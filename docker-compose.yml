@@ -1,0 +1,84 @@
+services:
+  minio:
+    image: minio/minio:latest
+
+    container_name: rehni-minio
+
+    restart: always
+
+    env_file:
+      - ./RehniMarket-backend/.env
+
+    ports:
+      - "9000:9000"
+    
+    volumes:
+      - minio_rehni_data:/data
+
+    command: server /data
+
+  postgres:
+    image: postgres:17-alpine
+
+    container_name: rehni-postgres
+
+    restart: always
+
+    env_file:
+      - ./RehniMarket-backend/.env
+
+    ports:
+      - "5434:5432"
+
+    volumes:
+      - postgres_rehni_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./RehniMarket-backend
+      dockerfile: Dockerfile
+      
+    container_name: rehni-backend
+ 
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+
+    ports:
+      - "8001:8000"
+
+    volumes:
+      - ./RehniMarket-backend:/app
+
+    depends_on:
+      - postgres
+      - minio
+
+    env_file:
+      - ./RehniMarket-backend/.env
+
+    restart: always
+
+    command: uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build: ./RehniMarket-frontend
+    
+    ports:
+      - "5173:5173"
+    
+    volumes:
+      - ./RehniMarket-frontend:/app
+      - /app/node_modules
+
+    depends_on:
+      - backend
+
+    stdin_open: true
+    tty: true
+    
+    command: pnpm run dev --host 0.0.0.0 --port 5173 --host
+
+volumes:
+  postgres_rehni_data:
+  minio_rehni_data:
