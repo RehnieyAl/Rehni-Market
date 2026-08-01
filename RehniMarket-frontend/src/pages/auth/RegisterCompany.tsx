@@ -15,7 +15,8 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { registerCompany } from "../../services/authService";
 import TermsModal from "../../components/modal/TermsModal";
-import { AxiosError } from "axios";
+import axios from "axios";
+import { ErrorCode } from "../../types/ErrorCode";
 
 export default function CompanyForm() {
   const navigate = useNavigate();
@@ -101,11 +102,31 @@ export default function CompanyForm() {
         },
       });
 
-    } catch (error) {
-      const err = error as AxiosError;
-      console.log(JSON.stringify(err.response?.data, null, 2));
-      console.error(error);
-      alert("No fue posible registrar la empresa.");
+    } catch (err) {
+      if (axios.isAxiosError(err)){
+        const error = err.response?.data?.detail;
+
+        switch (error?.code){
+          case ErrorCode.EMAIL_ALREADY_EXISTS:
+            alert(error.message)
+            break;
+
+          case ErrorCode.NIT_ALREADY_EXISTS:
+            alert(error.message)
+            break;
+
+          case ErrorCode.COMPANY_PENDING:
+            alert(error.message);
+            break;
+
+          default:
+            alert(error?.message ?? "Ocurrió un error.");
+        }
+
+      } else {
+        alert("Ocurrio un error inesperado")
+      }
+
     } finally {
       setLoading(false);
     }

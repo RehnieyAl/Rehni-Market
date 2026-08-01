@@ -37,9 +37,8 @@ def create_refresh_token(user_id: str):
     )
 
 def verify_token(token: str):
-    
     try:
-        print("Prueba token: ",token)
+
         payload = jwt.decode(
             token,
             SECRET_KEY,
@@ -47,11 +46,15 @@ def verify_token(token: str):
         )
 
         return payload
-    
+
     except ExpiredSignatureError:
         print("TOKEN EXPIRADO")
         return "expired"
-    
+
     except JWTError as e:
-        print("ERROR: ", str(e))
+        print("JWT ERROR:", repr(e))
+        return None
+
+    except Exception as e:
+        print("ERROR GENERAL:", repr(e))
         return None

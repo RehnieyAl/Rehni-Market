@@ -6,6 +6,7 @@ from app.services.authentication.AuthService import (
     register_user_service,
     register_company_service,
     verify_email_service,
+    change_email_service,
     get_me_profile_service,
     forgot_password_service,
     reset_password_service,
@@ -16,13 +17,14 @@ from sqlalchemy.orm import Session
 from app.database.Connection import get_db
 from app.schemas.SchemaAuthUser import (
     createUser, 
-    verifyEmail, 
+    verifyEmail,
+    changeEmailRequest, 
     userLogin, 
     forgotPassword, 
     ResetPassword,
     RefreshRequest
 )
-from app.schemas.SchemaAuthCompany import createCompany, LoginCompany
+from app.schemas.SchemaAuthCompany import createCompany
 
 from app.Config import config
 
@@ -32,6 +34,10 @@ router = APIRouter(
     prefix=("/auth"),   
     tags=["auth"]
 )
+
+# =========================
+# AUTH ROUTER
+# =========================
 
 @router.post("/register-user")
 def registerUser(user: createUser, database: Session = Depends(get_db)):
@@ -81,6 +87,10 @@ def verify_email(code: verifyEmail, database: Session = Depends(get_db)):
     
     return verify_email_service(code, database)
 
+@router.post("/change-email")
+def verify_email(changeEmail: changeEmailRequest, database: Session = Depends(get_db)):
+    
+    return change_email_service(changeEmail, database)
 @router.post("/login-user")
 def login_user(user: userLogin, database: Session = Depends(get_db)):
     
@@ -109,9 +119,4 @@ def refresh_token(data:RefreshRequest, database: Session = Depends(get_db)):
 
     return refresh_token_service(data, database)
 
-@router.post("/logout")
-def logout():
-    
-    return {
-        "saliendo del inicio de session"
-    }
+

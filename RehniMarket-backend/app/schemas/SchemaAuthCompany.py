@@ -6,8 +6,6 @@ class createCompany(BaseModel):
     companyAddress: str
     companyNIT: str     
     companyNITDV: str
-    companyLogo: str | None = None
-    companyBanner: str | None = None
     companyCertificate: str | None = None
 
     
@@ -36,17 +34,6 @@ class createCompany(BaseModel):
             raise ValueError('el dígito de verificación del NIT debe contener solo números')
         return v
     
-    @field_validator('companyLogo')
-    def validate_logo(cls, v: str | None):
-        if v is not None and len(v) > 255:
-            raise ValueError('la URL del logo no debe exceder los 255 caracteres')
-        return v
-
-    @field_validator('companyBanner')
-    def validate_banner(cls, v: str | None):
-        if v is not None and len(v) > 255:
-            raise ValueError('la URL del banner no debe exceder los 255 caracteres')
-        return v
 
     @field_validator('companyCertificate')
     def validate_certificate(cls, v: str | None):
@@ -54,7 +41,3 @@ class createCompany(BaseModel):
             raise ValueError('la URL del certificado no debe exceder los 255 caracteres')
         return v
 
-
-class LoginCompany(BaseModel):
-    companyNIT: str
-    companyPassword: str

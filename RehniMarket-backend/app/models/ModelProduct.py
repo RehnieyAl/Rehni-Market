@@ -1,33 +1,33 @@
-from sqlalchemy import String, Numeric, Boolean, Text, JSON, ForeignKey, Integer, DateTime
+from sqlalchemy import String,Numeric,Boolean,Text,ForeignKey,Integer,DateTime
 from decimal import Decimal
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
-from app.database.Connection import Base
 from datetime import datetime
+from app.database.Connection import Base
+
 class Product(Base):
+
     __tablename__ = "products"
+
+
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        primary_key=True, 
+        primary_key=True,
         default=uuid.uuid4
     )
 
+
     name: Mapped[str] = mapped_column(
-        String(50),
-        nullable=False,
-        unique=True
+        String(100),
+        nullable=False
     )
+
 
     price: Mapped[Decimal] = mapped_column(
         Numeric(10,2),
         default=0,
         nullable=False
-    )
-
-    images:  Mapped[list[str]] = mapped_column(
-        JSON,
-        nullable=True
     )
 
 
@@ -37,11 +37,12 @@ class Product(Base):
         nullable=False
     )
 
-    discount_value: Mapped[int] = mapped_column(
+
+    discount_value: Mapped[Decimal] = mapped_column(
         Numeric(10,2),
-        default=0,
-        nullable=False
+        default=0
     )
+
 
     stock: Mapped[int] = mapped_column(
         Integer,
@@ -49,19 +50,29 @@ class Product(Base):
         nullable=False
     )
 
+    has_variants: Mapped[bool] = mapped_column(
+    Boolean,
+    default=False,
+    nullable=False
+    )
+
+
     descripcion: Mapped[str] = mapped_column(
         Text,
         nullable=False
     )
 
-    technical_spec: Mapped[dict] = mapped_column(
-        JSON,
-        nullable=True
+
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False
     )
+
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
-        default=datetime.utcnow    
+        default=datetime.utcnow
     )
 
 
@@ -71,39 +82,82 @@ class Product(Base):
         nullable=False
     )
 
+
     catalog_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("catalog.id"),
-        nullable=True
+        nullable=False
     )
 
-    #Relacion con empresa
-    company: Mapped["Company"] = relationship(
+
+
+    company = relationship(
         "Company",
         back_populates="products"
     )
 
-    #Relacion con la tabla products
-    catalog: Mapped["Catalog"] = relationship(
+
+    catalog = relationship(
         "Catalog",
         back_populates="products"
     )
 
-class Catalog(Base):
-    __tablename__ = "catalog"
+
+    images = relationship(
+        "ProductImage",
+        back_populates="product",
+        cascade="all, delete"
+    )
+
+
+    variants = relationship(
+        "ProductVariant",
+        back_populates="product",
+        cascade="all, delete"
+    )
+
+
+    specifications = relationship(
+        "ProductSpecification",
+        back_populates="product",
+        cascade="all, delete"
+    )
+
+
+
+class ProductImage(Base):
+
+    __tablename__ = "product_images"
+
+
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        primary_key=True, 
+        primary_key=True,
         default=uuid.uuid4
     )
 
-    name: Mapped[str] = mapped_column(
-        String(50),
-        nullable=False,
-        unique=True
+
+    url: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False
     )
 
-    products: Mapped[list["Product"]] = relationship(
-        "Product",
-        back_populates="catalog"
+
+    is_main: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False
     )
+
+
+    product_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("products.id"),
+        nullable=False
+    )
+
+
+    product = relationship(
+        "Product",
+        back_populates="images"
+    )
+

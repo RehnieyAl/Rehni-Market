@@ -1,11 +1,17 @@
 # Este modelo representa la tabla "company" en la base de datos, 
 # que almacena información sobre las empresas.
-from sqlalchemy import String, Boolean, ForeignKey, DateTime
+from sqlalchemy import String, Boolean, ForeignKey, DateTime, Enum
 from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from app.database.Connection import Base
+from enum import Enum as PyEnum
+
+class CompanyCertificateEnum(str, PyEnum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
 
 class Company(Base):
     __tablename__ = "company"
@@ -49,10 +55,15 @@ class Company(Base):
         nullable=True
     )
 
-    CompanyCertificateStatus: Mapped[bool] = mapped_column(
+    CompanyCertificateStatus: Mapped[CompanyCertificateEnum] = mapped_column(
+        Enum(CompanyCertificateEnum),
+        nullable=False,
+        default=CompanyCertificateEnum.PENDING
+    )
+
+    CompanyStatus: Mapped[bool] = mapped_column(
         Boolean,
-        default=False,
-        nullable=False
+        default=True
     )
 
     created_at: Mapped[datetime] = mapped_column(

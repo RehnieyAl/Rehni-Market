@@ -3,7 +3,7 @@
 # ademas de esto genera ids automaticamente, registra fechas de creacion,
 # agrega tiempo de expiracion, relaciona cada codigo con un usuario por llave foranea
 # y permite acceder al usuario relacionado con ORM
-from sqlalchemy import String, Enum, ForeignKey, DateTime, Boolean
+from sqlalchemy import String, Enum, ForeignKey, DateTime, Index
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime, timedelta
 from app.database.Connection import Base
@@ -14,9 +14,12 @@ import uuid
 class TypeCode(str, typerEnum):
     RESET_PASSWORD = "resetPassword"
     VERIFY_EMAIL = "verifyEmail"
-
+    CHANGE_EMAIL = "changeEmail"
 class Codes(Base):
     __tablename__ = "event_codes"
+    __table_args__ = (
+    Index("idx_codes_user_type","user_id","type"),)
+    
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True, 
@@ -24,7 +27,7 @@ class Codes(Base):
     )
 
     code: Mapped[str] = mapped_column(
-        String(6), 
+        String(10), 
         nullable=False
     )
 
@@ -42,10 +45,6 @@ class Codes(Base):
         default=lambda: datetime.utcnow() + timedelta(minutes=15)
     )
 
-    used: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False
-    )
     
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

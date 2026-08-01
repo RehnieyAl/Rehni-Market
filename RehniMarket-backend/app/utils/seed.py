@@ -2,7 +2,7 @@ import uuid
 from sqlalchemy.orm import Session
 from app.models.ModelRole import Role
 from app.models.ModelUser import Users
-from app.models.ModelProduct import Catalog
+from app.models.ModelCatalog import Catalog, SpecificationTemplate
 from app.utils.Security import hash_password
 from app.Config import config
 
@@ -61,21 +61,167 @@ def seed_catalog(db: Session):
     db.commit()
 
 
+def seed_specifications(db: Session):
+
+    specifications = {
+
+        "Computadoras": [
+            "Marca",
+            "Modelo",
+            "Procesador",
+            "RAM",
+            "Almacenamiento",
+            "Tarjeta gráfica",
+            "Sistema operativo",
+            "Fuente de poder",
+        ],
+
+        "Laptops": [
+            "Marca",
+            "Modelo",
+            "Procesador",
+            "RAM",
+            "Almacenamiento SSD",
+            "Tarjeta gráfica",
+            "Pantalla",
+            "Resolución",
+            "Batería",
+            "Sistema operativo",
+        ],
+
+        "Celulares": [
+            "Marca",
+            "Modelo",
+            "Procesador",
+            "RAM",
+            "Almacenamiento interno",
+            "Cámara principal",
+            "Cámara frontal",
+            "Batería",
+            "Pantalla",
+            "Sistema operativo",
+        ],
+
+        "Tablets": [
+            "Marca",
+            "Modelo",
+            "Procesador",
+            "RAM",
+            "Almacenamiento",
+            "Pantalla",
+            "Batería",
+            "Sistema operativo",
+        ],
+
+        "Componentes PC": [
+            "Marca",
+            "Modelo",
+            "Tipo",
+            "Compatibilidad",
+            "Memoria",
+            "Frecuencia",
+        ],
+
+        "Audio": [
+            "Marca",
+            "Modelo",
+            "Tipo",
+            "Conectividad",
+            "Duración batería",
+        ],
+
+        "Monitores": [
+            "Marca",
+            "Modelo",
+            "Tamaño pantalla",
+            "Resolución",
+            "Tipo de panel",
+            "Frecuencia",
+            "Tiempo de respuesta",
+        ],
+
+        "Periféricos": [
+            "Marca",
+            "Modelo",
+            "Tipo",
+            "Conectividad",
+            "Compatibilidad",
+        ],
+
+        "Consolas": [
+            "Marca",
+            "Modelo",
+            "Generación",
+            "Almacenamiento",
+            "Resolución",
+        ],
+
+        "Accesorios Gaming": [
+            "Marca",
+            "Modelo",
+            "Tipo",
+            "Compatibilidad",
+            "Conectividad",
+        ],
+    }
+
+
+    for catalog_name, specs in specifications.items():
+
+        catalog = (
+            db.query(Catalog)
+            .filter(Catalog.name == catalog_name)
+            .first()
+        )
+
+        if not catalog:
+            continue
+
+
+        for spec_name in specs:
+
+            exists = (
+                db.query(SpecificationTemplate)
+                .filter(
+                    SpecificationTemplate.name == spec_name,
+                    SpecificationTemplate.catalog_id == catalog.id
+                )
+                .first()
+            )
+
+
+            if not exists:
+
+                specification = SpecificationTemplate(
+                    name=spec_name,
+                    type="text",
+                    required=True,
+                    catalog_id=catalog.id
+                )
+
+                db.add(specification)
+
+
+    db.commit()
+
+
 def seed_admin(db: Session):
     admin_role = db.query(Role).filter(Role.name == "admin").first()
 
     if not admin_role:
         return
-
+    
+    admin_name = config.ADMIN_NAME
     admin_email = config.ADMIN_DEFAULT
     admin_password = config.PASSWORD_DEFAULT
+
 
     exists = db.query(Users).filter(Users.email == admin_email).first()
 
     if not exists:
         admin = Users(
             id=uuid.uuid4(),
-            fullName="System Admin",
+            fullName=admin_name,
             email=admin_email,
             tell="0000000000",
             hashed_password=hash_password(admin_password),
@@ -91,4 +237,5 @@ def seed_admin(db: Session):
 def run_seed(db: Session):
     seed_roles(db)
     seed_catalog(db)
+    seed_specifications(db)
     seed_admin(db)

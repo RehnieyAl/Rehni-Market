@@ -8,6 +8,7 @@ router = APIRouter(
     prefix=("/health"),
     tags=["health"]
 )
+
 @router.get("/database")
 def healthDatabase():
     return db_test()

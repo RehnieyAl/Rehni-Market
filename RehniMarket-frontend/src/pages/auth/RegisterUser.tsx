@@ -10,6 +10,8 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { registerUser } from "../../services/authService";
 import TermsModal from "../../components/modal/TermsModal";
+import axios from "axios";
+import { ErrorCode } from "../../types/ErrorCode";
 
 export default function UserForm() {
   const navigate = useNavigate();
@@ -65,8 +67,24 @@ export default function UserForm() {
         },
       });
     } catch (err) {
-      console.error(err);
-      alert("No fue posible crear la cuenta.");
+      if (axios.isAxiosError(err)){
+        const error = err.response?.data?.detail;
+
+        switch (error?.code){
+          case ErrorCode.EMAIL_ALREADY_EXISTS:
+            alert(error.message)
+            break;
+
+          case ErrorCode.ROLE_NOT_FOUND:
+            alert(error.message)
+            break;
+          
+          default:
+            alert(error?.message ?? "Ocurrio un error.")
+        }
+      } else {
+        alert("Ocurrio un error inesperado")
+      }
     } finally {
       setLoading(false);
     }

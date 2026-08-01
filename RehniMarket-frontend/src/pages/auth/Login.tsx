@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { AxiosError } from "axios";
+
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { loginUser } from "../../services/authService";
 import { useAuth } from "../../context/useAuth";
 
-import type { ApiErrorResponse } from "../../types/axios";
+
 import { ErrorCode } from "../../types/ErrorCode";
+import axios from "axios";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -47,48 +48,45 @@ export default function Login() {
       login(res);
 
       navigate("/");
-    } catch (error) {
-      const err =
-        error as AxiosError<ApiErrorResponse>;
+    } catch (err) {
+      if (axios.isAxiosError(err)){
+        const error = err.response?.data?.detail;
 
-      const detail = err.response?.data.detail;
-
-      if (!detail) {
-        setError(
-          "Ha ocurrido un error inesperado."
-        );
-        return;
-      }
-
-      switch (detail.code) {
-        case ErrorCode.INVALID_CREDENTIALS:
-          setError(detail.message);
+        switch (error?.code){
+          case ErrorCode.INVALID_CREDENTIALS:
+          setError(error.message);
           break;
 
-        case ErrorCode.EMAIL_NOT_VERIFIED:
-          navigate("/verify-email", {
+          case ErrorCode.EMAIL_NOT_VERIFIED:
+            navigate("/verify-email", {
             state: {
               email: form.email,
             },
           });
           break;
 
-        case ErrorCode.ROLE_NOT_ASSIGNED:
-          setError(detail.message);
-          break;
+          case ErrorCode.ROLE_NOT_ASSIGNED:
+            setError(error.message)
+            break;
 
-        case ErrorCode.COMPANY_PENDING:
-          setError(detail.message);
-          break;
+          case ErrorCode.COMPANY_PENDING:
+            setError(error.message);
+            break;
 
         case ErrorCode.COMPANY_REJECTED:
-          setError(detail.message);
+          setError(error.message);
           break;
 
         default:
-          setError(detail.message);
+          setError(error.message);
           break;
+
+        }
+      } else {
+        alert("Ocurrio un error")
       }
+
+
     } finally {
       setLoading(false);
     }

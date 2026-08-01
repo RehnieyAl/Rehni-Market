@@ -29,6 +29,11 @@ class Users(Base):
     tell: Mapped[str] = mapped_column(
         String(50), nullable=False
     )
+
+    profileImagen: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True
+    )
     
     verified: Mapped[bool] = mapped_column(
         Boolean,

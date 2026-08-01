@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request,Depends, UploadFile, File, Form
+from fastapi import APIRouter, Request,Depends, UploadFile, File, Form, Body
 from sqlalchemy.orm import Session
 from app.database.Connection import get_db
 from uuid import UUID
@@ -6,10 +6,11 @@ from uuid import UUID
 from app.services.DashboardService.company.Products import (
     create_product_service,
     update_product_service,
-    delete_product_service
+    delete_product_service,
+    change_product_status_service
 )
 
-from app.services.DashboardService.company.Dasboard import (
+from app.services.DashboardService.company.Dashboard import (
     company_dashboard_me_service, 
     company_dashboard_my_profile_service,
     company_dashboard_upgrade_my_profile_service,
@@ -18,13 +19,17 @@ from app.services.DashboardService.company.Dasboard import (
 )
 
 from app.schemas.SchemaDashboard.ShemaCompany import UpdateInformationCompanyRequest
-
+from app.schemas.SchemaDashboard.SchemaProduct import ProductStatusRequest
 from app.services.NasService import NasService, get_nas_service
 
 router = APIRouter(
     prefix=("/company"),
     tags=["company"]
 )
+
+# ==============================
+# ROUTERS DASHBOARD
+# ==============================
 
 @router.get("/dashboard/me")
 def dashboard(request: Request,database: Session = Depends(get_db)):
@@ -67,25 +72,26 @@ def patch_media(
         banner_profile=banner_profile
     )
 
-@router.post("/dashboard/product")
+@router.post("/dashboard/create-product")
 def create_product(
     request: Request,
-    nameProduct: str = Form (...), 
-    nameCatalog: str = Form(...),
+    nameProduct: str = Form(...),
+    catalogId: str = Form(...),
     priceProduct: float = Form(...),
     stockProduct: int = Form(...),
     descripcionProduct: str = Form(...),
     technicalSpecProduct: str = Form(...),
     imagesProduct: list[UploadFile] = File(None),
     nas: NasService = Depends(get_nas_service),
-    database:Session = Depends(get_db)
+    database: Session = Depends(get_db)
+
 ):
     user_id = request.state.user_id
 
     return create_product_service(
         user_id=user_id,
-        nameProduct=nameProduct, 
-        nameCatalog=nameCatalog,
+        nameProduct=nameProduct,
+        catalogId=catalogId,
         priceProduct=priceProduct,
         stockProduct=stockProduct,
         descripcionProduct=descripcionProduct,
@@ -98,9 +104,10 @@ def create_product(
 # Para atraer productos de la empresa
 @router.get("/dashboard/get-my-products")
 def get_my_product( 
-    request: Request, 
+    request: Request,
+    search: str = "", 
     page: int =  1, 
-    limit: int =10, 
+    limit: int = 5,
     database: Session = Depends(get_db)
 ):
     print("accediendo a endpoint")
@@ -108,6 +115,7 @@ def get_my_product(
 
     return company_dashboard_get_my_products(
         user_id,
+        search=search,
         page=page,
         limit= limit,
         database=database
@@ -153,7 +161,34 @@ def upgrade_my_product(
         database=database
     )
 
-@router.delete("/dashboard/delete-my-product/{product_id}")
-def delete_my_product(request: Request, database: Session = Depends(get_db)):
+
+
+
+@router.patch("/dashboard/change-status-my-product/{product_id}")
+def change_status_my_product(
+    request: Request,
+    product_id: UUID,
+    data: ProductStatusRequest, 
+    database: Session = Depends(get_db)):
+
+    user_id = request.state.user_id
+
+    print("userid", user_id)
     
-    return delete_product_service()
+    return change_product_status_service(
+        user_id=user_id,
+        product_id=product_id,
+        is_active=data.is_active,
+        database=database
+    )
+
+@router.delete("/dashboard/delete-my-product/{product_id}")
+def delete_my_product(request: Request,product_id: UUID, database: Session = Depends(get_db)):
+    
+    user_id = request.state.user_id
+    return delete_product_service(
+        user_id=user_id,
+        product_id=product_id,
+        database=database
+    )
+

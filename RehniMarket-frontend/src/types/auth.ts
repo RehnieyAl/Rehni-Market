@@ -26,6 +26,11 @@ export interface VerifyEmail {
   code: string;
 }
 
+export interface ChangeEmail {
+  old_email: string;
+  new_email:string;
+}
+
 export interface ForgotPassword {
   email: string;
 }

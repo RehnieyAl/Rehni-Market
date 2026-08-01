@@ -6,6 +6,7 @@ import VerifyEmail from "../pages/auth/VerifyEmail"
 import Login from "../pages/auth/Login";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import ResetPassword from "../pages/auth/ResetPassword";
+import Dashboard from "../pages/company/Dashboard";
 
 export default function AppRouter() {
   return (
@@ -18,6 +19,7 @@ export default function AppRouter() {
         <Route path="/login" element={<Login />}/>
         <Route path="/forgot-password" element={<ForgotPassword />}/>
         <Route path="/reset-password" element={<ResetPassword />}/>
+        <Route path="/company/dashboard" element={<Dashboard />}/>
       </Routes>
     </BrowserRouter>
   );

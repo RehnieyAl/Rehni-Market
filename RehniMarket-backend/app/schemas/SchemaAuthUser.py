@@ -42,7 +42,24 @@ class createUser(BaseModel):
         if len(v) < 10:
             raise ValueError('el número de teléfono debe tener al menos 10 caracteres')
         return v
+    
 
+class changeEmailRequest(BaseModel):
+    old_email: EmailStr
+    new_email: EmailStr
+
+
+    @field_validator('old_email')
+    def validate_old_email(cls, v: str):
+        if not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', v):
+            raise ValueError('correo electrónico no válido')
+        return v
+    
+    @field_validator('new_email')
+    def validate_new_email(cls, v: str):
+        if not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', v):
+            raise ValueError('correo electrónico no válido')
+        return v
 class verifyEmail(BaseModel):
     email: EmailStr
     code: str

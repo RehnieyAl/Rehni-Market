@@ -6,7 +6,8 @@ import type {
   LoginUser,
   MeResponse,
   ForgotPassword,
-  ResetPassword
+  ResetPassword,
+  ChangeEmail
 } from "../types/auth";
 
 
@@ -22,6 +23,11 @@ export const registerCompany = async (data: RegisterCompanyPayloadFormData) => {
 
 export const verifyEmail = async(data: VerifyEmail) => {
   const res = await api.post("/auth/verify-email-user", data)
+  return res.data;
+}
+
+export const changeEmail = async(data: ChangeEmail) => {
+  const res = await api.post("/auth/change-email", data)
   return res.data;
 }
 
