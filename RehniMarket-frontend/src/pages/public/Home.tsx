@@ -1,5 +1,5 @@
-import NavBar from "../../components/navbar/NavBar";
-import Footer from "../../components/footer/Footer";
+import NavBar from "@/shared/components/navbar/navbar";
+import Footer from "@/shared/components/Footer";
 
 export default function Home() {
   return (

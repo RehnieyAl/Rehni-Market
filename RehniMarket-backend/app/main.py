@@ -9,9 +9,12 @@ from app.routers import HealthRouter
 from app.routers import CompanyRouter
 from app.routers import mediaRouter
 from app.routers import publicRouters
-from app.routers import AdminRouters
+from app.routers import AdminCompanyRouters
+from app.routers import AdminUserRouters
+from app.routers import AdminDashboardRouters
 import app.models
 from app.middleware.AuthMiddleware import auth_middleware
+from app.middleware.RateLimitMiddleware import rate_limit_middleware
 from app.middleware.CorsMiddleware import setup_cors
 from app.database.Connection import SessionLocal
 from app.utils.seed import run_seed
@@ -40,8 +43,9 @@ app = FastAPI(lifespan=lifespan)
 # =========================
 # MIDDLEWARE
 # =========================
-setup_cors(app)
 app.middleware("http")(auth_middleware)
+app.middleware("http")(rate_limit_middleware)
+setup_cors(app)
 
 # =========================
 # ROUTERS
@@ -51,7 +55,14 @@ app.include_router(HealthRouter.router)
 app.include_router(CompanyRouter.router)
 app.include_router(mediaRouter.router)
 app.include_router(publicRouters.router)
-app.include_router(AdminRouters.router)
+
+# =========================
+# AdminRouter
+# =========================
+app.include_router(AdminDashboardRouters.router)
+app.include_router(AdminCompanyRouters.router)
+app.include_router(AdminUserRouters.router)
+
 
 
 

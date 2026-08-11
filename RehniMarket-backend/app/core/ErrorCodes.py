@@ -21,6 +21,8 @@ class ErrorCodes:
     PASSWORD_INCORRECT = "PASSWORD_INCORRECT"
     PASSWORDS_DO_NOT_MATCH = "PASSWORDS_DO_NOT_MATCH"
     ACCOUNT_DISABLED = "ACCOUNT_DISABLED"
+    USER_BLOCKED = "USER_BLOCKED"
+    USER_HAS_COMPANY = "USER_HAS_COMPANY"
 
     # ==========================
     # VERIFICACIÓN
@@ -45,6 +47,7 @@ class ErrorCodes:
     COMPANY_APPROVED = "COMPANY_APPROVED"
     COMPANY_REJECTED = "COMPANY_REJECTED"
     COMPANY_SUSPENDED = "COMPANY_SUSPENDED"
+    
 
     # ==========================
     # NIT
@@ -82,3 +85,8 @@ class ErrorCodes:
     # SERVIDOR
     # ==========================
     INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR"
+
+    # ==========================
+    # RATE LIMIT
+    # ==========================
+    RATE_LIMIT_EXCEEDED = "RATE_LIMIT_EXCEEDED"

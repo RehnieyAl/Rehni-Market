@@ -3,16 +3,36 @@ from app.services.NasService import client
 
 router = APIRouter()
 
+
 @router.get("/media/proxy")
 def proxy_file(path: str):
-   try:
-      response = client.get_object("uploads", path.replace("uploads", ""))
+    try:
+        object_name = path.removeprefix("uploads/")
 
-      return Response(
-         content=response.read(),
-         media_type="images/png"
-      )
-   
-   except Exception as e:
-      print(e)
-      raise HTTPException(status_code=404, detail="Archivo no encontrado")
+        response = client.get_object(
+            "uploads",
+            object_name,
+        )
+
+        content = response.read()
+
+        content_type = response.headers.get(
+            "Content-Type",
+            "application/octet-stream",
+        )
+
+        return Response(
+            content=content,
+            media_type=content_type,
+            headers={
+                "Content-Disposition": "inline",
+            },
+        )
+
+    except Exception as e:
+        print("Error proxy:", e)
+
+        raise HTTPException(
+            status_code=404,
+            detail="Archivo no encontrado",
+        )

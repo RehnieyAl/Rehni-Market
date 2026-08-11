@@ -1,154 +1,202 @@
-# este codigo es creado para dar acceso a las rutas 
-# esto sin necesitad de token de autenticacion,
-# pero de igual manera se busca validar el token a la hora
-# de proteger las demas rutas dependiendo del rol validando 
-# en la base de datos si aquel token existe y corresponde a el usuario
-from fastapi import Request
+from fastapi import Request, HTTPException
 from starlette.responses import JSONResponse
+
 from app.services.authentication.JWTService import verify_token
+
 from app.core.ErrorCodes import ErrorCodes
 from app.core.Exceptions import api_error
-from app.utils.Response import json_response
 
-PUBLIC_ROUTES = [
-    "/auth/login-user",
-    "/auth/login-company",
-    "/auth/register-user",
-    "/auth/register-company",
-    "/auth/verify-email-user",
-    "/auth/change-email",
-    "/auth/forgot-password-user",
-    "/auth/reset-password-user",
-    "/auth/refresh",
-    "/auth/logout",
-    "/media/proxy",
-    "/docs",
-    "/openapi.json",
-    "/media/proxy",
-    "/public/catalogs",
-    "/public/catalogs/{catalog_id}/specifications",
-    "/health/database",
-    "/health/internet",
-    "/admin/dashboard/get-catalogs",
-    "/admin/dashboard/created-catalogs",
-    "/admin/dashboard/update-catalogs/",
-    "/admin/dashboard/delete-catalogs/",
-    "/admin/dashboard/get-colors",
-    "/admin/dashboard/create-color",
-    "/admin/dashboard/update-color/",
-    "/admin/dashboard/delete-color/",
-    "/admin/dashboard/get-colors"
-]
+from app.middleware.PublicRoutes import PUBLIC_ROUTES
+from app.middleware.RolePermissions import ROLES_PERMISSIONS_ROUTERS
+from app.middleware.AuthUser import get_authenticated_user
 
+from app.database.Connection import SessionLocal
 
-ROLES_PERMISSIONS_ROUTERS = {
-
-    "admin": [
-        "",
-        "/auth/me"
-    ],
-
-    "company": [
-        "/company/dashboard/me",
-        "/company/dashboard/my-profile",
-        "/company/dashboard/upgrade-my-profile",
-        "/company/dashboard/patch-media-logo-banner",
-        "/company/dashboard/create-product",
-        "/company/dashboard/get-my-products",
-        "/company/dashboard/change-status-my-product/",
-        "/company/dashboard/delete-my-product/",
-        "/company/dashboard/update-my-product/",
-        "/auth/me"
-    ],
-
-    "user": [
-        "",
-        "/auth/me"
-    ]
-    
-}
 
 async def auth_middleware(request: Request, call_next):
+    path = request.url.path
 
-    print("PATH:", request.url.path)
-    print("METHOD:", request.method)
+    print("PATH:", path)
 
     if request.method == "OPTIONS":
         return await call_next(request)
 
-    path = request.url.path
-
-    if path.startswith("/admin/"):
-        return await call_next(request)
-    
     if path in PUBLIC_ROUTES:
+        print("PUBLIC ROUTE:", path)
         return await call_next(request)
-    
+
     auth_header = request.headers.get("Authorization")
 
     if not auth_header:
-        return json_response(401, "Token requerido")
-    
+        return JSONResponse(
+            status_code=401,
+            content={
+                "detail": {
+                    "code": ErrorCodes.UNAUTHORIZED,
+                    "message": "Token requerido",
+                }
+            },
+        )
+
     parts = auth_header.split()
 
-    if len(parts) !=2:
-       return json_response(401, "Formato de autorizacion invalido")
-    
+    if len(parts) != 2:
+        return JSONResponse(
+            status_code=401,
+            content={
+                "detail": {
+                    "code": ErrorCodes.INVALID_TOKEN,
+                    "message": "Formato de autorización inválido",
+                }
+            },
+        )
+
     scheme, token = parts
-    
+
+    if scheme.lower() != "bearer":
+        return JSONResponse(
+            status_code=401,
+            content={
+                "detail": {
+                    "code": ErrorCodes.INVALID_TOKEN,
+                    "message": "Formato de autorización inválido",
+                }
+            },
+        )
+
     try:
-
-        print("TOKEN RAW:", token)
-
-        if scheme.lower() != "bearer":
-            return json_response(401, "Formato de autorizacion invalido")
-
-        payload =verify_token(token)
+        payload = verify_token(token)
 
         if payload == "expired":
-            return json_response(401, "Token expirado")
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "detail": {
+                        "code": ErrorCodes.TOKEN_EXPIRED,
+                        "message": "Token expirado",
+                    }
+                },
+            )
 
         if not isinstance(payload, dict):
-            return json_response(401, "Token invalido")
-        
-        
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "detail": {
+                        "code": ErrorCodes.INVALID_TOKEN,
+                        "message": "Token inválido",
+                    }
+                },
+            )
+
         if payload.get("type") != "access":
-            return json_response(401, "Access token requerido")
-        
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "detail": {
+                        "code": ErrorCodes.INVALID_TOKEN,
+                        "message": "Access token requerido",
+                    }
+                },
+            )
+
         user_id = payload.get("sub")
         role = payload.get("role")
 
         if not user_id or not role:
-            return json_response(401, "No hay usuario o rol")
-        
-        request.state.user_id = user_id
-        request.state.role = role
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "detail": {
+                        "code": ErrorCodes.INVALID_TOKEN,
+                        "message": "No hay usuario o rol en el token",
+                    }
+                },
+            )
 
-        if role not in ROLES_PERMISSIONS_ROUTERS:
-            return json_response(401, "Rol invalido")
+        database = SessionLocal()
 
-        if role == "admin":
+        try:
+            user = get_authenticated_user(
+                database,
+                user_id,
+            )
+
+            if not user:
+                return JSONResponse(
+                    status_code=401,
+                    content={
+                        "detail": {
+                            "code": ErrorCodes.INVALID_TOKEN,
+                            "message": "Usuario no encontrado",
+                        }
+                    },
+                )
+
+            if not user.isActive:
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "detail": {
+                            "code": ErrorCodes.USER_BLOCKED,
+                            "message": "Tu cuenta se encuentra bloqueada.",
+                        }
+                    },
+                )
+
+            if role not in ROLES_PERMISSIONS_ROUTERS:
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "detail": {
+                            "code": ErrorCodes.FORBIDDEN,
+                            "message": "Rol inválido",
+                        }
+                    },
+                )
+
+            request.state.user_id = user_id
+            request.state.role = role
+            request.state.user = user
+
+            if role == "admin":
+                return await call_next(request)
+
+            allowed_routes = ROLES_PERMISSIONS_ROUTERS[role]
+
+            has_permission = any(
+                path.startswith(route)
+                for route in allowed_routes
+            )
+
+            if not has_permission:
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "detail": {
+                            "code": ErrorCodes.FORBIDDEN,
+                            "message": "No tienes permiso para acceder a este recurso",
+                        }
+                    },
+                )
+
             return await call_next(request)
-        
-        
-        allowed_routers = ROLES_PERMISSIONS_ROUTERS[role]
 
-        has_permission = any(
-            path.startswith(route)
-            for route in allowed_routers
+        finally:
+            database.close()
+
+    except HTTPException:
+        raise
+
+    except Exception as error:
+        print("Auth Error:", error)
+
+        return JSONResponse(
+            status_code=401,
+            content={
+                "detail": {
+                    "code": ErrorCodes.INVALID_TOKEN,
+                    "message": "Token inválido",
+                }
+            },
         )
-
-        if not has_permission:
-            return json_response(401, "no tienes permiso para acceder a este recurso")
-        
-        
-        return await call_next(request)
-    
-    except Exception as e:
-        
-        print("Auth Error", e)
-
-        return json_response(401, "Token invalido")
-
-    
-
