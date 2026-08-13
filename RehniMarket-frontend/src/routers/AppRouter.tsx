@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Home from "../pages/public/Home";
+import Products from "../pages/public/Products";
+import ProductsDetail from "../pages/public/ProductsDetail";
 
 import RegisterUser from "@/features/public/auth/pages/RegisterUser";
 import RegisterCompany from "@/features/public/auth/pages/RegisterCompany";
@@ -18,6 +20,8 @@ export default function AppRouter() {
       <Routes>
         {/* Public */}
         <Route path="/" element={<Home />} />
+        <Route path="/products" element={<Products />} />
+        <Route path="/products/:id" element={<ProductsDetail />} />
         <Route path="/register-user" element={<RegisterUser />} />
         <Route path="/register-company" element={<RegisterCompany />} />
         <Route path="/verify-email" element={<VerifyEmail />} />

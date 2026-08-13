@@ -5,6 +5,7 @@ import type { CreateProductRequest } from "@/features/company/types/request";
 import type {
   CatalogResponse,
   SpecificationResponse,
+  ColorResponse,
 } from "@/features/company/types/response";
 
 import {
@@ -16,6 +17,10 @@ import {
   getCatalogSpecifications,
 } from "@/features/company/api/catalogService";
 
+import { getColors } from "@/features/company/api/colorService";
+
+import SpecificationChecklist from "./SpecificationChecklist";
+
 import { useState, useEffect, useRef } from "react";
 
 interface ProductModalProps {
@@ -26,6 +31,7 @@ interface ProductModalProps {
 
 export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModalProps) {
   const [catalogs, setCatalogs] = useState<CatalogResponse[]>([]);
+  const [colors, setColors] = useState<ColorResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [specifications, setSpecifications] = useState<SpecificationResponse[]>(
     [],
@@ -38,6 +44,7 @@ export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModal
     descripcionProduct: "",
     technicalSpecProduct: [],
     imagesProduct: [],
+    mainColorId: "",
   });
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -54,6 +61,7 @@ export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModal
       descripcionProduct: "",
       technicalSpecProduct: [],
       imagesProduct: [],
+      mainColorId: "",
     });
 
     setSpecifications([]);
@@ -67,8 +75,15 @@ export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModal
     try {
       setLoading(true);
 
-      await createProduct(product);
-      
+      await createProduct({
+        ...product,
+        // No enviar especificaciones marcadas pero sin valor todavía -
+        // solo cuentan las que la empresa realmente completó.
+        technicalSpecProduct: product.technicalSpecProduct.filter(
+          (item) => item.value.trim() !== "",
+        ),
+      });
+
       resetProduct();
       onClose();
       onSuccess();
@@ -89,6 +104,19 @@ export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModal
     };
 
     loadCatalogs();
+  }, []);
+
+  useEffect(() => {
+    const loadColors = async () => {
+      try {
+        const response = await getColors();
+        setColors(response);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadColors();
   }, []);
 
   useEffect(() => {
@@ -172,7 +200,7 @@ export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModal
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6">
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-3 sm:p-6">
       <div className="bg-white rounded-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto border border-gray-200 shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <h2 className="text-xl font-semibold text-gray-900">
@@ -242,7 +270,50 @@ export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModal
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm text-gray-700 mb-2">
+                  Color principal
+                </label>
+
+                <div className="flex items-center gap-3">
+                  <select
+                    value={product.mainColorId ?? ""}
+                    onChange={(e) =>
+                      setProduct({
+                        ...product,
+                        mainColorId: e.target.value,
+                      })
+                    }
+                    className="w-full rounded-lg bg-white border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
+                  >
+                    <option value="">Sin color principal</option>
+
+                    {colors.map((color) => (
+                      <option key={color.id} value={color.id}>
+                        {color.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  {product.mainColorId && (
+                    <span
+                      className="h-9 w-9 shrink-0 rounded-full border border-gray-300"
+                      style={{
+                        backgroundColor: colors.find(
+                          (color) => color.id === product.mainColorId,
+                        )?.hex_color,
+                      }}
+                    />
+                  )}
+                </div>
+
+                <p className="mt-2 text-xs text-gray-500">
+                  Si el producto tendrá variantes de color, el color
+                  principal deberá coincidir con el de alguna de ellas.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
                   <label className="block text-sm text-gray-700 mb-2">
                     Precio
@@ -382,69 +453,42 @@ export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModal
 
           <section>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Especificaciones técnicas
+              Especificaciones disponibles
             </h3>
 
             <p className="text-sm text-gray-500 mb-5">
-              Estas especificaciones cambiarán automáticamente según la
-              categoría seleccionada.
+              Estas especificaciones las administra el equipo de Rehni-Market
+              para cada categoría. Selecciona las que apliquen a este
+              producto y asigna su valor.
             </p>
 
-            <div className="grid grid-cols-2 gap-5">
-              {specifications.map((specification) => (
-                <div key={specification.id}>
-                  <label className="block text-sm text-gray-700 mb-2">
-                    {specification.name}
-
-                    {specification.required && (
-                      <span className="text-red-500 ml-1">*</span>
-                    )}
-                  </label>
-
-                  <input
-                    type="text"
-                    value={
-                      product.technicalSpecProduct.find(
-                        (item) =>
-                          item.specificationTemplateId === specification.id,
-                      )?.value || ""
-                    }
-                    onChange={(e) => {
-                      const value = e.target.value;
-
-                      setProduct((prev) => {
-                        const technicalSpecProduct = [
-                          ...prev.technicalSpecProduct,
-                        ];
-
-                        const index = technicalSpecProduct.findIndex(
-                          (item) =>
-                            item.specificationTemplateId === specification.id,
-                        );
-
-                        if (index >= 0) {
-                          technicalSpecProduct[index] = {
-                            ...technicalSpecProduct[index],
-                            value,
-                          };
-                        } else {
-                          technicalSpecProduct.push({
-                            specificationTemplateId: specification.id,
-                            value,
-                          });
-                        }
-
-                        return {
-                          ...prev,
-                          technicalSpecProduct,
-                        };
-                      });
-                    }}
-                    className="w-full rounded-lg bg-white border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
-                  />
-                </div>
-              ))}
-            </div>
+            <SpecificationChecklist
+              templates={specifications}
+              values={product.technicalSpecProduct}
+              onToggle={(templateId, checked) => {
+                setProduct((prev) => ({
+                  ...prev,
+                  technicalSpecProduct: checked
+                    ? [
+                        ...prev.technicalSpecProduct,
+                        { specificationTemplateId: templateId, value: "" },
+                      ]
+                    : prev.technicalSpecProduct.filter(
+                        (item) => item.specificationTemplateId !== templateId,
+                      ),
+                }));
+              }}
+              onValueChange={(templateId, value) => {
+                setProduct((prev) => ({
+                  ...prev,
+                  technicalSpecProduct: prev.technicalSpecProduct.map((item) =>
+                    item.specificationTemplateId === templateId
+                      ? { ...item, value }
+                      : item,
+                  ),
+                }));
+              }}
+            />
           </section>
         </div>
 

@@ -31,6 +31,23 @@ class ProductVariant(Base):
         default=0
     )
 
+    # Descuento propio de la variante, independiente del descuento del
+    # producto base (Product.discount_enable/discount_value). Mismo
+    # significado: discount_value es un PORCENTAJE (0-100), no un monto
+    # absoluto - ver _compute_price_fields en
+    # app/services/publicService/Products.py.
+    discount_enable: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False
+    )
+
+    discount_value: Mapped[Decimal] = mapped_column(
+        Numeric(10,2),
+        default=0,
+        nullable=False
+    )
+
     product_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("products.id"),

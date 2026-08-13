@@ -67,6 +67,30 @@ export class ErrorCode {
   static readonly PRODUCT_NOT_FOUND = "PRODUCT_NOT_FOUND";
   static readonly PRODUCT_ALREADY_EXISTS = "PRODUCT_ALREADY_EXISTS";
   static readonly PRODUCT_OUT_OF_STOCK = "PRODUCT_OUT_OF_STOCK";
+  static readonly PRODUCT_IMAGE_NOT_FOUND = "PRODUCT_IMAGE_NOT_FOUND";
+
+  // ==========================
+  // CATÁLOGO
+  // ==========================
+  static readonly CATALOG_NOT_FOUND = "CATALOG_NOT_FOUND";
+
+  // ==========================
+  // VARIANTES
+  // ==========================
+  static readonly VARIANT_NOT_FOUND = "VARIANT_NOT_FOUND";
+  static readonly VARIANT_COLOR_ALREADY_EXISTS = "VARIANT_COLOR_ALREADY_EXISTS";
+  static readonly VARIANT_SPECIFICATION_NOT_FOUND = "VARIANT_SPECIFICATION_NOT_FOUND";
+  static readonly VARIANT_SPECIFICATION_ALREADY_EXISTS = "VARIANT_SPECIFICATION_ALREADY_EXISTS";
+  static readonly VARIANT_IMAGE_NOT_FOUND = "VARIANT_IMAGE_NOT_FOUND";
+  static readonly COLOR_NOT_FOUND = "COLOR_NOT_FOUND";
+  static readonly SPECIFICATION_TEMPLATE_NOT_FOUND = "SPECIFICATION_TEMPLATE_NOT_FOUND";
+  static readonly SPECIFICATION_TEMPLATE_CATALOG_MISMATCH = "SPECIFICATION_TEMPLATE_CATALOG_MISMATCH";
+
+  // ==========================
+  // ANUNCIOS
+  // ==========================
+  static readonly ADVERTISEMENT_NOT_FOUND = "ADVERTISEMENT_NOT_FOUND";
+  static readonly ADVERTISEMENT_IMAGE_REQUIRED = "ADVERTISEMENT_IMAGE_REQUIRED";
 
   // ==========================
   // VALIDACIÓN

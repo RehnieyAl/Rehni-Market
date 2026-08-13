@@ -195,7 +195,13 @@ def company_dashboard_get_my_products(user_id,search,page,limit,database: Sessio
                 "price": float(product.price),
                 "stock": product.stock,
                 "image": main_image,
-                "is_active": "Activo" if product.is_active else "Inactivo"
+                # Bug de integracion: antes se enviaba el string "Activo"/
+                # "Inactivo". El frontend (MyProductResponse.is_active y
+                # Products.tsx) siempre trato este campo como boolean, asi
+                # que cualquier string no vacio evaluaba a "true" y el
+                # badge/los toggles de estado nunca reflejaban el estado
+                # real del producto. Se envia el boolean real.
+                "is_active": product.is_active
                 })
         
         print("PRODUCTOS ENVIADOS:", len(result))

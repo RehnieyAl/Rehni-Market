@@ -93,3 +93,41 @@ export interface AdminRecentUser {
   created_at: string;
 }
 
+
+export interface AdminCatalogResponse {
+  id: string;
+  name: string;
+}
+
+
+export interface AdminColorResponse {
+  id: string;
+  name: string;
+  hex_color: string;
+}
+
+
+export interface AdminSpecificationResponse {
+  id: string;
+  name: string;
+  type: string;
+  required: boolean;
+  catalog_id: string;
+}
+
+
+export interface AdminAdvertisementResponse {
+  id: string;
+  title: string;
+  description: string | null;
+  // Desktop/tablet
+  image_url: string;
+  // Mobile - nullable, el Hero público hace fallback a image_url
+  mobile_image_url: string | null;
+  button_text: string | null;
+  button_link: string | null;
+  is_active: boolean;
+  order: number;
+  created_at: string;
+}
+

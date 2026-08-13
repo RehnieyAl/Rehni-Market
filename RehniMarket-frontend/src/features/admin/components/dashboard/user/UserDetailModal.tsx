@@ -17,6 +17,7 @@ import {
 
 import type { AdminUserResponse } from "@/features/admin/types/response";
 import type { UpdateAdminUserRequest } from "@/features/admin/types/request";
+import { useRole } from "@/hooks/useRole";
 
 interface UserDetailModalProps {
   userId: string | null;
@@ -24,7 +25,7 @@ interface UserDetailModalProps {
   onClose: () => void;
 }
 
-type EditableRole = "user" | "admin" | "company";
+type EditableRole = "user" | "admin" | "company" | "owner";
 
 function getRoleLabel(role: string): string {
   switch (role) {
@@ -34,6 +35,8 @@ function getRoleLabel(role: string): string {
       return "Administrador";
     case "company":
       return "Empresa";
+    case "owner":
+      return "Propietario";
     default:
       return role;
   }
@@ -44,6 +47,9 @@ export default function UserDetailModal({
   isOpen,
   onClose,
 }: UserDetailModalProps) {
+  // Solo lectura: el backend es quien realmente hace cumplir estas reglas.
+  const { isOwner } = useRole();
+
   const [user, setUser] = useState<AdminUserResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -119,10 +125,15 @@ export default function UserDetailModal({
       data.email = email;
     }
 
+    const isAssignableRole =
+      editRole === "user" ||
+      editRole === "admin" ||
+      (editRole === "owner" && isOwner);
+
     if (
       user.role !== "company" &&
       editRole !== user.role &&
-      (editRole === "user" || editRole === "admin")
+      isAssignableRole
     ) {
       data.role = editRole;
     }
@@ -152,6 +163,9 @@ export default function UserDetailModal({
   };
 
   const canEditRole = user?.role !== "company";
+
+  // Una cuenta owner solo puede editarse (correo o rol) por otro owner.
+  const canEdit = !(user?.role === "owner" && !isOwner);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -274,6 +288,15 @@ export default function UserDetailModal({
                         value: "admin",
                         label: "Administrador",
                       },
+                      // Solo un owner puede asignar el rol owner.
+                      ...(isOwner
+                        ? [
+                            {
+                              value: "owner",
+                              label: "Propietario",
+                            },
+                          ]
+                        : []),
                     ]}
                   />
                 ) : (
@@ -379,9 +402,11 @@ export default function UserDetailModal({
                 </h3>
 
                 <p className="mt-1 text-sm text-gray-500">
-                  {isEditing
-                    ? "Guarda o cancela los cambios realizados."
-                    : "Gestiona la información del usuario."}
+                  {!canEdit
+                    ? "Solo un Owner puede gestionar esta cuenta."
+                    : isEditing
+                      ? "Guarda o cancela los cambios realizados."
+                      : "Gestiona la información del usuario."}
                 </p>
 
                 <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -411,14 +436,16 @@ export default function UserDetailModal({
                       </button>
                     </>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={handleEdit}
-                      className="flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
-                    >
-                      <Pencil size={18} />
-                      Editar información
-                    </button>
+                    canEdit && (
+                      <button
+                        type="button"
+                        onClick={handleEdit}
+                        className="flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
+                      >
+                        <Pencil size={18} />
+                        Editar información
+                      </button>
+                    )
                   )}
                 </div>
               </div>

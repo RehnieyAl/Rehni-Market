@@ -15,46 +15,55 @@ import {
 
 import type { SidebarItem } from "../components/dashboard/Sidebar";
 
-export type UserRole = "admin" | "company" | "user";
+export type UserRole = "admin" | "company" | "user" | "owner";
+
+// Navegación base del panel de administración. OWNER la reutiliza por
+// completo (hereda todas las capacidades de ADMIN) y solo se le agregan
+// las opciones exclusivas de OWNER a continuación.
+const adminNavigation: SidebarItem[] = [
+  {
+    id: "home",
+    text: "Inicio",
+    icon: <House size={22} />,
+  },
+  {
+    id: "companies",
+    text: "Empresas",
+    icon: <Building2 size={22} />,
+  },
+  {
+    id: "users",
+    text: "Usuarios",
+    icon: <Users size={22} />,
+  },
+  {
+    id: "products",
+    text: "Catálogo",
+    icon: <Package size={22} />,
+  },
+  {
+    id: "hero",
+    text: "Anuncios",
+    icon: <Megaphone size={22} />,
+  },
+  {
+    id: "reports",
+    text: "Reportes",
+    icon: <BarChart3 size={22} />,
+  },
+];
+
+// Opciones exclusivas de OWNER. Por ahora la unica capacidad exclusiva
+// habilitada es la gestión de administradores, que vive dentro de la
+// propia vista "Usuarios" (con permisos adicionales en esa pantalla), por
+// lo que no hay todavía una entrada de menú nueva que agregar aquí. Este
+// arreglo queda listo para sumar futuras secciones exclusivas de OWNER.
+const ownerExclusiveNavigation: SidebarItem[] = [];
 
 export const dashboardNavigation: Record<UserRole, SidebarItem[]> = {
-  admin: [
-    {
-      id: "home",
-      text: "Inicio",
-      icon: <House size={22} />,
-    },
-    {
-      id: "companies",
-      text: "Empresas",
-      icon: <Building2 size={22} />,
-    },
-    {
-      id: "users",
-      text: "Usuarios",
-      icon: <Users size={22} />,
-    },
-    {
-      id: "products",
-      text: "Productos",
-      icon: <Package size={22} />,
-    },
-    {
-      id: "hero",
-      text: "Hero",
-      icon: <Megaphone size={22} />,
-    },
-    {
-      id: "orders",
-      text: "Pedidos",
-      icon: <ShoppingBag size={22} />,
-    },
-    {
-      id: "reports",
-      text: "Reportes",
-      icon: <BarChart3 size={22} />,
-    },
-  ],
+  admin: adminNavigation,
+
+  owner: [...adminNavigation, ...ownerExclusiveNavigation],
 
   company: [
     {

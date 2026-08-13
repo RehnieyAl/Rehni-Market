@@ -13,3 +13,23 @@ class CatalogResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+class CreateSpecificationRequest(BaseModel):
+    name: str = Field(..., min_length=2, max_length=100)
+    type: str = Field(default="text", min_length=2, max_length=50)
+    required: bool = False
+
+class UpdateSpecificationRequest(BaseModel):
+    name: str = Field(..., min_length=2, max_length=100)
+    type: str = Field(default="text", min_length=2, max_length=50)
+    required: bool = False
+
+class SpecificationResponse(BaseModel):
+    id: UUID
+    name: str
+    type: str
+    required: bool
+    catalog_id: UUID
+    model_config = {
+        "from_attributes": True
+    }

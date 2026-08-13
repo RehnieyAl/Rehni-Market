@@ -90,6 +90,16 @@ class Product(Base):
     )
 
 
+    # Color principal del producto. Es completamente independiente del
+    # color de cada variante (ProductVariant.color_id) - no existe (ni debe
+    # existir) ninguna regla que exija que coincidan.
+    main_color_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("color_variants.id"),
+        nullable=True
+    )
+
+
 
     company = relationship(
         "Company",
@@ -99,6 +109,12 @@ class Product(Base):
 
     catalog = relationship(
         "Catalog",
+        back_populates="products"
+    )
+
+
+    main_color = relationship(
+        "ColorVariant",
         back_populates="products"
     )
 

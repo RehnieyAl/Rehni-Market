@@ -2,7 +2,9 @@ import { api } from "@/api/Client";
 import type {
 CreateProductRequest,
 ChangeProductStatus,
+UpdateProductRequest,
 } from "@/features/company/types/request";
+import type { ProductDetailResponse } from "@/features/company/types/response";
 
 export async function createProduct(
 product: CreateProductRequest,
@@ -28,6 +30,10 @@ formData.append(
 "technicalSpecProduct",
 JSON.stringify(product.technicalSpecProduct),
 );
+
+if (product.mainColorId) {
+formData.append("mainColorId", product.mainColorId);
+}
 
 product.imagesProduct.forEach((image) => {
 formData.append("imagesProduct", image.file);
@@ -84,6 +90,83 @@ productId: string,
 ) {
 const { data } = await api.delete(
 `/company/dashboard/delete-my-product/${productId}`,
+);
+
+return data;
+}
+
+export async function getProductDetail(
+productId: string,
+) {
+const { data } = await api.get<ProductDetailResponse>(
+`/company/dashboard/get-my-product/${productId}`,
+);
+
+return data;
+}
+
+export async function updateProduct(
+productId: string,
+patch: UpdateProductRequest,
+) {
+const formData = new FormData();
+
+if (patch.nameProduct !== undefined) {
+formData.append("nameProduct", patch.nameProduct);
+}
+
+if (patch.catalogId !== undefined) {
+formData.append("catalogId", patch.catalogId);
+}
+
+if (patch.priceProduct !== undefined) {
+formData.append("priceProduct", patch.priceProduct.toString());
+}
+
+if (patch.discountEnable !== undefined) {
+formData.append("discountEnable", patch.discountEnable.toString());
+}
+
+if (patch.discountValue !== undefined) {
+formData.append("discountValue", patch.discountValue.toString());
+}
+
+if (patch.stockProduct !== undefined) {
+formData.append("stockProduct", patch.stockProduct.toString());
+}
+
+if (patch.descripcionProduct !== undefined) {
+formData.append("descripcionProduct", patch.descripcionProduct);
+}
+
+if (patch.clearMainColor) {
+formData.append("clearMainColor", "true");
+} else if (patch.mainColorId !== undefined) {
+formData.append("mainColorId", patch.mainColorId);
+}
+
+if (patch.technicalSpecProduct !== undefined) {
+formData.append(
+"technicalSpecProduct",
+JSON.stringify(patch.technicalSpecProduct),
+);
+}
+
+if (patch.mainImageId !== undefined) {
+formData.append("mainImageId", patch.mainImageId);
+}
+
+patch.imagesToDeleted?.forEach((imageId) => {
+formData.append("imagesToDeleted", imageId);
+});
+
+patch.imagesProduct?.forEach((file) => {
+formData.append("imagesProduct", file);
+});
+
+const { data } = await api.patch(
+`/company/dashboard/update-my-product/${productId}`,
+formData,
 );
 
 return data;

@@ -5,34 +5,46 @@ import Sidebar from "@/shared/components/dashboard/Sidebar";
 import Topbar from "@/shared/components/dashboard/Topbar";
 
 import { dashboardNavigation } from "@/shared/config/dashboardNavigation";
+import { useRole } from "@/hooks/useRole";
 
 import Home from "@/features/admin/components/dashboard/Home";
 import Companies from "@/features/admin/components/dashboard/company/Companies";
 import Users from "@/features/admin/components/dashboard/user/Users";
+import CatalogManagement from "@/features/admin/components/dashboard/CatalogManagement";
+import Advertisements from "@/features/admin/components/dashboard/advertisement/Advertisements";
 
 export default function Admin() {
   const [view, setView] = useState("home");
+  const { isOwner } = useRole();
 
   const views = {
     home: <Home onNavigate={setView} />,
     companies: <Companies />,
     users: <Users />,
+    products: <CatalogManagement />,
+    hero: <Advertisements />,
   };
 
   return (
     <DashboardLayout
       sidebar={
         <Sidebar
-          items={dashboardNavigation.admin}
+          items={
+            isOwner
+              ? dashboardNavigation.owner
+              : dashboardNavigation.admin
+          }
           activeItem={view}
           onItemClick={setView}
         />
       }
       topbar={
         <Topbar
-          title="Panel Administrador"
+          title={
+            isOwner ? "Panel Propietario" : "Panel Administrador"
+          }
           description="Administra la plataforma"
-          roleName="Administrador"
+          roleName={isOwner ? "Propietario" : "Administrador"}
         />
       }
     >

@@ -37,7 +37,8 @@ export function AuthProvider({ children }: Props) {
     if (
       storedRole === "admin" ||
       storedRole === "company" ||
-      storedRole === "user"
+      storedRole === "user" ||
+      storedRole === "owner"
     ) {
       return storedRole;
     }

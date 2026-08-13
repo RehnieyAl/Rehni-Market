@@ -1,194 +1,355 @@
 from app.services.email.EmailService import send_email
 
-def EmailForgotPassword(to_email: str, code: str, code_type):
 
-    subject = "Recuperación de contraseña"
+def EmailForgotPassword(
+    to_email: str,
+    code: str,
+    code_type
+):
+
+    subject = "Recuperación de contraseña | Rehni Market"
 
     body = f"""
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Recuperación de contraseña</title>
-    </head>
+<!DOCTYPE html>
+<html lang="es">
 
-    <body style="
-        margin:0;
-        padding:0;
-        background-color:#f4f4f4;
-        font-family:Arial,sans-serif;
-    ">
+<head>
 
-        <table width="100%" cellpadding="0" cellspacing="0">
-            <tr>
-                <td align="center" style="padding:40px 0;">
+<meta charset="UTF-8">
 
-                    <table width="600" cellpadding="0" cellspacing="0"
-                        style="
-                            background:#ffffff;
-                            border-radius:12px;
-                            overflow:hidden;
-                            border:1px solid #e5e7eb;
-                        ">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-                        <!-- Header -->
-                        <tr>
-                            <td align="center"
-                                style="
-                                    background:#00E65A;
-                                    color:#0f172a;
-                                    padding:30px;
-                                ">
-                                <h1 style="margin:0;">
-                                    Lubix
-                                </h1>
-                            </td>
-                        </tr>
+<title>Recuperación de contraseña | Rehni Market</title>
 
-                        <!-- Content -->
-                        <tr>
-                            <td style="padding:30px;">
+</head>
 
-                                <h2 style="
-                                    margin-top:0;
-                                    color:#111827;
-                                ">
-                                    Recuperación de contraseña
-                                </h2>
+<body style="
+margin:0;
+padding:0;
+background:#f4f4f4;
+font-family:Arial, Helvetica, sans-serif;
+">
 
-                                <p style="
-                                    color:#4b5563;
-                                    line-height:1.7;
-                                ">
-                                    Hemos recibido una solicitud para restablecer la
-                                    contraseña de tu cuenta en <strong>Lubix</strong>.
-                                </p>
+<table
+width="100%"
+cellpadding="0"
+cellspacing="0"
+style="background:#f4f4f4;padding:40px 0;"
+>
 
-                                <p style="
-                                    color:#4b5563;
-                                    line-height:1.7;
-                                ">
-                                    Utiliza el siguiente código para continuar:
-                                </p>
+<tr>
 
-                                <!-- Recovery Code -->
-                                <table width="100%" cellpadding="0" cellspacing="0"
-                                    style="
-                                        background:#f9fafb;
-                                        border:1px solid #e5e7eb;
-                                        border-radius:8px;
-                                        margin:25px 0;
-                                    ">
-                                    <tr>
-                                        <td align="center" style="padding:30px;">
+<td align="center">
 
-                                            <span style="
-                                                display:inline-block;
-                                                color:#00E65A;
-                                                font-size:40px;
-                                                font-weight:bold;
-                                                letter-spacing:10px;
-                                                font-family:monospace;
-                                            ">
-                                                {code}
-                                            </span>
+<table
+width="600"
+cellpadding="0"
+cellspacing="0"
+style="
+background:#ffffff;
+border-radius:18px;
+overflow:hidden;
+box-shadow:0 8px 30px rgba(0,0,0,.08);
+"
+>
 
-                                        </td>
-                                    </tr>
-                                </table>
+<!-- HEADER -->
 
-                                <!-- Information -->
-                                <table width="100%" cellpadding="0" cellspacing="0"
-                                    style="
-                                        background:#f9fafb;
-                                        border:1px solid #e5e7eb;
-                                        border-radius:8px;
-                                        margin:20px 0;
-                                    ">
-                                    <tr>
-                                        <td style="padding:20px;">
+<tr>
 
-                                            <p style="
-                                                margin:0 0 10px 0;
-                                                color:#374151;
-                                            ">
-                                                <strong>Proceso:</strong>
-                                                Recuperación de contraseña
-                                            </p>
+<td
+align="center"
+style="
+background:#6D0F2D;
+padding:40px;
+"
+>
 
-                                            <p style="
-                                                margin:0;
-                                                color:#374151;
-                                            ">
-                                                <strong>Expira en:</strong>
-                                                10 minutos
-                                            </p>
+<h1 style="
+margin:0;
+color:#ffffff;
+font-size:34px;
+font-weight:bold;
+">
+Rehni Market
+</h1>
 
-                                        </td>
-                                    </tr>
-                                </table>
+<p style="
+margin:15px 0 0;
+color:#f3dbe4;
+font-size:17px;
+">
+Recuperación de contraseña
+</p>
 
-                                <!-- Security Notice -->
-                                <table width="100%" cellpadding="0" cellspacing="0"
-                                    style="
-                                        background:#fff7ed;
-                                        border:1px solid #fed7aa;
-                                        border-radius:8px;
-                                        margin:20px 0;
-                                    ">
-                                    <tr>
-                                        <td style="padding:20px;">
+</td>
 
-                                            <p style="
-                                                margin:0;
-                                                color:#b45309;
-                                                font-weight:bold;
-                                            ">
-                                                Aviso de seguridad
-                                            </p>
+</tr>
 
-                                            <p style="
-                                                margin-top:10px;
-                                                color:#92400e;
-                                                line-height:1.6;
-                                            ">
-                                                Nunca compartas este código con terceros.
-                                                Si no solicitaste recuperar tu contraseña,
-                                                puedes ignorar este correo de forma segura.
-                                            </p>
+<!-- CONTENT -->
 
-                                        </td>
-                                    </tr>
-                                </table>
+<tr>
 
-                            </td>
-                        </tr>
+<td
+style="
+padding:45px;
+"
+>
 
-                        <!-- Footer -->
-                        <tr>
-                            <td align="center"
-                                style="
-                                    background:#f9fafb;
-                                    color:#6b7280;
-                                    padding:20px;
-                                    font-size:12px;
-                                ">
-                                © 2026 Lubix. Todos los derechos reservados.
-                                <br>
-                                Este es un mensaje automático, por favor no respondas este correo.
-                            </td>
-                        </tr>
+<h2 style="
+margin:0;
+color:#222222;
+font-size:28px;
+">
+Recuperación de contraseña
+</h2>
 
-                    </table>
+<p style="
+margin-top:25px;
+color:#555555;
+font-size:16px;
+line-height:28px;
+">
+Hemos recibido una solicitud para restablecer la contraseña asociada a tu cuenta de
+<strong style="color:#6D0F2D;">
+Rehni Market
+</strong>.
+</p>
 
-                </td>
-            </tr>
-        </table>
+<p style="
+color:#555555;
+font-size:16px;
+line-height:28px;
+">
+Si realizaste esta solicitud, utiliza el siguiente código para verificar tu identidad y continuar con el proceso.
+</p>
 
-    </body>
-    </html>
-    """
+<!-- CODE -->
 
-    return send_email(to_email, subject, body)
+<table
+width="100%"
+cellpadding="0"
+cellspacing="0"
+style="margin:40px 0;"
+>
 
+<tr>
+
+<td align="center">
+
+<div
+style="
+display:inline-block;
+background:#6D0F2D;
+padding:20px 40px;
+border-radius:16px;
+letter-spacing:12px;
+font-size:38px;
+font-weight:bold;
+color:#ffffff;
+font-family:Arial, Helvetica, sans-serif;
+"
+>
+{code}
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+<p style="
+color:#555555;
+font-size:16px;
+line-height:28px;
+text-align:center;
+">
+Por motivos de seguridad, este código será válido únicamente durante los próximos
+<strong>10 minutos</strong>.
+</p>
+
+<!-- INFO -->
+
+<table
+width="100%"
+cellpadding="0"
+cellspacing="0"
+style="
+margin-top:35px;
+background:#F8F8F8;
+border-radius:12px;
+"
+>
+
+<tr>
+
+<td
+style="
+padding:20px;
+"
+>
+
+<p style="
+margin:0;
+font-size:15px;
+line-height:26px;
+color:#555555;
+">
+
+<strong>Información de la solicitud:</strong>
+
+<br><br>
+
+✓ Recuperación de contraseña
+
+<br>
+
+✓ Cuenta asociada: {to_email}
+
+<br>
+
+✓ Código válido por 10 minutos
+
+</p>
+
+</td>
+
+</tr>
+
+</table>
+
+<!-- SECURITY -->
+
+<table
+width="100%"
+cellpadding="0"
+cellspacing="0"
+style="
+margin-top:35px;
+background:#FFF6F8;
+border-radius:12px;
+border:1px solid #F2D4DE;
+"
+>
+
+<tr>
+
+<td
+style="
+padding:20px;
+"
+>
+
+<p style="
+margin:0;
+font-size:15px;
+line-height:26px;
+color:#555555;
+">
+
+<strong>Importante:</strong>
+
+<br><br>
+
+Por tu seguridad, nunca compartas este código con terceros.
+
+<br><br>
+
+El equipo de Rehni Market nunca solicitará códigos de verificación por correo electrónico, llamadas telefónicas o mensajes.
+
+</p>
+
+</td>
+
+</tr>
+
+</table>
+
+<p style="
+margin-top:35px;
+color:#555555;
+font-size:16px;
+line-height:28px;
+">
+Si no solicitaste este cambio de contraseña, puedes ignorar este correo de forma segura. Tu cuenta permanecerá protegida y no se realizará ningún cambio.
+</p>
+
+<p style="
+margin-top:35px;
+color:#555555;
+font-size:16px;
+line-height:28px;
+">
+Si continúas teniendo problemas para acceder a tu cuenta, comunícate con nuestro equipo de soporte.
+</p>
+
+<p style="
+margin-top:30px;
+font-size:15px;
+color:#333333;
+">
+Atentamente,
+<br>
+<strong style="color:#6D0F2D;">
+Equipo Rehni Market
+</strong>
+</p>
+
+</td>
+
+</tr>
+
+<!-- FOOTER -->
+
+<tr>
+
+<td
+style="
+background:#F2F2F2;
+padding:30px;
+text-align:center;
+"
+>
+
+<p style="
+margin:0;
+font-size:14px;
+color:#777777;
+">
+© 2026 Rehni Market
+</p>
+
+<p style="
+margin-top:10px;
+font-size:13px;
+color:#999999;
+line-height:22px;
+">
+Marketplace para empresas y clientes.
+<br>
+Este es un correo automático, por favor no respondas este mensaje.
+</p>
+
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+</tr>
+
+</table>
+
+</body>
+
+</html>
+"""
+
+    return send_email(
+        to_email,
+        subject,
+        body
+    )

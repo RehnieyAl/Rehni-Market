@@ -1,0 +1,309 @@
+import { useEffect, useState } from "react";
+import { Plus, Pencil, Trash2, Eye, Loader2, Power } from "lucide-react";
+
+import AdvertisementFormModal from "./AdvertisementFormModal";
+import AdvertisementDeleteConfirmModal from "./AdvertisementDeleteConfirmModal";
+import AdvertisementPreviewModal from "./AdvertisementPreviewModal";
+
+import {
+  getAdminAdvertisements,
+  createAdminAdvertisement,
+  updateAdminAdvertisement,
+  changeAdminAdvertisementStatus,
+  deleteAdminAdvertisement,
+} from "@/features/admin/api/advertisementService";
+
+import type { AdminAdvertisementResponse } from "@/features/admin/types/response";
+
+export default function Advertisements() {
+  const [advertisements, setAdvertisements] = useState<AdminAdvertisementResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingAdvertisement, setEditingAdvertisement] =
+    useState<AdminAdvertisementResponse | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const [previewTarget, setPreviewTarget] = useState<AdminAdvertisementResponse | null>(null);
+
+  const [deleteTarget, setDeleteTarget] = useState<AdminAdvertisementResponse | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const [statusChangingId, setStatusChangingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadAdvertisements = async () => {
+      try {
+        setLoading(true);
+
+        const response = await getAdminAdvertisements();
+
+        setAdvertisements(response);
+      } catch (error) {
+        console.error("Error cargando anuncios:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAdvertisements();
+  }, []);
+
+  const handleOpenCreate = () => {
+    setEditingAdvertisement(null);
+    setFormOpen(true);
+  };
+
+  const handleOpenEdit = (advertisement: AdminAdvertisementResponse) => {
+    setEditingAdvertisement(advertisement);
+    setFormOpen(true);
+  };
+
+  const handleCloseForm = () => {
+    if (saving) return;
+
+    setFormOpen(false);
+    setEditingAdvertisement(null);
+  };
+
+  const sortAdvertisements = (items: AdminAdvertisementResponse[]) =>
+    [...items].sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
+
+  const handleSubmitForm = async (values: {
+    title: string;
+    description: string;
+    buttonText: string;
+    buttonLink: string;
+    order: number;
+    isActive: boolean;
+    image: File | null;
+    mobileImage: File | null;
+    removeMobileImage: boolean;
+  }) => {
+    try {
+      setSaving(true);
+
+      if (editingAdvertisement) {
+        const updated = await updateAdminAdvertisement(editingAdvertisement.id, {
+          title: values.title,
+          description: values.description,
+          button_text: values.buttonText,
+          button_link: values.buttonLink,
+          order: values.order,
+          is_active: values.isActive,
+          ...(values.image ? { image: values.image } : {}),
+          ...(values.mobileImage ? { mobile_image: values.mobileImage } : {}),
+          ...(values.removeMobileImage ? { remove_mobile_image: true } : {}),
+        });
+
+        setAdvertisements((current) =>
+          sortAdvertisements(
+            current.map((advertisement) =>
+              advertisement.id === updated.id ? updated : advertisement,
+            ),
+          ),
+        );
+      } else {
+        if (!values.image) return;
+
+        const created = await createAdminAdvertisement({
+          title: values.title,
+          description: values.description || undefined,
+          button_text: values.buttonText || undefined,
+          button_link: values.buttonLink || undefined,
+          order: values.order,
+          is_active: values.isActive,
+          image: values.image,
+          ...(values.mobileImage ? { mobile_image: values.mobileImage } : {}),
+        });
+
+        setAdvertisements((current) => sortAdvertisements([...current, created]));
+      }
+
+      setFormOpen(false);
+      setEditingAdvertisement(null);
+    } catch (error) {
+      console.error("Error guardando anuncio:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleToggleStatus = async (advertisement: AdminAdvertisementResponse) => {
+    try {
+      setStatusChangingId(advertisement.id);
+
+      const updated = await changeAdminAdvertisementStatus(
+        advertisement.id,
+        !advertisement.is_active,
+      );
+
+      setAdvertisements((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      );
+    } catch (error) {
+      console.error("Error cambiando el estado del anuncio:", error);
+    } finally {
+      setStatusChangingId(null);
+    }
+  };
+
+  const handleCloseDelete = () => {
+    if (deleting) return;
+
+    setDeleteTarget(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      setDeleting(true);
+
+      await deleteAdminAdvertisement(deleteTarget.id);
+
+      setAdvertisements((current) =>
+        current.filter((advertisement) => advertisement.id !== deleteTarget.id),
+      );
+
+      setDeleteTarget(null);
+    } catch (error) {
+      console.error("Error eliminando anuncio:", error);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex shrink-0 items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">Anuncios</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Administra el Hero que se muestra al comienzo del Home.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleOpenCreate}
+          className="flex items-center gap-2 rounded-xl bg-[#7A1833] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#64132a]"
+        >
+          <Plus size={18} />
+          Nuevo anuncio
+        </button>
+      </div>
+
+      <section className="mt-5 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+        {loading ? (
+          <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
+            Cargando anuncios...
+          </div>
+        ) : advertisements.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
+            No hay anuncios creados todavía.
+          </div>
+        ) : (
+          advertisements.map((advertisement) => (
+            <div
+              key={advertisement.id}
+              className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="flex items-center gap-4">
+                <img
+                  src={advertisement.image_url}
+                  alt={advertisement.title}
+                  className="h-16 w-16 shrink-0 rounded-lg object-cover"
+                />
+
+                <div>
+                  <p className="font-medium text-gray-900">{advertisement.title}</p>
+
+                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+                    <span
+                      className={
+                        advertisement.is_active ? "text-green-600" : "text-gray-400"
+                      }
+                    >
+                      {advertisement.is_active ? "🟢 Activo" : "🔴 Inactivo"}
+                    </span>
+
+                    <span>Orden: {advertisement.order}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex shrink-0 items-center justify-end gap-1">
+                <button
+                  type="button"
+                  onClick={() => setPreviewTarget(advertisement)}
+                  className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
+                  title="Ver anuncio"
+                >
+                  <Eye size={18} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleOpenEdit(advertisement)}
+                  className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
+                  title="Editar anuncio"
+                >
+                  <Pencil size={18} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleToggleStatus(advertisement)}
+                  disabled={statusChangingId === advertisement.id}
+                  className={`rounded-lg p-2 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 ${
+                    advertisement.is_active ? "text-green-600" : "text-gray-400"
+                  }`}
+                  title={advertisement.is_active ? "Desactivar" : "Activar"}
+                >
+                  {statusChangingId === advertisement.id ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <Power size={18} />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDeleteTarget(advertisement)}
+                  className="rounded-lg p-2 text-red-600 transition hover:bg-red-50"
+                  title="Eliminar anuncio"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </section>
+
+      <AdvertisementFormModal
+        key={formOpen ? (editingAdvertisement?.id ?? "new") : "closed"}
+        isOpen={formOpen}
+        advertisement={editingAdvertisement}
+        loading={saving}
+        onClose={handleCloseForm}
+        onSubmit={handleSubmitForm}
+      />
+
+      <AdvertisementPreviewModal
+        isOpen={previewTarget !== null}
+        advertisement={previewTarget}
+        onClose={() => setPreviewTarget(null)}
+      />
+
+      <AdvertisementDeleteConfirmModal
+        isOpen={deleteTarget !== null}
+        advertisementTitle={deleteTarget?.title ?? ""}
+        loading={deleting}
+        onConfirm={handleConfirmDelete}
+        onClose={handleCloseDelete}
+      />
+    </div>
+  );
+}

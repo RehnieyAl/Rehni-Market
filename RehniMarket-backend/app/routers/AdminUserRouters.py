@@ -48,20 +48,23 @@ def get_user_by_id(user_id: UUID,database: Session = Depends(get_db)):
 def update_admin_user(request: Request,user_id: UUID,data: UpdateAdminUserRequest,database: Session = Depends(get_db)):
 
     admin_id = request.state.user_id
+    acting_role = request.state.role
 
-    return update_admin_user_service(database,user_id,admin_id,data)
+    return update_admin_user_service(database,user_id,admin_id,data,acting_role)
 
 
 @router.patch("/dashboard/user/update-information/status/{user_id}")
 def toggle_admin_user_status(request: Request, user_id: UUID,database: Session = Depends(get_db)):
 
     admin_id = request.state.user_id
-    return toggle_admin_user_status_service(database=database,user_id=user_id,admin_id=admin_id)
+    acting_role = request.state.role
+    return toggle_admin_user_status_service(database=database,user_id=user_id,admin_id=admin_id,acting_role=acting_role)
 
 
 @router.delete("/dashboard/user/delete/{user_id}")
 def delete_admin_user(request: Request,user_id: UUID,database: Session = Depends(get_db)):
 
     admin_id = request.state.user_id
+    acting_role = request.state.role
 
-    return delete_admin_user_service(database=database,user_id=user_id,admin_id=admin_id)
+    return delete_admin_user_service(database=database,user_id=user_id,admin_id=admin_id,acting_role=acting_role)

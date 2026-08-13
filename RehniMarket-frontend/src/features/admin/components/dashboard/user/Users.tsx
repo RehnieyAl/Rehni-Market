@@ -19,8 +19,13 @@ import {
 } from "@/features/admin/api/userService";
 
 import type { AdminUserResponse } from "@/features/admin/types/response";
+import { useRole } from "@/hooks/useRole";
 
 export default function Users() {
+  // Solo lectura: el backend es quien realmente hace cumplir estas
+  // reglas. Aquí se usa únicamente para mostrar/ocultar acciones.
+  const { isOwner } = useRole();
+
   const [users, setUsers] = useState<AdminUserResponse[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -210,11 +215,20 @@ export default function Users() {
   // ELIMINAR
   // =========================
 
+  // Las cuentas owner nunca se pueden eliminar desde aquí (ni siquiera
+  // otro owner). Las cuentas admin solo pueden eliminarse si quien opera
+  // es owner (gestionar administradores es una capacidad exclusiva de
+  // OWNER). El backend aplica exactamente esta misma regla.
+  const canDeleteUser = (user: AdminUserResponse) => {
+    if (user.role === "owner") return false;
+    if (user.role === "admin") return isOwner;
+    return true;
+  };
+
   const handleOpenDeleteModal = (
     user: AdminUserResponse,
   ) => {
-    // No permitir eliminar administradores
-    if (user.role === "admin") return;
+    if (!canDeleteUser(user)) return;
 
     setSelectedDeleteUser(user);
     setDeleteModalOpen(true);
@@ -231,7 +245,7 @@ export default function Users() {
     if (!selectedDeleteUser) return;
 
     // Protección adicional
-    if (selectedDeleteUser.role === "admin") {
+    if (!canDeleteUser(selectedDeleteUser)) {
       return;
     }
 
@@ -468,34 +482,36 @@ export default function Users() {
 
                         {/* BLOQUEAR / DESBLOQUEAR */}
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handleOpenStatusModal(
-                              user,
-                            )
-                          }
-                          className={`rounded-lg p-2 transition ${
-                            user.isActive
-                              ? "text-red-600 hover:bg-red-50"
-                              : "text-green-600 hover:bg-green-50"
-                          }`}
-                          title={
-                            user.isActive
-                              ? "Bloquear usuario"
-                              : "Desbloquear usuario"
-                          }
-                        >
-                          {user.isActive ? (
-                            <Lock size={18} />
-                          ) : (
-                            <Unlock size={18} />
-                          )}
-                        </button>
+                        {(user.role !== "owner" || isOwner) && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleOpenStatusModal(
+                                user,
+                              )
+                            }
+                            className={`rounded-lg p-2 transition ${
+                              user.isActive
+                                ? "text-red-600 hover:bg-red-50"
+                                : "text-green-600 hover:bg-green-50"
+                            }`}
+                            title={
+                              user.isActive
+                                ? "Bloquear usuario"
+                                : "Desbloquear usuario"
+                            }
+                          >
+                            {user.isActive ? (
+                              <Lock size={18} />
+                            ) : (
+                              <Unlock size={18} />
+                            )}
+                          </button>
+                        )}
 
                         {/* ELIMINAR */}
 
-                        {user.role !== "admin" && (
+                        {canDeleteUser(user) && (
                           <button
                             type="button"
                             onClick={() =>
@@ -642,16 +658,20 @@ function RoleStatus({
         ? "Administrador"
         : role === "company"
           ? "Empresa"
-          : role;
+          : role === "owner"
+            ? "Propietario"
+            : role;
 
   return (
     <span
       className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-        role === "admin"
-          ? "bg-gray-900 text-white"
-          : role === "company"
-            ? "bg-gray-200 text-gray-700"
-            : "bg-gray-100 text-gray-700"
+        role === "owner"
+          ? "bg-[#6D0F2D] text-white"
+          : role === "admin"
+            ? "bg-gray-900 text-white"
+            : role === "company"
+              ? "bg-gray-200 text-gray-700"
+              : "bg-gray-100 text-gray-700"
       }`}
     >
       {roleLabel}

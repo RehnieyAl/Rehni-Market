@@ -1,8 +1,10 @@
 ## main.py: Este codigo sirve para iniciar la
 #  aplicacion de FastAPI del backend lubix, configurar las rutas y
 #  middlewares necesarios,.
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
+from pydantic import ValidationError
+from starlette.responses import JSONResponse
 from app.database.Connection import SessionLocal
 from app.routers import AuthRouters
 from app.routers import HealthRouter
@@ -16,6 +18,7 @@ import app.models
 from app.middleware.AuthMiddleware import auth_middleware
 from app.middleware.RateLimitMiddleware import rate_limit_middleware
 from app.middleware.CorsMiddleware import setup_cors
+from app.core.ErrorCodes import ErrorCodes
 from app.database.Connection import SessionLocal
 from app.utils.seed import run_seed
 from app.Config import config
@@ -39,6 +42,31 @@ async def lifespan(app):
 # APP
 # =========================
 app = FastAPI(lifespan=lifespan)
+
+# =========================
+# EXCEPTION HANDLERS
+# =========================
+# Endpoints que construyen su schema manualmente dentro de un
+# classmethod as_form(...) (patron ya usado en CreateUserRequest,
+# CreateCompanyRequest y UpdateProductRequest) no pasan por la
+# validacion automatica de FastAPI para parametros Body/Form - el
+# ValidationError de Pydantic lo lanza el propio classmethod, y sin
+# este handler quedaba sin capturar (500 "Internal Server Error" en
+# vez de un 422 con el mensaje real de que fallo).
+@app.exception_handler(ValidationError)
+async def pydantic_validation_exception_handler(request: Request, exc: ValidationError):
+    errors = exc.errors()
+    message = errors[0]["msg"] if errors else "Datos inválidos."
+
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": {
+                "code": ErrorCodes.VALIDATION_ERROR,
+                "message": message,
+            }
+        },
+    )
 
 # =========================
 # MIDDLEWARE

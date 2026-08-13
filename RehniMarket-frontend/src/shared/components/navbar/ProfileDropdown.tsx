@@ -49,26 +49,34 @@ export default function ProfileDropdown() {
     admin: "Administrador",
     company: "Empresa",
     user: "Usuario",
+    owner: "Propietario",
   };
 
+  // OWNER reutiliza exactamente las mismas opciones del menú de ADMIN
+  // (hereda todas sus capacidades). Las opciones exclusivas de OWNER se
+  // agregarían aquí, aparte, cuando existan.
+  const adminMenuItems = [
+    {
+      label: "Dashboard",
+      to: "/admin/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      label: "Usuarios",
+      to: "/admin/users",
+      icon: Users,
+    },
+    {
+      label: "Empresas",
+      to: "/admin/companies",
+      icon: Building2,
+    },
+  ];
+
   const menu = {
-    admin: [
-      {
-        label: "Dashboard",
-        to: "/admin/dashboard",
-        icon: LayoutDashboard,
-      },
-      {
-        label: "Usuarios",
-        to: "/admin/users",
-        icon: Users,
-      },
-      {
-        label: "Empresas",
-        to: "/admin/companies",
-        icon: Building2,
-      },
-    ],
+    admin: adminMenuItems,
+
+    owner: adminMenuItems,
 
     company: [
       {

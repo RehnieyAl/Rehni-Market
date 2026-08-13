@@ -1,62 +1,276 @@
-import { Menu, Search, X } from "lucide-react";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { ImageOff, Menu, Search, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/public/auth/context/useAuth";
 import ProfileDropdown from "./ProfileDropdown";
+import logo from "@/assets/logo.png";
+
+import { getDailyProducts } from "@/features/public/home/api/homeService";
+import { formatPrice } from "@/shared/utils/formatPrice";
+
+import type { PublicProductCard } from "@/features/public/home/types/response";
+
+const SEARCH_DEBOUNCE_MS = 300;
+const SEARCH_RESULTS_LIMIT = 5;
+
+// TODO(backend): no existe todavía un endpoint público de búsqueda de
+// productos (GET /public/products?search=...) - ver ALCANCE >
+// app/routers/publicRouters.py, que solo expone /products/daily (máx 24,
+// sin filtro por texto) y /products/{id}. Mientras no exista, este
+// dropdown reutiliza /products/daily como única fuente real de "varios
+// productos" y filtra por nombre en el cliente sobre ese resultado (se
+// cachea en memoria para no repetir la llamada en cada tecla). Cuando el
+// backend exponga búsqueda real, reemplazar por ese endpoint aquí.
+
+const desktopLink = ({ isActive }: { isActive: boolean }) =>
+  `relative py-1 transition hover:text-[#6D0F2D] ${
+    isActive
+      ? "text-[#6D0F2D] after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:bg-[#6D0F2D]"
+      : "text-gray-700"
+  }`;
+
+const mobileLink = ({ isActive }: { isActive: boolean }) =>
+  `rounded-xl px-4 py-3.5 text-sm font-medium transition ${
+    isActive ? "bg-[#6D0F2D]/10 text-[#6D0F2D]" : "text-gray-800 hover:bg-gray-50"
+  }`;
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const [searchResults, setSearchResults] = useState<PublicProductCard[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+
   const { role } = useAuth();
+  const navigate = useNavigate();
+
+  const desktopSearchRef = useRef<HTMLDivElement>(null);
+  const mobileSearchRef = useRef<HTMLDivElement>(null);
+  const productsCacheRef = useRef<PublicProductCard[] | null>(null);
+
+  // Cierra el dropdown al hacer click afuera de cualquiera de los dos
+  // buscadores (desktop/mobile - solo uno está visible a la vez).
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      const insideDesktop = desktopSearchRef.current?.contains(target);
+      const insideMobile = mobileSearchRef.current?.contains(target);
+
+      if (!insideDesktop && !insideMobile) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Búsqueda en vivo (debounced) mientras el usuario escribe. El cierre
+  // del dropdown al limpiar el campo se maneja en handleSearchChange (evento
+  // directo del input, no acá) para no disparar setState de forma síncrona
+  // dentro del efecto.
+  useEffect(() => {
+    const query = search.trim().toLowerCase();
+
+    if (!query) return;
+
+    let cancelled = false;
+
+    const timer = setTimeout(async () => {
+      try {
+        setSearching(true);
+
+        if (!productsCacheRef.current) {
+          productsCacheRef.current = await getDailyProducts(24);
+        }
+
+        if (cancelled) return;
+
+        const matches = productsCacheRef.current
+          .filter((product) => product.name.toLowerCase().includes(query))
+          .slice(0, SEARCH_RESULTS_LIMIT);
+
+        setSearchResults(matches);
+        setShowDropdown(true);
+      } catch (error) {
+        console.error("Error buscando productos:", error);
+
+        if (!cancelled) {
+          setSearchResults([]);
+          setShowDropdown(true);
+        }
+      } finally {
+        if (!cancelled) {
+          setSearching(false);
+        }
+      }
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [search]);
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+
+    // Limpiar la búsqueda cierra el dropdown de inmediato (ver REQUISITOS
+    // > BUSCADOR DEL NAVBAR > 8).
+    if (!value.trim()) {
+      setShowDropdown(false);
+      setSearchResults([]);
+    }
+  };
+
+  const handleSearch = () => {
+    const query = search.trim();
+
+    if (!query) return;
+
+    navigate(`/products?search=${encodeURIComponent(query)}`);
+    setOpen(false);
+    setShowDropdown(false);
+  };
+
+  const handleSelectResult = (productId: string) => {
+    navigate(`/products/${productId}`);
+    setOpen(false);
+    setShowDropdown(false);
+  };
+
+  const renderSearchDropdown = () => {
+    if (!showDropdown) return null;
+
+    return (
+      <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-96 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg">
+        {searching ? (
+          <div className="p-4 text-sm text-gray-500">Buscando...</div>
+        ) : searchResults.length === 0 ? (
+          <div className="p-4 text-sm text-gray-500">No se encontraron productos</div>
+        ) : (
+          searchResults.map((product) => (
+            <button
+              key={product.id}
+              type="button"
+              onClick={() => handleSelectResult(product.id)}
+              className="flex w-full items-center gap-3 border-b border-gray-100 p-3 text-left transition last:border-b-0 hover:bg-gray-50"
+            >
+              {product.image ? (
+                <img
+                  src={product.image}
+                  alt=""
+                  className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                />
+              ) : (
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-300">
+                  <ImageOff size={18} />
+                </div>
+              )}
+
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-gray-900">
+                  {product.name}
+                </p>
+
+                {/* TODO(backend): PublicProductCardResponse no expone
+                    categoría (catalog_name) en la tarjeta de producto - se
+                    muestra la empresa en su lugar hasta que ese campo
+                    exista (ver app/schemas/SchemaPublic.py). */}
+                <p className="truncate text-xs text-gray-500">
+                  {product.company_name}
+                </p>
+              </div>
+
+              <span className="shrink-0 text-sm font-semibold text-[#6D0F2D]">
+                {formatPrice(product.discount_enabled ? product.final_price : product.price)}
+              </span>
+            </button>
+          ))
+        )}
+      </div>
+    );
+  };
+
   return (
-    <header className="w-full bg-white border-b border-gray-200">
-      <div className="max-w-[1600px] mx-auto h-20 px-4 lg:px-8 flex items-center justify-between">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white">
+      <div className="mx-auto flex h-20 max-w-[1600px] items-center justify-between px-4 lg:px-8">
 
         <Link to="/" className="flex items-center gap-3">
           <img
-            src="src/assets/logo.png"
-            alt="logo"
-            className="w-35 h-35 object-cover"
+            src={logo}
+            alt="RehniMarket"
+            className="h-40 w-auto object-contain"
           />
-          
         </Link>
 
-        <nav className="hidden lg:flex gap-8 font-medium">
-          <Link to="/">Inicio</Link>
-          <Link to="/categories">Categorías</Link>
-          <Link to="/products">Productos</Link>
+        <nav className="hidden gap-8 font-medium lg:flex">
+          <NavLink to="/" end className={desktopLink}>
+            Inicio
+          </NavLink>
+
+          <NavLink to="/categories" className={desktopLink}>
+            Categorías
+          </NavLink>
+
+          <NavLink to="/products" className={desktopLink}>
+            Productos
+          </NavLink>
         </nav>
 
-        <div className="hidden xl:block relative w-96">
+        {/* BUSCADOR DESKTOP */}
+        <div ref={desktopSearchRef} className="relative hidden w-96 xl:block">
           <input
             type="text"
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            onFocus={() => {
+              if (search.trim()) setShowDropdown(true);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearch();
+              }
+            }}
             placeholder="Buscar productos..."
-            className="w-full border rounded-full py-3 pl-5 pr-12 outline-none focus:border-[#6D0F2D]"
+            className="w-full rounded-full border py-3 pl-5 pr-12 outline-none focus:border-[#6D0F2D]"
           />
 
           <Search
             size={20}
-            className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-500"
+            onClick={handleSearch}
+            className="absolute right-5 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500"
           />
+
+          {renderSearchDropdown()}
         </div>
 
-        <div className="hidden lg:flex gap-5 items-center">
+        <div className="hidden items-center gap-5 lg:flex">
           {role == null ? (
             <>
               <Link to="/login" className="font-medium">
                 Iniciar sesión
               </Link>
-              <Link to="/register-user" className="bg-[#6D0F2D] hover:bg-[#530A20] text-white px-6 py-3 rounded-xl transition">
+
+              <Link
+                to="/register-user"
+                className="rounded-xl bg-[#6D0F2D] px-6 py-3 text-white transition hover:bg-[#530A20]"
+              >
                 Registrarse
               </Link>
             </>
-            ) : (
-              <ProfileDropdown />
-            )
-          }
+          ) : (
+            <ProfileDropdown />
+          )}
         </div>
-        <button
 
+        <button
           onClick={() => setOpen(!open)}
+          aria-label={open ? "Cerrar menú" : "Abrir menú"}
+          aria-expanded={open}
           className="lg:hidden"
         >
           {open ? <X size={28} /> : <Menu size={28} />}
@@ -64,94 +278,97 @@ export default function Navbar() {
 
       </div>
 
+      {open && (
+        <div className="border-t border-gray-200 bg-white lg:hidden">
+          <div className="p-5">
 
-{open && (
-  <div className="lg:hidden border-t border-gray-200 bg-white">
-    <div className="p-5">
+            {/* BUSCADOR MÓVIL */}
+            <div ref={mobileSearchRef} className="relative mb-5">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onFocus={() => {
+                  if (search.trim()) setShowDropdown(true);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleSearch();
+                  }
+                }}
+                placeholder="Buscar productos..."
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-4 pr-11 text-sm outline-none transition focus:border-[#6D0F2D] focus:bg-white"
+              />
 
-      {/* BUSCADOR MÓVIL */}
-      <div className="relative mb-5">
-        <input
-          type="text"
-          placeholder="Buscar productos..."
-          className="w-full rounded-xl border border-gray-200 bg-gray-50 py-3 pl-4 pr-11 text-sm outline-none transition focus:border-[#6D0F2D] focus:bg-white"
-        />
+              <Search
+                size={18}
+                onClick={handleSearch}
+                className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400"
+              />
 
-        <Search
-          size={18}
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
-        />
-      </div>
+              {renderSearchDropdown()}
+            </div>
 
-      {/* NAVEGACIÓN */}
-      <nav className="flex flex-col gap-1">
+            {/* NAVEGACIÓN */}
+            <nav className="flex flex-col gap-1">
+              <NavLink
+                to="/"
+                end
+                onClick={() => setOpen(false)}
+                className={mobileLink}
+              >
+                Inicio
+              </NavLink>
 
-        <Link
-          to="/"
-          onClick={() => setOpen(false)}
-          className="rounded-xl px-4 py-3.5 text-sm font-medium text-gray-800 transition hover:bg-gray-50"
-        >
-          Inicio
-        </Link>
+              <NavLink
+                to="/categories"
+                onClick={() => setOpen(false)}
+                className={mobileLink}
+              >
+                Categorías
+              </NavLink>
 
-        <Link
-          to="/categories"
-          onClick={() => setOpen(false)}
-          className="rounded-xl px-4 py-3.5 text-sm font-medium text-gray-800 transition hover:bg-gray-50"
-        >
-          Categorías
-        </Link>
+              <NavLink
+                to="/products"
+                onClick={() => setOpen(false)}
+                className={mobileLink}
+              >
+                Productos
+              </NavLink>
+            </nav>
 
-        <Link
-          to="/products"
-          onClick={() => setOpen(false)}
-          className="rounded-xl px-4 py-3.5 text-sm font-medium text-gray-800 transition hover:bg-gray-50"
-        >
-          Productos
-        </Link>
+            <div className="my-4 border-t border-gray-200" />
 
-      </nav>
+            {role == null ? (
+              <div className="flex flex-col gap-3">
+                <Link
+                  to="/login"
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                >
+                  Iniciar sesión
+                </Link>
 
-      {/* SEPARADOR */}
-      <div className="my-4 border-t border-gray-200" />
+                <Link
+                  to="/register-user"
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl bg-[#6D0F2D] px-4 py-3 text-center text-sm font-medium text-white transition hover:bg-[#530A20]"
+                >
+                  Registrarse
+                </Link>
+              </div>
+            ) : (
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+                <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-gray-400">
+                  Mi cuenta
+                </p>
 
-      {/* AUTENTICACIÓN */}
-      {role == null ? (
-        <div className="flex flex-col gap-3">
-
-          <Link
-            to="/login"
-            onClick={() => setOpen(false)}
-            className="rounded-xl border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-          >
-            Iniciar sesión
-          </Link>
-
-          <Link
-            to="/register-user"
-            onClick={() => setOpen(false)}
-            className="rounded-xl bg-[#6D0F2D] px-4 py-3 text-center text-sm font-medium text-white transition hover:bg-[#530A20]"
-          >
-            Registrarse
-          </Link>
-
-        </div>
-      ) : (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
-
-          <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-gray-400">
-            Mi cuenta
-          </p>
-
-          <ProfileDropdown />
-
+                <ProfileDropdown />
+              </div>
+            )}
+          </div>
         </div>
       )}
-
-    </div>
-  </div>
-)}
-
     </header>
   );
 }

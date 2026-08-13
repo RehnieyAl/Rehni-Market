@@ -18,6 +18,9 @@ class config():
     ADMIN_NAME = os.getenv("USER_NAME_ADMIN")
     ADMIN_DEFAULT = os.getenv("ADMIN_DEFAULT")
     PASSWORD_DEFAULT = os.getenv("PASSWORD_DEFAULT")
+    OWNER_NAME = os.getenv("USER_NAME_OWNER")
+    OWNER_DEFAULT = os.getenv("OWNER_DEFAULT")
+    OWNER_PASSWORD_DEFAULT = os.getenv("OWNER_PASSWORD_DEFAULT")
     RUN_SEED = os.getenv("RUN_SEED", "false").lower() == "true"
 
 config = config()

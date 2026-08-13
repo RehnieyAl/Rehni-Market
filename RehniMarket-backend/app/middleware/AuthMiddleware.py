@@ -6,8 +6,13 @@ from app.services.authentication.JWTService import verify_token
 from app.core.ErrorCodes import ErrorCodes
 from app.core.Exceptions import api_error
 
-from app.middleware.PublicRoutes import PUBLIC_ROUTES
-from app.middleware.RolePermissions import ROLES_PERMISSIONS_ROUTERS
+from app.middleware.PublicRoutes import (
+    PUBLIC_ROUTES,
+    PUBLIC_CATALOG_SPECIFICATIONS_PREFIX,
+    PUBLIC_CATALOG_SPECIFICATIONS_SUFFIX,
+    PUBLIC_PRODUCT_DETAIL_PREFIX,
+)
+from app.middleware.RolePermissions import ROLES_PERMISSIONS_ROUTERS, FULL_ACCESS_ROLES
 from app.middleware.AuthUser import get_authenticated_user
 
 from app.database.Connection import SessionLocal
@@ -23,6 +28,19 @@ async def auth_middleware(request: Request, call_next):
 
     if path in PUBLIC_ROUTES:
         print("PUBLIC ROUTE:", path)
+        return await call_next(request)
+
+    if (
+        path.startswith(PUBLIC_CATALOG_SPECIFICATIONS_PREFIX)
+        and path.endswith(PUBLIC_CATALOG_SPECIFICATIONS_SUFFIX)
+    ):
+        print("PUBLIC ROUTE (catalog specifications):", path)
+        return await call_next(request)
+
+    # /public/products/{product_id} (detalle publico). "/public/products/daily"
+    # ya coincidio arriba por igualdad exacta y nunca llega aqui.
+    if path.startswith(PUBLIC_PRODUCT_DETAIL_PREFIX):
+        print("PUBLIC ROUTE (product detail):", path)
         return await call_next(request)
 
     auth_header = request.headers.get("Authorization")
@@ -159,28 +177,24 @@ async def auth_middleware(request: Request, call_next):
             request.state.role = role
             request.state.user = user
 
-            if role == "admin":
-                return await call_next(request)
+            if role not in FULL_ACCESS_ROLES:
+                allowed_routes = ROLES_PERMISSIONS_ROUTERS[role]
 
-            allowed_routes = ROLES_PERMISSIONS_ROUTERS[role]
-
-            has_permission = any(
-                path.startswith(route)
-                for route in allowed_routes
-            )
-
-            if not has_permission:
-                return JSONResponse(
-                    status_code=403,
-                    content={
-                        "detail": {
-                            "code": ErrorCodes.FORBIDDEN,
-                            "message": "No tienes permiso para acceder a este recurso",
-                        }
-                    },
+                has_permission = any(
+                    path.startswith(route)
+                    for route in allowed_routes
                 )
 
-            return await call_next(request)
+                if not has_permission:
+                    return JSONResponse(
+                        status_code=403,
+                        content={
+                            "detail": {
+                                "code": ErrorCodes.FORBIDDEN,
+                                "message": "No tienes permiso para acceder a este recurso",
+                            }
+                        },
+                    )
 
         finally:
             database.close()
@@ -200,3 +214,14 @@ async def auth_middleware(request: Request, call_next):
                 }
             },
         )
+
+    # A partir de aqui la autenticacion/autorizacion ya quedo resuelta con
+    # exito. call_next() se invoca FUERA del try/except de arriba a
+    # proposito: ese try/except esta pensado solo para fallos de
+    # verificacion de token/usuario, no para lo que pase dentro del
+    # endpoint real. Si quedaba adentro, cualquier error de la ruta (por
+    # ejemplo una validacion de Pydantic al resolver un Depends, como
+    # UpdateProductRequest.as_form) se atrapaba aqui y se reportaba como
+    # 401 "Token invalido" en vez de dejar que FastAPI lo convierta en su
+    # respuesta real (422, 500, etc.).
+    return await call_next(request)

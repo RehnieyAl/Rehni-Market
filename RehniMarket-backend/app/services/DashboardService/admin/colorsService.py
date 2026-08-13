@@ -103,6 +103,16 @@ def delete_color_service(
             detail="No puedes eliminar un color que está siendo utilizado por productos."
         )
 
+    # Ademas de usarse en variantes (arriba), un color tambien puede estar
+    # asignado como color principal de un producto (Product.main_color_id).
+    # Sin este chequeo, borrar ese color fallaria con un error de FK sin
+    # manejar (500) en vez de un 409 claro.
+    if len(color.products) > 0:
+        raise HTTPException(
+            status_code=409,
+            detail="No puedes eliminar un color que está siendo utilizado como color principal de un producto."
+        )
+
     database.delete(color)
     database.commit()
 

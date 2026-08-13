@@ -122,6 +122,7 @@ def update_admin_user_service(
     user_id: UUID,
     admin_id: UUID,
     data: UpdateAdminUserRequest,
+    acting_role: str,
 ):
 
     if admin_id == user_id:
@@ -141,6 +142,14 @@ def update_admin_user_service(
             404,
             ErrorCodes.USER_NOT_FOUND,
             "Usuario no encontrado.",
+        )
+
+    # Las cuentas owner solo pueden ser gestionadas por otro owner.
+    if user.role and user.role.name == "owner" and acting_role != "owner":
+        return api_error(
+            403,
+            ErrorCodes.FORBIDDEN,
+            "No tienes permisos para modificar una cuenta Owner.",
         )
 
     updated = False
@@ -186,6 +195,14 @@ def update_admin_user_service(
                 400,
                 ErrorCodes.INVALID_ROLE,
                 "Una empresa no puede cambiar de rol.",
+            )
+
+        # Solo un owner puede asignar (o quitar) el rol owner.
+        if new_role == "owner" and acting_role != "owner":
+            return api_error(
+                403,
+                ErrorCodes.FORBIDDEN,
+                "Solo un Owner puede asignar el rol Owner.",
             )
 
         role = (
@@ -234,6 +251,7 @@ def toggle_admin_user_status_service(
     database: Session,
     user_id: UUID,
     admin_id: UUID,
+    acting_role: str,
 ):
 
     if admin_id == user_id:
@@ -253,6 +271,14 @@ def toggle_admin_user_status_service(
             404,
             ErrorCodes.USER_NOT_FOUND,
             "Usuario no encontrado.",
+        )
+
+    # Las cuentas owner solo pueden ser bloqueadas/desbloqueadas por otro owner.
+    if user.role and user.role.name == "owner" and acting_role != "owner":
+        return api_error(
+            403,
+            ErrorCodes.FORBIDDEN,
+            "No tienes permisos para bloquear o desbloquear una cuenta Owner.",
         )
 
     user.isActive = not user.isActive
@@ -291,6 +317,7 @@ def delete_admin_user_service(
     database: Session,
     user_id: UUID,
     admin_id: UUID,
+    acting_role: str,
 ) -> None:
 
     if user_id == admin_id:
@@ -312,7 +339,18 @@ def delete_admin_user_service(
             "Usuario no encontrado.",
         )
 
-    if user.role and user.role.name == "admin":
+    # Las cuentas owner no pueden eliminarse desde esta operación (ni
+    # siquiera por otro owner) en esta etapa.
+    if user.role and user.role.name == "owner":
+        return api_error(
+            403,
+            ErrorCodes.FORBIDDEN,
+            "No se puede eliminar la cuenta de un Owner.",
+        )
+
+    # Un admin no puede eliminar la cuenta de otro administrador; un owner
+    # sí puede, porque gestionar cuentas admin es una capacidad exclusiva de OWNER.
+    if user.role and user.role.name == "admin" and acting_role != "owner":
         return api_error(
             403,
             ErrorCodes.FORBIDDEN,

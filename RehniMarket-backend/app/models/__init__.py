@@ -15,3 +15,4 @@ from .ModelVariantImage import ProductVariantImage
 from .ModelVariantSpecification import VariantSpecification
 from .ModelColor import ColorVariant
 from .ModelAdminActivity import AdminActivity
+from .ModelAdvertisement import Advertisement

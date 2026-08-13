@@ -7,7 +7,7 @@ from app.utils.Security import hash_password
 from app.Config import config
 
 def seed_roles(db: Session):
-    roles = ["user", "company", "admin"]
+    roles = ["user", "company", "admin", "owner"]
 
     for role_name in roles:
         exists = db.query(Role).filter(Role.name == role_name).first()
@@ -234,8 +234,43 @@ def seed_admin(db: Session):
         db.commit()
 
 
+def seed_owner(db: Session):
+    owner_role = db.query(Role).filter(Role.name == "owner").first()
+
+    if not owner_role:
+        return
+
+    owner_name = config.OWNER_NAME
+    owner_email = config.OWNER_DEFAULT
+    owner_password = config.OWNER_PASSWORD_DEFAULT
+
+    # Si no se configuraron las variables de entorno del owner,
+    # no se crea ninguna cuenta (evita insertar un usuario con
+    # correo/contraseña vacios).
+    if not owner_name or not owner_email or not owner_password:
+        return
+
+    exists = db.query(Users).filter(Users.email == owner_email).first()
+
+    if not exists:
+        owner = Users(
+            id=uuid.uuid4(),
+            fullName=owner_name,
+            email=owner_email,
+            tell="0000000000",
+            hashed_password=hash_password(owner_password),
+            role_id=owner_role.id,
+            verified = True
+
+        )
+
+        db.add(owner)
+        db.commit()
+
+
 def run_seed(db: Session):
     seed_roles(db)
     seed_catalog(db)
     seed_specifications(db)
     seed_admin(db)
+    seed_owner(db)

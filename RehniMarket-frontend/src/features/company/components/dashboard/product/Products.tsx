@@ -29,6 +29,7 @@ export default function Products() {
 
   const [openProductModal, setOpenProductModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
 
   const loadProducts = useCallback(async () => {
     try {
@@ -81,6 +82,10 @@ export default function Products() {
   };
 
   const handleDeleteProduct = async (productId: string) => {
+    if (!window.confirm("¿Eliminar este producto? Esta acción no se puede deshacer.")) {
+      return;
+    }
+
     try {
       await deleteMyProduct(productId);
 
@@ -238,9 +243,10 @@ export default function Products() {
                     </button>
 
                     <button
-                      onClick={() =>
-                        setOpenEditModal(true)
-                      }
+                      onClick={() => {
+                        setEditingProductId(product.id);
+                        setOpenEditModal(true);
+                      }}
                       className="rounded-xl p-3 hover:bg-gray-100"
                       title="Editar producto"
                     >
@@ -294,7 +300,12 @@ export default function Products() {
 
       <EditProductModal
         isOpen={openEditModal}
-        onClose={() => setOpenEditModal(false)}
+        productId={editingProductId}
+        onClose={() => {
+          setOpenEditModal(false);
+          setEditingProductId(null);
+        }}
+        onSuccess={loadProducts}
       />
     </>
   );
