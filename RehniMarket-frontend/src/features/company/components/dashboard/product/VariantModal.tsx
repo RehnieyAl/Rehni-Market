@@ -17,6 +17,7 @@ import { getColors } from "@/features/company/api/colorService";
 import { getCatalogSpecifications } from "@/features/company/api/catalogService";
 
 import SpecificationChecklist from "./SpecificationChecklist";
+import { parseNumericField } from "@/shared/utils/parseNumericField";
 
 import type {
   ColorResponse,
@@ -58,15 +59,18 @@ export default function VariantModal({
   const [specTemplates, setSpecTemplates] = useState<SpecificationResponse[]>([]);
 
   const [name, setName] = useState("");
-  const [price, setPrice] = useState<number | "">("");
-  const [stock, setStock] = useState<number | "">("");
+  // String crudo mientras el usuario escribe - la conversión a número
+  // ocurre únicamente al enviar (ver shared/utils/parseNumericField.ts).
+  const [price, setPrice] = useState("");
+  const [stock, setStock] = useState("");
   const [colorId, setColorId] = useState("");
+  const [errors, setErrors] = useState<{ price?: string; stock?: string; discount?: string }>({});
 
   // Descuento propio de la variante - solo editable en modo edición (igual
   // que el descuento del producto base, que tampoco existe en el flujo de
   // creación - ver ProductForm.tsx).
   const [discountEnable, setDiscountEnable] = useState(false);
-  const [discountValue, setDiscountValue] = useState<number | "">("");
+  const [discountValue, setDiscountValue] = useState("");
 
   // Modo creación: especificaciones e imágenes viajan juntas con el
   // formulario, en el mismo POST (igual que ProductForm al crear producto).
@@ -103,6 +107,7 @@ export default function VariantModal({
     setVariant(null);
     setLoadError(null);
     setPendingSpecTemplateIds(new Set());
+    setErrors({});
   };
 
   const handleClose = () => {
@@ -139,11 +144,13 @@ export default function VariantModal({
 
           setVariant(detail);
           setName(detail.name);
-          setPrice(Number(detail.price));
-          setStock(detail.stock);
+          // detail.price / detail.discount_value ya llegan como string
+          // (Decimal serializado) - se usan tal cual, sin pasar por Number().
+          setPrice(detail.price);
+          setStock(String(detail.stock));
           setColorId(detail.color?.id ?? "");
           setDiscountEnable(detail.discount_enable);
-          setDiscountValue(Number(detail.discount_value));
+          setDiscountValue(detail.discount_value);
         }
       } catch (error) {
         if (!cancelled) {
@@ -347,6 +354,43 @@ export default function VariantModal({
   const handleSubmit = async () => {
     if (!name.trim() || !colorId || price === "" || stock === "") return;
 
+    // La conversión a número ocurre únicamente aquí, al enviar - nunca
+    // mientras el usuario escribe (ver shared/utils/parseNumericField.ts).
+    const parsedPrice = parseNumericField(price);
+    const parsedStock = parseNumericField(stock, { integer: true });
+    const parsedDiscount = discountValue === "" ? null : parseNumericField(discountValue);
+
+    const nextErrors: typeof errors = {};
+
+    if (parsedPrice === null || parsedPrice < 0) {
+      nextErrors.price = "Ingresa un precio válido (un número mayor o igual a 0).";
+    }
+
+    if (parsedStock === null || parsedStock < 0) {
+      nextErrors.stock =
+        "Ingresa una cantidad de stock válida (un número entero mayor o igual a 0).";
+    }
+
+    if (
+      discountEnable &&
+      discountValue !== "" &&
+      (parsedDiscount === null || parsedDiscount < 0 || parsedDiscount > 100)
+    ) {
+      nextErrors.discount = "Ingresa un porcentaje de descuento válido (entre 0 y 100).";
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      return;
+    }
+
+    setErrors({});
+
+    // A partir de aquí parsedPrice/parsedStock son números finitos válidos
+    // (ya se validó arriba) - la aserción evita repetir el check de nulidad.
+    const validPrice = parsedPrice as number;
+    const validStock = parsedStock as number;
+
     try {
       setSaving(true);
 
@@ -354,18 +398,18 @@ export default function VariantModal({
         const patch: Parameters<typeof updateVariant>[2] = {};
 
         if (variant && name !== variant.name) patch.name = name;
-        if (variant && Number(price) !== Number(variant.price)) patch.price = Number(price);
+        if (variant && validPrice !== Number(variant.price)) patch.price = validPrice;
         if (variant && discountEnable !== variant.discount_enable) {
           patch.discountEnable = discountEnable;
         }
         if (
           variant &&
-          discountValue !== "" &&
-          Number(discountValue) !== Number(variant.discount_value)
+          parsedDiscount !== null &&
+          parsedDiscount !== Number(variant.discount_value)
         ) {
-          patch.discountValue = Number(discountValue);
+          patch.discountValue = parsedDiscount;
         }
-        if (variant && Number(stock) !== variant.stock) patch.stock = Number(stock);
+        if (variant && validStock !== variant.stock) patch.stock = validStock;
         if (variant && colorId !== (variant.color?.id ?? "")) patch.colorId = colorId;
 
         if (Object.keys(patch).length > 0) {
@@ -374,8 +418,8 @@ export default function VariantModal({
       } else {
         await createVariant(productId, {
           name: name.trim(),
-          price: Number(price),
-          stock: Number(stock),
+          price: String(validPrice),
+          stock: String(validStock),
           colorId,
           // No se envían especificaciones marcadas pero sin valor todavía.
           specifications: newSpecifications.filter((spec) => spec.value.trim() !== ""),
@@ -480,11 +524,13 @@ export default function VariantModal({
                   type="text"
                   inputMode="numeric"
                   value={price}
-                  onChange={(e) =>
-                    setPrice(e.target.value === "" ? "" : Number(e.target.value))
-                  }
+                  onChange={(e) => setPrice(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500"
                 />
+
+                {errors.price && (
+                  <p className="mt-1 text-xs text-red-600">{errors.price}</p>
+                )}
               </div>
 
               <div>
@@ -494,11 +540,13 @@ export default function VariantModal({
                   type="text"
                   inputMode="numeric"
                   value={stock}
-                  onChange={(e) =>
-                    setStock(e.target.value === "" ? "" : Number(e.target.value))
-                  }
+                  onChange={(e) => setStock(e.target.value)}
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500"
                 />
+
+                {errors.stock && (
+                  <p className="mt-1 text-xs text-red-600">{errors.stock}</p>
+                )}
               </div>
             </div>
 
@@ -513,30 +561,27 @@ export default function VariantModal({
                     checked={discountEnable}
                     onChange={(e) => {
                       setDiscountEnable(e.target.checked);
-                      if (!e.target.checked) setDiscountValue(0);
+                      if (!e.target.checked) setDiscountValue("0");
                     }}
                   />
                   Variante en descuento
                 </label>
 
                 {discountEnable && (
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={discountValue}
-                    onChange={(e) => {
-                      if (e.target.value === "") {
-                        setDiscountValue("");
-                        return;
-                      }
+                  <>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={discountValue}
+                      onChange={(e) => setDiscountValue(e.target.value)}
+                      placeholder="Porcentaje de descuento (%)"
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500"
+                    />
 
-                      const parsed = Number(e.target.value);
-
-                      setDiscountValue(Math.min(100, Math.max(0, parsed)));
-                    }}
-                    placeholder="Porcentaje de descuento (%)"
-                    className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500"
-                  />
+                    {errors.discount && (
+                      <p className="mt-1 text-xs text-red-600">{errors.discount}</p>
+                    )}
+                  </>
                 )}
               </div>
             )}

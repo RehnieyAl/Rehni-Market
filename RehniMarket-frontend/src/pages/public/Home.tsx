@@ -2,8 +2,8 @@ import NavBar from "@/shared/components/navbar/navbar";
 import Footer from "@/shared/components/Footer";
 
 import Hero from "@/features/public/home/components/Hero";
+import CategoriesSection from "@/features/public/home/components/CategoriesSection";
 import DailyProducts from "@/features/public/home/components/DailyProducts";
-import CommunityBanner from "@/features/public/home/components/CommunityBanner";
 
 export default function Home() {
   return (
@@ -18,15 +18,16 @@ export default function Home() {
         </section>
 
         <div className="mx-auto w-full max-w-[1500px] px-4 sm:px-6 lg:px-8">
+          {/* EXPLORAR CATEGORÍAS */}
+          <section className="mt-8 sm:mt-10">
+            <CategoriesSection />
+          </section>
+
           {/* PRODUCTOS DEL DÍA */}
-          <section className="mt-6 sm:mt-8">
+          <section className="mb-10 mt-10 sm:mb-12 sm:mt-12">
             <DailyProducts />
           </section>
 
-          {/* COMUNIDAD */}
-          <section className="mt-6 mb-8 sm:mt-8 sm:mb-10">
-            <CommunityBanner />
-          </section>
         </div>
       </main>
 

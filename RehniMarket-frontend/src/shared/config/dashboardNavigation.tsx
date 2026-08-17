@@ -1,16 +1,17 @@
 import {
   House,
   User,
-  CirclePlus,
   Package,
   Truck,
   Store,
   Users,
   Building2,
   Megaphone,
-  ShoppingBag,
   Heart,
   BarChart3,
+  MapPin,
+  Settings,
+  Coins,
 } from "lucide-react";
 
 import type { SidebarItem } from "../components/dashboard/Sidebar";
@@ -51,6 +52,16 @@ const adminNavigation: SidebarItem[] = [
     text: "Reportes",
     icon: <BarChart3 size={22} />,
   },
+  {
+    id: "wallet",
+    text: "RehniCoin",
+    icon: <Coins size={22} />,
+  },
+  {
+    id: "account",
+    text: "Configuración de cuenta",
+    icon: <User size={22} />,
+  },
 ];
 
 // Opciones exclusivas de OWNER. Por ahora la unica capacidad exclusiva
@@ -79,11 +90,6 @@ export const dashboardNavigation: Record<UserRole, SidebarItem[]> = {
     {
       id: "orders",
       text: "Pedidos",
-      icon: <CirclePlus size={22} />,
-    },
-    {
-      id: "process-orders",
-      text: "Procesar pedidos",
       icon: <Truck size={22} />,
     },
     {
@@ -93,7 +99,7 @@ export const dashboardNavigation: Record<UserRole, SidebarItem[]> = {
     },
     {
       id: "profile",
-      text: "Mi perfil",
+      text: "Configuración de cuenta",
       icon: <User size={22} />,
     },
   ],
@@ -107,7 +113,7 @@ export const dashboardNavigation: Record<UserRole, SidebarItem[]> = {
     {
       id: "orders",
       text: "Mis pedidos",
-      icon: <ShoppingBag size={22} />,
+      icon: <Package size={22} />,
     },
     {
       id: "favorites",
@@ -115,9 +121,14 @@ export const dashboardNavigation: Record<UserRole, SidebarItem[]> = {
       icon: <Heart size={22} />,
     },
     {
+      id: "addresses",
+      text: "Direcciones",
+      icon: <MapPin size={22} />,
+    },
+    {
       id: "profile",
-      text: "Mi perfil",
-      icon: <User size={22} />,
+      text: "Configuración de cuenta",
+      icon: <Settings size={22} />,
     },
   ],
 };

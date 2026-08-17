@@ -37,6 +37,7 @@ from app.services.DashboardService.admin.CatalogService import (
     get_catalogs_service,
     create_catalog_service,
     update_catalog_service,
+    change_catalog_status_service,
     delete_catalog_service,
 )
 
@@ -98,6 +99,7 @@ from app.schemas.SchemaDashboard.SchemaCatalog import (
     CreateCatalogRequest,
     UpdateCatalogRequest,
     CatalogResponse,
+    CatalogStatusRequest,
     CreateSpecificationRequest,
     UpdateSpecificationRequest,
     SpecificationResponse,
@@ -319,13 +321,19 @@ def get_catalogs(
     response_model=CatalogResponse,
 )
 def create_catalog(
-    data: CreateCatalogRequest,
+    data: CreateCatalogRequest = Depends(CreateCatalogRequest.as_form),
+    # Igual que create_advertisement (ver AdvertisementRouter): opcional,
+    # una categoría puede crearse sin imagen y agregársela después.
+    image: UploadFile | None = File(None),
+    nas: NasService = Depends(get_nas_service),
     database: Session = Depends(get_db),
 ):
 
     return create_catalog_service(
         database,
         data,
+        image,
+        nas,
     )
 
 
@@ -335,7 +343,9 @@ def create_catalog(
 )
 def update_catalog(
     catalog_id: UUID,
-    data: UpdateCatalogRequest,
+    data: UpdateCatalogRequest = Depends(UpdateCatalogRequest.as_form),
+    image: UploadFile | None = File(None),
+    nas: NasService = Depends(get_nas_service),
     database: Session = Depends(get_db),
 ):
 
@@ -343,6 +353,25 @@ def update_catalog(
         database,
         catalog_id,
         data,
+        image,
+        nas,
+    )
+
+
+@router.patch(
+    "/dashboard/change-status-catalog/{catalog_id}",
+    response_model=CatalogResponse,
+)
+def change_catalog_status(
+    catalog_id: UUID,
+    data: CatalogStatusRequest,
+    database: Session = Depends(get_db),
+):
+
+    return change_catalog_status_service(
+        database,
+        catalog_id,
+        data.is_active,
     )
 
 
@@ -351,12 +380,14 @@ def update_catalog(
 )
 def delete_catalog(
     catalog_id: UUID,
+    nas: NasService = Depends(get_nas_service),
     database: Session = Depends(get_db),
 ):
 
     return delete_catalog_service(
         database,
         catalog_id,
+        nas,
     )
 
 

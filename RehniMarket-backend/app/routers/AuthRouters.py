@@ -12,7 +12,7 @@ from app.schemas.schemaAuth.SchemaRegister import (
     CreateCompanyRequest
 )
 from app.schemas.schemaAuth.SchemaVerifyEmail import VerifyEmailRequest, ChangeEmailRequestOnlyRegistered
-from app.schemas.schemaAuth.SchemaLogin import LoginRequest
+from app.schemas.schemaAuth.SchemaLogin import LoginRequest, UpdateMeRequest
 from app.schemas.schemaAuth.SchemaForgotPassword import ForgotPasswordRequest
 from app.schemas.schemaAuth.SchemaResetPassword import ResetPasswordRequest
 from app.schemas.schemaAuth.SchemaToken import RefreshRequest
@@ -27,7 +27,11 @@ from app.services.authentication.LoginService import login_service
 from app.services.authentication.ForgotPasswordService import forgot_password_service
 from app.services.authentication.ResetPasswordService import reset_password_service
 from app.services.authentication.RefreshTokenService import refresh_token_service
-from app.services.authentication.MeService import get_me_profile_service
+from app.services.authentication.MeService import (
+    get_me_profile_service,
+    update_me_profile_service,
+    update_me_photo_service,
+)
 
 #Servicio de minio (Nasservice)
 
@@ -99,6 +103,40 @@ def get_me(request: Request, database: Session = Depends(get_db)):
     return get_me_profile_service(
         user_id=request.state.user_id,
         database=database
+    )
+
+
+# ==============================
+# CONFIGURACIÓN DE CUENTA (común a cualquier rol)
+# ==============================
+# Nombre/correo/foto de perfil pertenecen a la CUENTA autenticada, no a
+# ningún módulo específico de rol - por eso viven bajo /auth, no bajo
+# /company/dashboard, /admin/dashboard, etc. (ver ALCANCE > "Configuración
+# de cuenta" es común a user/company/admin/owner).
+
+@router.patch("/me")
+def update_me(request: Request, data: UpdateMeRequest, database: Session = Depends(get_db)):
+
+    return update_me_profile_service(
+        user_id=request.state.user_id,
+        data=data,
+        database=database,
+    )
+
+
+@router.patch("/me/photo")
+def update_me_photo(
+    request: Request,
+    photo: UploadFile = File(...),
+    nas: NasService = Depends(get_nas_service),
+    database: Session = Depends(get_db),
+):
+
+    return update_me_photo_service(
+        user_id=request.state.user_id,
+        photo=photo,
+        nas=nas,
+        database=database,
     )
 
 

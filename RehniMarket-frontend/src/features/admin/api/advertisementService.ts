@@ -7,6 +7,34 @@ import type {
   UpdateAdvertisementRequest,
 } from "../types/request";
 
+// Compartido por create/update (ver ALCANCE > "sin duplicar lógica") -
+// un solo lugar que sabe qué campos de target existen, en vez de repetir
+// la lista de 7 campos en ambas funciones.
+function appendTargetFields(
+  formData: FormData,
+  data: Partial<CreateAdvertisementRequest & UpdateAdvertisementRequest>,
+) {
+  if (data.target_type !== undefined) formData.append("target_type", data.target_type);
+  if (data.target_product_id !== undefined) {
+    formData.append("target_product_id", data.target_product_id);
+  }
+  if (data.target_catalog_id !== undefined) {
+    formData.append("target_catalog_id", data.target_catalog_id);
+  }
+  if (data.target_company_id !== undefined) {
+    formData.append("target_company_id", data.target_company_id);
+  }
+  if (data.minimum_discount !== undefined) {
+    formData.append("minimum_discount", data.minimum_discount.toString());
+  }
+  if (data.maximum_stock !== undefined) {
+    formData.append("maximum_stock", data.maximum_stock.toString());
+  }
+  if (data.max_age_days !== undefined) {
+    formData.append("max_age_days", data.max_age_days.toString());
+  }
+}
+
 export async function getAdminAdvertisements(): Promise<AdminAdvertisementResponse[]> {
   const response = await api.get<AdminAdvertisementResponse[]>(
     "/admin/dashboard/get-advertisements",
@@ -28,6 +56,7 @@ export async function createAdminAdvertisement(
   formData.append("is_active", data.is_active.toString());
   formData.append("image", data.image);
   if (data.mobile_image) formData.append("mobile_image", data.mobile_image);
+  appendTargetFields(formData, data);
 
   const response = await api.post<AdminAdvertisementResponse>(
     "/admin/dashboard/create-advertisement",
@@ -54,6 +83,10 @@ export async function updateAdminAdvertisement(
   if (data.remove_mobile_image !== undefined) {
     formData.append("remove_mobile_image", data.remove_mobile_image.toString());
   }
+  if (data.clear_target !== undefined) {
+    formData.append("clear_target", data.clear_target.toString());
+  }
+  appendTargetFields(formData, data);
 
   const response = await api.patch<AdminAdvertisementResponse>(
     `/admin/dashboard/update-advertisement/${advertisementId}`,

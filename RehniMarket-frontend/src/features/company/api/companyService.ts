@@ -3,14 +3,25 @@ import type {
 UpdateProfileRequest,
 CompanyMediaUpload,
 } from "@/features/company/types/request";
+import type {
+DashboardHomeResponse,
+ProductsSummaryResponse,
+CompanyProfileResponse,
+} from "@/features/company/types/response";
 
-export async function getCompanyHero() {
+export async function getCompanyHero(): Promise<DashboardHomeResponse> {
 const { data } = await api.get("/company/dashboard/me");
 
 return data;
 }
 
-export async function getMyCompanyProfile() {
+export async function getProductsSummary(): Promise<ProductsSummaryResponse> {
+const { data } = await api.get("/company/dashboard/products-summary");
+
+return data;
+}
+
+export async function getMyCompanyProfile(): Promise<CompanyProfileResponse> {
 const { data } = await api.get("/company/dashboard/my-profile");
 
 return data;

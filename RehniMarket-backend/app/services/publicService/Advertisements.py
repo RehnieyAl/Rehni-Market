@@ -6,12 +6,6 @@ from app.services.NasService import build_media_url
 
 
 def get_active_advertisements_service(database: Session) -> list[AdvertisementResponse]:
-    """
-    Anuncios para el Hero del Home publico: solo activos, en orden de
-    prioridad (ver ALCANCE > ESTADO / ORDEN DE ANUNCIOS). Reutiliza el
-    mismo schema de respuesta que el dashboard admin (AdvertisementResponse)
-    - no hay ningun campo admin-only que ocultar.
-    """
 
     advertisements = (
         database.query(Advertisement)
@@ -26,11 +20,8 @@ def get_active_advertisements_service(database: Session) -> list[AdvertisementRe
             title=advertisement.title,
             description=advertisement.description,
 
-            # Desktop/tablet
             image_url=build_media_url(advertisement.image_url),
 
-            # Mobile (nullable - el fallback a image_url lo resuelve el
-            # frontend en el Hero)
             mobile_image_url=(
                 build_media_url(advertisement.mobile_image_url)
                 if advertisement.mobile_image_url
@@ -42,6 +33,14 @@ def get_active_advertisements_service(database: Session) -> list[AdvertisementRe
             is_active=advertisement.is_active,
             order=advertisement.order,
             created_at=advertisement.created_at,
+
+            target_type=advertisement.target_type,
+            target_product_id=advertisement.target_product_id,
+            target_catalog_id=advertisement.target_catalog_id,
+            target_company_id=advertisement.target_company_id,
+            minimum_discount=advertisement.minimum_discount,
+            maximum_stock=advertisement.maximum_stock,
+            max_age_days=advertisement.max_age_days,
         )
         for advertisement in advertisements
     ]

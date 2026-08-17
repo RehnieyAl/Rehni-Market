@@ -103,3 +103,42 @@ class Users(Base):
         back_populates="target_user",
     )
 
+    # =========================================================
+    # COMPRAS (rol USER - ver ALCANCE > Restricciones de compra)
+    # =========================================================
+
+    cart: Mapped["Cart | None"] = relationship(
+        "Cart",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    orders: Mapped[list["Order"]] = relationship(
+        "Order",
+        back_populates="user",
+    )
+
+    favorites: Mapped[list["Favorite"]] = relationship(
+        "Favorite",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    reviews: Mapped[list["Review"]] = relationship(
+        "Review",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    addresses: Mapped[list["Address"]] = relationship(
+        "Address",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
+    wallet: Mapped["Wallet | None"] = relationship(
+        "Wallet",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+

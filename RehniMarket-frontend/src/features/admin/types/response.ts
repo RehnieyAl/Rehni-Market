@@ -1,3 +1,5 @@
+import type { AdvertisementTargetType } from "./request";
+
 export type CompanyCertificateStatus =
   | "pending"
   | "approved"
@@ -97,6 +99,13 @@ export interface AdminRecentUser {
 export interface AdminCatalogResponse {
   id: string;
   name: string;
+  description: string | null;
+  image_url: string | null;
+  display_order: number;
+  is_active: boolean;
+  // Productos activos/visibles/con stock válido - calculado en el
+  // backend con un único query agregado (ver ALCANCE > Rendimiento).
+  product_count: number;
 }
 
 
@@ -125,9 +134,20 @@ export interface AdminAdvertisementResponse {
   // Mobile - nullable, el Hero público hace fallback a image_url
   mobile_image_url: string | null;
   button_text: string | null;
+  // Calculado por el backend cuando target_type no es null (ver ALCANCE
+  // > Anuncios dinámicos) - solo es editable a mano cuando target_type
+  // es null (anuncio manual clásico).
   button_link: string | null;
   is_active: boolean;
   order: number;
   created_at: string;
+
+  target_type: AdvertisementTargetType | null;
+  target_product_id: string | null;
+  target_catalog_id: string | null;
+  target_company_id: string | null;
+  minimum_discount: number | null;
+  maximum_stock: number | null;
+  max_age_days: number | null;
 }
 

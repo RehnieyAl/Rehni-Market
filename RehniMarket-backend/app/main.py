@@ -14,6 +14,14 @@ from app.routers import publicRouters
 from app.routers import AdminCompanyRouters
 from app.routers import AdminUserRouters
 from app.routers import AdminDashboardRouters
+from app.routers import CartRouter
+from app.routers import CheckoutRouter
+from app.routers import OrderRouter
+from app.routers import FavoriteRouter
+from app.routers import AddressRouter
+from app.routers import WalletRouter
+from app.routers import AdminWalletRouter
+from app.routers import ReviewRouter
 import app.models
 from app.middleware.AuthMiddleware import auth_middleware
 from app.middleware.RateLimitMiddleware import rate_limit_middleware
@@ -90,6 +98,18 @@ app.include_router(publicRouters.router)
 app.include_router(AdminDashboardRouters.router)
 app.include_router(AdminCompanyRouters.router)
 app.include_router(AdminUserRouters.router)
+app.include_router(AdminWalletRouter.router)
+
+# =========================
+# COMPRAS (carrito / checkout / pedidos / favoritos / direcciones / wallet)
+# =========================
+app.include_router(CartRouter.router)
+app.include_router(CheckoutRouter.router)
+app.include_router(OrderRouter.router)
+app.include_router(FavoriteRouter.router)
+app.include_router(AddressRouter.router)
+app.include_router(WalletRouter.router)
+app.include_router(ReviewRouter.router)
 
 
 

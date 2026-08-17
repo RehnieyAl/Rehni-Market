@@ -1,4 +1,4 @@
-from sqlalchemy import String, Boolean, ForeignKey, DateTime, Enum
+from sqlalchemy import String, Boolean, ForeignKey, DateTime, Enum, Text
 from datetime import datetime, timezone
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -34,6 +34,14 @@ class Company(Base):
     addressCompany: Mapped[str] = mapped_column(
         String(100),
         nullable=False,
+    )
+
+    # Descripcion publica de la empresa (perfil publico > "Descripcion").
+    # Nullable porque las empresas ya existentes antes de este campo no
+    # tienen valor - ver migracion add_description_to_company.
+    description: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
     )
 
     CompanyNIT: Mapped[str] = mapped_column(

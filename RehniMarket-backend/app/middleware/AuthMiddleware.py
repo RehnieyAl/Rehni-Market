@@ -11,6 +11,7 @@ from app.middleware.PublicRoutes import (
     PUBLIC_CATALOG_SPECIFICATIONS_PREFIX,
     PUBLIC_CATALOG_SPECIFICATIONS_SUFFIX,
     PUBLIC_PRODUCT_DETAIL_PREFIX,
+    PUBLIC_COMPANY_PROFILE_PREFIX,
 )
 from app.middleware.RolePermissions import ROLES_PERMISSIONS_ROUTERS, FULL_ACCESS_ROLES
 from app.middleware.AuthUser import get_authenticated_user
@@ -41,6 +42,12 @@ async def auth_middleware(request: Request, call_next):
     # ya coincidio arriba por igualdad exacta y nunca llega aqui.
     if path.startswith(PUBLIC_PRODUCT_DETAIL_PREFIX):
         print("PUBLIC ROUTE (product detail):", path)
+        return await call_next(request)
+
+    # /public/company/{company_id} y /public/company/{company_id}/products
+    # (perfil publico de empresa).
+    if path.startswith(PUBLIC_COMPANY_PROFILE_PREFIX):
+        print("PUBLIC ROUTE (company profile):", path)
         return await call_next(request)
 
     auth_header = request.headers.get("Authorization")
@@ -214,14 +221,5 @@ async def auth_middleware(request: Request, call_next):
                 }
             },
         )
-
-    # A partir de aqui la autenticacion/autorizacion ya quedo resuelta con
-    # exito. call_next() se invoca FUERA del try/except de arriba a
-    # proposito: ese try/except esta pensado solo para fallos de
-    # verificacion de token/usuario, no para lo que pase dentro del
-    # endpoint real. Si quedaba adentro, cualquier error de la ruta (por
-    # ejemplo una validacion de Pydantic al resolver un Depends, como
-    # UpdateProductRequest.as_form) se atrapaba aqui y se reportaba como
-    # 401 "Token invalido" en vez de dejar que FastAPI lo convierta en su
-    # respuesta real (422, 500, etc.).
+    
     return await call_next(request)

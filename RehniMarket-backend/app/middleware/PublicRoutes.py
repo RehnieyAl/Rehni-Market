@@ -31,6 +31,12 @@ PUBLIC_ROUTES = [
     # maneja igual que las especificaciones de catalogo, ver
     # PUBLIC_PRODUCT_DETAIL_PREFIX mas abajo.
     "/public/products/daily",
+    # Catalogo publico completo con filtros (Categoria, Precio, Descuento,
+    # Disponibilidad, Ordenamiento - ver ALCANCE > pagina Categorias).
+    # Estatica ("/public/products", sin segmento dinamico) - no confundir
+    # con PUBLIC_PRODUCT_DETAIL_PREFIX ("/public/products/", CON slash
+    # final), que es para el detalle de un producto puntual.
+    "/public/products",
 
 ]
 
@@ -46,3 +52,10 @@ PUBLIC_CATALOG_SPECIFICATIONS_SUFFIX = "/specifications"
 # ALCANCE > "Productos del dia" > navegacion). "/public/products/daily" ya
 # esta cubierta arriba por igualdad exacta y nunca llega a este prefijo.
 PUBLIC_PRODUCT_DETAIL_PREFIX = "/public/products/"
+
+# Rutas publicas con segmento dinamico (company_id): GET
+# /public/company/{company_id} y /public/company/{company_id}/products
+# (perfil publico de empresa, accesible desde el detalle de producto - ver
+# "Vendido por" en ProductDetail.tsx). Mismo motivo que las de arriba: no
+# pueden vivir en PUBLIC_ROUTES por el segmento dinamico.
+PUBLIC_COMPANY_PROFILE_PREFIX = "/public/company/"

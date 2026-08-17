@@ -1,0 +1,56 @@
+from sqlalchemy import String, Boolean, ForeignKey, DateTime
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
+from datetime import datetime, timezone
+from app.database.Connection import Base
+
+
+class Address(Base):
+    """
+    Direcciones de envío del comprador (ver ALCANCE > Modal de
+    direcciones + compra obligatoria con dirección).
+
+    `label`/`full_name`/`additional_instructions` son nullable a nivel de
+    BD (para no romper filas existentes al agregar estas columnas por
+    migración) pero se exigen en la creación a nivel de Pydantic (ver
+    SchemaAddress.py > CreateAddressRequest) - toda dirección NUEVA
+    siempre los trae.
+    """
+
+    __tablename__ = "addresses"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
+    )
+
+    # Nombre de referencia de la dirección (ej. "Casa", "Oficina") - para
+    # que el usuario identifique cuál es cuál en el modal de selección
+    # (ver AddressSelectionModal.tsx).
+    label: Mapped[str | None] = mapped_column(String(60), nullable=True)
+
+    # Nombre completo de quien recibe el pedido en esta dirección - no
+    # necesariamente el titular de la cuenta (ver ALCANCE > snapshot de
+    # pedido).
+    full_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
+
+    country: Mapped[str] = mapped_column(String(60), nullable=False)
+    department: Mapped[str] = mapped_column(String(60), nullable=False)
+    city: Mapped[str] = mapped_column(String(60), nullable=False)
+    address: Mapped[str] = mapped_column(String(150), nullable=False)
+    postal_code: Mapped[str | None] = mapped_column(String(15), nullable=True)
+    phone: Mapped[str] = mapped_column(String(20), nullable=False)
+
+    additional_instructions: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    is_default: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+
+    user = relationship("Users", back_populates="addresses")

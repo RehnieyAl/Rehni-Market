@@ -5,10 +5,11 @@ import {
   LayoutDashboard,
   LogOut,
   Package,
-  Heart,
-  ShoppingBag,
   Users,
   Building2,
+  User,
+  Wallet,
+  Settings,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -96,21 +97,29 @@ export default function ProfileDropdown() {
       },
     ],
 
+    // El dashboard de comprador es una sola ruta (/user/dashboard) con
+    // navegación interna por pestaña (ver pages/user/Dashboard.tsx) - no
+    // existen /user/profile ni /user/wallet como rutas propias, así que
+    // "Mi perfil"/"Configuración" y "Mi billetera" apuntan a esa misma
+    // ruta real con ?tab=... en vez de inventar una ruta nueva. El
+    // saldo de RehniCoin se muestra en la pestaña "Inicio" (ver
+    // features/user/components/dashboard/Home.tsx > Resumen rápido), por
+    // eso "Mi billetera" navega ahí.
     user: [
       {
-        label: "Dashboard",
-        to: "/user/dashboard",
-        icon: LayoutDashboard,
+        label: "Mi perfil",
+        to: "/user/dashboard?tab=profile",
+        icon: User,
       },
       {
-        label: "Pedidos",
-        to: "/user/orders",
-        icon: ShoppingBag,
+        label: "Mi billetera",
+        to: "/user/dashboard?tab=home",
+        icon: Wallet,
       },
       {
-        label: "Favoritos",
-        to: "/user/favorites",
-        icon: Heart,
+        label: "Configuración",
+        to: "/user/dashboard?tab=profile",
+        icon: Settings,
       },
     ],
   };
@@ -143,8 +152,16 @@ export default function ProfileDropdown() {
       >
         {/* AVATAR */}
 
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#6D0F2D] text-sm font-bold text-white">
-          {initial}
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#6D0F2D] text-sm font-bold text-white">
+          {user?.profileImagen ? (
+            <img
+              src={user.profileImagen}
+              alt={displayName}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            initial
+          )}
         </div>
 
         {/* INFORMACIÓN */}
@@ -181,8 +198,16 @@ export default function ProfileDropdown() {
           <div className="bg-gray-50 p-4">
             <div className="flex items-center gap-3">
 
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#6D0F2D] text-lg font-bold text-white">
-                {initial}
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#6D0F2D] text-lg font-bold text-white">
+                {user?.profileImagen ? (
+                  <img
+                    src={user.profileImagen}
+                    alt={displayName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  initial
+                )}
               </div>
 
               <div className="min-w-0">

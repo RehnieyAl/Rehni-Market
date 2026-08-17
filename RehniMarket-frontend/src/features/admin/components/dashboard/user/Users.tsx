@@ -5,12 +5,14 @@ import {
   Lock,
   Unlock,
   Trash2,
+  Coins,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import UserDetailModal from "./UserDetailModal";
 import UserStatusConfirmModal from "./UserStatusConfirmModal";
 import UserDeleteConfirmModal from "./UserDeleteConfirmModal";
+import RechargeWalletModal from "./RechargeWalletModal";
 
 import {
   getAdminUsers,
@@ -49,6 +51,10 @@ export default function Users() {
     useState<AdminUserResponse | null>(null);
 
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const [rechargeModalOpen, setRechargeModalOpen] = useState(false);
+  const [selectedRechargeUser, setSelectedRechargeUser] =
+    useState<AdminUserResponse | null>(null);
 
   // =========================
   // CARGA INICIAL
@@ -509,6 +515,22 @@ export default function Users() {
                           </button>
                         )}
 
+                        {/* RECARGAR REHNICOIN (solo compradores) */}
+
+                        {user.role === "user" && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedRechargeUser(user);
+                              setRechargeModalOpen(true);
+                            }}
+                            className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
+                            title="Recargar RehniCoin"
+                          >
+                            <Coins size={18} />
+                          </button>
+                        )}
+
                         {/* ELIMINAR */}
 
                         {canDeleteUser(user) && (
@@ -614,6 +636,22 @@ export default function Users() {
           loading={deleteLoading}
           onConfirm={handleConfirmDelete}
           onClose={handleCloseDeleteModal}
+        />
+      )}
+
+      {/* =========================
+          MODAL RECARGAR REHNICOIN
+      ========================= */}
+
+      {selectedRechargeUser && (
+        <RechargeWalletModal
+          isOpen={rechargeModalOpen}
+          userId={selectedRechargeUser.id}
+          userName={selectedRechargeUser.fullName}
+          onClose={() => {
+            setRechargeModalOpen(false);
+            setSelectedRechargeUser(null);
+          }}
         />
       )}
     </div>

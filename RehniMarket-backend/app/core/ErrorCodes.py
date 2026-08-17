@@ -97,6 +97,57 @@ class ErrorCodes:
     ADVERTISEMENT_IMAGE_REQUIRED = "ADVERTISEMENT_IMAGE_REQUIRED"
 
     # ==========================
+    # CARRITO
+    # ==========================
+    CART_NOT_FOUND = "CART_NOT_FOUND"
+    CART_ITEM_NOT_FOUND = "CART_ITEM_NOT_FOUND"
+    CART_EMPTY = "CART_EMPTY"
+    INVALID_QUANTITY = "INVALID_QUANTITY"
+    INSUFFICIENT_STOCK = "INSUFFICIENT_STOCK"
+
+    # ==========================
+    # PEDIDOS
+    # ==========================
+    ORDER_NOT_FOUND = "ORDER_NOT_FOUND"
+    INVALID_ORDER_STATUS_TRANSITION = "INVALID_ORDER_STATUS_TRANSITION"
+
+    # ==========================
+    # FAVORITOS
+    # ==========================
+    FAVORITE_ALREADY_EXISTS = "FAVORITE_ALREADY_EXISTS"
+    FAVORITE_NOT_FOUND = "FAVORITE_NOT_FOUND"
+
+    # ==========================
+    # DIRECCIONES
+    # ==========================
+    ADDRESS_NOT_FOUND = "ADDRESS_NOT_FOUND"
+    # El checkout no tiene una dirección de entrega válida seleccionada
+    # (ver ALCANCE > compra obligatoria con dirección: falta la
+    # dirección, o la dirección seleccionada no tiene nombre/teléfono).
+    ADDRESS_REQUIRED = "ADDRESS_REQUIRED"
+
+    # ==========================
+    # BILLETERA (REHNICOIN)
+    # ==========================
+    WALLET_NOT_FOUND = "WALLET_NOT_FOUND"
+    INSUFFICIENT_BALANCE = "INSUFFICIENT_BALANCE"
+    INVALID_AMOUNT = "INVALID_AMOUNT"
+
+    # ==========================
+    # RESTRICCIONES DE COMPRA
+    # ==========================
+    PURCHASE_NOT_ALLOWED = "PURCHASE_NOT_ALLOWED"
+
+    # ==========================
+    # RESEÑAS
+    # ==========================
+    REVIEW_NOT_FOUND = "REVIEW_NOT_FOUND"
+    REVIEW_ALREADY_EXISTS = "REVIEW_ALREADY_EXISTS"
+    # El usuario no tiene un pedido propio con este producto ya entregado
+    # (ver ReviewRepository.has_delivered_purchase).
+    REVIEW_NOT_ELIGIBLE = "REVIEW_NOT_ELIGIBLE"
+
+    # ==========================
     # VALIDACIÓN
     # ==========================
     VALIDATION_ERROR = "VALIDATION_ERROR"

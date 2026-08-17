@@ -12,6 +12,8 @@ import Companies from "@/features/admin/components/dashboard/company/Companies";
 import Users from "@/features/admin/components/dashboard/user/Users";
 import CatalogManagement from "@/features/admin/components/dashboard/CatalogManagement";
 import Advertisements from "@/features/admin/components/dashboard/advertisement/Advertisements";
+import RehniCoin from "@/features/admin/components/dashboard/wallet/RehniCoin";
+import AccountSettings from "@/features/public/auth/components/AccountSettings";
 
 export default function Admin() {
   const [view, setView] = useState("home");
@@ -23,6 +25,8 @@ export default function Admin() {
     users: <Users />,
     products: <CatalogManagement />,
     hero: <Advertisements />,
+    wallet: <RehniCoin />,
+    account: <AccountSettings />,
   };
 
   return (

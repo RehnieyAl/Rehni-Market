@@ -38,6 +38,14 @@ export interface ForgotPasswordRequest {
 }
 
 
+// PATCH parcial sobre la propia cuenta autenticada (nombre y/o correo) -
+// común a cualquier rol, ver "Configuración de cuenta".
+export interface UpdateMeRequest {
+  fullName?: string;
+  email?: string;
+}
+
+
 export interface ResetPasswordRequest {
   email: string;
   code: string;

@@ -18,6 +18,11 @@ export interface PublicProductCard {
   name: string;
   image: string | null;
   company_name: string;
+  // Catálogo del producto (ver backend > SchemaPublic.py >
+  // PublicProductCardResponse) - habilita filtrar/navegar por categoría
+  // desde el listado público (ver features/public/categories).
+  catalog_id: string;
+  catalog_name: string;
   // Pydantic serializa Decimal como string en JSON (mismo criterio que
   // ProductDetailResponse en el dashboard de empresa).
   price: string;
@@ -25,4 +30,7 @@ export interface PublicProductCard {
   // null cuando discount_enabled es false.
   discount_percentage: number | null;
   final_price: string;
+  // Para el badge "Agotado" (ver ProductCard.tsx) y el filtro
+  // "Disponibilidad" del catálogo público.
+  stock: number;
 }

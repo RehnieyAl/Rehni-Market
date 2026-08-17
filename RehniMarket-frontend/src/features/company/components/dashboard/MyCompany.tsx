@@ -7,6 +7,7 @@ import {
   updateMyCompanyProfile,
   patchMediaLogoBanner,
 } from "@/features/company/api/companyService";
+import CompanyRatingBadge from "@/features/public/company/components/CompanyRatingBadge";
 
 import type {
   CompanyProfileResponse,
@@ -32,11 +33,14 @@ export default function Company() {
   const [company, setCompany] =
     useState<CompanyProfileResponse | null>(null);
 
+  // Solo información pública de la tienda - el correo (y cualquier otro
+  // dato de la cuenta) se gestiona en "Configuración de cuenta"
+  // (ver Profile.tsx), no aquí.
   const [form, setForm] = useState({
     nameCompany: "",
-    emailCompany: "",
     addressCompany: "",
     tellCompany: "",
+    description: "",
   });
 
   const [loading, setLoading] = useState(true);
@@ -50,9 +54,9 @@ export default function Company() {
 
         setForm({
           nameCompany: data.nameCompany,
-          emailCompany: data.emailCompany,
           addressCompany: data.addressCompany,
           tellCompany: data.tellCompany,
+          description: data.description ?? "",
         });
       } catch (error) {
         console.error("Error cargando empresa", error);
@@ -132,6 +136,11 @@ export default function Company() {
         <p className="mt-2 text-gray-500">
           Administra la información pública de tu empresa.
         </p>
+
+        {/* Reputación real, calculada sobre las reseñas activas de todos
+            los productos de la empresa (ver ALCANCE > Calificaciones de
+            empresa) - la empresa no tiene reseñas propias. */}
+        {company && <CompanyRatingBadge companyId={company.id} className="mt-3" />}
       </div>
 
       {/* IMAGEN EMPRESA */}
@@ -308,9 +317,9 @@ export default function Company() {
                 if (company) {
                   setForm({
                     nameCompany: company.nameCompany,
-                    emailCompany: company.emailCompany,
                     addressCompany: company.addressCompany,
                     tellCompany: company.tellCompany,
+                    description: company.description ?? "",
                   });
                 }
 
@@ -339,15 +348,6 @@ export default function Company() {
             />
 
             <InputCompany
-              label="Correo electrónico"
-              value={form.emailCompany}
-              edit={editing}
-              onChange={(v) =>
-                handleChange("emailCompany", v)
-              }
-            />
-
-            <InputCompany
               label="Dirección"
               value={form.addressCompany}
               edit={editing}
@@ -364,6 +364,17 @@ export default function Company() {
                 handleChange("tellCompany", v)
               }
             />
+
+            <div className="md:col-span-2">
+              <TextareaCompany
+                label="Descripción"
+                value={form.description}
+                edit={editing}
+                onChange={(v) =>
+                  handleChange("description", v)
+                }
+              />
+            </div>
           </div>
         )}
 
@@ -388,29 +399,6 @@ export default function Company() {
             </button>
           </div>
         )}
-      </section>
-
-      {/* ESTADISTICAS */}
-      <section className="mt-8 grid gap-5 md:grid-cols-4">
-        <Card
-          title="Ventas"
-          value={company?.completeSales ?? ""}
-        />
-
-        <Card
-          title="Reseñas"
-          value={company?.totalReviews ?? ""}
-        />
-
-        <Card
-          title="Calificación"
-          value={company?.averageRating ?? ""}
-        />
-
-        <Card
-          title="Nivel"
-          value={company?.sellerLevel ?? ""}
-        />
       </section>
     </>
   );
@@ -443,22 +431,32 @@ function InputCompany({
   );
 }
 
-function Card({
-  title,
+function TextareaCompany({
+  label,
   value,
+  edit,
+  onChange,
 }: {
-  title: string;
-  value: string | number;
+  label: string;
+  value: string;
+  edit: boolean;
+  onChange: (value: string) => void;
 }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-      <p className="text-sm text-gray-500">
-        {title}
-      </p>
+    <div>
+      <label className="font-medium text-gray-700">
+        {label}
+      </label>
 
-      <h3 className="mt-2 text-2xl font-bold">
-        {value}
-      </h3>
+      <textarea
+        value={value}
+        disabled={!edit}
+        onChange={(e) => onChange(e.target.value)}
+        rows={4}
+        maxLength={1000}
+        placeholder="Cuéntale a tus clientes a qué se dedica tu empresa..."
+        className="mt-2 w-full resize-none rounded-xl border border-gray-300 px-4 py-3 disabled:bg-gray-100"
+      />
     </div>
   );
 }

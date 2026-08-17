@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Eye, Loader2, Power } from "lucide-react";
 
 import AdvertisementFormModal from "./AdvertisementFormModal";
+import type { AdvertisementFormValues } from "./AdvertisementFormModal";
 import AdvertisementDeleteConfirmModal from "./AdvertisementDeleteConfirmModal";
 import AdvertisementPreviewModal from "./AdvertisementPreviewModal";
 
@@ -69,17 +70,29 @@ export default function Advertisements() {
   const sortAdvertisements = (items: AdminAdvertisementResponse[]) =>
     [...items].sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
 
-  const handleSubmitForm = async (values: {
-    title: string;
-    description: string;
-    buttonText: string;
-    buttonLink: string;
-    order: number;
-    isActive: boolean;
-    image: File | null;
-    mobileImage: File | null;
-    removeMobileImage: boolean;
-  }) => {
+  // Config del target elegido (ver ALCANCE > Anuncios dinámicos) - un
+  // solo lugar que arma estos 7 campos, reutilizado por create/update en
+  // vez de repetirlos en las dos ramas de abajo.
+  const buildTargetFields = (values: AdvertisementFormValues) =>
+    values.targetType
+      ? {
+          target_type: values.targetType,
+          ...(values.targetType === "PRODUCT" && values.targetProductId
+            ? { target_product_id: values.targetProductId }
+            : {}),
+          ...(values.targetType === "CATEGORY" && values.targetCatalogId
+            ? { target_catalog_id: values.targetCatalogId }
+            : {}),
+          ...(values.targetType === "COMPANY" && values.targetCompanyId
+            ? { target_company_id: values.targetCompanyId }
+            : {}),
+          ...(values.minimumDiscount ? { minimum_discount: values.minimumDiscount } : {}),
+          ...(values.maximumStock ? { maximum_stock: values.maximumStock } : {}),
+          ...(values.maxAgeDays ? { max_age_days: values.maxAgeDays } : {}),
+        }
+      : {};
+
+  const handleSubmitForm = async (values: AdvertisementFormValues) => {
     try {
       setSaving(true);
 
@@ -94,6 +107,8 @@ export default function Advertisements() {
           ...(values.image ? { image: values.image } : {}),
           ...(values.mobileImage ? { mobile_image: values.mobileImage } : {}),
           ...(values.removeMobileImage ? { remove_mobile_image: true } : {}),
+          ...(values.clearTarget ? { clear_target: true } : {}),
+          ...buildTargetFields(values),
         });
 
         setAdvertisements((current) =>
@@ -115,6 +130,7 @@ export default function Advertisements() {
           is_active: values.isActive,
           image: values.image,
           ...(values.mobileImage ? { mobile_image: values.mobileImage } : {}),
+          ...buildTargetFields(values),
         });
 
         setAdvertisements((current) => sortAdvertisements([...current, created]));

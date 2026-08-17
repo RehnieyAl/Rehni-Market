@@ -9,7 +9,6 @@ import Topbar from "@/shared/components/dashboard/Topbar";
 import Home from "@/features/company/components/dashboard/Home";
 import Products from "@/features/company/components/dashboard/product/Products";
 import Orders from "@/features/company/components/dashboard/Orders";
-import ProcessOrders from "@/features/company/components/dashboard/ProcessOrders";
 import MyCompany from "@/features/company/components/dashboard/MyCompany";
 import Profile from "@/features/company/components/dashboard/Profile";
 
@@ -19,10 +18,9 @@ export default function Dashboard() {
   const [view, setView] = useState("home");
 
   const views = {
-    home: <Home />,
+    home: <Home onNavigate={setView} />,
     products: <Products />,
     orders: <Orders />,
-    "process-orders": <ProcessOrders />,
     company: <MyCompany />,
     profile: <Profile />,
   };

@@ -1,27 +1,37 @@
+// Estados posibles del certificado de la empresa (espejo de
+// CompanyCertificateEnum en el backend).
+export type CompanyCertificateStatus = "pending" | "approved" | "rejected";
+
 export interface DashboardHomeResponse {
-logo: string;
-banner: string;
+id: string;
+logo: string | null;
+banner: string | null;
 nameCompany: string;
 addressCompany: string;
-emailCompany: string;
-CompanyCertificate: boolean;
+description: string | null;
+certificate_status: CompanyCertificateStatus;
+is_verified: boolean;
 memberAT: string;
-role: string;
-sales: number;
-stars: number;
-reviews: number;
 }
 
+// Solo datos reales calculados sobre los productos de la empresa (ver
+// ALCANCE > Home > ESTADÍSTICAS) - no hay ventas/ingresos/visitas.
+export interface ProductsSummaryResponse {
+total: number;
+active: number;
+hidden: number;
+out_of_stock: number;
+}
+
+// Solo información PÚBLICA de la tienda - nombre/correo de la cuenta se
+// consultan con GET /auth/me (ver "Configuración de cuenta"), no aquí.
 export interface CompanyProfileResponse {
+id: string;
 nameCompany: string;
-emailCompany: string;
 addressCompany: string;
+description: string | null;
 tellCompany: string;
 memberAT: string;
-averageRating: number;
-totalReviews: number;
-completeSales: number;
-sellerLevel: string;
 logo?: string;
 banner?: string;
 }

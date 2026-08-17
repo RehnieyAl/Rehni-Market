@@ -1,8 +1,10 @@
+// Solo información PÚBLICA de la tienda - nombre/correo de la cuenta se
+// editan con PATCH /auth/me (ver "Configuración de cuenta"), no aquí.
 export interface UpdateProfileRequest {
-nameCompany: string;
-emailCompany: string;
-addressCompany: string;
-tellCompany: string;
+nameCompany?: string;
+addressCompany?: string;
+tellCompany?: string;
+description?: string;
 }
 
 export interface CompanyMediaUpload {
@@ -24,8 +26,11 @@ isMain: boolean;
 export interface CreateProductRequest {
 nameProduct: string;
 catalogId: string;
-priceProduct: number | "";
-stockProduct: number | "";
+// String crudo mientras el usuario escribe - la conversión a número
+// ocurre únicamente al enviar el formulario (ver
+// shared/utils/parseNumericField.ts). Nunca debe contener NaN.
+priceProduct: string;
+stockProduct: string;
 descripcionProduct: string;
 technicalSpecProduct: ProductSpecification[];
 imagesProduct: ProductImage[];
@@ -72,8 +77,11 @@ preview: string;
 
 export interface CreateVariantRequest {
 name: string;
-price: number | "";
-stock: number | "";
+// String crudo mientras el usuario escribe - la conversión a número
+// ocurre únicamente al enviar el formulario (ver
+// shared/utils/parseNumericField.ts). Nunca debe contener NaN.
+price: string;
+stock: string;
 // Obligatorio: cada variante debe tener exactamente un color.
 colorId: string;
 specifications: ProductSpecification[];

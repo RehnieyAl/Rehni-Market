@@ -140,6 +140,13 @@ class Product(Base):
     )
 
 
+    reviews = relationship(
+        "Review",
+        back_populates="product",
+        cascade="all, delete"
+    )
+
+
 
 class ProductImage(Base):
 

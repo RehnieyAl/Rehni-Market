@@ -7,7 +7,8 @@ import type {
   LoginRequest,
   ForgotPasswordRequest,
   ResetPasswordRequest,
-  ChangeEmailRequest
+  ChangeEmailRequest,
+  UpdateMeRequest
 } from "../types/request";
 
 import type {
@@ -81,4 +82,25 @@ export const getProfile = async (): Promise<MeResponse> => {
   const res = await api.get("/auth/me");
   return res.data;
 
+};
+
+// Actualiza nombre y/o correo de la propia cuenta - funciona igual para
+// cualquier rol (ver "Configuración de cuenta").
+export const updateMe = async (data: UpdateMeRequest): Promise<MeResponse> => {
+  const res = await api.patch("/auth/me", data);
+  return res.data;
+};
+
+// Foto de perfil de la CUENTA - común a cualquier rol.
+export const updateMePhoto = async (photo: File): Promise<MeResponse> => {
+  const formData = new FormData();
+  formData.append("photo", photo);
+
+  const res = await api.patch("/auth/me/photo", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return res.data;
 };

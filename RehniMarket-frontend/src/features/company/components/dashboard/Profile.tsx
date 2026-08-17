@@ -1,17 +1,9 @@
+import AccountSettings from "@/features/public/auth/components/AccountSettings";
 
+// "Configuración de cuenta" es común a cualquier rol (user/company/admin/
+// owner) - la lógica vive una sola vez en AccountSettings (ver
+// features/public/auth/components/AccountSettings.tsx). Este archivo solo
+// monta esa vista compartida en el dashboard de empresa.
 export default function Profile() {
-  return (
-    <>
-      {/* Encabezado */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Mi perfil
-        </h1>
-
-        <p className="mt-2 text-gray-500">
-          Actualiza la información de tu empresa y personaliza tu tienda.
-        </p>
-      </div>
-    </>
-  );
+  return <AccountSettings />;
 }

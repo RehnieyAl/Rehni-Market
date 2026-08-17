@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
 from app.models.ModelUser import Users
 from app.models.ModelProduct import Product
+from app.models.ModelCompany import CompanyCertificateEnum
 from fastapi import HTTPException
 from app.schemas.SchemaDashboard.ShemaCompany import UpdateInformationCompanyRequest
 from app.services.NasService import build_media_url
@@ -13,9 +13,8 @@ def company_dashboard_me_service(user_id,database: Session):
 
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
+
     company = user.company
-    role = user.role
 
     logo = (build_media_url(f"uploads/{company.CompanyLogo}")
             if company.CompanyLogo
@@ -29,26 +28,33 @@ def company_dashboard_me_service(user_id,database: Session):
             )
 
     return {
+        # Necesario para que el frontend pueda pedir la reputacion de la
+        # empresa (GET /public/company/{id}/rating, ver ALCANCE >
+        # Calificaciones de empresa) sin otro endpoint aparte - antes esta
+        # respuesta no exponia el id de la empresa en absoluto.
+        "id": company.id,
         "logo": logo,
         "banner": banner,
         "nameCompany": company.nameCompany,
         "addressCompany": company.addressCompany,
-        "emailCompany": user.email,
-        "CompanyCertificate": company.CompanyCertificate,
+        "description": company.description,
+        # Estado real de verificacion (antes se usaba
+        # company.CompanyCertificate, la ruta del archivo del certificado,
+        # que es truthy desde el registro - el badge "verificada" quedaba
+        # siempre encendido sin importar si un admin lo habia aprobado o
+        # no). Se usa el mismo criterio que LoginService/CompanyService.
+        "certificate_status": company.CompanyCertificateStatus,
+        "is_verified": company.CompanyCertificateStatus == CompanyCertificateEnum.APPROVED,
         "memberAT": user.created_at,
-        "role": role.name,
-        "sales": 1247,
-        "stars": 4.7,
-        "reviews": 856
     }
 
 
 def company_dashboard_my_profile_service(user_id: str, database: Session):
     user = database.query(Users).filter(Users.id == user_id).first()
-    
+
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-        
+
     company = user.company  # relationship por si se me olvida xd
 
     logo = (build_media_url(f"uploads/{company.CompanyLogo}")
@@ -62,32 +68,27 @@ def company_dashboard_my_profile_service(user_id: str, database: Session):
             None
             )
 
-
+    # Solo datos PÚBLICOS de la tienda - nombre/correo de la cuenta se
+    # consultan con GET /auth/me (ver MeService.py), no aquí.
     return {
+        # Ver company_dashboard_me_service: mismo motivo, habilita pedir
+        # GET /public/company/{id}/rating desde "Mi tienda".
+        "id": company.id,
         "nameCompany": company.nameCompany,
-        "emailCompany": user.email,
         "addressCompany": company.addressCompany,
+        "description": company.description,
         "tellCompany": user.tell,
         "memberAT": user.created_at,
-        "averageRating": 4.7,
-        "totalReviews": 856,
-        "completeSales": 1247,
-        "sellerLevel": "platino",
         "logo": logo,
         "banner": banner,
     }
 
 def company_dashboard_upgrade_my_profile_service(user_id: str, CompanyRequest:UpdateInformationCompanyRequest,database: Session):
     user = database.query(Users).filter(Users.id == user_id).first()
-    search_emails = database.query(Users).filter(Users.email == CompanyRequest.emailCompany)
-    print("recibido: ", CompanyRequest.emailCompany )
-    if not search_emails:
-        raise HTTPException(status_code=400, detail="El correo esta en uso")
-    
+
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
-    
+
     company = user.company  # relationship por si se me olvida xd
 
     try:
@@ -95,25 +96,29 @@ def company_dashboard_upgrade_my_profile_service(user_id: str, CompanyRequest:Up
         if CompanyRequest.nameCompany is not None:
             company.nameCompany = CompanyRequest.nameCompany
 
-        if CompanyRequest.emailCompany is not None:
-            user.email = CompanyRequest.emailCompany
-        
         if CompanyRequest.tellCompany is not None:
             user.tell = CompanyRequest.tellCompany
-        
+
         if CompanyRequest.addressCompany is not None:
             company.addressCompany = CompanyRequest.addressCompany
-        
+
+        if CompanyRequest.description is not None:
+            company.description = CompanyRequest.description
+
         database.commit()
         database.refresh(user)
         database.refresh(company)
+
+    except HTTPException:
+        database.rollback()
+        raise
 
     except Exception as e:
         database.rollback()
 
         print("ERROR:",e)
         raise HTTPException(status_code=500, detail="En actualizar datos")
-    
+
     return {
         "messaje": "Perfil actualizado correctamente"
     }
@@ -169,12 +174,22 @@ def company_dashboard_get_my_products(user_id,search,page,limit,database: Sessio
 
         query = database.query(Product).filter(Product.company_id == company.id)
 
-        if search: 
+        if search:
             query = query.filter(Product.name.ilike(f"%{search}%"))
 
         total = query.count()
 
-        products = (query.offset(offset).limit(limit).all())
+        # Antes no tenia ORDER BY: el orden entre paginas quedaba
+        # indefinido a nivel de PostgreSQL. Se ordena por mas reciente
+        # primero - lo necesita ademas "Productos recientes" en el Inicio
+        # del dashboard de empresa (ver Home.tsx), que reutiliza este mismo
+        # endpoint con limit=10.
+        products = (
+            query.order_by(Product.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
 
 
         result = []
@@ -219,5 +234,33 @@ def company_dashboard_get_my_products(user_id,search,page,limit,database: Sessio
         raise HTTPException(status_code=500, detail=str(e))
 
 
-def company_dasboard_my_stadistic():
-    pass
+# ==============================
+# ESTADÍSTICAS DE PRODUCTOS
+# ==============================
+# Únicamente datos reales calculados sobre Product (ver ALCANCE > Home >
+# ESTADÍSTICAS): no existen ventas/ingresos/visitas/favoritos/reseñas en
+# el modelo actual, así que no se inventan aquí. Reemplaza al stub vacío
+# `company_dasboard_my_stadistic()` (nunca se llamaba desde ningún router).
+
+def company_dashboard_products_summary_service(user_id, database: Session):
+
+    search_user = database.query(Users).filter(Users.id == user_id).first()
+
+    if not search_user or not search_user.company:
+        raise HTTPException(status_code=404, detail="Empresa no encontrada")
+
+    base_query = database.query(Product).filter(
+        Product.company_id == search_user.company.id
+    )
+
+    total = base_query.count()
+    active = base_query.filter(Product.is_active.is_(True)).count()
+    hidden = base_query.filter(Product.is_active.is_(False)).count()
+    out_of_stock = base_query.filter(Product.stock <= 0).count()
+
+    return {
+        "total": total,
+        "active": active,
+        "hidden": hidden,
+        "out_of_stock": out_of_stock,
+    }

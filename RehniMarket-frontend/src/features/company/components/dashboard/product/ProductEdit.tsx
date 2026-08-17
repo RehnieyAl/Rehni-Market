@@ -15,6 +15,7 @@ import { getColors } from "@/features/company/api/colorService";
 
 import VariantsPanel from "./VariantsPanel";
 import SpecificationChecklist from "./SpecificationChecklist";
+import { parseNumericField } from "@/shared/utils/parseNumericField";
 
 import type { UpdateProductRequest, ProductSpecification } from "@/features/company/types/request";
 
@@ -55,12 +56,15 @@ export default function EditProductModal({
 
   const [nameProduct, setNameProduct] = useState("");
   const [catalogId, setCatalogId] = useState("");
-  const [priceProduct, setPriceProduct] = useState<number | "">("");
+  // String crudo mientras el usuario escribe - la conversión a número
+  // ocurre únicamente al enviar (ver shared/utils/parseNumericField.ts).
+  const [priceProduct, setPriceProduct] = useState("");
   const [discountEnable, setDiscountEnable] = useState(false);
-  const [discountValue, setDiscountValue] = useState<number | "">("");
-  const [stockProduct, setStockProduct] = useState<number | "">("");
+  const [discountValue, setDiscountValue] = useState("");
+  const [stockProduct, setStockProduct] = useState("");
   const [descripcionProduct, setDescripcionProduct] = useState("");
   const [mainColorId, setMainColorId] = useState("");
+  const [errors, setErrors] = useState<{ price?: string; stock?: string; discount?: string }>({});
 
   const [existingImages, setExistingImages] = useState<ProductDetailResponse["images"]>([]);
   const [imagesToDelete, setImagesToDelete] = useState<Set<string>>(new Set());
@@ -97,12 +101,15 @@ export default function EditProductModal({
 
         setNameProduct(detail.name);
         setCatalogId(detail.catalog_id);
-        setPriceProduct(Number(detail.price));
+        // detail.price / detail.discount_value ya llegan como string
+        // (Decimal serializado) - se usan tal cual, sin pasar por Number().
+        setPriceProduct(detail.price);
         setDiscountEnable(detail.discount_enable);
-        setDiscountValue(Number(detail.discount_value));
-        setStockProduct(detail.stock);
+        setDiscountValue(detail.discount_value);
+        setStockProduct(String(detail.stock));
         setDescripcionProduct(detail.descripcion);
         setMainColorId(detail.main_color_id ?? "");
+        setErrors({});
 
         setExistingImages(detail.images);
         setImagesToDelete(new Set());
@@ -196,6 +203,7 @@ export default function EditProductModal({
     setProduct(null);
     setLoadError(null);
     setNewImages([]);
+    setErrors({});
     onClose();
   };
 
@@ -241,6 +249,41 @@ export default function EditProductModal({
   const handleSubmit = async () => {
     if (!product || !productId) return;
 
+    // La conversión a número ocurre únicamente aquí, al enviar - nunca
+    // mientras el usuario escribe (ver shared/utils/parseNumericField.ts).
+    // Un campo vacío significa "no tocar" (mismo criterio que ya tenía el
+    // PATCH), así que solo se valida cuando trae contenido.
+    const parsedPrice = priceProduct === "" ? null : parseNumericField(priceProduct);
+    const parsedStock =
+      stockProduct === "" ? null : parseNumericField(stockProduct, { integer: true });
+    const parsedDiscount = discountValue === "" ? null : parseNumericField(discountValue);
+
+    const nextErrors: typeof errors = {};
+
+    if (priceProduct !== "" && (parsedPrice === null || parsedPrice < 0)) {
+      nextErrors.price = "Ingresa un precio válido (un número mayor o igual a 0).";
+    }
+
+    if (stockProduct !== "" && (parsedStock === null || parsedStock < 0)) {
+      nextErrors.stock =
+        "Ingresa una cantidad de stock válida (un número entero mayor o igual a 0).";
+    }
+
+    if (
+      discountEnable &&
+      discountValue !== "" &&
+      (parsedDiscount === null || parsedDiscount < 0 || parsedDiscount > 100)
+    ) {
+      nextErrors.discount = "Ingresa un porcentaje de descuento válido (entre 0 y 100).";
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      return;
+    }
+
+    setErrors({});
+
     try {
       setSaving(true);
 
@@ -248,20 +291,17 @@ export default function EditProductModal({
 
       if (nameProduct !== product.name) patch.nameProduct = nameProduct;
       if (catalogId !== product.catalog_id) patch.catalogId = catalogId;
-      if (priceProduct !== "" && Number(priceProduct) !== Number(product.price)) {
-        patch.priceProduct = Number(priceProduct);
+      if (parsedPrice !== null && parsedPrice !== Number(product.price)) {
+        patch.priceProduct = parsedPrice;
       }
       if (discountEnable !== product.discount_enable) {
         patch.discountEnable = discountEnable;
       }
-      if (
-        discountValue !== "" &&
-        Number(discountValue) !== Number(product.discount_value)
-      ) {
-        patch.discountValue = Number(discountValue);
+      if (parsedDiscount !== null && parsedDiscount !== Number(product.discount_value)) {
+        patch.discountValue = parsedDiscount;
       }
-      if (stockProduct !== "" && Number(stockProduct) !== product.stock) {
-        patch.stockProduct = Number(stockProduct);
+      if (parsedStock !== null && parsedStock !== product.stock) {
+        patch.stockProduct = parsedStock;
       }
       if (descripcionProduct !== product.descripcion) {
         patch.descripcionProduct = descripcionProduct;
@@ -430,13 +470,13 @@ export default function EditProductModal({
                           type="text"
                           inputMode="numeric"
                           value={priceProduct}
-                          onChange={(e) =>
-                            setPriceProduct(
-                              e.target.value === "" ? "" : Number(e.target.value),
-                            )
-                          }
+                          onChange={(e) => setPriceProduct(e.target.value)}
                           className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500"
                         />
+
+                        {errors.price && (
+                          <p className="mt-1 text-xs text-red-600">{errors.price}</p>
+                        )}
                       </div>
 
                       <div>
@@ -448,13 +488,13 @@ export default function EditProductModal({
                           type="text"
                           inputMode="numeric"
                           value={stockProduct}
-                          onChange={(e) =>
-                            setStockProduct(
-                              e.target.value === "" ? "" : Number(e.target.value),
-                            )
-                          }
+                          onChange={(e) => setStockProduct(e.target.value)}
                           className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500"
                         />
+
+                        {errors.stock && (
+                          <p className="mt-1 text-xs text-red-600">{errors.stock}</p>
+                        )}
                       </div>
                     </div>
 
@@ -465,33 +505,32 @@ export default function EditProductModal({
                           checked={discountEnable}
                           onChange={(e) => {
                             setDiscountEnable(e.target.checked);
-                            if (!e.target.checked) setDiscountValue(0);
+                            if (!e.target.checked) setDiscountValue("0");
                           }}
                         />
                         Producto en descuento
                       </label>
 
                       {discountEnable && (
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={discountValue}
-                          onChange={(e) => {
-                            if (e.target.value === "") {
-                              setDiscountValue("");
-                              return;
-                            }
+                        <>
+                          {/* Porcentaje (0-100), no un monto en pesos - ver
+                              _compute_price_fields en
+                              app/services/publicService/Products.py. El
+                              rango se valida al enviar (ver handleSubmit),
+                              no mientras se escribe. */}
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={discountValue}
+                            onChange={(e) => setDiscountValue(e.target.value)}
+                            placeholder="Porcentaje de descuento (%)"
+                            className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500"
+                          />
 
-                            // Porcentaje (0-100), no un monto en pesos - ver
-                            // _compute_price_fields en
-                            // app/services/publicService/Products.py.
-                            const parsed = Number(e.target.value);
-
-                            setDiscountValue(Math.min(100, Math.max(0, parsed)));
-                          }}
-                          placeholder="Porcentaje de descuento (%)"
-                          className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500"
-                        />
+                          {errors.discount && (
+                            <p className="mt-1 text-xs text-red-600">{errors.discount}</p>
+                          )}
+                        </>
                       )}
                     </div>
 

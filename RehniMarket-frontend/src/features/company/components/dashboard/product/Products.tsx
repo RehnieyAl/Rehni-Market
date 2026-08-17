@@ -16,12 +16,19 @@ import {
   changeProductStatus,
   deleteMyProduct,
 } from "@/features/company/api/productService";
+import { getProductsSummary } from "@/features/company/api/companyService";
 
-import type { MyProductResponse } from "@/features/company/types/response";
+import type {
+  MyProductResponse,
+  ProductsSummaryResponse,
+} from "@/features/company/types/response";
 
 export default function Products() {
   const [products, setProducts] = useState<MyProductResponse[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [summary, setSummary] = useState<ProductsSummaryResponse | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(true);
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -46,6 +53,24 @@ export default function Products() {
     }
   }, [page, search]);
 
+  // Conteos reales sobre toda la tabla de productos de la empresa (no
+  // solo la página actual) - mismo endpoint que ya usa el Inicio del
+  // dashboard (ver Home.tsx). Se recarga cada vez que una acción puede
+  // cambiar los conteos (crear, editar, activar/desactivar, eliminar).
+  const loadSummary = useCallback(async () => {
+    try {
+      setSummaryLoading(true);
+
+      const response = await getProductsSummary();
+
+      setSummary(response);
+    } catch (error) {
+      console.error("Error cargando las estadísticas de productos:", error);
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     const timeout = setTimeout(() => {
       loadProducts();
@@ -53,6 +78,45 @@ export default function Products() {
 
     return () => clearTimeout(timeout);
   }, [loadProducts]);
+
+  useEffect(() => {
+    // Carga inicial de las estadísticas (no reutiliza `loadSummary`
+    // directamente como dependencia del efecto para no disparar un
+    // setState síncrono desde el cuerpo del efecto - `loadSummary` sigue
+    // disponible aparte para las acciones que cambian los conteos).
+    let cancelled = false;
+
+    const loadInitialSummary = async () => {
+      try {
+        setSummaryLoading(true);
+
+        const response = await getProductsSummary();
+
+        if (!cancelled) {
+          setSummary(response);
+        }
+      } catch (error) {
+        console.error("Error cargando las estadísticas de productos:", error);
+      } finally {
+        if (!cancelled) {
+          setSummaryLoading(false);
+        }
+      }
+    };
+
+    loadInitialSummary();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Crear/editar un producto también puede cambiar los conteos (activo,
+  // agotado por stock, etc.) - se refrescan ambos juntos.
+  const handleProductSaved = () => {
+    loadProducts();
+    loadSummary();
+  };
 
   const handleChangeStatus = async (
     productId: string,
@@ -73,6 +137,8 @@ export default function Products() {
             : product,
         ),
       );
+
+      loadSummary();
     } catch (error) {
       console.error(
         "Error cambiando estado del producto:",
@@ -92,6 +158,8 @@ export default function Products() {
       setProducts((prev) =>
         prev.filter((product) => product.id !== productId),
       );
+
+      loadSummary();
     } catch (error) {
       console.error(
         "Error eliminando producto:",
@@ -122,20 +190,25 @@ export default function Products() {
         </button>
       </div>
 
-      <section className="mt-8 grid gap-5 md:grid-cols-3">
+      <section className="mt-8 grid grid-cols-2 gap-5 md:grid-cols-4">
         <StatsCard
-          title="Productos"
-          value="Próximamente"
+          title="Productos publicados"
+          value={summaryLoading ? "..." : String(summary?.total ?? 0)}
         />
 
         <StatsCard
-          title="Publicados"
-          value="Próximamente"
+          title="Activos"
+          value={summaryLoading ? "..." : String(summary?.active ?? 0)}
         />
 
         <StatsCard
-          title="Stock bajo"
-          value="Próximamente"
+          title="Agotados"
+          value={summaryLoading ? "..." : String(summary?.out_of_stock ?? 0)}
+        />
+
+        <StatsCard
+          title="Ocultos"
+          value={summaryLoading ? "..." : String(summary?.hidden ?? 0)}
         />
       </section>
 
@@ -295,7 +368,7 @@ export default function Products() {
       <ProductForm
         isOpen={openProductModal}
         onClose={() => setOpenProductModal(false)}
-        onSuccess={loadProducts}
+        onSuccess={handleProductSaved}
       />
 
       <EditProductModal
@@ -305,7 +378,7 @@ export default function Products() {
           setOpenEditModal(false);
           setEditingProductId(null);
         }}
-        onSuccess={loadProducts}
+        onSuccess={handleProductSaved}
       />
     </>
   );

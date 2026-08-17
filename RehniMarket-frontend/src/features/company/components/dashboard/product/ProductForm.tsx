@@ -20,6 +20,7 @@ import {
 import { getColors } from "@/features/company/api/colorService";
 
 import SpecificationChecklist from "./SpecificationChecklist";
+import { parseNumericField } from "@/shared/utils/parseNumericField";
 
 import { useState, useEffect, useRef } from "react";
 
@@ -36,6 +37,7 @@ export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModal
   const [specifications, setSpecifications] = useState<SpecificationResponse[]>(
     [],
   );
+  const [errors, setErrors] = useState<{ price?: string; stock?: string }>({});
   const [product, setProduct] = useState<CreateProductRequest>({
     nameProduct: "",
     catalogId: "",
@@ -65,18 +67,45 @@ export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModal
     });
 
     setSpecifications([]);
+    setErrors({});
   };
 
   const handleClose = () => {
     resetProduct();
     onClose();
   };
+
   const handleSubmit = async () => {
+    // La conversión a número ocurre únicamente aquí, al enviar - nunca
+    // mientras el usuario escribe (ver shared/utils/parseNumericField.ts).
+    const parsedPrice = parseNumericField(product.priceProduct);
+    const parsedStock = parseNumericField(product.stockProduct, { integer: true });
+
+    const nextErrors: typeof errors = {};
+
+    if (parsedPrice === null || parsedPrice < 0) {
+      nextErrors.price = "Ingresa un precio válido (un número mayor o igual a 0).";
+    }
+
+    if (parsedStock === null || parsedStock < 0) {
+      nextErrors.stock =
+        "Ingresa una cantidad de stock válida (un número entero mayor o igual a 0).";
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      return;
+    }
+
+    setErrors({});
+
     try {
       setLoading(true);
 
       await createProduct({
         ...product,
+        priceProduct: String(parsedPrice),
+        stockProduct: String(parsedStock),
         // No enviar especificaciones marcadas pero sin valor todavía -
         // solo cuentan las que la empresa realmente completó.
         technicalSpecProduct: product.technicalSpecProduct.filter(
@@ -326,12 +355,15 @@ export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModal
                     onChange={(e) =>
                       setProduct({
                         ...product,
-                        priceProduct:
-                          e.target.value === "" ? "" : Number(e.target.value),
+                        priceProduct: e.target.value,
                       })
                     }
                     className="w-full appearance-none rounded-lg bg-white border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
                   />
+
+                  {errors.price && (
+                    <p className="mt-1 text-xs text-red-600">{errors.price}</p>
+                  )}
                 </div>
 
                 <div>
@@ -346,12 +378,15 @@ export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModal
                     onChange={(e) =>
                       setProduct({
                         ...product,
-                        stockProduct:
-                          e.target.value === "" ? "" : Number(e.target.value),
+                        stockProduct: e.target.value,
                       })
                     }
                     className="w-full appearance-none rounded-lg bg-white border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100"
                   />
+
+                  {errors.stock && (
+                    <p className="mt-1 text-xs text-red-600">{errors.stock}</p>
+                  )}
                 </div>
               </div>
 

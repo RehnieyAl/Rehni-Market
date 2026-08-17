@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request,Depends, UploadFile, File, Form, Body
+from fastapi import APIRouter, Request,Depends, UploadFile, File, Form, Body, Query
 from sqlalchemy.orm import Session
 from app.database.Connection import get_db
 from uuid import UUID
@@ -16,7 +16,8 @@ from app.services.DashboardService.company.Dashboard import (
     company_dashboard_my_profile_service,
     company_dashboard_upgrade_my_profile_service,
     company_dasboard_upgrade_my_photo_and_banner_profile,
-    company_dashboard_get_my_products
+    company_dashboard_get_my_products,
+    company_dashboard_products_summary_service,
 )
 
 from app.services.DashboardService.company.Variants import (
@@ -52,6 +53,19 @@ from app.schemas.SchemaDashboard.SchemaVariant import (
     VariantSpecificationUpdateRequest,
 )
 from app.services.NasService import NasService, get_nas_service
+
+from app.services.commerce.OrderService import (
+    list_company_orders_service,
+    get_company_order_detail_service,
+    get_company_order_status_counts_service,
+    update_company_order_status_service,
+)
+from app.schemas.SchemaCommerce.SchemaOrder import (
+    OrderResponse,
+    OrdersPaginatedResponse,
+    OrderStatusCountsResponse,
+    UpdateOrderStatusRequest,
+)
 
 router = APIRouter(
     prefix=("/company"),
@@ -108,8 +122,16 @@ def create_product(
     request: Request,
     nameProduct: str = Form(...),
     catalogId: str = Form(...),
-    priceProduct: float = Form(...),
-    stockProduct: int = Form(...),
+    # ge=0 rechaza tanto negativos como NaN (NaN >= 0 es False en
+    # IEEE754) - mismo patron que UpdateProductRequest.priceProduct /
+    # CreateVariantRequest.price (ver SchemaProduct.py / SchemaVariant.py).
+    # Este endpoint es el unico que recibia estos campos como Form(...)
+    # sueltos, sin ninguna cota, lo que permitia que un "NaN" enviado por
+    # error desde el frontend se guardara sin validar y rompiera la
+    # serializacion JSON de una respuesta posterior (Starlette usa
+    # allow_nan=False).
+    priceProduct: float = Form(..., ge=0),
+    stockProduct: int = Form(..., ge=0),
     descripcionProduct: str = Form(...),
     technicalSpecProduct: str = Form(...),
     imagesProduct: list[UploadFile] = File(None),
@@ -153,6 +175,17 @@ def get_my_product(
         limit= limit,
         database=database
     )
+
+@router.get("/dashboard/products-summary")
+def get_products_summary(request: Request, database: Session = Depends(get_db)):
+
+    user_id = request.state.user_id
+
+    return company_dashboard_products_summary_service(
+        user_id=user_id,
+        database=database,
+    )
+
 
 @router.get("/dashboard/get-my-product/{product_id}", response_model=ProductDetailResponse)
 def get_my_product_detail(
@@ -503,6 +536,68 @@ def delete_variant_specification(
         product_id=product_id,
         variant_id=variant_id,
         specification_id=specification_id,
+        database=database,
+    )
+
+
+# ==============================
+# ROUTERS PEDIDOS (Fase 5 - ver ALCANCE)
+# ==============================
+# Pedidos recibidos por la empresa. El lado comprador vive en
+# OrderRouter.py (/orders) - ambos reutilizan el mismo OrderService.
+
+@router.get("/dashboard/orders", response_model=OrdersPaginatedResponse)
+def get_company_orders(
+    request: Request,
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=50),
+    # Repetible (?status=pending&status=paid) - las pestañas del
+    # dashboard de empresa agrupan varios estados a la vez (ver
+    # Orders.tsx > STATUS_TABS).
+    status: list[str] | None = Query(None),
+    search: str | None = Query(None),
+    database: Session = Depends(get_db),
+):
+    return list_company_orders_service(
+        user_id=request.state.user_id,
+        database=database,
+        page=page,
+        limit=limit,
+        statuses=status,
+        search=search,
+    )
+
+
+@router.get("/dashboard/orders/status-counts", response_model=OrderStatusCountsResponse)
+def get_company_orders_status_counts(request: Request, database: Session = Depends(get_db)):
+    return get_company_order_status_counts_service(
+        user_id=request.state.user_id,
+        database=database,
+    )
+
+
+@router.get("/dashboard/orders/{order_id}", response_model=OrderResponse)
+def get_company_order_detail(
+    request: Request, order_id: UUID, database: Session = Depends(get_db)
+):
+    return get_company_order_detail_service(
+        user_id=request.state.user_id,
+        order_id=order_id,
+        database=database,
+    )
+
+
+@router.patch("/dashboard/orders/{order_id}/status", response_model=OrderResponse)
+def update_company_order_status(
+    request: Request,
+    order_id: UUID,
+    data: UpdateOrderStatusRequest,
+    database: Session = Depends(get_db),
+):
+    return update_company_order_status_service(
+        user_id=request.state.user_id,
+        order_id=order_id,
+        new_status=data.status,
         database=database,
     )
 

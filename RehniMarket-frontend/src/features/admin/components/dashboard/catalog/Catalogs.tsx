@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, ListTree } from "lucide-react";
+import { Plus, Pencil, Trash2, ListTree, ImageOff, Power } from "lucide-react";
 
 import CatalogFormModal from "./CatalogFormModal";
 import CatalogDeleteConfirmModal from "./CatalogDeleteConfirmModal";
@@ -9,10 +9,15 @@ import {
   getAdminCatalogs,
   createAdminCatalog,
   updateAdminCatalog,
+  changeAdminCatalogStatus,
   deleteAdminCatalog,
 } from "@/features/admin/api/catalogService";
 
 import type { AdminCatalogResponse } from "@/features/admin/types/response";
+import type { CatalogFormValues } from "./CatalogFormModal";
+
+const sortCatalogs = (items: AdminCatalogResponse[]) =>
+  [...items].sort((a, b) => a.display_order - b.display_order || a.name.localeCompare(b.name));
 
 export default function Catalogs() {
   const [catalogs, setCatalogs] = useState<AdminCatalogResponse[]>([]);
@@ -30,6 +35,8 @@ export default function Catalogs() {
   const [specsCatalog, setSpecsCatalog] =
     useState<AdminCatalogResponse | null>(null);
 
+  const [statusChangingId, setStatusChangingId] = useState<string | null>(null);
+
   useEffect(() => {
     const loadCatalogs = async () => {
       try {
@@ -37,7 +44,7 @@ export default function Catalogs() {
 
         const response = await getAdminCatalogs();
 
-        setCatalogs(response);
+        setCatalogs(sortCatalogs(response));
       } catch (error) {
         console.error("Error cargando catálogos:", error);
       } finally {
@@ -65,24 +72,35 @@ export default function Catalogs() {
     setEditingCatalog(null);
   };
 
-  const handleSubmitForm = async (name: string) => {
+  const handleSubmitForm = async (values: CatalogFormValues) => {
     try {
       setSaving(true);
 
       if (editingCatalog) {
-        const updated = await updateAdminCatalog(editingCatalog.id, { name });
+        const updated = await updateAdminCatalog(editingCatalog.id, {
+          name: values.name,
+          description: values.description,
+          display_order: values.displayOrder,
+          is_active: values.isActive,
+          ...(values.image ? { image: values.image } : {}),
+          ...(values.removeImage ? { remove_image: true } : {}),
+        });
 
         setCatalogs((current) =>
-          current
-            .map((catalog) => (catalog.id === updated.id ? updated : catalog))
-            .sort((a, b) => a.name.localeCompare(b.name)),
+          sortCatalogs(
+            current.map((catalog) => (catalog.id === updated.id ? updated : catalog)),
+          ),
         );
       } else {
-        const created = await createAdminCatalog({ name });
+        const created = await createAdminCatalog({
+          name: values.name,
+          description: values.description || undefined,
+          display_order: values.displayOrder,
+          is_active: values.isActive,
+          ...(values.image ? { image: values.image } : {}),
+        });
 
-        setCatalogs((current) =>
-          [...current, created].sort((a, b) => a.name.localeCompare(b.name)),
-        );
+        setCatalogs((current) => sortCatalogs([...current, created]));
       }
 
       setFormOpen(false);
@@ -120,13 +138,29 @@ export default function Catalogs() {
     }
   };
 
+  const handleToggleStatus = async (catalog: AdminCatalogResponse) => {
+    try {
+      setStatusChangingId(catalog.id);
+
+      const updated = await changeAdminCatalogStatus(catalog.id, !catalog.is_active);
+
+      setCatalogs((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)),
+      );
+    } catch (error) {
+      console.error("Error cambiando el estado del catálogo:", error);
+    } finally {
+      setStatusChangingId(null);
+    }
+  };
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex shrink-0 items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Catálogos</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Categorías</h2>
           <p className="mt-1 text-sm text-gray-500">
-            Categorías de productos y sus especificaciones técnicas.
+            Categorías del marketplace y sus especificaciones técnicas.
           </p>
         </div>
 
@@ -136,7 +170,7 @@ export default function Catalogs() {
           className="flex items-center gap-2 rounded-xl bg-[#7A1833] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#64132a]"
         >
           <Plus size={18} />
-          Nuevo catálogo
+          Nueva categoría
         </button>
       </div>
 
@@ -145,22 +179,26 @@ export default function Catalogs() {
           <table className="w-full">
             <thead className="sticky top-0 z-10 bg-white">
               <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-400">
+                <th className="px-5 py-3 font-medium">Imagen</th>
                 <th className="px-5 py-3 font-medium">Nombre</th>
-                <th className="px-5 py-3 text-center font-medium">Acción</th>
+                <th className="px-5 py-3 text-center font-medium">Productos</th>
+                <th className="px-5 py-3 text-center font-medium">Orden</th>
+                <th className="px-5 py-3 text-center font-medium">Estado</th>
+                <th className="px-5 py-3 text-center font-medium">Acciones</th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={2} className="px-5 py-8 text-center text-sm text-gray-500">
-                    Cargando catálogos...
+                  <td colSpan={6} className="px-5 py-8 text-center text-sm text-gray-500">
+                    Cargando categorías...
                   </td>
                 </tr>
               ) : catalogs.length === 0 ? (
                 <tr>
-                  <td colSpan={2} className="px-5 py-8 text-center text-sm text-gray-500">
-                    No hay catálogos creados todavía.
+                  <td colSpan={6} className="px-5 py-8 text-center text-sm text-gray-500">
+                    No hay categorías creadas todavía.
                   </td>
                 </tr>
               ) : (
@@ -169,8 +207,42 @@ export default function Catalogs() {
                     key={catalog.id}
                     className="border-b border-gray-100 last:border-0 hover:bg-gray-50"
                   >
+                    <td className="px-5 py-3">
+                      <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg bg-gray-100">
+                        {catalog.image_url ? (
+                          <img
+                            src={catalog.image_url}
+                            alt={catalog.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <ImageOff size={16} className="text-gray-300" />
+                        )}
+                      </div>
+                    </td>
+
                     <td className="px-5 py-3 text-sm font-medium text-gray-900">
                       {catalog.name}
+                    </td>
+
+                    <td className="px-5 py-3 text-center text-sm text-gray-600">
+                      {catalog.product_count}
+                    </td>
+
+                    <td className="px-5 py-3 text-center text-sm text-gray-600">
+                      {catalog.display_order}
+                    </td>
+
+                    <td className="px-5 py-3 text-center">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                          catalog.is_active
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-500"
+                        }`}
+                      >
+                        {catalog.is_active ? "Activa" : "Inactiva"}
+                      </span>
                     </td>
 
                     <td className="px-5 py-3">
@@ -186,9 +258,21 @@ export default function Catalogs() {
 
                         <button
                           type="button"
+                          onClick={() => handleToggleStatus(catalog)}
+                          disabled={statusChangingId === catalog.id}
+                          className={`rounded-lg p-2 transition hover:bg-gray-100 disabled:opacity-50 ${
+                            catalog.is_active ? "text-green-600" : "text-gray-400"
+                          }`}
+                          title={catalog.is_active ? "Desactivar categoría" : "Activar categoría"}
+                        >
+                          <Power size={18} />
+                        </button>
+
+                        <button
+                          type="button"
                           onClick={() => handleOpenEdit(catalog)}
                           className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
-                          title="Editar catálogo"
+                          title="Editar categoría"
                         >
                           <Pencil size={18} />
                         </button>
@@ -197,7 +281,7 @@ export default function Catalogs() {
                           type="button"
                           onClick={() => setDeleteTarget(catalog)}
                           className="rounded-lg p-2 text-red-600 transition hover:bg-red-50"
-                          title="Eliminar catálogo"
+                          title="Eliminar categoría"
                         >
                           <Trash2 size={18} />
                         </button>

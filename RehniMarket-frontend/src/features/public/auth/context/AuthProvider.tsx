@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 import { getProfile } from "@/features/public/auth/api/authService";
@@ -77,6 +77,30 @@ export function AuthProvider({ children }: Props) {
   }, [accessToken]);
 
 
+  // Expuesta vía contexto para volver a pedir GET /auth/me bajo demanda
+  // desde "Configuración de cuenta" después de editar nombre/correo/foto,
+  // sin necesitar recargar la página - mismo fetch que el efecto de
+  // arriba, pero disparado manualmente (no como dependencia de un
+  // efecto).
+  const refreshProfile = useCallback(async () => {
+    if (!accessToken) {
+      setUser(null);
+      setRole(null);
+      return;
+    }
+
+    try {
+      const profile = await getProfile();
+
+      setUser(profile);
+      setRole(profile.role);
+
+    } catch (error) {
+      console.error("Error cargando el perfil:", error);
+    }
+  }, [accessToken]);
+
+
   const login = (data: TokenResponse) => {
 
     setAccessToken(data.access_token);
@@ -124,6 +148,7 @@ export function AuthProvider({ children }: Props) {
     user,
     login,
     logout,
+    refreshProfile,
   };
 
 

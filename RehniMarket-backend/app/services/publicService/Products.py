@@ -1,6 +1,8 @@
+from datetime import datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
 
+from sqlalchemy import and_, case, func, or_
 from sqlalchemy.orm import Session
 
 from app.core.ErrorCodes import ErrorCodes
@@ -9,6 +11,7 @@ from app.core.Exceptions import api_error
 from app.models.ModelCatalog import Catalog, SpecificationTemplate
 from app.models.ModelColor import ColorVariant
 from app.models.ModelProduct import Product
+from app.models.ModelVariant import ProductVariant
 
 from app.schemas.SchemaPublic import (
     PublicProductCardResponse,
@@ -17,15 +20,52 @@ from app.schemas.SchemaPublic import (
     PublicProductSpecificationResponse,
     PublicProductColorResponse,
     PublicProductVariantResponse,
+    PublicProductsPaginatedResponse,
 )
 
 from app.services.NasService import build_media_url
 
 
 def get_catalogs_service(database: Session):
-    catalogs = (database.query(Catalog).order_by(Catalog.name.asc()).all())
+    """
+    Categorías públicas (ver ALCANCE > Módulo completo de Categorías):
+    - Solo `is_active=True` (una categoría desactivada no debe aparecer
+      en el storefront, aunque siga existiendo para sus productos).
+    - Ordenadas por `display_order ASC` (no alfabético).
+    - `image_url` es la imagen real subida por admin/owner (ver
+      ModelCatalog.py > Catalog.image_url) - ya no se calcula a partir
+      de un producto representativo (ese hack se elimina: ahora sí
+      existe una imagen propia de la categoría).
+    - `product_count`: un ÚNICO query agregado (GROUP BY) para TODOS los
+      catálogos a la vez (antes: 2 queries POR catálogo en un loop, ver
+      ALCANCE > Rendimiento/N+1). Cuenta solo productos activos, visibles
+      y con stock válido (mismo criterio que _has_visible_stock, ver
+      abajo - una sola fuente de verdad de esa regla).
+    """
 
-    return [{"id": str(catalog.id),"name": catalog.name,}for catalog in catalogs]
+    catalogs = (
+        database.query(Catalog)
+        .filter(Catalog.is_active.is_(True))
+        .order_by(Catalog.display_order.asc(), Catalog.name.asc())
+        .all()
+    )
+
+    counts = dict(
+        database.query(Product.catalog_id, func.count(Product.id))
+        .filter(Product.is_active.is_(True), _has_visible_stock())
+        .group_by(Product.catalog_id)
+        .all()
+    )
+
+    return [
+        {
+            "id": catalog.id,
+            "name": catalog.name,
+            "product_count": counts.get(catalog.id, 0),
+            "image_url": build_media_url(catalog.image_url) if catalog.image_url else None,
+        }
+        for catalog in catalogs
+    ]
 
 
 def get_colors_service(database: Session):
@@ -94,31 +134,191 @@ def _to_card_response(product: Product) -> PublicProductCardResponse:
         name=product.name,
         image=build_media_url(main_image.url) if main_image else None,
         company_name=product.company.nameCompany,
+        catalog_id=product.catalog_id,
+        catalog_name=product.catalog.name,
         price=product.price,
         discount_enabled=discount_enabled,
         discount_percentage=discount_percentage,
         final_price=final_price,
+        stock=product.stock,
+    )
+
+
+def _has_visible_stock():
+    """
+    Condicion de visibilidad por stock (ver ALCANCE > Reglas de negocio de
+    visibilidad de productos/variantes):
+
+    - Producto SIN variantes (has_variants=False): visible solo si
+      Product.stock > 0.
+    - Producto CON variantes (has_variants=True): visible si existe AL
+      MENOS UNA variante con stock > 0 - Product.stock no es el campo
+      relevante en ese caso (cada variante tiene su propio stock, ver
+      ModelVariant.py). Antes el filtro usaba Product.stock sin importar
+      has_variants, lo que podia ocultar productos con variantes
+      disponibles o mostrar productos con todas las variantes agotadas.
+
+    Se usa tanto en el listado publico (get_daily_products_service) como,
+    a futuro, en cualquier otro endpoint de listado publico que se agregue
+    - es la UNICA fuente de verdad de esta regla, para no duplicarla.
+    """
+
+    return or_(
+        and_(Product.has_variants.is_(False), Product.stock > 0),
+        and_(
+            Product.has_variants.is_(True),
+            Product.variants.any(ProductVariant.stock > 0),
+        ),
     )
 
 
 def get_daily_products_service(database: Session, limit: int = 8) -> list[PublicProductCardResponse]:
     """
-    "Productos del dia" (ver Home publico). No existe todavia un concepto
-    de producto destacado/featured en el modelo actual (revisado
-    Product/ModelProduct.py) - se implementa con la regla mas simple y
-    coherente con lo que ya existe: productos activos, con stock
-    disponible, los mas recientes primero.
+    "Productos del dia" (ver Home publico) - MISMO endpoint que reutilizan
+    catalogo publico, destacados/recomendados, recientes y la busqueda del
+    navbar (no existe otro endpoint publico de "varios productos" - ver
+    ALCANCE > CONSISTENCIA GLOBAL), asi que esta unica funcion determina
+    la visibilidad para todos esos lugares a la vez.
+
+    No existe todavia un concepto de producto destacado/featured en el
+    modelo actual (revisado Product/ModelProduct.py) - se implementa con
+    la regla mas simple y coherente con lo que ya existe: productos
+    activos, visibles por stock (ver _has_visible_stock), los mas
+    recientes primero.
     """
 
     products = (
         database.query(Product)
-        .filter(Product.is_active.is_(True), Product.stock > 0)
+        .filter(Product.is_active.is_(True), _has_visible_stock())
         .order_by(Product.created_at.desc())
         .limit(limit)
         .all()
     )
 
     return [_to_card_response(product) for product in products]
+
+
+# Valores validos de `sort` para list_public_products_service (ver
+# ALCANCE > catalogo publico > Ordenamiento). Cualquier otro valor (o
+# ninguno) cae en "relevance" - no se rompe la busqueda por un sort
+# invalido en la URL.
+SORT_PRICE_ASC = "price_asc"
+SORT_PRICE_DESC = "price_desc"
+SORT_DISCOUNT = "discount"
+SORT_RELEVANCE = "relevance"
+
+
+def list_public_products_service(
+    database: Session,
+    search: str | None = None,
+    catalog_id: UUID | None = None,
+    min_price: Decimal | None = None,
+    max_price: Decimal | None = None,
+    discount: bool | None = None,
+    in_stock: bool | None = None,
+    min_discount: int | None = None,
+    max_stock: int | None = None,
+    days: int | None = None,
+    sort: str | None = None,
+    page: int = 1,
+    limit: int = 24,
+) -> PublicProductsPaginatedResponse:
+    """
+    Catalogo publico completo con filtros reales (ver ALCANCE > pagina
+    Categorias + filtros de catalogo: Categoria, Precio, Descuento,
+    Disponibilidad, Ordenamiento). Unico listado publico de productos con
+    paginacion - antes solo existia /products/daily (limite fijo de 24,
+    sin filtros, ver get_daily_products_service), que el frontend usaba
+    como sustituto temporal (ver TODO en ProductsList.tsx / navbar.tsx,
+    ya resueltos por este endpoint).
+
+    Por defecto (sin filtro de disponibilidad) se incluyen productos
+    agotados - "Disponibilidad" es un filtro real, no algo ya aplicado de
+    entrada (a diferencia de get_daily_products_service, que si oculta
+    agotados porque ahi no hay forma de pedirlos de vuelta).
+
+    El precio (min_price/max_price) y el orden por precio se evaluan
+    sobre el PRECIO FINAL (con descuento aplicado, ver
+    _compute_price_fields) via una expresion SQL equivalente - no sobre
+    el precio base -, para que coincida con lo que la tarjeta le muestra
+    al comprador.
+
+    min_discount/max_stock/days: filtros agregados para que los anuncios
+    dinamicos por reglas (PROMOTION/BLACK_FRIDAY/CYBER_DAYS/LIQUIDATION/
+    NEW_RELEASE, ver AdvertisementTargeting.py) resuelvan a resultados
+    reales via SQL - ninguno carga productos de mas para despues filtrar
+    en memoria/frontend (ver ALCANCE > Rendimiento).
+    """
+
+    final_price_expr = case(
+        (
+            and_(Product.discount_enable.is_(True), Product.discount_value > 0),
+            Product.price - (Product.price * Product.discount_value / 100),
+        ),
+        else_=Product.price,
+    )
+
+    query = database.query(Product).filter(Product.is_active.is_(True))
+
+    if search:
+        query = query.filter(Product.name.ilike(f"%{search.strip()}%"))
+
+    if catalog_id:
+        query = query.filter(Product.catalog_id == catalog_id)
+
+    if min_price is not None:
+        query = query.filter(final_price_expr >= min_price)
+
+    if max_price is not None:
+        query = query.filter(final_price_expr <= max_price)
+
+    if discount:
+        query = query.filter(Product.discount_enable.is_(True), Product.discount_value > 0)
+
+    if in_stock:
+        query = query.filter(_has_visible_stock())
+
+    if min_discount is not None:
+        # >=, no solo "tiene algun descuento" (eso ya lo cubre `discount`
+        # arriba) - mismo campo que ya usa _compute_price_fields.
+        query = query.filter(
+            Product.discount_enable.is_(True), Product.discount_value >= min_discount
+        )
+
+    if max_stock is not None:
+        # LIQUIDACION (ver ALCANCE): Product.stock, no el stock de
+        # variantes - mismo campo que ya usa _has_visible_stock para
+        # productos sin variantes. Un producto con variantes puede tener
+        # Product.stock en 0 aunque tenga variantes con stock (ver
+        # ModelProduct.py) - se documenta la limitacion, no se resuelve
+        # aca para no complicar el filtro con una regla que el propio
+        # modelo de datos no expone de forma agregada.
+        query = query.filter(Product.stock <= max_stock)
+
+    if days is not None:
+        cutoff = datetime.utcnow() - timedelta(days=days)
+        query = query.filter(Product.created_at >= cutoff)
+
+    if sort == SORT_PRICE_ASC:
+        query = query.order_by(final_price_expr.asc())
+    elif sort == SORT_PRICE_DESC:
+        query = query.order_by(final_price_expr.desc())
+    elif sort == SORT_DISCOUNT:
+        query = query.order_by(Product.discount_value.desc(), Product.created_at.desc())
+    else:
+        query = query.order_by(Product.created_at.desc())
+
+    total = query.count()
+    offset = (page - 1) * limit
+    products = query.offset(offset).limit(limit).all()
+
+    return PublicProductsPaginatedResponse(
+        page=page,
+        limit=limit,
+        total=total,
+        total_pages=(total + limit - 1) // limit if total else 0,
+        products=[_to_card_response(product) for product in products],
+    )
 
 
 def _to_color_response(color) -> PublicProductColorResponse | None:
@@ -181,12 +381,23 @@ def get_public_product_detail_service(database: Session, product_id: UUID) -> Pu
 
     variants = [_to_public_variant_response(variant) for variant in product.variants]
 
+    # CompanyLogo se guarda como object_name (sin el bucket "uploads/"
+    # incluido) - mismo patron que company_dashboard_me_service (ver
+    # app/services/DashboardService/company/Dashboard.py).
+    company_logo = (
+        build_media_url(f"uploads/{product.company.CompanyLogo}")
+        if product.company.CompanyLogo
+        else None
+    )
+
     return PublicProductDetailResponse(
         id=product.id,
         name=product.name,
         descripcion=product.descripcion,
         catalog_name=product.catalog.name,
         company_name=product.company.nameCompany,
+        company_id=product.company.id,
+        company_logo=company_logo,
         is_active=product.is_active,
         price=product.price,
         discount_enabled=discount_enabled,

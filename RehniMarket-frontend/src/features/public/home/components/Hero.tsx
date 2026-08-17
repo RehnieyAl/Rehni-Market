@@ -20,8 +20,17 @@ export default function Hero() {
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [minimumLoading, setMinimumLoading] = useState(true);
 
   const touchStartX = useRef<number | null>(null);
+
+  useEffect(() => {
+  const timer = setTimeout(() => {
+    setMinimumLoading(false);
+  }, 500);
+
+  return () => clearTimeout(timer);
+}, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -97,34 +106,32 @@ export default function Hero() {
     return <HeroSkeleton />;
   }
 
-  if (advertisements.length === 0) {
-    return null;
-  }
+  if (loading || minimumLoading) {
+  return <HeroSkeleton />;
+}
 
   return (
-    <section className="w-full pt-4 ">
+    <section className="w-full pt-2 lg:max-w-[1500px] lg:mx-auto lg:px-6">
       <div
   className="
     relative
     w-full
     overflow-hidden
     bg-gray-100
-
     h-[260px]
     sm:h-[300px]
-    md:h-[400px]
-    lg:h-[550px]
-
+    md:h-[420px]
+    lg:h-[460px]
     rounded-none
-    rounded-[28px]
+    lg:rounded-3xl
     shadow-xl
+    animate-hero-premium
   "
-
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-      >
+  onMouseEnter={() => setIsPaused(true)}
+  onMouseLeave={() => setIsPaused(false)}
+  onTouchStart={handleTouchStart}
+  onTouchEnd={handleTouchEnd}
+>
         {advertisements.map((advertisement, slideIndex) => {
           const isActive = slideIndex === index;
 
@@ -199,15 +206,15 @@ export default function Hero() {
                   className="
                       w-full
                       px-6
-                      pb-8
+                      pb-6
 
-                      sm:px-10
-                      sm:pb-10
+                      sm:px-8
+                      sm:pb-8
 
-                      lg:px-16
-                      lg:pb-14
+                      lg:px-14
+                      lg:pb-10
 
-                      xl:px-24
+                      xl:px-20
                     "
                 >
                   <div className="max-w-xl text-white">
@@ -220,6 +227,7 @@ export default function Hero() {
                           sm:text-4xl
 
                           lg:text-5xl
+                          xl:text-5xl
                         "
                     >
                       {advertisement.title}
@@ -228,14 +236,14 @@ export default function Hero() {
                     {advertisement.description && (
                       <p
                         className="
-                            mt-2
+                            mt-3
                             max-w-lg
                             text-sm
                             text-white/90
 
                             sm:text-base
 
-                            lg:text-lg
+                            lg:text-base
                           "
                       >
                         {advertisement.description}
@@ -312,68 +320,81 @@ export default function Hero() {
         {/* FLECHA ANTERIOR */}
         {hasMultiple && (
           <>
-            <button
-              type="button"
-              onClick={goPrev}
-              aria-label="Anuncio anterior"
-              className="
-                absolute
-                left-4
-                top-1/2
-                z-20
-                flex
-                h-10
-                w-10
-                -translate-y-1/2
-                items-center
-                justify-center
-                rounded-full
-                bg-white/90
-                text-gray-800
-                shadow-md
-                transition
-                hover:scale-105
-                hover:bg-white
+            {/* FLECHA ANTERIOR */}
+<button
+  type="button"
+  onClick={goPrev}
+  aria-label="Anuncio anterior"
+  className="
+    absolute
+    left-4
+    top-1/2
+    z-20
 
-                sm:left-6
-                sm:h-11
-                sm:w-11
-              "
-            >
-              <ChevronLeft size={21} aria-hidden="true" />
-            </button>
+    hidden
+    lg:flex
+
+    h-11
+    w-11
+
+    -translate-y-1/2
+    items-center
+    justify-center
+
+    rounded-full
+    bg-white/40
+    backdrop-blur-md
+
+    text-gray-800
+    shadow-md
+
+    transition-all
+    duration-200
+
+    hover:scale-105
+    hover:bg-white/70
+  "
+>
+  <ChevronLeft size={21} aria-hidden="true" />
+</button>
 
             {/* FLECHA SIGUIENTE */}
-            <button
-              type="button"
-              onClick={goNext}
-              aria-label="Siguiente anuncio"
-              className="
-                absolute
-                right-4
-                top-1/2
-                z-20
-                flex
-                h-10
-                w-10
-                -translate-y-1/2
-                items-center
-                justify-center
-                rounded-full
-                bg-white/90
-                text-gray-800
-                shadow-md
-                transition
-                hover:scale-105
-                hover:bg-white
+<button
+  type="button"
+  onClick={goNext}
+  aria-label="Siguiente anuncio"
+  className="
+    absolute
+    right-4
+    top-1/2
+    z-20
 
-                sm:right-6
-                sm:h-11
-                sm:w-11
-              "
-            >
-              <ChevronRight size={21} aria-hidden="true" />
-            </button>
+    hidden
+    lg:flex
+
+    h-11
+    w-11
+
+    -translate-y-1/2
+    items-center
+    justify-center
+
+    rounded-full
+    bg-white/40
+    backdrop-blur-md
+
+    text-gray-800
+    shadow-md
+
+    transition-all
+    duration-200
+
+    hover:scale-105
+    hover:bg-white/70
+  "
+>
+  <ChevronRight size={21} aria-hidden="true" />
+</button>
 
             {/* INDICADORES */}
             <div

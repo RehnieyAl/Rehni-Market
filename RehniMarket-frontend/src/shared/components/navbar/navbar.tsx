@@ -1,7 +1,8 @@
-import { ImageOff, Menu, Search, X } from "lucide-react";
+import { ImageOff, Menu, Search, ShoppingCart, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/public/auth/context/useAuth";
+import { useCart } from "@/features/cart/context/useCart";
 import ProfileDropdown from "./ProfileDropdown";
 import logo from "@/assets/logo.png";
 
@@ -43,6 +44,7 @@ export default function Navbar() {
   const [showDropdown, setShowDropdown] = useState(false);
 
   const { role } = useAuth();
+  const { cart } = useCart();
   const navigate = useNavigate();
 
   const desktopSearchRef = useRef<HTMLDivElement>(null);
@@ -249,6 +251,22 @@ export default function Navbar() {
         </div>
 
         <div className="hidden items-center gap-5 lg:flex">
+          {role === "user" && (
+            <Link
+              to="/cart"
+              className="relative rounded-xl p-2 text-gray-700 transition hover:bg-gray-100"
+              aria-label="Mi carrito"
+            >
+              <ShoppingCart size={22} />
+
+              {!!cart?.totalItems && (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#6D0F2D] text-[10px] font-bold text-white">
+                  {cart.totalItems}
+                </span>
+              )}
+            </Link>
+          )}
+
           {role == null ? (
             <>
               <Link to="/login" className="font-medium">
@@ -338,6 +356,25 @@ export default function Navbar() {
             </nav>
 
             <div className="my-4 border-t border-gray-200" />
+
+            {role === "user" && (
+              <Link
+                to="/cart"
+                onClick={() => setOpen(false)}
+                className="mb-4 flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700"
+              >
+                <span className="flex items-center gap-2">
+                  <ShoppingCart size={18} />
+                  Mi carrito
+                </span>
+
+                {!!cart?.totalItems && (
+                  <span className="rounded-full bg-[#6D0F2D] px-2 py-0.5 text-xs font-bold text-white">
+                    {cart.totalItems}
+                  </span>
+                )}
+              </Link>
+            )}
 
             {role == null ? (
               <div className="flex flex-col gap-3">

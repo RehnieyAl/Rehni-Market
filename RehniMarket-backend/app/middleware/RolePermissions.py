@@ -45,6 +45,7 @@ ROLES_PERMISSIONS_ROUTERS = {
         "/company/dashboard/upgrade-my-profile",
         "/company/dashboard/patch-media-logo-banner",
         "/company/dashboard/create-product",
+        "/company/dashboard/products-summary",
         "/company/dashboard/get-my-products",
         "/company/dashboard/get-my-product/",
         "/company/dashboard/change-status-my-product/",
@@ -54,10 +55,30 @@ ROLES_PERMISSIONS_ROUTERS = {
         # especificaciones), ver app/routers/CompanyRouter.py: todas esas
         # rutas empiezan con este mismo prefijo.
         "/company/dashboard/products/",
+        # Pedidos recibidos por la empresa (ver ALCANCE > Fase 5).
+        "/company/dashboard/orders",
         "/auth/me",
     ],
 
+    # Compras: unicamente USER puede comprar (ver ALCANCE > Restricciones
+    # de compra). ADMIN/OWNER tienen bypass total via FULL_ACCESS_ROLES,
+    # asi que ademas se revalida el rol dentro de cada servicio (ver
+    # CartService._require_buyer y equivalentes) para que "solo user
+    # puede comprar" se cumpla de verdad y no dependa solo de esta lista.
+    # No se incluye "/wallet/recharge": ese endpoint es exclusivo de
+    # ADMIN/OWNER (ver WalletRouter.py).
     "user": [
         "/auth/me",
+        "/cart",
+        "/checkout",
+        "/orders",
+        "/favorites",
+        "/addresses",
+        "/wallet/me",
+        "/wallet/transactions",
+        # Escribir/editar/eliminar reseñas propias (ver ALCANCE >
+        # Calificaciones de empresa) - el listado publico de reseñas de
+        # un producto vive en /public/products/{id}/reviews, no aca.
+        "/reviews",
     ],
 }

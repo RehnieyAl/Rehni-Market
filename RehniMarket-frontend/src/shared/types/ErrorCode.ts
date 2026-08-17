@@ -93,6 +93,52 @@ export class ErrorCode {
   static readonly ADVERTISEMENT_IMAGE_REQUIRED = "ADVERTISEMENT_IMAGE_REQUIRED";
 
   // ==========================
+  // CARRITO
+  // ==========================
+  static readonly CART_NOT_FOUND = "CART_NOT_FOUND";
+  static readonly CART_ITEM_NOT_FOUND = "CART_ITEM_NOT_FOUND";
+  static readonly CART_EMPTY = "CART_EMPTY";
+  static readonly INVALID_QUANTITY = "INVALID_QUANTITY";
+  static readonly INSUFFICIENT_STOCK = "INSUFFICIENT_STOCK";
+
+  // ==========================
+  // PEDIDOS
+  // ==========================
+  static readonly ORDER_NOT_FOUND = "ORDER_NOT_FOUND";
+  static readonly INVALID_ORDER_STATUS_TRANSITION = "INVALID_ORDER_STATUS_TRANSITION";
+
+  // ==========================
+  // FAVORITOS
+  // ==========================
+  static readonly FAVORITE_ALREADY_EXISTS = "FAVORITE_ALREADY_EXISTS";
+  static readonly FAVORITE_NOT_FOUND = "FAVORITE_NOT_FOUND";
+
+  // ==========================
+  // DIRECCIONES
+  // ==========================
+  static readonly ADDRESS_NOT_FOUND = "ADDRESS_NOT_FOUND";
+  static readonly ADDRESS_REQUIRED = "ADDRESS_REQUIRED";
+
+  // ==========================
+  // BILLETERA (REHNICOIN)
+  // ==========================
+  static readonly WALLET_NOT_FOUND = "WALLET_NOT_FOUND";
+  static readonly INSUFFICIENT_BALANCE = "INSUFFICIENT_BALANCE";
+  static readonly INVALID_AMOUNT = "INVALID_AMOUNT";
+
+  // ==========================
+  // RESTRICCIONES DE COMPRA
+  // ==========================
+  static readonly PURCHASE_NOT_ALLOWED = "PURCHASE_NOT_ALLOWED";
+
+  // ==========================
+  // RESEÑAS
+  // ==========================
+  static readonly REVIEW_NOT_FOUND = "REVIEW_NOT_FOUND";
+  static readonly REVIEW_ALREADY_EXISTS = "REVIEW_ALREADY_EXISTS";
+  static readonly REVIEW_NOT_ELIGIBLE = "REVIEW_NOT_ELIGIBLE";
+
+  // ==========================
   // VALIDACIÓN
   // ==========================
   static readonly VALIDATION_ERROR = "VALIDATION_ERROR";

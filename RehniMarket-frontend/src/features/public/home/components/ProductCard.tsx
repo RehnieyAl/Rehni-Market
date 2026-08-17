@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Heart, ImageOff } from "lucide-react";
 
 import { formatPrice } from "@/shared/utils/formatPrice";
+import { useAuth } from "@/features/public/auth/context/useAuth";
+import { addFavorite, removeFavorite } from "@/features/favorites/api/favoriteService";
 
 import type { PublicProductCard } from "../types/response";
 
@@ -10,6 +13,37 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const { role } = useAuth();
+
+  // No hay un endpoint de "productos favoritos" masivo para precargar el
+  // estado de cada tarjeta (ver ALCANCE > Favoritos) - el corazón arranca
+  // sin marcar y refleja lo que el propio usuario hace en esta sesión.
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (role !== "user" || saving) return;
+
+    try {
+      setSaving(true);
+
+      if (isFavorite) {
+        await removeFavorite(product.id);
+        setIsFavorite(false);
+      } else {
+        await addFavorite(product.id);
+        setIsFavorite(true);
+      }
+    } catch (error) {
+      console.error("Error actualizando favoritos:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <Link
       to={`/products/${product.id}`}
@@ -28,16 +62,20 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-          className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md"
-        >
-          <Heart size={18} />
-        </button>
+        {role === "user" && (
+          <button
+            type="button"
+            onClick={handleToggleFavorite}
+            disabled={saving}
+            aria-label={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
+            className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md disabled:opacity-60"
+          >
+            <Heart
+              size={18}
+              className={isFavorite ? "fill-[#6D0F2D] text-[#6D0F2D]" : "text-gray-700"}
+            />
+          </button>
+        )}
 
         {product.discount_enabled &&
           product.discount_percentage !== null && (
