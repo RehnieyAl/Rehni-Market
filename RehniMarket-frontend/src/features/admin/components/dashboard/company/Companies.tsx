@@ -16,6 +16,9 @@ import {
   updateCompanyStatus,
 } from "@/features/admin/api/companyService";
 
+import { useAlert } from "@/shared/components/alert/useAlert";
+import { formatPrice } from "@/shared/utils/formatPrice";
+
 import type {
   AdminCompanyResponse,
   CompanyCertificateStatus,
@@ -26,6 +29,8 @@ import type {
 } from "@/features/admin/api/companyService";
 
 export default function Companies() {
+  const { showAlert } = useAlert();
+
   const [companies, setCompanies] = useState<
     AdminCompanyResponse[]
   >([]);
@@ -55,6 +60,9 @@ export default function Companies() {
 
   const [updatingStatus, setUpdatingStatus] =
     useState(false);
+
+  const [statusReason, setStatusReason] =
+    useState("");
 
   const [certificateFilter, setCertificateFilter] =
     useState<CompanyCertificateFilter>("all");
@@ -224,6 +232,7 @@ export default function Companies() {
     company: AdminCompanyResponse,
   ) => {
     setSelectedStatusCompany(company);
+    setStatusReason("");
     setStatusModalOpen(true);
   };
 
@@ -234,6 +243,7 @@ export default function Companies() {
 
     setStatusModalOpen(false);
     setSelectedStatusCompany(null);
+    setStatusReason("");
   };
 
   // =========================
@@ -245,15 +255,27 @@ export default function Companies() {
       return;
     }
 
+    const newStatus =
+      !selectedStatusCompany.CompanyStatus;
+
+    // El motivo es obligatorio solo al suspender, es decir cuando
+    // newStatus es false (ver CompanyStatusConfirmModal, que ya
+    // deshabilita el botón en este caso - esta validación es la de
+    // respaldo del lado del padre).
+    if (!newStatus && !statusReason.trim()) {
+      return;
+    }
+
     try {
       setUpdatingStatus(true);
 
-      const newStatus =
-        !selectedStatusCompany.CompanyStatus;
-
-      await updateCompanyStatus(
+      const result = await updateCompanyStatus(
         selectedStatusCompany.id,
         newStatus,
+        // El motivo aplica al SUSPENDER (newStatus=false), no al
+        // desbloquear (newStatus=true, ver update_company_status_service
+        // > is_new_suspension) - "!newStatus", no "newStatus".
+        !newStatus ? statusReason.trim() : undefined,
       );
 
       setCompanies(
@@ -265,7 +287,9 @@ export default function Companies() {
                 ? {
                     ...company,
                     CompanyStatus:
-                      newStatus,
+                      result.CompanyStatus,
+                    suspensionReason:
+                      result.suspensionReason,
                   }
                 : company,
           ),
@@ -273,6 +297,30 @@ export default function Companies() {
 
       setSelectedStatusCompany(null);
       setStatusModalOpen(false);
+      setStatusReason("");
+
+      // Feedback global con los valores REALES devueltos por el backend
+      // (ver ALCANCE > FEEDBACK ADMIN) - nunca un mensaje inventado.
+      if (newStatus) {
+        showAlert(
+          "success",
+          "Empresa desbloqueada correctamente.",
+        );
+      } else if (result.affectedOrdersCount > 0) {
+        showAlert(
+          "success",
+          `Empresa suspendida correctamente. Se procesaron ${result.affectedOrdersCount} pedido${
+            result.affectedOrdersCount !== 1 ? "s" : ""
+          } y se reembolsaron ${formatPrice(
+            result.totalRefunded,
+          )} en RehniCoins.`,
+        );
+      } else {
+        showAlert(
+          "success",
+          "Empresa suspendida correctamente. No había pedidos pendientes de reembolso.",
+        );
+      }
     } catch (error) {
       console.error(
         "Error actualizando estado de la empresa:",
@@ -730,6 +778,8 @@ export default function Companies() {
           loading={
             updatingStatus
           }
+          reason={statusReason}
+          onReasonChange={setStatusReason}
           onConfirm={
             handleCompanyStatus
           }

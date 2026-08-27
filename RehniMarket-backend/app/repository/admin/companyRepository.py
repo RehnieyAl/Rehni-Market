@@ -212,9 +212,30 @@ def get_company_by_id(
         CompanyCertificate=certificado,
         CompanyCertificateStatus=company.CompanyCertificateStatus,
         CompanyStatus=company.CompanyStatus,
+        suspensionReason=company.suspension_reason,
         addressCompany=company.addressCompany,
         user_id=company.user_id,
         created_at=company.created_at,
+    )
+
+
+def get_company_by_id_orm(
+    database: Session,
+    company_id: UUID,
+) -> Company | None:
+    """
+    A diferencia de get_company_by_id (arriba), devuelve el ORM crudo, no
+    el DTO AdminCompanyDetailResponse - lo necesita update_company_status_
+    service para leer CompanyStatus ANTES de cambiarlo (para saber si
+    esta suspensión es nueva, true->false, o una repetición sobre una
+    empresa que ya estaba suspendida - ver ALCANCE > Suspensión de
+    empresa, punto 6) y para mutar suspension_reason en el mismo objeto.
+    """
+
+    return (
+        database.query(Company)
+        .filter(Company.id == company_id)
+        .first()
     )
 
 

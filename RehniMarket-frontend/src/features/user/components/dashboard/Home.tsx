@@ -11,7 +11,7 @@ import ProductCard from "@/features/public/home/components/ProductCard";
 import ProductCardSkeleton from "@/features/public/home/components/ProductCardSkeleton";
 
 import { getMyOrders } from "@/features/orders/api/orderService";
-import { getFavorites } from "@/features/favorites/api/favoriteService";
+import { useFavorites } from "@/features/favorites/context/useFavorites";
 import { getMyWallet } from "@/features/wallet/api/walletService";
 import { ORDER_STATUS_LABEL } from "@/features/orders/utils/orderStatus";
 import { formatPrice } from "@/shared/utils/formatPrice";
@@ -28,12 +28,14 @@ const PENDING_STATUSES = new Set(["pending", "paid", "processing", "shipped"]);
 
 export default function Home() {
   const { user } = useAuth();
+  // Mismo estado global que ProductCard.tsx (ver FavoritesProvider.tsx) -
+  // evita un GET /favorites aparte solo para contar cuántos hay.
+  const { favoriteIds, loading: favoritesLoading } = useFavorites();
 
   const [products, setProducts] = useState<PublicProductCard[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
 
   const [pendingOrders, setPendingOrders] = useState(0);
-  const [favoritesCount, setFavoritesCount] = useState(0);
   const [walletBalance, setWalletBalance] = useState("0");
   const [lastOrder, setLastOrder] = useState<Order | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(true);
@@ -59,16 +61,11 @@ export default function Home() {
       try {
         setSummaryLoading(true);
 
-        const [orders, favorites, wallet] = await Promise.all([
-          getMyOrders(1, 10),
-          getFavorites(),
-          getMyWallet(),
-        ]);
+        const [orders, wallet] = await Promise.all([getMyOrders(1, 10), getMyWallet()]);
 
         setPendingOrders(
           orders.items.filter((order) => PENDING_STATUSES.has(order.status)).length,
         );
-        setFavoritesCount(favorites.length);
         setWalletBalance(wallet.balance);
         setLastOrder(orders.items[0] ?? null);
       } catch (error) {
@@ -86,7 +83,7 @@ export default function Home() {
       {/* Bienvenida */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          Hola, {user?.name ?? "Cargando..."} 👋
+          Hola, {user?.name ?? "Cargando..."}
         </h1>
 
         <p className="mt-2 text-gray-500">
@@ -105,7 +102,7 @@ export default function Home() {
 
         <StatCard
           title="Favoritos"
-          value={summaryLoading ? "..." : String(favoritesCount)}
+          value={favoritesLoading ? "..." : String(favoriteIds.size)}
           subtitle="Productos guardados"
           icon={<Heart size={24} />}
         />

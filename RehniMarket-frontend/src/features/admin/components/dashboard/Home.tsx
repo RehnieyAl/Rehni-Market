@@ -15,6 +15,7 @@ import {
   getRecentAdminActivities,
   getRecentAdminUsers,
 } from "@/features/admin/api/dashboardService";
+import { useAlert } from "@/shared/components/alert/useAlert";
 
 import type {
   AdminDashboardStatisticsResponse,
@@ -27,6 +28,8 @@ interface HomeProps {
 }
 
 export default function Home({ onNavigate }: HomeProps) {
+  const { showAlert } = useAlert();
+
   const [statistics, setStatistics] =
     useState<AdminDashboardStatisticsResponse | null>(null);
 
@@ -44,7 +47,11 @@ export default function Home({ onNavigate }: HomeProps) {
   const [recentUsersLoading, setRecentUsersLoading] =
     useState(true);
 
-  const [error, setError] = useState(false);
+  // Solo controla el "—" de las tarjetas de estadísticas cuando la carga
+  // falla (ver getValue más abajo) - el AVISO al usuario ya no se
+  // renderiza a mano acá, lo muestra el sistema global de alertas
+  // (ver showAlert en el catch de abajo).
+  const [statsFailed, setStatsFailed] = useState(false);
 
   /*
    * Se utiliza únicamente para actualizar
@@ -64,7 +71,7 @@ export default function Home({ onNavigate }: HomeProps) {
     const loadStatistics = async () => {
       try {
         setLoading(true);
-        setError(false);
+        setStatsFailed(false);
 
         const response =
           await getAdminDashboardStatistics();
@@ -76,13 +83,15 @@ export default function Home({ onNavigate }: HomeProps) {
           error,
         );
 
-        setError(true);
+        setStatsFailed(true);
+        showAlert("error", "No se pudieron cargar las estadísticas.");
       } finally {
         setLoading(false);
       }
     };
 
     loadStatistics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /*
@@ -180,7 +189,7 @@ export default function Home({ onNavigate }: HomeProps) {
       return "...";
     }
 
-    if (error) {
+    if (statsFailed) {
       return "—";
     }
 
@@ -202,18 +211,6 @@ export default function Home({ onNavigate }: HomeProps) {
           Resumen general de RehniMarket.
         </p>
       </div>
-
-      {/* =========================
-          ERROR
-      ========================= */}
-
-      {error && (
-        <div className="mt-4 shrink-0 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-          <p className="text-sm text-red-700">
-            No se pudieron cargar las estadísticas.
-          </p>
-        </div>
-      )}
 
       {/* =========================
           CONTENIDO

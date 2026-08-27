@@ -60,9 +60,9 @@ def register_user_service(user: CreateUserRequest, database: Session):
         database.rollback()
         raise
 
-    except Exception as e:
-        print(f"Error al registrar el usuario: {e}")
+    except Exception:
         database.rollback()
+        traceback.print_exc()
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR,"Error interno del servidor.")
 
 
@@ -120,13 +120,11 @@ def register_company_service(user: CreateUserRequest, company: CreateCompanyRequ
         }
     
 
-    except HTTPException as e:
-        print(f"Error HTTP al registrar la empresa: {e}")
+    except HTTPException:
         database.rollback()
         raise
-    
-    except Exception as e:
-        print(f"Error al registrar la empresa: {e}")
+
+    except Exception:
         database.rollback()
         traceback.print_exc()
 

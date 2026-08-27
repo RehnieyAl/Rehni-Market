@@ -14,14 +14,12 @@ import type { PublicProductCard } from "@/features/public/home/types/response";
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULTS_LIMIT = 5;
 
-// TODO(backend): no existe todavía un endpoint público de búsqueda de
-// productos (GET /public/products?search=...) - ver ALCANCE >
-// app/routers/publicRouters.py, que solo expone /products/daily (máx 24,
-// sin filtro por texto) y /products/{id}. Mientras no exista, este
-// dropdown reutiliza /products/daily como única fuente real de "varios
-// productos" y filtra por nombre en el cliente sobre ese resultado (se
-// cachea en memoria para no repetir la llamada en cada tecla). Cuando el
-// backend exponga búsqueda real, reemplazar por ese endpoint aquí.
+// Dropdown de búsqueda rápida del navbar: reutiliza /products/daily como
+// fuente de "varios productos" y filtra por nombre en el cliente sobre
+// ese resultado (se cachea en memoria para no repetir la llamada en cada
+// tecla). GET /public/products ya soporta un filtro `search` real (ver
+// ProductsList.tsx) - este dropdown puntual no fue migrado a ese
+// endpoint todavía.
 
 const desktopLink = ({ isActive }: { isActive: boolean }) =>
   `relative py-1 transition hover:text-[#6D0F2D] ${

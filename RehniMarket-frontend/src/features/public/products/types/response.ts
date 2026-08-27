@@ -74,22 +74,42 @@ export interface PublicProductVariant {
   specifications: PublicProductSpecification[];
 }
 
+// Conteo real de reseñas activas por puntaje (ver ALCANCE > rediseño
+// detalle de producto, panel "Opiniones de compradores" - espejo de
+// PublicRatingDistributionResponse en SchemaPublic.py).
+export interface PublicRatingDistribution {
+  five: number;
+  four: number;
+  three: number;
+  two: number;
+  one: number;
+}
+
 export interface PublicProductDetail {
   id: string;
   name: string;
   descripcion: string;
   catalog_name: string;
+  // Id real del catálogo - se usa para pedir "Productos relacionados"
+  // (GET /public/products?catalog=, ver RelatedProducts.tsx).
+  catalog_id: string;
   company_name: string;
   // Datos minimos de la empresa para el bloque "Vendido por" (ver
   // ProductDetail.tsx > "Ver perfil de empresa").
   company_id: string;
   company_logo: string | null;
+  company_is_verified: boolean;
   is_active: boolean;
   price: string;
   discount_enabled: boolean;
   discount_percentage: number | null;
   final_price: string;
   stock: number;
+  // Resumen real de reseñas (ver ReviewsSection.tsx) - average_rating es
+  // null cuando review_count es 0, nunca 0 falso.
+  average_rating: number | null;
+  review_count: number;
+  rating_distribution: PublicRatingDistribution;
   color: PublicProductColor | null;
   images: PublicProductImage[];
   specifications: PublicProductSpecification[];

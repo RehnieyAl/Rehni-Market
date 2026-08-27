@@ -165,7 +165,6 @@ def get_my_product(
     limit: int = 5,
     database: Session = Depends(get_db)
 ):
-    print("accediendo a endpoint")
     user_id = request.state.user_id
 
     return company_dashboard_get_my_products(
@@ -238,8 +237,6 @@ def change_status_my_product(
 
     user_id = request.state.user_id
 
-    print("userid", user_id)
-    
     return change_product_status_service(
         user_id=user_id,
         product_id=product_id,

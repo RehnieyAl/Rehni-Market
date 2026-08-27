@@ -244,9 +244,6 @@ def seed_owner(db: Session):
     owner_email = config.OWNER_DEFAULT
     owner_password = config.OWNER_PASSWORD_DEFAULT
 
-    # Si no se configuraron las variables de entorno del owner,
-    # no se crea ninguna cuenta (evita insertar un usuario con
-    # correo/contraseña vacios).
     if not owner_name or not owner_email or not owner_password:
         return
 

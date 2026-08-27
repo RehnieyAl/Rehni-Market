@@ -18,7 +18,7 @@ from app.schemas.SchemaPublic import (
 )
 
 from app.services.NasService import build_media_url
-from app.services.publicService.Products import _to_card_response, _has_visible_stock
+from app.services.publicService.Products import _to_card_responses, _has_visible_stock
 
 
 # ==========================
@@ -35,7 +35,11 @@ def get_public_company_profile_service(
 
     company = get_company_by_id(database, company_id)
 
-    if not company:
+    # Empresa suspendida (ver ALCANCE > BUG 2): mismo código/mensaje que
+    # "no existe" - no se distingue "no existe" de "suspendida" en la
+    # respuesta pública, para no revelar el estado de la cuenta a
+    # cualquier visitante (ver ALCANCE > "no revelar información").
+    if not company or not company.CompanyStatus:
         api_error(404, ErrorCodes.COMPANY_NOT_FOUND, "Empresa no encontrada.")
 
     # "Verificada" para el storefront publico = certificado aprobado y sin
@@ -73,6 +77,7 @@ def get_public_company_profile_service(
         .filter(
             Product.company_id == company.id,
             Product.is_active.is_(True),
+            Product.deleted_at.is_(None),
             _has_visible_stock(),
         )
         .count()
@@ -132,7 +137,10 @@ def get_public_company_products_service(
 
     company = get_company_by_id(database, company_id)
 
-    if not company:
+    # Mismo criterio que get_public_company_profile_service (ver ALCANCE
+    # > BUG 2): una empresa suspendida responde igual que una que no
+    # existe.
+    if not company or not company.CompanyStatus:
         api_error(404, ErrorCodes.COMPANY_NOT_FOUND, "Empresa no encontrada.")
 
     offset = (page - 1) * limit
@@ -142,6 +150,7 @@ def get_public_company_products_service(
         .filter(
             Product.company_id == company.id,
             Product.is_active.is_(True),
+            Product.deleted_at.is_(None),
             _has_visible_stock(),
         )
         .order_by(Product.created_at.desc())
@@ -156,5 +165,5 @@ def get_public_company_products_service(
         limit=limit,
         total=total,
         total_pages=(total + limit - 1) // limit if total else 0,
-        products=[_to_card_response(product) for product in products],
+        products=_to_card_responses(database, products),
     )

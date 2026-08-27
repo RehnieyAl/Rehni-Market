@@ -148,6 +148,46 @@ class ErrorCodes:
     REVIEW_NOT_ELIGIBLE = "REVIEW_NOT_ELIGIBLE"
 
     # ==========================
+    # CUENTAS BANCARIAS (LIQUIDACIONES)
+    # ==========================
+    BANK_ACCOUNT_NOT_FOUND = "BANK_ACCOUNT_NOT_FOUND"
+    # La cuenta ya está referenciada por al menos una liquidación - no se
+    # puede eliminar (ver BankAccountService.delete_bank_account_service).
+    BANK_ACCOUNT_IN_USE = "BANK_ACCOUNT_IN_USE"
+
+    # ==========================
+    # LIQUIDACIONES (PAYOUTS)
+    # ==========================
+    PAYOUT_NOT_FOUND = "PAYOUT_NOT_FOUND"
+    # Ya existe una liquidación generada para esa empresa y ese periodo
+    # exacto (ver CompanyPayout, UniqueConstraint company_id+period_start+
+    # period_end).
+    PAYOUT_ALREADY_EXISTS = "PAYOUT_ALREADY_EXISTS"
+    PAYOUT_ALREADY_PAID = "PAYOUT_ALREADY_PAID"
+    # La empresa no tiene ninguna cuenta bancaria predeterminada registrada
+    # - no hay a dónde girar el 95% (ver PayoutService).
+    PAYOUT_NO_BANK_ACCOUNT = "PAYOUT_NO_BANK_ACCOUNT"
+    # No hay ventas válidas (pedidos DELIVERED) en el periodo solicitado -
+    # no tiene sentido generar una liquidación en $0.
+    PAYOUT_NO_VALID_SALES = "PAYOUT_NO_VALID_SALES"
+    PAYOUT_INVALID_PERIOD = "PAYOUT_INVALID_PERIOD"
+
+    # ==========================
+    # REPORTES (producto/empresa)
+    # ==========================
+    REPORT_NOT_FOUND = "REPORT_NOT_FOUND"
+    # El target_type no coincide con lo que trae targetId (ej. targetType
+    # "product" pero el id no existe como producto), o el target_type
+    # enviado no es "product"/"company".
+    INVALID_REPORT_TARGET = "INVALID_REPORT_TARGET"
+    # RESOLVED es un estado terminal (ver ALCANCE > Reportes - "RESOLVED
+    # = estado terminal"): cualquier intento de modificar un reporte ya
+    # resuelto (cambiar su estado, su respuesta administrativa, o
+    # cualquier otro campo) se rechaza con este código, sin importar qué
+    # transición se pida.
+    REPORT_ALREADY_RESOLVED = "REPORT_ALREADY_RESOLVED"
+
+    # ==========================
     # VALIDACIÓN
     # ==========================
     VALIDATION_ERROR = "VALIDATION_ERROR"

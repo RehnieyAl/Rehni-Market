@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Pencil, Save, ShieldCheck, Upload, X } from "lucide-react";
 
+import ConfirmModal from "@/shared/components/ConfirmModal";
+import { useAlert } from "@/shared/components/alert/useAlert";
 import { useAuth } from "@/features/public/auth/context/useAuth";
 import { forgotPassword, updateMe, updateMePhoto } from "@/features/public/auth/api/authService";
 
@@ -15,6 +17,9 @@ import { forgotPassword, updateMe, updateMePhoto } from "@/features/public/auth/
 export default function AccountSettings() {
   const navigate = useNavigate();
   const { user, refreshProfile } = useAuth();
+  const { showAlert } = useAlert();
+
+  const [confirmPasswordOpen, setConfirmPasswordOpen] = useState(false);
 
   const [editingName, setEditingName] = useState(false);
   const [nameForm, setNameForm] = useState(user?.name ?? "");
@@ -39,7 +44,7 @@ export default function AccountSettings() {
     const trimmed = nameForm.trim();
 
     if (trimmed.length < 3) {
-      alert("El nombre debe tener al menos 3 caracteres.");
+      showAlert("error", "El nombre debe tener al menos 3 caracteres.");
       return;
     }
 
@@ -50,7 +55,7 @@ export default function AccountSettings() {
       setEditingName(false);
     } catch (error) {
       console.error("Error actualizando el nombre", error);
-      alert("No se pudo actualizar el nombre. Intenta de nuevo.");
+      showAlert("error", "No se pudo actualizar el nombre. Intenta de nuevo.");
     } finally {
       setSavingName(false);
     }
@@ -77,7 +82,7 @@ export default function AccountSettings() {
       setPreviewPhoto(null);
     } catch (error) {
       console.error("Error actualizando la foto de perfil", error);
-      alert("No se pudo actualizar la foto de perfil. Intenta de nuevo.");
+      showAlert("error", "No se pudo actualizar la foto de perfil. Intenta de nuevo.");
     } finally {
       setUploadingPhoto(false);
     }
@@ -92,7 +97,7 @@ export default function AccountSettings() {
     const trimmed = emailForm.trim();
 
     if (!trimmed) {
-      alert("Ingresa un correo electrónico válido.");
+      showAlert("error", "Ingresa un correo electrónico válido.");
       return;
     }
 
@@ -103,7 +108,7 @@ export default function AccountSettings() {
       setEditingEmail(false);
     } catch (error) {
       console.error("Error actualizando el correo", error);
-      alert("No se pudo actualizar el correo. Es posible que ya esté en uso.");
+      showAlert("error", "No se pudo actualizar el correo. Es posible que ya esté en uso.");
     } finally {
       setSavingEmail(false);
     }
@@ -116,23 +121,16 @@ export default function AccountSettings() {
   const handleChangePassword = async () => {
     if (!user) return;
 
-    if (
-      !window.confirm(
-        `Te enviaremos un código de verificación a ${user.email} para crear una nueva contraseña. ¿Continuar?`,
-      )
-    ) {
-      return;
-    }
-
     try {
       setSendingCode(true);
       await forgotPassword({ email: user.email });
       navigate("/reset-password", { state: { email: user.email } });
     } catch (error) {
       console.error("Error enviando el código de recuperación", error);
-      alert("No se pudo enviar el código. Intenta de nuevo más tarde.");
+      showAlert("error", "No se pudo enviar el código. Intenta de nuevo más tarde.");
     } finally {
       setSendingCode(false);
+      setConfirmPasswordOpen(false);
     }
   };
 
@@ -314,7 +312,7 @@ export default function AccountSettings() {
         </p>
 
         <button
-          onClick={handleChangePassword}
+          onClick={() => setConfirmPasswordOpen(true)}
           disabled={sendingCode}
           className="mt-6 flex items-center gap-2 rounded-xl border border-gray-300 px-6 py-3 text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
         >
@@ -322,6 +320,16 @@ export default function AccountSettings() {
           {sendingCode ? "Enviando código..." : "Cambiar contraseña"}
         </button>
       </section>
+
+      <ConfirmModal
+        isOpen={confirmPasswordOpen}
+        title="Cambiar contraseña"
+        message={`Te enviaremos un código de verificación a ${user?.email ?? "tu correo"} para crear una nueva contraseña. ¿Continuar?`}
+        confirmLabel="Enviar código"
+        loading={sendingCode}
+        onConfirm={handleChangePassword}
+        onClose={() => setConfirmPasswordOpen(false)}
+      />
     </>
   );
 }

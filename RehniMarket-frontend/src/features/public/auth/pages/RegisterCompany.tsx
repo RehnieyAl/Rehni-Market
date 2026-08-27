@@ -17,12 +17,13 @@ import axios from "axios";
 import { registerCompany } from "@/features/public/auth/api/authService";
 import TermsModal from "@/features/public/auth/components/TermsModal";
 import CompanyTerms from "@/features/public/auth/components/terms/CompanyTerms";
-import AlertMessage from "@/shared/components/alert/AlertMessage";
+import { useAlert } from "@/shared/components/alert/useAlert";
 
 import { ErrorCode } from "@/shared/types/ErrorCode";
 
 export default function CompanyForm() {
   const navigate = useNavigate();
+  const { showAlert } = useAlert();
 
   const [showTerms, setShowTerms] = useState(false);
 
@@ -31,11 +32,6 @@ export default function CompanyForm() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [loading, setLoading] = useState(false);
-
-  const [alert, setAlert] = useState<{
-    type: "error" | "success";
-    message: string;
-  } | null>(null);
 
   const [form, setForm] = useState({
     full_name: "",
@@ -70,21 +66,13 @@ export default function CompanyForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    setAlert(null);
-
     if (form.password !== form.confirmPassword) {
-      setAlert({
-        type: "error",
-        message: "Las contraseñas no coinciden.",
-      });
+      showAlert("error", "Las contraseñas no coinciden.");
       return;
     }
 
     if (!certificate) {
-      setAlert({
-        type: "error",
-        message: "Debes adjuntar el certificado.",
-      });
+      showAlert("error", "Debes adjuntar el certificado.");
       return;
     }
 
@@ -107,55 +95,31 @@ export default function CompanyForm() {
 
         switch (error?.code) {
           case ErrorCode.EMAIL_ALREADY_EXISTS:
-            setAlert({
-              type: "error",
-              message: error.message,
-            });
+            showAlert("error", error.message);
             break;
 
           case ErrorCode.NIT_ALREADY_EXISTS:
-            setAlert({
-              type: "error",
-              message: error.message,
-            });
+            showAlert("error", error.message);
             break;
 
           case ErrorCode.COMPANY_PENDING:
-            setAlert({
-              type: "error",
-              message: error.message,
-            });
+            showAlert("error", error.message);
             break;
 
           default:
-            setAlert({
-              type: "error",
-              message: error?.message ?? "Ocurrió un error.",
-            });
+            showAlert("error", error?.message ?? "Ocurrió un error.");
         }
       } else {
-        setAlert({
-          type: "error",
-          message: "Ocurrió un error inesperado.",
-        });
+        showAlert("error", "Ocurrió un error inesperado.");
       }
     } finally {
       setLoading(false);
     }
   };
   return (
-    <>
-      {alert && (
-        <AlertMessage
-          type={alert.type}
-          message={alert.message}
-          onClose={() => setAlert(null)}
-        />
-      )}
-
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-5xl">
-          <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-8 md:p-12">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 md:p-12">
             <div className="flex justify-center mb-8">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#6D0F2D]/10">
                 <Building2 size={36} className="text-[#6D0F2D]" />
@@ -407,6 +371,5 @@ export default function CompanyForm() {
           </div>
         </div>
       </div>
-    </>
   );
 }

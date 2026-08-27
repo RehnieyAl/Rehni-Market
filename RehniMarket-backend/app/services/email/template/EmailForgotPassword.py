@@ -201,15 +201,15 @@ color:#555555;
 
 <br><br>
 
-✓ Recuperación de contraseña
+- Recuperación de contraseña
 
 <br>
 
-✓ Cuenta asociada: {to_email}
+- Cuenta asociada: {to_email}
 
 <br>
 
-✓ Código válido por 10 minutos
+- Código válido por 10 minutos
 
 </p>
 

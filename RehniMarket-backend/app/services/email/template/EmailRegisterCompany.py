@@ -256,19 +256,19 @@ color:#555555;
 
 <br><br>
 
-✓ Registro de empresa recibido
+- Registro de empresa recibido
 
 <br>
 
-✓ Verificación del correo electrónico
+- Verificación del correo electrónico
 
 <br>
 
-✓ Validación de documentos enviados
+- Validación de documentos enviados
 
 <br>
 
-✓ Activación de cuenta empresarial
+- Activación de cuenta empresarial
 
 
 </p>

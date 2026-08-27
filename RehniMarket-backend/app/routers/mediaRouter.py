@@ -29,9 +29,7 @@ def proxy_file(path: str):
             },
         )
 
-    except Exception as e:
-        print("Error proxy:", e)
-
+    except Exception:
         raise HTTPException(
             status_code=404,
             detail="Archivo no encontrado",

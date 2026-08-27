@@ -76,6 +76,27 @@ class Product(Base):
     )
 
 
+    # Soft-delete de la empresa (ver ALCANCE > EMPRESA -> ELIMINAR
+    # PRODUCTO). NULL = producto nunca eliminado (activo o simplemente
+    # desactivado con el toggle Activo/Inactivo, ver
+    # change_product_status_service). Con fecha = eliminado por la
+    # empresa (ver delete_product_service) - un estado distinto e
+    # independiente de is_active, que ambos flujos comparten:
+    #
+    #   is_active=True,  deleted_at=NULL     -> activo
+    #   is_active=False, deleted_at=NULL     -> desactivado (toggle)
+    #   is_active=False, deleted_at=<fecha>  -> eliminado
+    #
+    # El registro de Product NUNCA se borra fisicamente - ver
+    # delete_product_service, que documenta por que (FKs de OrderItem/
+    # Review/Favorite/Report sin CASCADE, para no perder historial).
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+        default=None,
+    )
+
+
     company_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("company.id"),

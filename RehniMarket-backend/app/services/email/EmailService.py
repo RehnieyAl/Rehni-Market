@@ -1,5 +1,7 @@
 # Este servicio email se encarga de enviar correos electrónicos
 # utilizando la cuenta de Gmail configurada en las variables de entorno.
+import traceback
+
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -23,8 +25,10 @@ def send_email(to_email: str, subject: str, body: str):
         server.login(GMAIL_USERNAME, GMAIL_PASSWORD)
         server.send_message(msg)
         server.quit()
-        print("Correo enviado exitosamente")
-    except Exception as e:
-        print(f"Error al enviar correo: {e}")
-
+        exitosamente = f"Correo enviado a  {to_email}, exitosamente"
+        print(exitosamente )
+    except Exception:
+        error = f"error al enviar correo a {to_email}, problema de bloqueo de red"
+        print(error)
+        traceback.print_exc()
 

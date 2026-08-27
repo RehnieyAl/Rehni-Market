@@ -146,19 +146,19 @@ color:#555555;
 
 <br><br>
 
-✓ Certificado empresarial aprobado
+- Certificado empresarial aprobado
 
 <br>
 
-✓ Documentación validada
+- Documentación validada
 
 <br>
 
-✓ Cuenta empresarial habilitada
+- Cuenta empresarial habilitada
 
 <br>
 
-✓ Acceso a herramientas empresariales
+- Acceso a herramientas empresariales
 
 </p>
 
@@ -398,15 +398,15 @@ color:#555555;
 
 <br><br>
 
-✕ Certificado pendiente de aprobación
+- Certificado pendiente de aprobación
 
 <br>
 
-✕ Documentación requiere correcciones
+- Documentación requiere correcciones
 
 <br>
 
-✓ Puedes realizar una nueva solicitud
+- Puedes realizar una nueva solicitud
 
 </p>
 

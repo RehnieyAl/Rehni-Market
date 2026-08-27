@@ -21,17 +21,6 @@ def get_admin_dashboard_statistics_repository(database: Session,):
 
     active_companies = (database.query(func.count(Company.id)).filter(Company.CompanyStatus.is_(True)).scalar()or 0)
 
-
-    print("========== ADMIN STATISTICS ==========")
-    print("Usuarios:", users)
-    print("Usuarios activos:", active_users)
-    print("Usuarios bloqueados:", blocked_users)
-    print("Administradores:", administrators)
-    print("Empresas:", companies)
-    print("Empresas activas:", active_companies)
-    print("Empresas bloqueadas:", blocked_companies)
-    print("======================================")
-
     return {
         "users": users,
         "companies": companies,

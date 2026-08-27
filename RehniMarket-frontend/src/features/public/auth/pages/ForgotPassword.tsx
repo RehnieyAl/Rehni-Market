@@ -3,10 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { Mail } from "lucide-react";
 import { forgotPassword } from "@/features/public/auth/api/authService";
 import axios from "axios";
+import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
+  const { showAlert } = useAlert();
 
   const [loading, setLoading] = useState(false);
 
@@ -35,11 +37,11 @@ export default function ForgotPassword() {
 
         switch (error?.code) {
           case ErrorCode.EMAIL_NOT_FOUND:
-            alert(error.message);
+            showAlert("error", error.message);
             break;
 
           case ErrorCode.USER_NOT_FOUND:
-            alert(error.message);
+            showAlert("error", error.message);
             break;
 
           case ErrorCode.EMAIL_NOT_VERIFIED:
@@ -51,18 +53,19 @@ export default function ForgotPassword() {
             break;
 
           case ErrorCode.ACCOUNT_DISABLED:
-            alert(error.message);
+            showAlert("error", error.message);
             break;
 
           default:
-            alert(
+            showAlert(
+              "error",
               error?.message ??
                 "No fue posible enviar el código de recuperación.",
             );
             break;
         }
       } else {
-        alert("Ocurrió un error inesperado.");
+        showAlert("error", "Ocurrió un error inesperado.");
       }
     } finally {
       setLoading(false);
@@ -72,7 +75,7 @@ export default function ForgotPassword() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-8">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
           <div className="flex justify-center mb-6">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#6D0F2D]/10">
               <Mail size={30} className="text-[#6D0F2D]" />

@@ -12,6 +12,8 @@ import {
   MapPin,
   Settings,
   Coins,
+  Wallet,
+  Receipt,
 } from "lucide-react";
 
 import type { SidebarItem } from "../components/dashboard/Sidebar";
@@ -51,6 +53,11 @@ const adminNavigation: SidebarItem[] = [
     id: "reports",
     text: "Reportes",
     icon: <BarChart3 size={22} />,
+  },
+  {
+    id: "payouts",
+    text: "Liquidaciones",
+    icon: <Receipt size={22} />,
   },
   {
     id: "wallet",
@@ -93,6 +100,11 @@ export const dashboardNavigation: Record<UserRole, SidebarItem[]> = {
       icon: <Truck size={22} />,
     },
     {
+      id: "finance",
+      text: "Finanzas",
+      icon: <Wallet size={22} />,
+    },
+    {
       id: "company",
       text: "Mi tienda",
       icon: <Store size={22} />,
@@ -119,6 +131,11 @@ export const dashboardNavigation: Record<UserRole, SidebarItem[]> = {
       id: "favorites",
       text: "Favoritos",
       icon: <Heart size={22} />,
+    },
+    {
+      id: "wallet",
+      text: "RehniCoins",
+      icon: <Coins size={22} />,
     },
     {
       id: "addresses",

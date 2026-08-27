@@ -87,6 +87,7 @@ from app.services.DashboardService.admin.AdvertisementService import (
 from app.schemas.SchemaDashboard.admin.company import (
     UpdateCertificateStatusRequest,
     UpdateCompanyStatusRequest,
+    UpdateCompanyStatusResponse,
     AdminCompaniesPaginatedResponse,
 )
 
@@ -218,7 +219,8 @@ def update_certificate_status(
 
 
 @router.patch(
-    "/dashboard/company/status/{company_id}"
+    "/dashboard/company/status/{company_id}",
+    response_model=UpdateCompanyStatusResponse,
 )
 def update_company_status(
     request: Request,
@@ -234,6 +236,7 @@ def update_company_status(
         status=data.status,
         database=database,
         admin_id=admin_id,
+        reason=data.reason,
     )
 
 

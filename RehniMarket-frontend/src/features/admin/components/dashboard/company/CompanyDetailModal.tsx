@@ -1,9 +1,8 @@
 import { X, MapPin, FileText, CalendarDays, Eye, Check, Ban } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getAdminCompany, updateCertificateStatus, updateCompanyStatus } from "@/features/admin/api/companyService";
+import { getAdminCompany, updateCertificateStatus } from "@/features/admin/api/companyService";
 import type { AdminCompanyResponse } from "@/features/admin/types/response";
 import CertificateModal from "./CertificateModal";
-import CompanyStatusConfirmModal from "./CompanyStatusConfirmModal";
 
 interface CompanyDetailModalProps {
   companyId: string | null;
@@ -17,8 +16,6 @@ export default function CompanyDetailModal({ companyId, isOpen, onClose, onCompa
   const [loading, setLoading] = useState(false);
   const [certificateOpen, setCertificateOpen] = useState(false);
   const [updatingCertificate, setUpdatingCertificate] = useState(false);
-  const [statusModalOpen, setStatusModalOpen] = useState(false);
-  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const handleCertificateStatus = async (status: "approved" | "rejected") => {
     if (!company) return;
@@ -35,26 +32,6 @@ export default function CompanyDetailModal({ companyId, isOpen, onClose, onCompa
       console.error("Error actualizando estado del certificado:", error);
     } finally {
       setUpdatingCertificate(false);
-    }
-  };
-
-  const handleCompanyStatus = async () => {
-    if (!company) return;
-    try {
-      setUpdatingStatus(true);
-      const newStatus = !company.CompanyStatus;
-      await updateCompanyStatus(company.id, newStatus);
-      const updatedCompany: AdminCompanyResponse = {
-        ...company,
-        CompanyStatus: newStatus,
-      };
-      setCompany(updatedCompany);
-      onCompanyUpdated?.(updatedCompany);
-      setStatusModalOpen(false);
-    } catch (error) {
-      console.error("Error actualizando estado de la empresa:", error);
-    } finally {
-      setUpdatingStatus(false);
     }
   };
 
@@ -129,6 +106,12 @@ export default function CompanyDetailModal({ companyId, isOpen, onClose, onCompa
                   <InfoCard icon={<FileText size={20} />} title="Estado del certificado" value={getCertificateStatus(company.CompanyCertificateStatus)} />
                   <InfoCard icon={<CalendarDays size={20} />} title="Fecha de registro" value={new Date(company.created_at).toLocaleDateString("es-CO")} />
                   <InfoCard icon={<FileText size={20} />} title="NIT" value={`${company.CompanyNIT}-${company.CompanyNITDV}`} />
+                  {/* Bloquear/suspender la empresa vive en el listado
+                      (Companies.tsx), no acá - se removió el duplicado. Se
+                      conserva el motivo como información de solo lectura. */}
+                  {company.CompanyStatus === false && company.suspensionReason && (
+                    <InfoCard icon={<FileText size={20} />} title="Motivo de suspensión" value={company.suspensionReason} />
+                  )}
                 </div>
                 <div className="mt-6 rounded-2xl border border-gray-200 p-5">
                   <div className="flex items-center justify-between gap-4">
@@ -148,7 +131,7 @@ export default function CompanyDetailModal({ companyId, isOpen, onClose, onCompa
                   <div className="mt-4">
                     <CertificateStatus status={company.CompanyCertificateStatus} />
                   </div>
-                  {company.CompanyCertificate && (
+                  {company.CompanyCertificate && company.CompanyCertificateStatus === "pending" && (
                     <div className="mt-5 border-t border-gray-200 pt-5">
                       <h4 className="font-semibold text-gray-900">Revisión del certificado</h4>
                       <p className="mt-1 text-sm text-gray-500">Revisa el documento antes de tomar una decisión.</p>
@@ -164,13 +147,6 @@ export default function CompanyDetailModal({ companyId, isOpen, onClose, onCompa
                       </div>
                     </div>
                   )}
-                </div>
-                <div className="mt-6 rounded-2xl border border-gray-200 p-5">
-                  <h3 className="font-semibold text-gray-900">Estado de la empresa</h3>
-                  <p className="mt-1 text-sm text-gray-500">Puedes activar o desactivar la empresa desde aquí.</p>
-                  <button type="button" onClick={() => setStatusModalOpen(true)} disabled={updatingStatus} className={`mt-4 rounded-xl px-5 py-2.5 text-sm font-medium text-white transition ${company.CompanyStatus ? "bg-red-600 hover:bg-red-700" : "bg-[#7A1833] hover:bg-[#64132a]"} disabled:cursor-not-allowed disabled:opacity-50`}>
-                    {company.CompanyStatus ? "Desactivar empresa" : "Activar empresa"}
-                  </button>
                 </div>
               </div>
             )}
@@ -191,16 +167,6 @@ export default function CompanyDetailModal({ companyId, isOpen, onClose, onCompa
           companyName={company.nameCompany}
           isOpen={certificateOpen}
           onClose={() => setCertificateOpen(false)}
-        />
-      )}
-      {company && (
-        <CompanyStatusConfirmModal
-          isOpen={statusModalOpen}
-          companyName={company.nameCompany}
-          active={company.CompanyStatus}
-          loading={updatingStatus}
-          onConfirm={handleCompanyStatus}
-          onClose={() => setStatusModalOpen(false)}
         />
       )}
     </>

@@ -22,32 +22,26 @@ from app.database.Connection import SessionLocal
 async def auth_middleware(request: Request, call_next):
     path = request.url.path
 
-    print("PATH:", path)
-
     if request.method == "OPTIONS":
         return await call_next(request)
 
     if path in PUBLIC_ROUTES:
-        print("PUBLIC ROUTE:", path)
         return await call_next(request)
 
     if (
         path.startswith(PUBLIC_CATALOG_SPECIFICATIONS_PREFIX)
         and path.endswith(PUBLIC_CATALOG_SPECIFICATIONS_SUFFIX)
     ):
-        print("PUBLIC ROUTE (catalog specifications):", path)
         return await call_next(request)
 
     # /public/products/{product_id} (detalle publico). "/public/products/daily"
     # ya coincidio arriba por igualdad exacta y nunca llega aqui.
     if path.startswith(PUBLIC_PRODUCT_DETAIL_PREFIX):
-        print("PUBLIC ROUTE (product detail):", path)
         return await call_next(request)
 
     # /public/company/{company_id} y /public/company/{company_id}/products
     # (perfil publico de empresa).
     if path.startswith(PUBLIC_COMPANY_PROFILE_PREFIX):
-        print("PUBLIC ROUTE (company profile):", path)
         return await call_next(request)
 
     auth_header = request.headers.get("Authorization")
@@ -169,6 +163,25 @@ async def auth_middleware(request: Request, call_next):
                     },
                 )
 
+            # El bloqueo de una EMPRESA vive en Company.CompanyStatus, no en
+            # Users.isActive (ver ModelCompany.py / update_company_status).
+            # Sin este chequeo, una empresa bloqueada podia seguir usando
+            # cualquier endpoint protegido con un access token emitido antes
+            # del bloqueo: el JWT sigue siendo criptograficamente valido, y
+            # nada volvia a consultar el estado real de la empresa en cada
+            # request (ver AUDITORIA de bloqueo de cuentas). Mismo codigo/
+            # mensaje que ya usa login_service para este mismo caso.
+            if role == "company" and user.company and not user.company.CompanyStatus:
+                return JSONResponse(
+                    status_code=403,
+                    content={
+                        "detail": {
+                            "code": ErrorCodes.COMPANY_SUSPENDED,
+                            "message": "Tu empresa se encuentra suspendida.",
+                        }
+                    },
+                )
+
             if role not in ROLES_PERMISSIONS_ROUTERS:
                 return JSONResponse(
                     status_code=403,
@@ -209,9 +222,7 @@ async def auth_middleware(request: Request, call_next):
     except HTTPException:
         raise
 
-    except Exception as error:
-        print("Auth Error:", error)
-
+    except Exception:
         return JSONResponse(
             status_code=401,
             content={

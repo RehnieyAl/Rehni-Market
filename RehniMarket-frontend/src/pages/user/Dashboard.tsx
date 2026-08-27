@@ -9,13 +9,14 @@ import { dashboardNavigation } from "@/shared/config/dashboardNavigation";
 import Home from "@/features/user/components/dashboard/Home";
 import Orders from "@/features/user/components/dashboard/Orders";
 import Favorites from "@/features/user/components/dashboard/Favorites";
+import Wallet from "@/features/user/components/dashboard/Wallet";
 import Addresses from "@/features/user/components/dashboard/Addresses";
 import AccountSettings from "@/features/public/auth/components/AccountSettings";
 
 // Mismo patrón que pages/dashboard/Company.tsx: página delgada que solo
 // arma el layout y cambia de vista - toda la lógica vive en
 // features/user/components/dashboard/*.
-const VALID_TABS = ["home", "orders", "favorites", "addresses", "profile"];
+const VALID_TABS = ["home", "orders", "favorites", "wallet", "addresses", "profile"];
 
 export default function Dashboard() {
   // La pestaña activa se deriva directamente de la URL (?tab=...), sin
@@ -36,6 +37,7 @@ export default function Dashboard() {
     home: <Home />,
     orders: <Orders />,
     favorites: <Favorites />,
+    wallet: <Wallet />,
     addresses: <Addresses />,
     profile: <AccountSettings />,
   };

@@ -220,7 +220,7 @@ export default function CatalogFormModal({
                       : "border-gray-200 bg-gray-50 text-gray-500"
                   }`}
                 >
-                  {isActive ? "🟢 Activa" : "🔴 Inactiva"}
+                  {isActive ? "Activa" : "Inactiva"}
                 </button>
               </div>
             </div>

@@ -33,4 +33,10 @@ export interface PublicProductCard {
   // Para el badge "Agotado" (ver ProductCard.tsx) y el filtro
   // "Disponibilidad" del catálogo público.
   stock: number;
+
+  // Calificación real (ver backend > SchemaPublic.py >
+  // PublicProductCardResponse) - null/0 cuando el producto todavía no
+  // tiene reseñas activas.
+  average_rating: number | null;
+  review_count: number;
 }

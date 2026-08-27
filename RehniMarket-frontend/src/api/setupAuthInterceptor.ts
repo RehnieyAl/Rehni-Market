@@ -8,7 +8,18 @@ import {
   getRefreshToken,
   saveTokens,
   redirectToLogin,
+  redirectToLoginWithMessage,
 } from "./session";
+import { ErrorCode } from "@/shared/types/ErrorCode";
+
+// Ver apiErrorHandler.ts: mismos códigos, misma razón - una cuenta
+// bloqueada/suspendida no debe recuperar sesión válida vía refresh
+// (ver RefreshTokenService.py), y ese rechazo no debe mostrarse como
+// "sesión expirada".
+const ACCOUNT_BLOCKED_CODES: string[] = [
+  ErrorCode.USER_BLOCKED,
+  ErrorCode.COMPANY_SUSPENDED,
+];
 
 export const setupAuthInterceptor = (
   api: AxiosInstance,
@@ -19,11 +30,6 @@ export const setupAuthInterceptor = (
     },
 
     async (error: AxiosError) => {
-      console.log(
-        "INTERCEPTOR:",
-        error,
-      );
-
       const originalRequest =
         error.config as
           | (InternalAxiosRequestConfig & {
@@ -35,25 +41,11 @@ export const setupAuthInterceptor = (
         return Promise.reject(error);
       }
 
-      console.log(
-        "URL:",
-        originalRequest.url,
-      );
-
-      console.log(
-        "STATUS:",
-        error.response?.status,
-      );
-
       if (
         originalRequest.url?.includes(
           "/auth/refresh",
         )
       ) {
-        console.log(
-          "Falló el refresh",
-        );
-
         redirectToLogin();
 
         return Promise.reject(error);
@@ -65,15 +57,7 @@ export const setupAuthInterceptor = (
         return Promise.reject(error);
       }
 
-      console.log(
-        "401 DETECTADO",
-      );
-
       if (originalRequest._retry) {
-        console.log(
-          "La petición ya fue reintentada",
-        );
-
         redirectToLogin();
 
         return Promise.reject(error);
@@ -83,10 +67,6 @@ export const setupAuthInterceptor = (
         getRefreshToken();
 
       if (!refreshToken) {
-        console.log(
-          "No existe refresh token",
-        );
-
         redirectToLogin();
 
         return Promise.reject(error);
@@ -95,10 +75,6 @@ export const setupAuthInterceptor = (
       originalRequest._retry = true;
 
       try {
-        console.log(
-          "Llamando /auth/refresh...",
-        );
-
         const response =
           await axios.post(
             `${import.meta.env.VITE_API_URL}/auth/refresh`,
@@ -107,11 +83,6 @@ export const setupAuthInterceptor = (
                 refreshToken,
             },
           );
-
-        console.log(
-          "Refresh exitoso:",
-          response.data,
-        );
 
         const {
           access_token,
@@ -128,15 +99,6 @@ export const setupAuthInterceptor = (
           `Bearer ${access_token}`,
         );
 
-        console.log(
-          "Access token renovado",
-        );
-
-        console.log(
-          "Repitiendo petición:",
-          originalRequest.url,
-        );
-
         return api(
           originalRequest,
         );
@@ -147,7 +109,22 @@ export const setupAuthInterceptor = (
           refreshError,
         );
 
-        redirectToLogin();
+        const detail =
+          axios.isAxiosError(refreshError) &&
+          refreshError.response?.data?.detail;
+
+        if (
+          detail &&
+          detail.code &&
+          ACCOUNT_BLOCKED_CODES.includes(detail.code)
+        ) {
+          redirectToLoginWithMessage(
+            detail.message ||
+              "Tu cuenta se encuentra bloqueada.",
+          );
+        } else {
+          redirectToLogin();
+        }
 
         return Promise.reject(
           refreshError,

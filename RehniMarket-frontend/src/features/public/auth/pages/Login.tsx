@@ -20,6 +20,7 @@ import axios from "axios";
 import { loginUser } from "@/features/public/auth/api/authService";
 import { useAuth } from "@/features/public/auth/context/useAuth";
 import { ErrorCode } from "@/shared/types/ErrorCode";
+import { consumePostLoginRedirect } from "@/api/session";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -35,7 +36,6 @@ export default function Login() {
   });
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -51,7 +51,6 @@ export default function Login() {
   ) => {
     e.preventDefault();
 
-    setError("");
     setLoading(true);
 
     try {
@@ -59,35 +58,30 @@ export default function Login() {
 
       login(res);
 
-      navigate("/");
+      // Si el usuario llegó acá redirigido desde una acción protegida
+      // (carrito, checkout, un dashboard, etc. - ver
+      // api/session.ts > setPostLoginRedirect) vuelve exactamente ahí;
+      // si entró directo a /login (sin ningún destino guardado), sigue
+      // yendo a inicio como antes (ver AUDITORÍA > CASO 5).
+      const redirectTo = consumePostLoginRedirect();
+
+      navigate(redirectTo || "/", { replace: true });
     } catch (err) {
+      // Credenciales inválidas, rol no asignado, empresa pendiente/
+      // rechazada, etc. ya se muestran mediante el sistema global de
+      // alertas (ver api/Client.ts > handleApiError, que corre para
+      // cualquier error de la API). Acá solo se maneja EMAIL_NOT_VERIFIED,
+      // que además de mostrar el mensaje necesita redirigir.
       if (axios.isAxiosError(err)) {
         const errorResponse =
           err.response?.data?.detail;
 
-        switch (errorResponse?.code) {
-          case ErrorCode.EMAIL_NOT_VERIFIED:
-            navigate("/verify-email", {
-              state: {
-                email: form.email,
-              },
-            });
-            break;
-
-          case ErrorCode.INVALID_CREDENTIALS:
-          case ErrorCode.ROLE_NOT_ASSIGNED:
-          case ErrorCode.COMPANY_PENDING:
-          case ErrorCode.COMPANY_REJECTED:
-            setError(
-              errorResponse?.message ??
-                "No se pudo iniciar sesión.",
-            );
-            break;
-
-          default:
-            // Los demás errores son manejados
-            // por el sistema global de alertas.
-            break;
+        if (errorResponse?.code === ErrorCode.EMAIL_NOT_VERIFIED) {
+          navigate("/verify-email", {
+            state: {
+              email: form.email,
+            },
+          });
         }
       }
     } finally {
@@ -109,7 +103,7 @@ export default function Login() {
           <span>Volver a inicio</span>
         </button>
 
-        <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-lg">
+        <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-lg">
 
           <h1 className="text-center text-3xl font-bold">
             Bienvenido
@@ -118,12 +112,6 @@ export default function Login() {
           <p className="mt-2 text-center text-gray-500">
             Inicia sesión para continuar
           </p>
-
-          {error && (
-            <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
 
           <form
             onSubmit={handleSubmit}

@@ -78,6 +78,13 @@ class PublicProductCardResponse(BaseModel):
     # del lado del filtro, no este número aislado.
     stock: int
 
+    # Calificación real del producto (ver ALCANCE > rediseño Product Card,
+    # mismo cálculo que PublicProductDetailResponse.average_rating -
+    # ver publicService/Products.py > get_products_rating_summary).
+    # None/0 cuando todavía no tiene reseñas activas.
+    average_rating: float | None
+    review_count: int
+
 
 class PublicProductImageResponse(BaseModel):
     id: UUID
@@ -121,11 +128,30 @@ class PublicProductVariantResponse(BaseModel):
     specifications: list[PublicProductSpecificationResponse]
 
 
+class PublicRatingDistributionResponse(BaseModel):
+    """
+    Conteo de reseñas ACTIVAS por cada puntaje (ver ALCANCE > rediseño
+    detalle de producto, panel "Opiniones de compradores") - mismo
+    criterio de "activa" que ReviewRepository.list_product_reviews.
+    """
+
+    five: int
+    four: int
+    three: int
+    two: int
+    one: int
+
+
 class PublicProductDetailResponse(BaseModel):
     id: UUID
     name: str
     descripcion: str
     catalog_name: str
+    # Id real del catálogo (no solo el nombre) - necesario para pedir
+    # "Productos relacionados" (ver ALCANCE > rediseño detalle de
+    # producto): GET /public/products ya filtra por catalog_id, no hace
+    # falta un endpoint nuevo para eso.
+    catalog_id: UUID
     company_name: str
     # Datos minimos de la empresa para el bloque "Vendido por" del detalle
     # publico de producto (ver ProductDetail.tsx > "Ver perfil de empresa").
@@ -133,6 +159,10 @@ class PublicProductDetailResponse(BaseModel):
     # aqui solo hace falta lo necesario para el link, no todo el perfil.
     company_id: UUID
     company_logo: str | None
+    # Mismo criterio que company_dashboard_me_service/CompanyProfile.tsx
+    # (CompanyCertificateStatus == APPROVED) - para el badge "Empresa
+    # verificada" del rediseño.
+    company_is_verified: bool
     is_active: bool
 
     price: Decimal
@@ -141,6 +171,14 @@ class PublicProductDetailResponse(BaseModel):
     final_price: Decimal
 
     stock: int
+
+    # Resumen real de reseñas ACTIVAS del producto (ver ALCANCE > rediseño
+    # detalle de producto) - se calcula una sola vez acá y lo reutilizan
+    # tanto el encabezado (promedio + total) como el panel de Opiniones,
+    # sin pedirlo dos veces ni inventar datos en el frontend.
+    average_rating: float | None
+    review_count: int
+    rating_distribution: PublicRatingDistributionResponse
 
     color: PublicProductColorResponse | None
     images: list[PublicProductImageResponse]

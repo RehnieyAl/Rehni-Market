@@ -17,14 +17,14 @@ import type { AdminCompanyResponse } from "@/features/admin/types/response";
 // Etiqueta + configuración sugerida por tipo (ver ALCANCE > Anuncios
 // dinámicos): PROMOTION/BLACK_FRIDAY/CYBER_DAYS comparten exactamente el
 // mismo campo (minimumDiscount) - solo cambia qué se le sugiere al admin
-// como umbral típico y el emoji del título, no la lógica (esa vive una
-// sola vez en el backend, ver AdvertisementTargeting.py).
+// como umbral típico, no la lógica (esa vive una sola vez en el backend,
+// ver AdvertisementTargeting.py).
 const TARGET_TYPE_OPTIONS: { value: AdvertisementTargetType; label: string }[] = [
   { value: "PRODUCT", label: "Producto específico" },
   { value: "CATEGORY", label: "Categoría" },
   { value: "COMPANY", label: "Empresa" },
   { value: "PROMOTION", label: "Promoción" },
-  { value: "BLACK_FRIDAY", label: "🔥 Black Friday" },
+  { value: "BLACK_FRIDAY", label: "Black Friday" },
   { value: "CYBER_DAYS", label: "Cyber Days" },
   { value: "LIQUIDATION", label: "Liquidación" },
   { value: "NEW_RELEASE", label: "Nuevos lanzamientos" },
@@ -709,7 +709,7 @@ export default function AdvertisementFormModal({
                       : "border-gray-200 bg-gray-50 text-gray-500"
                   }`}
                 >
-                  {isActive ? "🟢 Activo" : "🔴 Inactivo"}
+                  {isActive ? "Activo" : "Inactivo"}
                 </button>
               </div>
             </div>

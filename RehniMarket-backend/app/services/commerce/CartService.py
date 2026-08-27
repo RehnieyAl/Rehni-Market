@@ -107,7 +107,10 @@ def add_to_cart_service(
     try:
         product = repo.get_product_by_id(database, data.productId)
 
-        if not product or not product.is_active:
+        # Producto de una empresa suspendida (ver ALCANCE > BUG 2, "no se
+        # puede comprar producto"): se trata igual que "no encontrado",
+        # mismo código que ya usa el catálogo público para este caso.
+        if not product or not product.is_active or not product.company or not product.company.CompanyStatus:
             api_error(404, ErrorCodes.PRODUCT_NOT_FOUND, "Producto no encontrado.")
 
         variant = None
@@ -118,7 +121,19 @@ def add_to_cart_service(
             if not variant or variant.product_id != product.id:
                 api_error(404, ErrorCodes.VARIANT_NOT_FOUND, "Variante no encontrada.")
 
-        elif product.has_variants:
+        elif product.has_variants and product.main_color_id is None:
+            # `variantId is None` es ambiguo: significa tanto "no elegi
+            # nada" como "elegi explicitamente el producto base" (ver
+            # frontend > colorOptions/hasChosenColor en ProductDetail.tsx,
+            # tanto web como mobile). El backend solo puede distinguir los
+            # dos casos igual que lo hace el frontend: el producto base es
+            # una eleccion valida cuando tiene su propio color
+            # (product.main_color_id), asi que solo se exige variante
+            # cuando el producto tiene variantes Y no tiene color propio -
+            # si no, un producto con variantes Y color base quedaba
+            # imposible de comprar en su version base (bug real: rechazaba
+            # el "producto principal" aunque el frontend nunca pedia
+            # seleccionar una variante para el).
             api_error(
                 400,
                 ErrorCodes.VALIDATION_ERROR,

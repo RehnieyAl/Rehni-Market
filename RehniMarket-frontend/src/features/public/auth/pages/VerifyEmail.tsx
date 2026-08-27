@@ -3,12 +3,14 @@ import { Mail } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { verifyEmail, changeEmail } from "@/features/public/auth/api/authService";
 
+import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 import axios from "axios";
 
 export default function VerifyEmail() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { showAlert } = useAlert();
 
   const email = location.state?.email ?? "";
 
@@ -60,7 +62,7 @@ export default function VerifyEmail() {
     const verificationCode = code.join("");
 
     if (verificationCode.length !== 6) {
-      alert("Ingresa el código completo.");
+      showAlert("error", "Ingresa el código completo.");
       return;
     }
 
@@ -72,7 +74,7 @@ export default function VerifyEmail() {
         code: verificationCode,
       });
 
-      alert("Cuenta verificada correctamente.");
+      showAlert("success", "Cuenta verificada correctamente.");
 
       navigate("/login", {
         state: {
@@ -85,14 +87,14 @@ export default function VerifyEmail() {
 
         switch (error?.code){
           case ErrorCode.USER_NOT_FOUND:
-            alert(error.message)
+            showAlert("error", error.message);
             break;
-          
+
           default:
-            alert(error?.message ?? "Ocurrio un error.")
+            showAlert("error", error?.message ?? "Ocurrió un error.");
         }
       } else {
-        alert("Ocurrio un error inesperado")
+        showAlert("error", "Ocurrió un error inesperado.");
       }
     } finally {
       setLoading(false);
@@ -101,7 +103,7 @@ export default function VerifyEmail() {
 
   const handleChangeEmail = async () => {
     if (!newEmail.trim()) {
-      alert("Ingresa un correo electrónico.");
+      showAlert("error", "Ingresa un correo electrónico.");
       return;
     }
 
@@ -117,12 +119,13 @@ export default function VerifyEmail() {
       setNewEmail("");
       setEditingEmail(false);
 
-      alert(
+      showAlert(
+        "success",
         "Correo actualizado correctamente. Se ha enviado un nuevo código de verificación."
       );
     } catch (error) {
       console.error(error);
-      alert("No fue posible cambiar el correo.");
+      showAlert("error", "No fue posible cambiar el correo.");
     } finally {
       setChangingEmail(false);
     }
@@ -131,7 +134,7 @@ export default function VerifyEmail() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-8">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
           <div className="flex justify-center mb-6">
             <div className="w-16 h-16 rounded-full bg-[#6D0F2D]/10 flex items-center justify-center">
               <Mail

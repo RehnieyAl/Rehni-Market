@@ -13,12 +13,24 @@ export interface AdminCompanyResponse {
   CompanyLogo: string | null;
   CompanyCertificate: string;
   CompanyStatus: boolean;
+  // Motivo VIGENTE de suspensión (ver ALCANCE > Suspensión de empresa) -
+  // null mientras CompanyStatus es true.
+  suspensionReason: string | null;
   user_id: string;
   addressCompany: string;
   CompanyNIT: string;
   CompanyBanner: string | null;
   CompanyCertificateStatus: CompanyCertificateStatus;
   created_at: string;
+}
+
+// Respuesta de PATCH /admin/dashboard/company/status/{id} - misma
+// empresa ya actualizada + el resultado del reembolso automático (ver
+// ALCANCE > FEEDBACK ADMIN). 0/"0" cuando se desbloquea, o al suspender
+// una empresa sin pedidos PENDING/PAID/PROCESSING.
+export interface UpdateCompanyStatusResponse extends AdminCompanyResponse {
+  affectedOrdersCount: number;
+  totalRefunded: string;
 }
 
 

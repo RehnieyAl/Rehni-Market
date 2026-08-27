@@ -3,6 +3,7 @@ import { Mail, MapPin, Phone, X } from "lucide-react";
 import axios from "axios";
 
 import OrderTimeline from "./OrderTimeline";
+import ConfirmModal from "@/shared/components/ConfirmModal";
 import { getMyOrderDetail, cancelMyOrder } from "@/features/orders/api/orderService";
 import { ORDER_STATUS_LABEL, ORDER_STATUS_BADGE } from "@/features/orders/utils/orderStatus";
 import { formatPrice } from "@/shared/utils/formatPrice";
@@ -38,6 +39,7 @@ export default function OrderDetailModal({
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !orderId) return;
@@ -75,7 +77,6 @@ export default function OrderDetailModal({
 
   const handleCancel = async () => {
     if (!order) return;
-    if (!window.confirm("¿Cancelar este pedido?")) return;
 
     try {
       setCancelling(true);
@@ -93,6 +94,7 @@ export default function OrderDetailModal({
       showAlert("error", message ?? "No se pudo cancelar el pedido.");
     } finally {
       setCancelling(false);
+      setConfirmCancelOpen(false);
     }
   };
 
@@ -256,7 +258,7 @@ export default function OrderDetailModal({
         {order && CANCELLABLE_STATUSES.has(order.status) && (
           <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
             <button
-              onClick={handleCancel}
+              onClick={() => setConfirmCancelOpen(true)}
               disabled={cancelling}
               className="rounded-xl border border-red-200 px-5 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
@@ -265,6 +267,16 @@ export default function OrderDetailModal({
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={confirmCancelOpen}
+        title="Cancelar pedido"
+        message="¿Cancelar este pedido? Esta acción no se puede deshacer."
+        confirmLabel="Cancelar pedido"
+        loading={cancelling}
+        onConfirm={handleCancel}
+        onClose={() => setConfirmCancelOpen(false)}
+      />
     </div>
   );
 }

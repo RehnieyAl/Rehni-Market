@@ -10,8 +10,11 @@ from app.core.Exceptions import api_error
 
 from app.models.ModelCatalog import Catalog, SpecificationTemplate
 from app.models.ModelColor import ColorVariant
+from app.models.ModelCompany import Company, CompanyCertificateEnum
 from app.models.ModelProduct import Product
 from app.models.ModelVariant import ProductVariant
+
+from app.repository.ReviewRepository import get_product_rating_summary, get_products_rating_summary
 
 from app.schemas.SchemaPublic import (
     PublicProductCardResponse,
@@ -21,6 +24,7 @@ from app.schemas.SchemaPublic import (
     PublicProductColorResponse,
     PublicProductVariantResponse,
     PublicProductsPaginatedResponse,
+    PublicRatingDistributionResponse,
 )
 
 from app.services.NasService import build_media_url
@@ -38,9 +42,10 @@ def get_catalogs_service(database: Session):
       existe una imagen propia de la categoría).
     - `product_count`: un ÚNICO query agregado (GROUP BY) para TODOS los
       catálogos a la vez (antes: 2 queries POR catálogo en un loop, ver
-      ALCANCE > Rendimiento/N+1). Cuenta solo productos activos, visibles
-      y con stock válido (mismo criterio que _has_visible_stock, ver
-      abajo - una sola fuente de verdad de esa regla).
+      ALCANCE > Rendimiento/N+1). Cuenta solo productos activos, visibles,
+      con stock válido y de una empresa NO suspendida (mismo criterio que
+      _has_visible_stock/_is_publicly_visible, ver abajo - una sola
+      fuente de verdad de esa regla).
     """
 
     catalogs = (
@@ -52,7 +57,8 @@ def get_catalogs_service(database: Session):
 
     counts = dict(
         database.query(Product.catalog_id, func.count(Product.id))
-        .filter(Product.is_active.is_(True), _has_visible_stock())
+        .join(Product.company)
+        .filter(_is_publicly_visible(), _has_visible_stock())
         .group_by(Product.catalog_id)
         .all()
     )
@@ -124,10 +130,14 @@ def _compute_price_fields(entity):
     return final_price, discount_percentage, True
 
 
-def _to_card_response(product: Product) -> PublicProductCardResponse:
+def _to_card_response(
+    product: Product, rating_summary: tuple[float | None, int] = (None, 0)
+) -> PublicProductCardResponse:
     main_image = next((image for image in product.images if image.is_main), None)
 
     final_price, discount_percentage, discount_enabled = _compute_price_fields(product)
+
+    average_rating, review_count = rating_summary
 
     return PublicProductCardResponse(
         id=product.id,
@@ -141,7 +151,25 @@ def _to_card_response(product: Product) -> PublicProductCardResponse:
         discount_percentage=discount_percentage,
         final_price=final_price,
         stock=product.stock,
+        average_rating=average_rating,
+        review_count=review_count,
     )
+
+
+def _to_card_responses(database: Session, products: list[Product]) -> list[PublicProductCardResponse]:
+    """
+    Arma tarjetas para una lista completa de productos con UN SOLO query
+    agregado de calificaciones (ver get_products_rating_summary) en vez de
+    uno por producto - usado por los 3 listados publicos que devuelven
+    tarjetas (destacados/recientes, catalogo con filtros, productos de una
+    empresa).
+    """
+
+    ratings = get_products_rating_summary(database, [product.id for product in products])
+
+    return [
+        _to_card_response(product, ratings.get(product.id, (None, 0))) for product in products
+    ]
 
 
 def _has_visible_stock():
@@ -172,6 +200,36 @@ def _has_visible_stock():
     )
 
 
+def _is_publicly_visible():
+    """
+    Condición de visibilidad pública de un producto (ver ALCANCE > BUG 2 -
+    "un producto de una empresa suspendida no debe aparecer
+    públicamente en ningún lado"): activo Y su empresa NO suspendida.
+
+    Toda consulta pública que use esta condición necesita además el join
+    `.join(Product.company)` (esta función solo agrega el filtro, no el
+    join - mismo criterio que _has_visible_stock, que tampoco se auto-
+    aplica). No se toca Product.is_active ni Product.deleted_at al
+    suspender una empresa (ver ALCANCE) - la visibilidad se decide leyendo
+    Company.CompanyStatus en vivo en cada consulta, así que reactivar la
+    empresa hace que sus productos vuelvan a aparecer automáticamente,
+    sin ningún paso manual.
+
+    deleted_at IS NULL: un producto eliminado por su empresa (ver
+    delete_product_service/ModelProduct.py > Product.deleted_at) siempre
+    tiene is_active=False, asi que ya quedaba fuera de este filtro en la
+    practica - se agrega de forma explicita como blindaje (no depender
+    solo de ese invariante) sin reemplazar el filtro de is_active/
+    CompanyStatus ya existente.
+    """
+
+    return and_(
+        Product.is_active.is_(True),
+        Product.deleted_at.is_(None),
+        Company.CompanyStatus.is_(True),
+    )
+
+
 def get_daily_products_service(database: Session, limit: int = 8) -> list[PublicProductCardResponse]:
     """
     "Productos del dia" (ver Home publico) - MISMO endpoint que reutilizan
@@ -189,13 +247,14 @@ def get_daily_products_service(database: Session, limit: int = 8) -> list[Public
 
     products = (
         database.query(Product)
-        .filter(Product.is_active.is_(True), _has_visible_stock())
+        .join(Product.company)
+        .filter(_is_publicly_visible(), _has_visible_stock())
         .order_by(Product.created_at.desc())
         .limit(limit)
         .all()
     )
 
-    return [_to_card_response(product) for product in products]
+    return _to_card_responses(database, products)
 
 
 # Valores validos de `sort` para list_public_products_service (ver
@@ -258,7 +317,7 @@ def list_public_products_service(
         else_=Product.price,
     )
 
-    query = database.query(Product).filter(Product.is_active.is_(True))
+    query = database.query(Product).join(Product.company).filter(_is_publicly_visible())
 
     if search:
         query = query.filter(Product.name.ilike(f"%{search.strip()}%"))
@@ -317,7 +376,7 @@ def list_public_products_service(
         limit=limit,
         total=total,
         total_pages=(total + limit - 1) // limit if total else 0,
-        products=[_to_card_response(product) for product in products],
+        products=_to_card_responses(database, products),
     )
 
 
@@ -370,7 +429,8 @@ def get_public_product_detail_service(database: Session, product_id: UUID) -> Pu
 
     product = (
         database.query(Product)
-        .filter(Product.id == product_id, Product.is_active.is_(True))
+        .join(Product.company)
+        .filter(Product.id == product_id, _is_publicly_visible())
         .first()
     )
 
@@ -390,20 +450,44 @@ def get_public_product_detail_service(database: Session, product_id: UUID) -> Pu
         else None
     )
 
+    # Resumen de reseñas (ver ALCANCE > rediseño detalle de producto): un
+    # solo query agrupado por rating, el promedio se deriva acá mismo -
+    # no se pide dos veces (header + panel de Opiniones lo comparten).
+    rating_counts = get_product_rating_summary(database, product.id)
+    review_count = sum(rating_counts.values())
+    average_rating = (
+        sum(rating * count for rating, count in rating_counts.items()) / review_count
+        if review_count
+        else None
+    )
+
     return PublicProductDetailResponse(
         id=product.id,
         name=product.name,
         descripcion=product.descripcion,
         catalog_name=product.catalog.name,
+        catalog_id=product.catalog.id,
         company_name=product.company.nameCompany,
         company_id=product.company.id,
         company_logo=company_logo,
+        company_is_verified=(
+            product.company.CompanyCertificateStatus == CompanyCertificateEnum.APPROVED
+        ),
         is_active=product.is_active,
         price=product.price,
         discount_enabled=discount_enabled,
         discount_percentage=discount_percentage,
         final_price=final_price,
         stock=product.stock,
+        average_rating=average_rating,
+        review_count=review_count,
+        rating_distribution=PublicRatingDistributionResponse(
+            five=rating_counts.get(5, 0),
+            four=rating_counts.get(4, 0),
+            three=rating_counts.get(3, 0),
+            two=rating_counts.get(2, 0),
+            one=rating_counts.get(1, 0),
+        ),
         color=_to_color_response(product.main_color),
         images=_to_image_responses(product.images),
         specifications=_to_specification_responses(product.specifications),

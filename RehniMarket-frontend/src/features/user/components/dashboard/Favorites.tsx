@@ -3,12 +3,15 @@ import { Link } from "react-router-dom";
 import { Heart, ImageOff, Trash2 } from "lucide-react";
 
 import ComingSoon from "@/shared/components/dashboard/ComingSoon";
-import { getFavorites, removeFavorite } from "@/features/favorites/api/favoriteService";
+import { getFavorites } from "@/features/favorites/api/favoriteService";
+import { useFavorites } from "@/features/favorites/context/useFavorites";
 import { formatPrice } from "@/shared/utils/formatPrice";
 
 import type { Favorite } from "@/features/favorites/types/response";
 
 export default function Favorites() {
+  const { toggleFavorite } = useFavorites();
+
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -33,7 +36,13 @@ export default function Favorites() {
   const handleRemove = async (favorite: Favorite) => {
     try {
       setRemovingId(favorite.id);
-      await removeFavorite(favorite.product.id);
+
+      // Mismo toggleFavorite que usa el corazón de ProductCard (ver
+      // FavoritesProvider.tsx) - no un removeFavorite aparte, para que el
+      // estado global se actualice también y cualquier ProductCard de
+      // este mismo producto, en otra pantalla, deje de verse marcada sin
+      // necesitar recargar.
+      await toggleFavorite(favorite.product.id);
 
       setFavorites((prev) => prev.filter((f) => f.id !== favorite.id));
     } catch (error) {

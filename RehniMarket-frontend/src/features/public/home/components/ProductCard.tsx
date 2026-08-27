@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Heart, ImageOff } from "lucide-react";
+import { Heart, ImageOff, Star } from "lucide-react";
 
 import { formatPrice } from "@/shared/utils/formatPrice";
 import { useAuth } from "@/features/public/auth/context/useAuth";
-import { addFavorite, removeFavorite } from "@/features/favorites/api/favoriteService";
+import { useFavorites } from "@/features/favorites/context/useFavorites";
+import { useRedirectToLogin } from "@/features/public/auth/hooks/useRedirectToLogin";
 
 import type { PublicProductCard } from "../types/response";
 
@@ -14,29 +15,34 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { role } = useAuth();
+  const redirectToLogin = useRedirectToLogin();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
-  // No hay un endpoint de "productos favoritos" masivo para precargar el
-  // estado de cada tarjeta (ver ALCANCE > Favoritos) - el corazón arranca
-  // sin marcar y refleja lo que el propio usuario hace en esta sesión.
-  const [isFavorite, setIsFavorite] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Mismo criterio que canPurchase en ProductDetail.tsx: favoritos es una
+  // acción de comprador, así que un visitante sin sesión (role === null)
+  // también puede intentarla (y termina en /login conservando esta
+  // pantalla) - solo company/admin/owner no ven el botón.
+  const canFavorite = role === null || role === "user";
+  const isFav = isFavorite(product.id);
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (role !== "user" || saving) return;
+    if (saving) return;
+
+    if (role === null) {
+      redirectToLogin();
+      return;
+    }
+
+    if (role !== "user") return;
 
     try {
       setSaving(true);
-
-      if (isFavorite) {
-        await removeFavorite(product.id);
-        setIsFavorite(false);
-      } else {
-        await addFavorite(product.id);
-        setIsFavorite(true);
-      }
+      await toggleFavorite(product.id);
     } catch (error) {
       console.error("Error actualizando favoritos:", error);
     } finally {
@@ -44,77 +50,94 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   };
 
+  const hasRating = product.review_count > 0 && product.average_rating !== null;
+
   return (
     <Link
       to={`/products/${product.id}`}
-      className="group flex min-w-0 flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
     >
-      <div className="relative aspect-square overflow-hidden bg-gray-100">
-        {product.image ? (
-          <img
-            src={product.image}
-            alt={product.name}
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-gray-300">
-            <ImageOff size={40} />
-          </div>
+      {/* Imagen - alto fijado con padding-bottom porcentual (4:3) en vez de
+          aspect-ratio: dentro de un flex-column con flex-basis auto, Chromium
+          termina resolviendo aspect-ratio como si fuera cuadrado (ancho =
+          alto), ignorando la proporción declarada. El padding porcentual
+          (relativo al ancho del propio elemento) no depende de esa
+          resolución y es consistente en cualquier contenedor. */}
+      <div className="relative w-full shrink-0 bg-white pb-[75%]">
+        <div className="absolute inset-0 p-4">
+          {product.image ? (
+            <img
+              src={product.image}
+              alt={product.name}
+              className="h-full w-full object-contain transition duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-gray-300">
+              <ImageOff size={32} />
+            </div>
+          )}
+        </div>
+
+        {product.discount_enabled && product.discount_percentage !== null && (
+          <span className="absolute left-2.5 top-2.5 rounded-full bg-[#B0123E] px-2 py-0.5 text-xs font-bold text-white">
+            -{product.discount_percentage}%
+          </span>
         )}
 
-        {role === "user" && (
+        {canFavorite && (
           <button
             type="button"
             onClick={handleToggleFavorite}
             disabled={saving}
-            aria-label={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
-            className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md disabled:opacity-60"
+            className="absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 shadow-sm"
           >
             <Heart
-              size={18}
-              className={isFavorite ? "fill-[#6D0F2D] text-[#6D0F2D]" : "text-gray-700"}
+              size={14}
+              className={isFav ? "fill-[#6D0F2D] text-[#6D0F2D]" : "text-gray-500"}
             />
           </button>
         )}
-
-        {product.discount_enabled &&
-          product.discount_percentage !== null && (
-            <span className="absolute left-3 top-3 rounded-xl bg-red-600 px-3 py-1 text-xs font-bold text-white">
-              -{product.discount_percentage}%
-            </span>
-          )}
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
-        <p className="mb-1 text-xs text-gray-500">
-          {product.company_name}
-        </p>
+      {/* Información */}
+      <div className="flex flex-1 flex-col px-3.5 pb-3 pt-2.5">
+        <p className="text-xs text-gray-500">{product.company_name}</p>
 
-        <h3 className="line-clamp-2 min-h-[48px] font-semibold text-gray-900">
+        <h3 className="mt-0.5 line-clamp-1 text-sm font-semibold text-gray-900">
           {product.name}
         </h3>
 
-        <div className="mt-auto pt-4">
-          {product.discount_enabled ? (
-            <>
-              <p className="text-sm text-gray-400 line-through">
-                {formatPrice(product.price)}
-              </p>
-
-              <p className="text-xl font-bold text-[#6D0F2D]">
-                {formatPrice(product.final_price)}
-              </p>
-            </>
-          ) : (
-            <p className="text-xl font-bold text-[#6D0F2D]">
-              {formatPrice(product.price)}
-            </p>
-          )}
-
-          <div className="mt-4 rounded-xl bg-[#6D0F2D] py-3 text-center text-sm font-medium text-white transition hover:bg-[#5b0d26]">
-            Ver producto
+        {hasRating ? (
+          <div className="mt-1 flex items-center gap-1 text-xs">
+            <Star size={13} className="fill-amber-400 text-amber-400" />
+            <span className="font-semibold text-gray-900">
+              {product.average_rating?.toFixed(1)}
+            </span>
+            <span className="text-gray-500">({product.review_count})</span>
           </div>
+        ) : (
+          <p className="mt-1 text-xs text-gray-400">Sin opiniones</p>
+        )}
+
+        <div className="mt-1.5 flex-1">
+          {product.discount_enabled ? (
+            <div className="flex flex-wrap items-baseline gap-x-1.5">
+              <span className="text-lg font-bold text-[#6D0F2D]">
+                {formatPrice(product.final_price)}
+              </span>
+
+              <span className="text-xs text-gray-400 line-through">
+                {formatPrice(product.price)}
+              </span>
+            </div>
+          ) : (
+            <span className="text-lg font-bold text-[#6D0F2D]">{formatPrice(product.price)}</span>
+          )}
         </div>
+
+        <span className="mt-2 flex h-8 items-center justify-center rounded-xl border border-[#6D0F2D] text-xs font-medium text-[#6D0F2D] transition-colors group-hover:bg-[#6D0F2D] group-hover:text-white">
+          Ver producto
+        </span>
       </div>
     </Link>
   );

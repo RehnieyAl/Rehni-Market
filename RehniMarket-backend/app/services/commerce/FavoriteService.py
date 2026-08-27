@@ -66,10 +66,6 @@ def list_favorites_service(user_id: UUID, role: str, database: Session) -> list[
     return result
 
 
-def count_favorites_service(user_id: UUID, database: Session) -> int:
-    return repo.count_favorites(database, user_id)
-
-
 def add_favorite_service(
     user_id: UUID, role: str, data: AddFavoriteRequest, database: Session
 ) -> dict:

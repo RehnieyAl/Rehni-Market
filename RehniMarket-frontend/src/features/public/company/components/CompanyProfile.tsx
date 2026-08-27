@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
-import { BadgeCheck, CalendarDays, ChevronLeft, Package } from "lucide-react";
+import { BadgeCheck, CalendarDays, ChevronLeft, Flag, Package } from "lucide-react";
 
 import {
   getPublicCompanyProfile,
@@ -10,6 +10,9 @@ import CompanyProfileSkeleton from "./CompanyProfileSkeleton";
 import CompanyRatingBadge from "./CompanyRatingBadge";
 import ProductCard from "@/features/public/home/components/ProductCard";
 import ProductCardSkeleton from "@/features/public/home/components/ProductCardSkeleton";
+import ReportModal from "@/features/reports/components/ReportModal";
+import { useRole } from "@/hooks/useRole";
+import { useRedirectToLogin } from "@/features/public/auth/hooks/useRedirectToLogin";
 
 import defaultLogo from "@/assets/logo-default.png";
 import defaultBanner from "@/assets/banner-template.png";
@@ -21,6 +24,14 @@ const PRODUCTS_PER_PAGE = 12;
 
 export default function CompanyProfile() {
   const { companyId } = useParams<{ companyId: string }>();
+
+  // "Reportar empresa" (ver ALCANCE > Reportes, sección 4) - mismo
+  // ReportModal que "Reportar producto" (ProductDetail.tsx), solo cambia
+  // targetType/targetId. Mismo criterio que ahí: solo rol USER reporta,
+  // un visitante sin sesión va a login primero.
+  const { role } = useRole();
+  const redirectToLogin = useRedirectToLogin();
+  const [reportModalOpen, setReportModalOpen] = useState(false);
 
   const [company, setCompany] = useState<PublicCompanyProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -103,6 +114,15 @@ export default function CompanyProfile() {
     };
   }, [companyId, page]);
 
+  const handleReportClick = () => {
+    if (role === null) {
+      redirectToLogin();
+      return;
+    }
+
+    setReportModalOpen(true);
+  };
+
   if (loading) {
     return <CompanyProfileSkeleton />;
   }
@@ -171,6 +191,21 @@ export default function CompanyProfile() {
           <p className="mt-4 text-center text-gray-600 sm:text-left">
             {company.description}
           </p>
+        )}
+
+        {/* REPORTAR EMPRESA */}
+        {(role === null || role === "user") && (
+          <div className="mt-3 text-center sm:text-left">
+            <button
+              type="button"
+              onClick={handleReportClick}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-400 transition hover:text-red-600"
+              title="Reportar empresa"
+            >
+              <Flag size={14} />
+              Reportar empresa
+            </button>
+          </div>
         )}
 
         {/* INFORMACIÓN DE LA EMPRESA */}
@@ -245,6 +280,14 @@ export default function CompanyProfile() {
           )}
         </section>
       </div>
+
+      <ReportModal
+        isOpen={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        targetType="company"
+        targetId={company.id}
+        targetLabel={company.name}
+      />
     </div>
   );
 }

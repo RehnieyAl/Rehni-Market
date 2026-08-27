@@ -22,6 +22,11 @@ from app.routers import AddressRouter
 from app.routers import WalletRouter
 from app.routers import AdminWalletRouter
 from app.routers import ReviewRouter
+from app.routers import BankAccountRouter
+from app.routers import CompanyPayoutRouter
+from app.routers import AdminPayoutRouter
+from app.routers import ReportRouter
+from app.routers import AdminReportRouter
 import app.models
 from app.middleware.AuthMiddleware import auth_middleware
 from app.middleware.RateLimitMiddleware import rate_limit_middleware
@@ -99,6 +104,8 @@ app.include_router(AdminDashboardRouters.router)
 app.include_router(AdminCompanyRouters.router)
 app.include_router(AdminUserRouters.router)
 app.include_router(AdminWalletRouter.router)
+app.include_router(AdminPayoutRouter.router)
+app.include_router(AdminReportRouter.router)
 
 # =========================
 # COMPRAS (carrito / checkout / pedidos / favoritos / direcciones / wallet)
@@ -110,6 +117,13 @@ app.include_router(FavoriteRouter.router)
 app.include_router(AddressRouter.router)
 app.include_router(WalletRouter.router)
 app.include_router(ReviewRouter.router)
+app.include_router(ReportRouter.router)
+
+# =========================
+# LIQUIDACIONES (cuentas bancarias / payouts empresa)
+# =========================
+app.include_router(BankAccountRouter.router)
+app.include_router(CompanyPayoutRouter.router)
 
 
 

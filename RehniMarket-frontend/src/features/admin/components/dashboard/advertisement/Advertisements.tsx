@@ -241,7 +241,7 @@ export default function Advertisements() {
                         advertisement.is_active ? "text-green-600" : "text-gray-400"
                       }
                     >
-                      {advertisement.is_active ? "🟢 Activo" : "🔴 Inactivo"}
+                      {advertisement.is_active ? "Activo" : "Inactivo"}
                     </span>
 
                     <span>Orden: {advertisement.order}</span>

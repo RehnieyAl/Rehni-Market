@@ -139,6 +139,29 @@ export class ErrorCode {
   static readonly REVIEW_NOT_ELIGIBLE = "REVIEW_NOT_ELIGIBLE";
 
   // ==========================
+  // CUENTAS BANCARIAS (LIQUIDACIONES)
+  // ==========================
+  static readonly BANK_ACCOUNT_NOT_FOUND = "BANK_ACCOUNT_NOT_FOUND";
+  static readonly BANK_ACCOUNT_IN_USE = "BANK_ACCOUNT_IN_USE";
+
+  // ==========================
+  // LIQUIDACIONES (PAYOUTS)
+  // ==========================
+  static readonly PAYOUT_NOT_FOUND = "PAYOUT_NOT_FOUND";
+  static readonly PAYOUT_ALREADY_EXISTS = "PAYOUT_ALREADY_EXISTS";
+  static readonly PAYOUT_ALREADY_PAID = "PAYOUT_ALREADY_PAID";
+  static readonly PAYOUT_NO_BANK_ACCOUNT = "PAYOUT_NO_BANK_ACCOUNT";
+  static readonly PAYOUT_NO_VALID_SALES = "PAYOUT_NO_VALID_SALES";
+  static readonly PAYOUT_INVALID_PERIOD = "PAYOUT_INVALID_PERIOD";
+
+  // ==========================
+  // REPORTES (producto/empresa)
+  // ==========================
+  static readonly REPORT_NOT_FOUND = "REPORT_NOT_FOUND";
+  static readonly INVALID_REPORT_TARGET = "INVALID_REPORT_TARGET";
+  static readonly REPORT_ALREADY_RESOLVED = "REPORT_ALREADY_RESOLVED";
+
+  // ==========================
   // VALIDACIÓN
   // ==========================
   static readonly VALIDATION_ERROR = "VALIDATION_ERROR";

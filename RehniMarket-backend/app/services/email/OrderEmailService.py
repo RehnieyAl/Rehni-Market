@@ -126,14 +126,17 @@ def send_order_status_email(
     order: Order,
     reason: str | None = None,
     refunded_amount: Decimal | None = None,
+    company_name: str | None = None,
 ) -> None:
     """
     Se llama después de cambiar `order.status` (empresa: ver
     OrderService.update_company_order_status_service - cubre
     PROCESSING/SHIPPED/DELIVERED/CANCELLED; comprador: ver
-    OrderService.cancel_my_order_service - CANCELLED). PENDING no pasa
-    por acá (correo propio en send_order_created_email) y PAID nunca se
-    asigna en este sistema (ver ModelOrder.py > Order) - ningún otro
+    OrderService.cancel_my_order_service - CANCELLED; suspensión de
+    empresa: ver OrderService.cancel_and_refund_company_orders_for_
+    suspension, único caso que además pasa `company_name`). PENDING no
+    pasa por acá (correo propio en send_order_created_email) y PAID nunca
+    se asigna en este sistema (ver ModelOrder.py > Order) - ningún otro
     estado dispara un correo.
     """
 
@@ -187,4 +190,5 @@ def send_order_status_email(
             total=order.total,
             reason=reason,
             refunded_amount=refunded_amount,
+            company_name=company_name,
         )

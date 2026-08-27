@@ -106,4 +106,4 @@ def get_nas_service():
     return nas_service
 
 def build_media_url(path: str):
-    return f"http://192.168.1.7:8001/media/proxy?path={path}"
+    return f"http://192.168.40.25:8001/media/proxy?path={path}"

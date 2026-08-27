@@ -118,7 +118,7 @@ export default function Orders() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">📦 Pedidos</h1>
+      <h1 className="text-3xl font-bold">Pedidos</h1>
 
       <p className="mt-2 text-gray-500">
         Gestiona los pedidos recibidos: filtra por estado, busca por referencia o comprador y

@@ -48,13 +48,10 @@ def verify_token(token: str):
         return payload
 
     except ExpiredSignatureError:
-        print("TOKEN EXPIRADO")
         return "expired"
 
-    except JWTError as e:
-        print("JWT ERROR:", repr(e))
+    except JWTError:
         return None
 
-    except Exception as e:
-        print("ERROR GENERAL:", repr(e))
+    except Exception:
         return None

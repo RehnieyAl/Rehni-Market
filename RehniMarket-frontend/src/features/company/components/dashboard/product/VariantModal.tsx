@@ -17,6 +17,8 @@ import { getColors } from "@/features/company/api/colorService";
 import { getCatalogSpecifications } from "@/features/company/api/catalogService";
 
 import SpecificationChecklist from "./SpecificationChecklist";
+import ConfirmModal from "@/shared/components/ConfirmModal";
+import { useAlert } from "@/shared/components/alert/useAlert";
 import { parseNumericField } from "@/shared/utils/parseNumericField";
 
 import type {
@@ -50,6 +52,10 @@ export default function VariantModal({
   usedColorIds,
 }: VariantModalProps) {
   const isEditMode = variantId !== null;
+
+  const { showAlert } = useAlert();
+
+  const [confirmDeleteImageId, setConfirmDeleteImageId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -189,6 +195,7 @@ export default function VariantModal({
         })
         .catch((error) => {
           console.error("Error subiendo imágenes:", error);
+          showAlert("error", "No se pudieron subir las imágenes.");
         })
         .finally(() => setUploadingImages(false));
     } else {
@@ -206,19 +213,20 @@ export default function VariantModal({
     });
   };
 
-  const handleDeleteExistingImage = async (imageId: string) => {
-    if (!variantId) return;
-    if (!window.confirm("¿Eliminar esta imagen?")) return;
+  const handleDeleteExistingImage = async () => {
+    if (!variantId || !confirmDeleteImageId) return;
 
     try {
-      setImageActionId(imageId);
-      const detail = await deleteVariantImage(productId, variantId, imageId);
+      setImageActionId(confirmDeleteImageId);
+      const detail = await deleteVariantImage(productId, variantId, confirmDeleteImageId);
       setVariant(detail);
       onSuccess();
     } catch (error) {
       console.error("Error eliminando imagen:", error);
+      showAlert("error", "No se pudo eliminar la imagen.");
     } finally {
       setImageActionId(null);
+      setConfirmDeleteImageId(null);
     }
   };
 
@@ -232,6 +240,7 @@ export default function VariantModal({
       onSuccess();
     } catch (error) {
       console.error("Error marcando imagen principal:", error);
+      showAlert("error", "No se pudo marcar la imagen como principal.");
     } finally {
       setImageActionId(null);
     }
@@ -298,6 +307,7 @@ export default function VariantModal({
       onSuccess();
     } catch (error) {
       console.error("Error eliminando especificación:", error);
+      showAlert("error", "No se pudo eliminar la especificación.");
       setPendingSpecTemplateIds((prev) => new Set(prev).add(templateId));
     } finally {
       setSpecActionTemplateId(null);
@@ -346,6 +356,7 @@ export default function VariantModal({
       onSuccess();
     } catch (error) {
       console.error("Error guardando especificación:", error);
+      showAlert("error", "No se pudo guardar la especificación.");
     } finally {
       setSpecActionTemplateId(null);
     }
@@ -432,6 +443,7 @@ export default function VariantModal({
       onSuccess();
     } catch (error) {
       console.error("Error guardando la variante:", error);
+      showAlert("error", "No se pudo guardar la variante.");
     } finally {
       setSaving(false);
     }
@@ -442,7 +454,7 @@ export default function VariantModal({
   const existingImages = variant?.images ?? [];
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-3 sm:p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-6">
       <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <h2 className="text-xl font-semibold">
@@ -648,7 +660,7 @@ export default function VariantModal({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDeleteExistingImage(image.id);
+                          setConfirmDeleteImageId(image.id);
                         }}
                         className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white shadow hover:bg-red-700"
                       >
@@ -731,6 +743,16 @@ export default function VariantModal({
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmDeleteImageId !== null}
+        title="Eliminar imagen"
+        message="¿Eliminar esta imagen?"
+        confirmLabel="Eliminar"
+        loading={imageActionId === confirmDeleteImageId}
+        onConfirm={handleDeleteExistingImage}
+        onClose={() => setConfirmDeleteImageId(null)}
+      />
     </div>
   );
 }

@@ -28,8 +28,33 @@ interface AlertState {
 export default function AlertProvider({
   children,
 }: AlertProviderProps) {
+  // Estado inicial calculado en un inicializador perezoso (corre una sola
+  // vez, antes del primer render) en vez de en un efecto: redirectToLogin/
+  // redirectToLoginWithMessage (ver api/session.ts) hacen un
+  // window.location.href, es decir, una recarga completa de página - por
+  // eso no pueden llamar a showAlert directamente (el remount de
+  // AlertProvider que sigue lo borraría). Dejan el mensaje en
+  // sessionStorage y este inicializador lo consume (lee y borra) para que
+  // ya esté en el estado desde el primer render, sin depender de un
+  // setState dentro de un efecto. Cubre tanto "sesión expirada" como
+  // "cuenta bloqueada" (ver AUDITORÍA de bloqueo de cuentas).
   const [alert, setAlert] =
-    useState<AlertState | null>(null);
+    useState<AlertState | null>(() => {
+      const pendingMessage =
+        sessionStorage.getItem("auth_alert");
+
+      if (!pendingMessage) {
+        return null;
+      }
+
+      sessionStorage.removeItem("auth_alert");
+
+      return {
+        id: 1,
+        type: "error",
+        message: pendingMessage,
+      };
+    });
 
   /*
    * ==========================

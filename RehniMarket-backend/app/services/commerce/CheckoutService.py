@@ -88,7 +88,16 @@ def checkout_service(
         for cart_item in cart.items:
             product = cart_item.product
 
-            if not product or not product.is_active:
+            # Producto de una empresa suspendida (ver ALCANCE > BUG 2,
+            # "no se puede comprar producto"): se revalida en el checkout
+            # igual que is_active, aunque el producto ya estuviera en el
+            # carrito desde antes de que la empresa se suspendiera.
+            if (
+                not product
+                or not product.is_active
+                or not product.company
+                or not product.company.CompanyStatus
+            ):
                 api_error(
                     409,
                     ErrorCodes.PRODUCT_NOT_FOUND,

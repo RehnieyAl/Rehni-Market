@@ -11,12 +11,14 @@ def create_admin_activity(
     action,
     target_user_id=None,
     target_company_id=None,
+    reason=None,
 ):
     activity = AdminActivity(
         admin_id=admin_id,
         action=action,
         target_user_id=target_user_id,
         target_company_id=target_company_id,
+        reason=reason,
     )
 
     database.add(activity)

@@ -63,6 +63,10 @@ price: number;
 stock: number;
 image: string | null;
 is_active: boolean;
+// null = nunca eliminado (activo o solo desactivado con el toggle).
+// Con fecha = eliminado por la empresa - distingue "Inactivo" de
+// "Eliminado" (ver backend > ModelProduct.py > Product.deleted_at).
+deleted_at: string | null;
 }
 
 export interface MyProductsPaginationResponse {
@@ -104,6 +108,7 @@ has_variants: boolean;
 descripcion: string;
 is_active: boolean;
 created_at: string;
+deleted_at: string | null;
 catalog_id: string;
 catalog_name: string;
 main_color_id: string | null;

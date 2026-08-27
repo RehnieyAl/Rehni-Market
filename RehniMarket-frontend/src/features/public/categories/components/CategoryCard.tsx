@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, ImageOff, Package } from "lucide-react";
+import { ArrowRight, ImageOff } from "lucide-react";
 
 import type { PublicCatalog } from "@/features/public/products/types/response";
 
@@ -7,54 +7,52 @@ interface CategoryCardProps {
   category: PublicCatalog;
 }
 
-// Tarjeta de categoría (ver ALCANCE > rediseño Categorías): imagen real
-// (image_url, con placeholder si es null - nunca hardcodeada) + nombre +
-// cantidad de productos + indicador de flecha. Toda la tarjeta es
-// clickeable y navega al catálogo ya filtrado por esta categoría (ver
-// ProductsList.tsx, que lee `?catalog=` de la URL).
+// Tarjeta de categoría (ver design/category-reference.png): imagen real
+// (image_url, con placeholder si es null - nunca hardcodeada) arriba, y
+// nombre + cantidad de productos + flecha en un cuerpo blanco separado
+// debajo - sin overlay ni iconos decorativos sobre la imagen (ver ALCANCE
+// > rediseño Categorías). Toda la tarjeta es clickeable y navega al
+// catálogo ya filtrado por esta categoría (ver ProductsList.tsx, que lee
+// `?catalog=` de la URL).
+//
+// Mismo lenguaje que ProductCard.tsx: rounded-2xl, border-gray-200,
+// shadow-sm en reposo, hover:-translate-y-1 + hover:shadow-lg.
 export default function CategoryCard({ category }: CategoryCardProps) {
   return (
     <Link
       to={`/products?catalog=${category.id}`}
-      className="group relative flex flex-col overflow-hidden rounded-3xl border border-gray-100 bg-white transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg"
     >
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-100">
+      <div className="aspect-video w-full overflow-hidden bg-gray-100">
         {category.image_url ? (
           <img
             src={category.image_url}
             alt={category.name}
-            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-gray-300">
-            <ImageOff size={36} />
+            <ImageOff size={32} />
           </div>
         )}
+      </div>
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
+      <div className="flex items-center justify-between gap-3 p-4">
+        <div className="min-w-0">
+          <h3 className="line-clamp-2 min-h-[2.5rem] text-base font-semibold text-gray-900">
+            {category.name}
+          </h3>
 
-        {/* Icono genérico de categoría (ver design/home-reference.png) -
-            no es un icono propio de CADA categoría (no existe ese dato en
-            el modelo) - se usa uno solo, consistente, como refuerzo
-            visual, no como información nueva. */}
-        <span className="absolute left-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-[#6D0F2D] text-white shadow-md">
-          <Package size={16} />
-        </span>
-
-        <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4">
-          <div className="min-w-0">
-            <h3 className="truncate text-lg font-semibold text-white">{category.name}</h3>
-
-            <p className="mt-0.5 text-sm text-white/85">
-              {category.product_count.toLocaleString("es-CO")}{" "}
-              {category.product_count === 1 ? "producto" : "productos"}
-            </p>
-          </div>
-
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-[#6D0F2D] shadow-md transition-transform duration-300 ease-out group-hover:translate-x-0.5">
-            <ArrowRight size={16} />
-          </span>
+          <p className="mt-0.5 text-sm text-gray-500">
+            {category.product_count.toLocaleString("es-CO")}{" "}
+            {category.product_count === 1 ? "producto" : "productos"}
+          </p>
         </div>
+
+        <ArrowRight
+          size={18}
+          className="shrink-0 text-[#6D0F2D] transition-transform duration-300 ease-out group-hover:translate-x-1"
+        />
       </div>
     </Link>
   );

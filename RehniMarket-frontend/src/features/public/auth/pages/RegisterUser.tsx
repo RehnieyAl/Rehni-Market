@@ -8,10 +8,12 @@ import { registerUser } from "@/features/public/auth/api/authService";
 import TermsModal from "@/features/public/auth/components/TermsModal";
 import UserTerms from "@/features/public/auth/components/terms/UserTerms";
 
+import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 
 export default function UserForm() {
   const navigate = useNavigate();
+  const { showAlert } = useAlert();
 
   const [showTerms, setShowTerms] = useState(false);
 
@@ -41,16 +43,14 @@ export default function UserForm() {
     e.preventDefault();
 
     if (form.password !== confirmPassword) {
-      alert("Las contraseñas no coinciden.");
+      showAlert("error", "Las contraseñas no coinciden.");
       return;
     }
 
     setLoading(true);
 
     try {
-      const res = await registerUser(form);
-
-      console.log(res);
+      await registerUser(form);
 
       navigate("/verify-email", {
         state: {
@@ -63,18 +63,18 @@ export default function UserForm() {
 
         switch (error?.code) {
           case ErrorCode.EMAIL_ALREADY_EXISTS:
-            alert(error.message);
+            showAlert("error", error.message);
             break;
 
           case ErrorCode.ROLE_NOT_FOUND:
-            alert(error.message);
+            showAlert("error", error.message);
             break;
 
           default:
-            alert(error?.message ?? "Ocurrio un error.");
+            showAlert("error", error?.message ?? "Ocurrió un error.");
         }
       } else {
-        alert("Ocurrio un error inesperado");
+        showAlert("error", "Ocurrió un error inesperado.");
       }
     } finally {
       setLoading(false);
@@ -85,7 +85,7 @@ export default function UserForm() {
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-3xl shadow-xl border border-gray-200 p-8">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-8">
             <h1 className="text-4xl font-bold text-center text-gray-900">
               Crear una cuenta
             </h1>

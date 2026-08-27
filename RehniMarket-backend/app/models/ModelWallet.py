@@ -84,6 +84,22 @@ class WalletTransaction(Base):
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
     )
 
+    # Pedido reembolsado (solo type=REFUND) - ver ALCANCE > Suspensión de
+    # empresa, "doble reembolso". Nulo para el resto de movimientos
+    # (RECHARGE/PURCHASE/ADJUSTMENT no estan atados a un pedido puntual).
+    # Con esta columna se puede distinguir "pedido cancelado" de "pedido
+    # cancelado Y YA reembolsado" sin depender solo de order.status - un
+    # pedido pudo cancelarse por otro motivo sin pasar por un reembolso
+    # (ver WalletRepository.has_order_been_refunded). ondelete="SET NULL"
+    # porque el movimiento es un registro contable que debe sobrevivir
+    # aunque, en teoria, el pedido se borrara (en la practica los pedidos
+    # nunca se eliminan, ver ModelOrder.py).
+    order_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("orders.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
@@ -95,3 +111,5 @@ class WalletTransaction(Base):
     # Users a proposito: no hace falta navegar de un admin a todas las
     # recargas que hizo desde el modelo Users.
     created_by_user = relationship("Users", foreign_keys=[created_by])
+
+    order = relationship("Order")

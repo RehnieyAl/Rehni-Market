@@ -1,3 +1,6 @@
+from decimal import Decimal
+from datetime import date, timedelta
+
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 from uuid import UUID
@@ -10,10 +13,6 @@ def create_order(database: Session, order: Order) -> Order:
     database.add(order)
     database.flush()
     return order
-
-
-def get_order_by_id(database: Session, order_id: UUID) -> Order | None:
-    return database.query(Order).filter(Order.id == order_id).first()
 
 
 def get_user_order(database: Session, order_id: UUID, user_id: UUID) -> Order | None:
@@ -32,6 +31,26 @@ def get_company_order(database: Session, order_id: UUID, company_id: UUID) -> Or
     )
 
 
+def list_company_orders_by_statuses(
+    database: Session, company_id: UUID, statuses: set[OrderStatusEnum]
+) -> list[Order]:
+    """
+    Pedidos de una empresa en alguno de `statuses` - usado por la
+    suspensión de empresa (ver OrderService.
+    cancel_and_refund_company_orders_for_suspension) para encontrar
+    únicamente PENDING/PAID/PROCESSING, la relación real es Order.
+    company_id (columna directa, ver ModelOrder.py > Order - el pedido ya
+    sabe a qué empresa pertenece desde el checkout, no hace falta pasar
+    por OrderItem/Product para deducirlo).
+    """
+
+    return (
+        database.query(Order)
+        .filter(Order.company_id == company_id, Order.status.in_(statuses))
+        .all()
+    )
+
+
 def list_user_orders(database: Session, user_id: UUID, page: int, limit: int):
     query = (
         database.query(Order)
@@ -44,33 +63,6 @@ def list_user_orders(database: Session, user_id: UUID, page: int, limit: int):
     orders = query.offset(offset).limit(limit).all()
 
     return orders, total
-
-
-def get_last_user_order(database: Session, user_id: UUID) -> Order | None:
-    return (
-        database.query(Order)
-        .filter(Order.user_id == user_id)
-        .order_by(Order.created_at.desc())
-        .first()
-    )
-
-
-def count_pending_user_orders(database: Session, user_id: UUID) -> int:
-    return (
-        database.query(Order)
-        .filter(
-            Order.user_id == user_id,
-            Order.status.in_(
-                [
-                    OrderStatusEnum.PENDING,
-                    OrderStatusEnum.PAID,
-                    OrderStatusEnum.PROCESSING,
-                    OrderStatusEnum.SHIPPED,
-                ]
-            ),
-        )
-        .count()
-    )
 
 
 def list_company_orders(
@@ -148,3 +140,68 @@ def count_company_orders_by_status(
     )
 
     return {status: count for status, count in rows}
+
+
+def sum_valid_company_sales(
+    database: Session, company_id: UUID, period_start, period_end
+) -> Decimal:
+    """
+    Suma de Order.total de ventas VÁLIDAS de una empresa dentro de un
+    periodo, para el módulo de liquidaciones (ver PayoutService.py).
+
+    "Válida" = DELIVERED únicamente (ver ALCANCE > Módulo de liquidaciones,
+    Fase "Reglas de negocio": solo cuentan pedidos completados/entregados/
+    finalizados). Este sistema no tiene un estado "rechazado" ni
+    "reembolsado" propio (ver ModelOrder.py > OrderStatusEnum) - CANCELLED
+    ya cubre esa exclusión, y el resto de estados (PENDING/PAID/PROCESSING/
+    SHIPPED) todavía no son una venta finalizada, así que tampoco cuentan.
+    Mismo criterio que OrderStatusCountsResponse.completed, que ya trata
+    DELIVERED como "completado" (ver OrderService.py).
+
+    Se filtra por `created_at` (fecha del pedido): no existe un
+    `delivered_at` separado en el modelo, así que el periodo de la
+    liquidación se ancla a cuándo se hizo el pedido, no a cuándo pasó a
+    DELIVERED.
+    """
+
+    # period_end es INCLUSIVO (ej. 2026-01-01 a 2026-01-31 debe contar todo
+    # el 31) pero Order.created_at es un timestamp - comparar con
+    # `< period_end` (medianoche) dejaría fuera todo ese último día. Se
+    # compara contra el inicio del día SIGUIENTE en su lugar.
+    period_end_exclusive = period_end + timedelta(days=1)
+
+    total = (
+        database.query(func.coalesce(func.sum(Order.total), 0))
+        .filter(
+            Order.company_id == company_id,
+            Order.status == OrderStatusEnum.DELIVERED,
+            Order.created_at >= period_start,
+            Order.created_at < period_end_exclusive,
+        )
+        .scalar()
+    )
+
+    return Decimal(total)
+
+
+def list_delivered_sale_months(database: Session, company_id: UUID) -> list[date]:
+    """
+    Primer día de cada mes calendario en el que la empresa tiene al menos
+    un pedido DELIVERED (ver ALCANCE > selector "Mes a liquidar" -
+    PayoutService.list_available_payout_periods_service). Mismo criterio
+    de "venta válida" que sum_valid_company_sales (DELIVERED únicamente,
+    por created_at) - un query agrupado por mes en vez de que el frontend
+    adivine qué meses probar.
+    """
+
+    month_expr = func.date_trunc("month", Order.created_at)
+
+    rows = (
+        database.query(month_expr.label("month"))
+        .filter(Order.company_id == company_id, Order.status == OrderStatusEnum.DELIVERED)
+        .distinct()
+        .order_by(month_expr.desc())
+        .all()
+    )
+
+    return [row.month.date() for row in rows]

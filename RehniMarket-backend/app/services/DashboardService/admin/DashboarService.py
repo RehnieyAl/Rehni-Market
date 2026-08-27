@@ -43,6 +43,7 @@ def register_admin_activity(
     action,
     target_user_id=None,
     target_company_id=None,
+    reason=None,
 ):
     return create_admin_activity(
         database=database,
@@ -50,6 +51,7 @@ def register_admin_activity(
         action=action,
         target_user_id=target_user_id,
         target_company_id=target_company_id,
+        reason=reason,
     )
 
 

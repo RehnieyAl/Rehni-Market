@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Filter, ImageOff } from "lucide-react";
+import { Filter, RotateCcw, Search, X } from "lucide-react";
 
 import ProductCard from "@/features/public/home/components/ProductCard";
 import ProductCardSkeleton from "@/features/public/home/components/ProductCardSkeleton";
@@ -9,7 +9,7 @@ import { getCatalogs, getPublicProducts } from "../api/productsService";
 import type { PublicProductCard } from "@/features/public/home/types/response";
 import type { PublicCatalog } from "../types/response";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 10;
 
 const SORT_OPTIONS = [
   { value: "", label: "Relevancia" },
@@ -17,6 +17,32 @@ const SORT_OPTIONS = [
   { value: "price_desc", label: "Mayor precio" },
   { value: "discount", label: "Mayor descuento" },
 ] as const;
+
+// Lista compacta de páginas con "..." para huecos grandes (ver ALCANCE >
+// rediseño visual Products, paginación real): siempre ancla 1, 2, 3 al
+// inicio y las últimas 2 al final, más el entorno inmediato de la página
+// actual - puramente de presentación sobre `page`/`totalPages`, que ya
+// existían.
+function buildPageList(current: number, total: number): (number | "ellipsis")[] {
+  const anchors = new Set(
+    [1, 2, 3, total - 1, total, current - 1, current, current + 1].filter(
+      (n) => n >= 1 && n <= total,
+    ),
+  );
+
+  const sorted = [...anchors].sort((a, b) => a - b);
+
+  const result: (number | "ellipsis")[] = [];
+  let previous = 0;
+
+  for (const n of sorted) {
+    if (previous && n - previous > 1) result.push("ellipsis");
+    result.push(n);
+    previous = n;
+  }
+
+  return result;
+}
 
 // Catálogo público con filtros reales (ver ALCANCE > catálogo público):
 // Categoría, Precio, Descuento, Disponibilidad y Ordenamiento, todos
@@ -54,6 +80,15 @@ export default function ProductsList() {
   const [minPriceInput, setMinPriceInput] = useState(minPriceParam);
   const [maxPriceInput, setMaxPriceInput] = useState(maxPriceParam);
 
+  // Buscador "dentro de la categoría" (ver ALCANCE > rediseño visual
+  // Products): solo se muestra cuando hay una categoría seleccionada (ver
+  // JSX abajo) y escribe al mismo param `search` que ya usa el buscador
+  // global del navbar - no es un filtro nuevo en el backend, es
+  // search+catalog combinados, que /public/products ya resuelve con AND
+  // (ver list_public_products_service). Mismo patrón de buffer+debounce
+  // (400ms) que minPriceInput/maxPriceInput.
+  const [categorySearchInput, setCategorySearchInput] = useState(search);
+
   const [catalogs, setCatalogs] = useState<PublicCatalog[]>([]);
   const [products, setProducts] = useState<PublicProductCard[]>([]);
   const [total, setTotal] = useState(0);
@@ -83,13 +118,23 @@ export default function ProductsList() {
     setSearchParams(next);
   };
 
+  // Cambiar de categoría vacía la búsqueda "dentro de la categoría" (ver
+  // ALCANCE > rediseño visual Products): si no, al elegir otra categoría
+  // quedaría un texto de búsqueda de la categoría anterior aplicado a la
+  // nueva sin que el campo (que se re-monta con el nombre de la nueva
+  // categoría) lo deje ver hasta que el usuario mire con atención.
+  const handleCatalogChange = (nextCatalog: string) => {
+    updateParams({ catalog: nextCatalog || null, search: null });
+    setCategorySearchInput("");
+  };
+
   const handlePageChange = (nextPage: number) => {
     updateParams({ page: nextPage > 1 ? String(nextPage) : null }, false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleClearFilters = () => {
-    setSearchParams(search ? { search } : {});
+    setSearchParams(search && !catalog ? { search } : {});
   };
 
   const hasActiveFilters =
@@ -145,6 +190,30 @@ export default function ProductsList() {
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [minPriceInput, maxPriceInput]);
+
+  // Sincroniza el buscador "dentro de la categoría" si `search` cambia
+  // desde afuera (ej. "Limpiar todo").
+  useEffect(() => {
+    const timeout = setTimeout(() => setCategorySearchInput(search));
+
+    return () => clearTimeout(timeout);
+  }, [search]);
+
+  // Debounce del buscador de categoría (mismo criterio que el precio,
+  // 400ms) - solo escribe a la URL mientras haya una categoría
+  // seleccionada, que es la única situación en la que el campo existe.
+  useEffect(() => {
+    if (!catalog) return;
+
+    const timeout = setTimeout(() => {
+      if (categorySearchInput === search) return;
+
+      updateParams({ search: categorySearchInput || null }, true);
+    }, 400);
+
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categorySearchInput, catalog]);
 
   // El fetch real: única fuente de verdad son los filtros ya reflejados
   // en la URL (no los buffers locales de precio).
@@ -209,84 +278,124 @@ export default function ProductsList() {
   // arriba, sin pedirla de nuevo.
   const selectedCatalog = catalog ? catalogs.find((c) => c.id === catalog) : undefined;
 
+  const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(page * PAGE_SIZE, total);
+  const pageList = buildPageList(page, totalPages);
+
   return (
-    <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    // Mismo contenedor que Home/Categorías/Footer/navbar (ver ALCANCE >
+    // rediseño visual Products, referencia design/products-reference.png):
+    // max-w-[clamp(1280px,90vw,1600px)] en vez de max-w-7xl fijo.
+    <section className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-2 py-6 sm:px-4 sm:py-8 lg:px-8">
+      {/* HEADER: solo título + cantidad de resultados (ver ALCANCE >
+          rediseño visual Products) - el buscador vive únicamente en el
+          navbar (ver navbar.tsx), acá no hay buscador/orden/vista
+          duplicados. */}
       {selectedCatalog && !search ? (
-        <div className="mb-8 flex items-center gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border bg-gray-100 sm:h-20 sm:w-20">
-            {selectedCatalog.image_url ? (
-              <img
-                src={selectedCatalog.image_url}
-                alt={selectedCatalog.name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <ImageOff size={24} className="text-gray-300" />
-            )}
-          </div>
+        <div className="mb-5">
+          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+            {selectedCatalog.name}
+          </h1>
 
-          <div>
-            <h1 className="text-2xl font-bold sm:text-3xl">{selectedCatalog.name}</h1>
-
-            <p className="mt-1 text-gray-500">
-              {selectedCatalog.product_count.toLocaleString("es-CO")}{" "}
-              {selectedCatalog.product_count === 1 ? "producto" : "productos"}
-            </p>
-          </div>
+          <p className="mt-1 text-gray-500">
+            {loading ? "Cargando productos..." : `${total} productos encontrados`}
+          </p>
         </div>
       ) : (
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">
+        <div className="mb-5">
+          <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">
             {search ? `Resultados para "${search}"` : "Productos"}
           </h1>
 
-          <p className="mt-2 text-gray-500">
+          <p className="mt-1 text-gray-500">
             {loading ? "Cargando productos..." : `${total} productos encontrados`}
           </p>
         </div>
       )}
 
-      <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[280px_1fr] lg:gap-8">
         {/* FILTROS */}
-        <aside className="h-fit rounded-2xl border bg-white p-5">
-          <div className="mb-5 flex items-center justify-between">
+        <aside className="h-fit rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Filter size={18} />
-              <h2 className="font-semibold">Filtros</h2>
+              <Filter size={18} className="text-gray-700" />
+              <h2 className="font-semibold text-gray-900">Filtros</h2>
             </div>
 
             {hasActiveFilters && (
               <button
                 onClick={handleClearFilters}
-                className="text-sm font-medium text-[#6D0F2D] hover:underline"
+                className="flex items-center gap-1.5 text-sm font-medium text-[#6D0F2D] hover:underline"
               >
-                Limpiar
+                <RotateCcw size={13} />
+                Limpiar todo
               </button>
             )}
           </div>
 
-          <div className="space-y-5">
+          <div className="divide-y divide-gray-100">
             {/* CATEGORÍA */}
-            <div>
-              <label className="mb-2 block text-sm font-medium">Categoría</label>
+            <div className="pb-4">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
+                Categoría
+              </label>
 
               <select
                 value={catalog}
-                onChange={(e) => updateParams({ catalog: e.target.value || null })}
-                className="w-full rounded-xl border p-3"
+                onChange={(e) => handleCatalogChange(e.target.value)}
+                className="w-full rounded-xl border border-gray-200 p-2.5 text-sm text-gray-700 outline-none transition focus:border-[#6D0F2D]"
               >
-                <option value="">Todas</option>
+                <option value="">Todas las categorías</option>
                 {catalogs.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.name} ({option.product_count})
                   </option>
                 ))}
               </select>
+
+              {/* Buscador acotado a la categoría elegida (ver ALCANCE >
+                  rediseño visual Products, comportamiento nuevo del
+                  filtro de categoría): solo existe mientras haya una
+                  categoría seleccionada, filtra en conjunto con ella
+                  (search + catalog, ambos ya soportados por
+                  /public/products). */}
+              {selectedCatalog && (
+                <div className="mt-3">
+                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    Buscar dentro de {selectedCatalog.name}
+                  </label>
+
+                  <div className="flex h-10 items-center rounded-xl border border-gray-200 bg-white px-3 transition focus-within:border-[#6D0F2D] focus-within:ring-2 focus-within:ring-[#6D0F2D]/10">
+                    <Search size={15} className="shrink-0 text-gray-400" aria-hidden="true" />
+
+                    <input
+                      type="text"
+                      value={categorySearchInput}
+                      onChange={(e) => setCategorySearchInput(e.target.value)}
+                      placeholder={`Ej. ${selectedCatalog.name}...`}
+                      className="ml-2 min-w-0 flex-1 bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400"
+                    />
+
+                    {categorySearchInput && (
+                      <button
+                        type="button"
+                        onClick={() => setCategorySearchInput("")}
+                        aria-label="Limpiar búsqueda"
+                        className="ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+                      >
+                        <X size={13} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* PRECIO */}
-            <div>
-              <label className="mb-2 block text-sm font-medium">Precio</label>
+            <div className="py-4">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
+                Precio mínimo y máximo
+              </label>
 
               <div className="flex items-center gap-2">
                 <input
@@ -295,11 +404,11 @@ export default function ProductsList() {
                   inputMode="numeric"
                   value={minPriceInput}
                   onChange={(e) => setMinPriceInput(e.target.value)}
-                  placeholder="Mín"
-                  className="w-full rounded-xl border p-3"
+                  placeholder="Mínimo"
+                  className="w-full min-w-0 rounded-xl border border-gray-200 p-2.5 text-sm outline-none transition focus:border-[#6D0F2D]"
                 />
 
-                <span className="text-gray-400">–</span>
+                <span className="shrink-0 text-gray-400">–</span>
 
                 <input
                   type="number"
@@ -307,42 +416,45 @@ export default function ProductsList() {
                   inputMode="numeric"
                   value={maxPriceInput}
                   onChange={(e) => setMaxPriceInput(e.target.value)}
-                  placeholder="Máx"
-                  className="w-full rounded-xl border p-3"
+                  placeholder="Máximo"
+                  className="w-full min-w-0 rounded-xl border border-gray-200 p-2.5 text-sm outline-none transition focus:border-[#6D0F2D]"
                 />
               </div>
             </div>
 
-            {/* DESCUENTO */}
-            <label className="flex cursor-pointer items-center gap-2.5 text-sm font-medium">
-              <input
-                type="checkbox"
-                checked={discountOnly}
-                onChange={(e) => updateParams({ discount: e.target.checked ? "1" : null })}
-                className="h-4 w-4 rounded border-gray-300 accent-[#6D0F2D]"
-              />
-              Solo con descuento
-            </label>
+            {/* DESCUENTO + DISPONIBILIDAD */}
+            <div className="space-y-3 py-4">
+              <label className="flex cursor-pointer items-center gap-2.5 text-sm font-medium text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={discountOnly}
+                  onChange={(e) => updateParams({ discount: e.target.checked ? "1" : null })}
+                  className="h-4 w-4 rounded border-gray-300 accent-[#6D0F2D]"
+                />
+                Solo con descuento
+              </label>
 
-            {/* DISPONIBILIDAD */}
-            <label className="flex cursor-pointer items-center gap-2.5 text-sm font-medium">
-              <input
-                type="checkbox"
-                checked={inStockOnly}
-                onChange={(e) => updateParams({ inStock: e.target.checked ? "1" : null })}
-                className="h-4 w-4 rounded border-gray-300 accent-[#6D0F2D]"
-              />
-              Solo disponibles
-            </label>
+              <label className="flex cursor-pointer items-center gap-2.5 text-sm font-medium text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={inStockOnly}
+                  onChange={(e) => updateParams({ inStock: e.target.checked ? "1" : null })}
+                  className="h-4 w-4 rounded border-gray-300 accent-[#6D0F2D]"
+                />
+                Solo disponibles
+              </label>
+            </div>
 
             {/* ORDENAMIENTO */}
-            <div>
-              <label className="mb-2 block text-sm font-medium">Ordenar por</label>
+            <div className="pt-4">
+              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
+                Ordenar por
+              </label>
 
               <select
                 value={sort}
                 onChange={(e) => updateParams({ sort: e.target.value || null })}
-                className="w-full rounded-xl border p-3"
+                className="w-full rounded-xl border border-gray-200 p-2.5 text-sm text-gray-700 outline-none transition focus:border-[#6D0F2D]"
               >
                 {SORT_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -357,50 +469,84 @@ export default function ProductsList() {
         {/* PRODUCTOS */}
         <div>
           {loading ? (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, index) => (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+              {Array.from({ length: PAGE_SIZE }).map((_, index) => (
                 <ProductCardSkeleton key={index} />
               ))}
             </div>
           ) : failed ? (
-            <div className="rounded-2xl border p-10 text-center text-gray-500">
+            <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500 shadow-sm">
               No se pudieron cargar los productos. Intenta de nuevo más tarde.
             </div>
           ) : products.length === 0 ? (
-            <div className="rounded-2xl border p-10 text-center text-gray-500">
+            <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500 shadow-sm">
               No se encontraron productos con estos filtros.
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+              {/* Grid: mobile 1 col, tablet 2, desktop 4 (ver ALCANCE >
+                  rediseño visual Products, referencia
+                  design/products-reference.png). */}
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
                 {products.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
 
-              {totalPages > 1 && (
-                <div className="mt-8 flex items-center justify-center gap-5">
-                  <button
-                    disabled={page === 1}
-                    onClick={() => handlePageChange(page - 1)}
-                    className="rounded-xl border px-4 py-2 disabled:opacity-50"
-                  >
-                    Anterior
-                  </button>
+              {/* Paginación real: 10 por página, "Mostrando X-Y de Z",
+                  Anterior | números | ... | Siguiente. Cambiar de página
+                  solo toca el param `page` (ver handlePageChange) - los
+                  demás filtros y la búsqueda quedan intactos en la URL, y
+                  el scroll al inicio ya estaba resuelto ahí mismo. */}
+              <div className="mt-8 flex flex-col items-center gap-3">
+                <p className="text-sm text-gray-500">
+                  Mostrando {rangeStart}-{rangeEnd} de {total} productos
+                </p>
 
-                  <span className="text-sm text-gray-600">
-                    Página {page} de {totalPages}
-                  </span>
+                {totalPages > 1 && (
+                  <div className="flex flex-wrap items-center justify-center gap-1.5">
+                    <button
+                      disabled={page === 1}
+                      onClick={() => handlePageChange(page - 1)}
+                      className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-40"
+                    >
+                      Anterior
+                    </button>
 
-                  <button
-                    disabled={page === totalPages}
-                    onClick={() => handlePageChange(page + 1)}
-                    className="rounded-xl border px-4 py-2 disabled:opacity-50"
-                  >
-                    Siguiente
-                  </button>
-                </div>
-              )}
+                    {pageList.map((item, index) =>
+                      item === "ellipsis" ? (
+                        <span
+                          key={`ellipsis-${index}`}
+                          className="px-1.5 text-sm text-gray-400"
+                        >
+                          …
+                        </span>
+                      ) : (
+                        <button
+                          key={item}
+                          onClick={() => handlePageChange(item)}
+                          aria-current={item === page}
+                          className={`flex h-9 min-w-9 items-center justify-center rounded-xl px-2 text-sm font-medium transition ${
+                            item === page
+                              ? "bg-[#6D0F2D] text-white"
+                              : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+                          }`}
+                        >
+                          {item}
+                        </button>
+                      ),
+                    )}
+
+                    <button
+                      disabled={page === totalPages}
+                      onClick={() => handlePageChange(page + 1)}
+                      className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-40"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>

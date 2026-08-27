@@ -16,6 +16,15 @@ def get_company_by_id(database: Session, company_id: UUID) -> Company | None:
     return (database.query(Company).filter(Company.id == company_id).first())
 
 
+def get_company_by_user_id(database: Session, user_id: UUID) -> Company | None:
+    # Usado por el modulo de liquidaciones (ver BankAccountService.py /
+    # PayoutService.py) para resolver la empresa del usuario autenticado -
+    # mismo dato que ya se lee via user.company en Dashboard.py, expuesto
+    # aca como funcion de repositorio para no depender de tener el ORM de
+    # Users ya cargado en el llamador.
+    return (database.query(Company).filter(Company.user_id == user_id).first())
+
+
 def create_company(database: Session,user_id,company: CreateCompanyRequest,certificate_path: str) -> Company:
 
     new_company = Company(

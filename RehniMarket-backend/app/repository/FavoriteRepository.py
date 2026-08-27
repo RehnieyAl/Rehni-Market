@@ -21,10 +21,6 @@ def list_favorites(database: Session, user_id: UUID):
     )
 
 
-def count_favorites(database: Session, user_id: UUID) -> int:
-    return database.query(Favorite).filter(Favorite.user_id == user_id).count()
-
-
 def create_favorite(database: Session, user_id: UUID, product_id: UUID) -> Favorite:
     favorite = Favorite(user_id=user_id, product_id=product_id)
     database.add(favorite)

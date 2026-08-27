@@ -81,6 +81,18 @@ class Company(Base):
         nullable=False,
     )
 
+    # Motivo de la suspension actual, proporcionado por el admin/owner que
+    # ejecuta update_company_status_service (ver CompanyService.py). Solo
+    # tiene sentido mientras CompanyStatus=False - se limpia (None) al
+    # desbloquear. El historial completo (quien, cuando, motivo de CADA
+    # suspension/desbloqueo) vive en AdminActivity.reason, no aca - esta
+    # columna es solo "cual es el motivo VIGENTE ahora mismo", para
+    # mostrarlo sin tener que ir a buscar en el log de actividad.
+    suspension_reason: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -108,5 +120,15 @@ class Company(Base):
         "AdminActivity",
         foreign_keys="AdminActivity.target_company_id",
         back_populates="target_company",
+    )
+
+    # Módulo de liquidaciones (ver ALCANCE > Módulo de liquidaciones,
+    # ModelCompanyBankAccount.py / ModelCompanyPayout.py).
+    bank_accounts: Mapped[list["CompanyBankAccount"]] = relationship(
+        "CompanyBankAccount", back_populates="company"
+    )
+
+    payouts: Mapped[list["CompanyPayout"]] = relationship(
+        "CompanyPayout", back_populates="company"
     )
 

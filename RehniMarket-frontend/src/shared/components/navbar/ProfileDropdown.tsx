@@ -1,19 +1,76 @@
 
-import { useEffect, useRef, useState } from "react";
 import {
-  ChevronDown,
-  LayoutDashboard,
-  LogOut,
-  Package,
-  Users,
-  Building2,
-  User,
-  Wallet,
-  Settings,
-} from "lucide-react";
+  cloneElement,
+  useEffect,
+  useRef,
+  useState,
+  type ReactElement,
+} from "react";
+import { ChevronDown, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "@/features/public/auth/context/useAuth";
+import { dashboardNavigation } from "@/shared/config/dashboardNavigation";
+import type { SidebarItem } from "@/shared/components/dashboard/Sidebar";
+import type { Role } from "@/features/public/auth/types/auth";
+
+// Acceso rápido por rol: qué ids de dashboardNavigation (ver
+// shared/config/dashboardNavigation.tsx) se muestran en este dropdown, y
+// a qué dashboard real pertenecen. Los labels/iconos NO se duplican acá -
+// se toman de dashboardNavigation por id (ver `pickItems` más abajo), así
+// que si algún día cambia un nombre o un ícono en el sidebar, este menú
+// lo hereda solo.
+//
+// Selección (ver AUDITORÍA ProfileDropdown):
+// - admin/owner: de las 9 pestañas reales, se muestran las 5 de gestión
+//   core + cuenta; "Anuncios", "Reportes" y "RehniCoin" quedan
+//   disponibles desde el propio sidebar del dashboard, no acá, para no
+//   convertir el dropdown en un segundo sidebar.
+// - company: se muestran las 6 pestañas reales completas - el dashboard
+//   de empresa ya es compacto, no hace falta recortar.
+// - user: de las 6 pestañas reales (incluye "wallet"/RehniCoins, ver
+//   ALCANCE > módulo RehniCoin comprador), se excluye "addresses": las
+//   direcciones de envío se gestionan en el flujo de checkout
+//   (AddressSelectionModal, ver features/cart/components/CheckoutView.tsx),
+//   no es una acción de acceso frecuente desde el header.
+const ADMIN_DROPDOWN_CONFIG = {
+  basePath: "/admin/dashboard",
+  navIds: ["home", "companies", "users", "products", "payouts"],
+  settingsId: "account",
+};
+
+const DROPDOWN_CONFIG: Record<
+  Role,
+  { basePath: string; navIds: string[]; settingsId: string }
+> = {
+  admin: ADMIN_DROPDOWN_CONFIG,
+
+  owner: ADMIN_DROPDOWN_CONFIG,
+
+  company: {
+    basePath: "/company/dashboard",
+    navIds: ["home", "products", "orders", "finance", "company"],
+    settingsId: "profile",
+  },
+
+  user: {
+    basePath: "/user/dashboard",
+    navIds: ["home", "orders", "favorites", "wallet"],
+    settingsId: "profile",
+  },
+};
+
+// Mismo mecanismo real que ya usan pages/user/Dashboard.tsx,
+// pages/dashboard/Company.tsx y pages/dashboard/Admin.tsx para elegir
+// pestaña: query param ?tab=, con "home" como caso especial que no lo
+// necesita (coincide con handleViewChange en esas tres páginas).
+const buildTabPath = (basePath: string, tabId: string) =>
+  tabId === "home" ? basePath : `${basePath}?tab=${tabId}`;
+
+const pickItems = (items: SidebarItem[], ids: string[]): SidebarItem[] =>
+  ids
+    .map((id) => items.find((item) => item.id === id))
+    .filter((item): item is SidebarItem => Boolean(item));
 
 export default function ProfileDropdown() {
   const { role, user, logout } = useAuth();
@@ -53,76 +110,11 @@ export default function ProfileDropdown() {
     owner: "Propietario",
   };
 
-  // OWNER reutiliza exactamente las mismas opciones del menú de ADMIN
-  // (hereda todas sus capacidades). Las opciones exclusivas de OWNER se
-  // agregarían aquí, aparte, cuando existan.
-  const adminMenuItems = [
-    {
-      label: "Dashboard",
-      to: "/admin/dashboard",
-      icon: LayoutDashboard,
-    },
-    {
-      label: "Usuarios",
-      to: "/admin/users",
-      icon: Users,
-    },
-    {
-      label: "Empresas",
-      to: "/admin/companies",
-      icon: Building2,
-    },
-  ];
+  const config = DROPDOWN_CONFIG[role];
+  const dashboardItems = dashboardNavigation[role];
 
-  const menu = {
-    admin: adminMenuItems,
-
-    owner: adminMenuItems,
-
-    company: [
-      {
-        label: "Dashboard",
-        to: "/company/dashboard",
-        icon: LayoutDashboard,
-      },
-      {
-        label: "Productos",
-        to: "/company/products",
-        icon: Package,
-      },
-      {
-        label: "Mi Empresa",
-        to: "/company/profile",
-        icon: Building2,
-      },
-    ],
-
-    // El dashboard de comprador es una sola ruta (/user/dashboard) con
-    // navegación interna por pestaña (ver pages/user/Dashboard.tsx) - no
-    // existen /user/profile ni /user/wallet como rutas propias, así que
-    // "Mi perfil"/"Configuración" y "Mi billetera" apuntan a esa misma
-    // ruta real con ?tab=... en vez de inventar una ruta nueva. El
-    // saldo de RehniCoin se muestra en la pestaña "Inicio" (ver
-    // features/user/components/dashboard/Home.tsx > Resumen rápido), por
-    // eso "Mi billetera" navega ahí.
-    user: [
-      {
-        label: "Mi perfil",
-        to: "/user/dashboard?tab=profile",
-        icon: User,
-      },
-      {
-        label: "Mi billetera",
-        to: "/user/dashboard?tab=home",
-        icon: Wallet,
-      },
-      {
-        label: "Configuración",
-        to: "/user/dashboard?tab=profile",
-        icon: Settings,
-      },
-    ],
-  };
+  const navItems = pickItems(dashboardItems, config.navIds);
+  const [settingsItem] = pickItems(dashboardItems, [config.settingsId]);
 
   const handleLogout = () => {
     setOpen(false);
@@ -228,38 +220,60 @@ export default function ProfileDropdown() {
           </div>
 
           {/* =================================================
-              OPCIONES
+              NAVEGACIÓN (pestañas del dashboard real, ver
+              DROPDOWN_CONFIG más arriba)
           ================================================= */}
 
           <div className="p-2">
 
-            {menu[role].map((item) => {
-              const Icon = item.icon;
+            {navItems.map((item) => (
+              <Link
+                key={item.id}
+                to={buildTabPath(config.basePath, item.id)}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-900"
+              >
+                {cloneElement(
+                  item.icon as ReactElement<{ size?: number }>,
+                  { size: 18 },
+                )}
 
-              return (
+                <span>
+                  {item.text}
+                </span>
+              </Link>
+            ))}
+
+            {/* =================================================
+                CONFIGURACIÓN (separada de la navegación)
+            ================================================= */}
+
+            {settingsItem && (
+              <>
+                <div className="my-2 h-px bg-gray-100" />
+
                 <Link
-                  key={item.to}
-                  to={item.to}
+                  to={buildTabPath(config.basePath, settingsItem.id)}
                   onClick={() => setOpen(false)}
                   className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-900"
                 >
-                  <Icon
-                    size={18}
-                    className="text-gray-500"
-                  />
+                  {cloneElement(
+                    settingsItem.icon as ReactElement<{ size?: number }>,
+                    { size: 18 },
+                  )}
 
                   <span>
-                    {item.label}
+                    {settingsItem.text}
                   </span>
                 </Link>
-              );
-            })}
+              </>
+            )}
 
-            {/* SEPARADOR SIN BORDE */}
+            {/* =================================================
+                CERRAR SESIÓN (separado de configuración)
+            ================================================= */}
 
             <div className="my-2 h-px bg-gray-100" />
-
-            {/* CERRAR SESIÓN */}
 
             <button
               type="button"
@@ -279,4 +293,3 @@ export default function ProfileDropdown() {
     </div>
   );
 }
-

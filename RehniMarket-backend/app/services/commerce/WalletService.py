@@ -239,3 +239,44 @@ def charge_wallet(database: Session, user_id: UUID, amount: Decimal, description
     repo.create_transaction(database, transaction)
 
     return wallet
+
+
+def refund_wallet(
+    database: Session,
+    user_id: UUID,
+    amount: Decimal,
+    description: str,
+    order_id: UUID | None = None,
+):
+    """
+    Acredita `amount` a la billetera del usuario (reembolso). Misma
+    mecánica de ledger que charge_wallet (suma/resta sobre wallet.balance
+    + WalletTransaction) y mismo contrato: NO hace commit, el llamador
+    controla la transacción completa (ver
+    OrderService.cancel_and_refund_company_orders_for_suspension, que
+    necesita que el reembolso, el cambio de estado del pedido y el
+    bloqueo de la empresa sean atómicos).
+
+    `order_id` enlaza el movimiento con el pedido reembolsado (ver
+    ModelWallet.py > WalletTransaction.order_id) para poder distinguir
+    "cancelado" de "cancelado Y reembolsado" y evitar un doble reembolso
+    (ver WalletRepository.has_order_been_refunded) - el llamador es
+    responsable de verificar esa idempotencia ANTES de llamar acá, esta
+    función no lo hace por sí sola.
+    """
+
+    wallet = get_or_create_wallet(database, user_id)
+
+    wallet.balance = Decimal(wallet.balance) + amount
+
+    transaction = WalletTransaction(
+        wallet_id=wallet.id,
+        type=WalletTransactionType.REFUND,
+        amount=amount,
+        description=description,
+        order_id=order_id,
+    )
+
+    repo.create_transaction(database, transaction)
+
+    return wallet

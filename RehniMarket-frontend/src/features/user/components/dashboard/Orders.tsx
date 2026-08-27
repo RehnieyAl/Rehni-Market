@@ -2,19 +2,24 @@ import { useCallback, useEffect, useState } from "react";
 import { Eye, ShoppingBag } from "lucide-react";
 
 import ComingSoon from "@/shared/components/dashboard/ComingSoon";
+import ConfirmModal from "@/shared/components/ConfirmModal";
 import OrderDetailModal from "@/features/orders/components/OrderDetailModal";
 import { getMyOrders, cancelMyOrder } from "@/features/orders/api/orderService";
 import { ORDER_STATUS_LABEL, ORDER_STATUS_BADGE } from "@/features/orders/utils/orderStatus";
 import { formatPrice } from "@/shared/utils/formatPrice";
+import { useAlert } from "@/shared/components/alert/useAlert";
 
 import type { Order } from "@/features/orders/types/response";
 
 const CANCELLABLE_STATUSES = new Set(["pending", "paid"]);
 
 export default function Orders() {
+  const { showAlert } = useAlert();
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [confirmCancelId, setConfirmCancelId] = useState<string | null>(null);
 
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -36,19 +41,20 @@ export default function Orders() {
     return () => clearTimeout(timeout);
   }, [loadOrders]);
 
-  const handleCancel = async (orderId: string) => {
-    if (!window.confirm("¿Cancelar este pedido?")) return;
+  const handleCancel = async () => {
+    if (!confirmCancelId) return;
 
     try {
-      setCancellingId(orderId);
-      const updated = await cancelMyOrder(orderId);
+      setCancellingId(confirmCancelId);
+      const updated = await cancelMyOrder(confirmCancelId);
 
-      setOrders((prev) => prev.map((order) => (order.id === orderId ? updated : order)));
+      setOrders((prev) => prev.map((order) => (order.id === confirmCancelId ? updated : order)));
     } catch (error) {
       console.error("Error cancelando el pedido:", error);
-      alert("No se pudo cancelar el pedido.");
+      showAlert("error", "No se pudo cancelar el pedido.");
     } finally {
       setCancellingId(null);
+      setConfirmCancelId(null);
     }
   };
 
@@ -124,7 +130,7 @@ export default function Orders() {
 
                   {CANCELLABLE_STATUSES.has(order.status) && (
                     <button
-                      onClick={() => handleCancel(order.id)}
+                      onClick={() => setConfirmCancelId(order.id)}
                       disabled={cancellingId === order.id}
                       className="text-sm font-medium text-red-600 hover:underline disabled:opacity-50"
                     >
@@ -143,6 +149,16 @@ export default function Orders() {
         isOpen={detailOpen}
         onClose={() => setDetailOpen(false)}
         onCancelled={loadOrders}
+      />
+
+      <ConfirmModal
+        isOpen={confirmCancelId !== null}
+        title="Cancelar pedido"
+        message="¿Cancelar este pedido? Esta acción no se puede deshacer."
+        confirmLabel="Cancelar pedido"
+        loading={cancellingId !== null}
+        onConfirm={handleCancel}
+        onClose={() => setConfirmCancelId(null)}
       />
     </div>
   );

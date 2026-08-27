@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import DashboardLayout from "@/shared/components/dashboard/DashboardLayout";
 import Sidebar from "@/shared/components/dashboard/Sidebar";
@@ -12,19 +12,46 @@ import Companies from "@/features/admin/components/dashboard/company/Companies";
 import Users from "@/features/admin/components/dashboard/user/Users";
 import CatalogManagement from "@/features/admin/components/dashboard/CatalogManagement";
 import Advertisements from "@/features/admin/components/dashboard/advertisement/Advertisements";
+import AdminPayouts from "@/features/admin/components/dashboard/payout/AdminPayouts";
 import RehniCoin from "@/features/admin/components/dashboard/wallet/RehniCoin";
+import Reports from "@/features/admin/components/dashboard/report/Reports";
 import AccountSettings from "@/features/public/auth/components/AccountSettings";
 
+// Mismo patrón que pages/user/Dashboard.tsx: la pestaña activa se deriva
+// de la URL (?tab=...) en vez de un useState aparte, para poder
+// deep-linkear una sección puntual (ver ProfileDropdown.tsx) sin crear
+// ninguna ruta nueva - el click del sidebar solo actualiza la URL.
+const VALID_TABS = [
+  "home",
+  "companies",
+  "users",
+  "products",
+  "hero",
+  "reports",
+  "payouts",
+  "wallet",
+  "account",
+];
+
 export default function Admin() {
-  const [view, setView] = useState("home");
+  const [searchParams, setSearchParams] = useSearchParams();
   const { isOwner } = useRole();
 
+  const tab = searchParams.get("tab");
+  const view = tab && VALID_TABS.includes(tab) ? tab : "home";
+
+  const handleViewChange = (id: string) => {
+    setSearchParams(id === "home" ? {} : { tab: id });
+  };
+
   const views = {
-    home: <Home onNavigate={setView} />,
+    home: <Home onNavigate={handleViewChange} />,
     companies: <Companies />,
     users: <Users />,
     products: <CatalogManagement />,
     hero: <Advertisements />,
+    reports: <Reports />,
+    payouts: <AdminPayouts />,
     wallet: <RehniCoin />,
     account: <AccountSettings />,
   };
@@ -39,7 +66,7 @@ export default function Admin() {
               : dashboardNavigation.admin
           }
           activeItem={view}
-          onItemClick={setView}
+          onItemClick={handleViewChange}
         />
       }
       topbar={

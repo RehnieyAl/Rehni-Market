@@ -22,6 +22,7 @@ class config():
     OWNER_DEFAULT = os.getenv("OWNER_DEFAULT")
     OWNER_PASSWORD_DEFAULT = os.getenv("OWNER_PASSWORD_DEFAULT")
     RUN_SEED = os.getenv("RUN_SEED", "false").lower() == "true"
+    URL_BACKEND = os.getenv("URL_BACKEND")
 
 config = config()
 

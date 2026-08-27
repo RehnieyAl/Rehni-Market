@@ -172,6 +172,19 @@ def create_variant_service(
         )
 
         database.add(new_variant)
+
+        # BUG: `Product.has_variants` es la bandera que
+        # `_has_visible_stock` (ver publicService/Products.py) usa para
+        # decidir si la disponibilidad se evalua con el stock del
+        # producto base o con el de sus variantes. Nunca se escribia
+        # aca, asi que quedaba en False para siempre (default del
+        # modelo) aunque el producto ya tuviera variantes reales - un
+        # producto con stock base 0 y variantes con stock terminaba
+        # oculto en busqueda/categorias/productos del dia porque el
+        # filtro seguia mirando Product.stock. Se corrige aca, en el
+        # unico lugar donde nace la primera variante de un producto.
+        product.has_variants = True
+
         database.flush()
 
         if data.specifications:
@@ -319,9 +332,18 @@ def update_variant_service(
 def delete_variant_service(user_id, product_id, variant_id, database: Session):
 
     try:
-        _, _, variant = _resolve_owned_variant(user_id, product_id, variant_id, database)
+        _, product, variant = _resolve_owned_variant(user_id, product_id, variant_id, database)
 
         database.delete(variant)
+        database.flush()
+
+        # Contraparte de create_variant_service: si esta era la ultima
+        # variante del producto, `has_variants` debe volver a False -
+        # si no, _has_visible_stock() seguiria evaluando disponibilidad
+        # por variantes (ya inexistentes) en vez de por Product.stock.
+        if not repo.list_variants_by_product(database, product.id):
+            product.has_variants = False
+
         database.commit()
 
         return {

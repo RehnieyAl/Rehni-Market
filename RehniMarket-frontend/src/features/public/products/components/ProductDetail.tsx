@@ -1,19 +1,31 @@
-import { ChevronLeft, ImageOff, Store } from "lucide-react";
+import { ChevronLeft, Flag, ShoppingCart } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 
 import { getPublicProductDetail } from "../api/productsService";
 import ProductDetailSkeleton from "./ProductDetailSkeleton";
+import ProductGallery from "./ProductGallery";
+import SellerCard from "./SellerCard";
+import ProductRatingBadge from "./ProductRatingBadge";
+import ProductPrice from "./ProductPrice";
+import ProductTabs from "./ProductTabs";
+import RelatedProducts from "./RelatedProducts";
 import ReviewsSection from "@/features/public/reviews/components/ReviewsSection";
-import { formatPrice } from "@/shared/utils/formatPrice";
+import ReportModal from "@/features/reports/components/ReportModal";
 import { useRole } from "@/hooks/useRole";
 import { useCart } from "@/features/cart/context/useCart";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
+import { useRedirectToLogin } from "@/features/public/auth/hooks/useRedirectToLogin";
 
 import type { PublicProductDetail, PublicProductVariant } from "../types/response";
 
+// Detalle público de producto (ver ALCANCE > rediseño detalle de
+// producto, referencia design/products-detail-reference.png). Estructura
+// adaptada a la referencia y al sistema visual ya usado en Home/
+// Categorías/Productos (contenedor ancho progresivo, rounded-2xl, colores
+// RehniMarket) - no es una copia 1:1 de la imagen.
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -28,7 +40,16 @@ export default function ProductDetail() {
 
   const { addItem } = useCart();
   const { showAlert } = useAlert();
+  const redirectToLogin = useRedirectToLogin();
   const [addingToCart, setAddingToCart] = useState(false);
+
+  // "Reportar producto" (ver ALCANCE > Reportes, sección 3) - reutiliza
+  // ReportModal, el mismo componente que "Reportar empresa"
+  // (CompanyProfile.tsx). Solo el rol USER puede reportar (mismo
+  // criterio que reseñas/compras, ver middleware/RolePermissions.py >
+  // "/reports"); un visitante sin sesión va a login, igual que al
+  // agregar al carrito.
+  const [reportModalOpen, setReportModalOpen] = useState(false);
 
   const [product, setProduct] = useState<PublicProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,9 +64,7 @@ export default function ProductDetail() {
   // "base" también deja `activeVariant` en null - ver colorOptions más
   // abajo). Sin esta bandera aparte, un producto que tiene color base
   // propio Y al menos una variante real nunca podía comprarse en su
-  // versión base: `canAddToCart` exigía `activeVariant !== null`, algo
-  // que seleccionar "base" nunca cumple (bug diagnosticado: producto con
-  // variantes bloqueaba la compra de su configuración base).
+  // versión base.
   const [hasChosenColor, setHasChosenColor] = useState(false);
 
   // Imagen elegida manualmente (click en una miniatura). Si es `null`, o
@@ -72,6 +91,7 @@ export default function ProductDetail() {
           setActiveVariant(null);
           setHasChosenColor(false);
           setQuantity(1);
+          setManualImage(null);
         }
       } catch (error) {
         console.error("Error cargando el producto:", error);
@@ -120,6 +140,10 @@ export default function ProductDetail() {
     ? activeVariant.discount_enabled
     : product?.discount_enabled ?? false;
 
+  const discountPercentage = activeVariant
+    ? activeVariant.discount_percentage
+    : product?.discount_percentage ?? null;
+
   // Colores seleccionables: producto base + variantes con color propio.
   // Las variantes agotadas se incluyen igual (NO se ocultan - ver ALCANCE
   // > CASO 3): se marcan con `outOfStock` para mostrarlas deshabilitadas
@@ -160,6 +184,24 @@ export default function ProductDetail() {
     return options;
   }, [product]);
 
+  // Antes de elegir un color, `stock` de arriba es el stock del PRODUCTO
+  // BASE - engañoso en un producto con variantes, porque puede ser 0
+  // aunque exista una variante con stock (ver ALCANCE > regla de negocio
+  // "stock padre vs. variantes", mismo criterio que
+  // _has_visible_stock en publicService/Products.py: la disponibilidad
+  // real de un producto con variantes no la decide su stock base). Se usa
+  // solo para el mensaje de STOCK más abajo mientras no haya elección
+  // (una vez elegido, `stock` ya refleja la variante/base real elegida).
+  const anyVariantInStock = colorOptions.some((option) => !option.outOfStock);
+
+  // Nombre del color activo para el encabezado "Color: X" - solo una vez
+  // que el usuario eligió explícitamente uno (hasChosenColor), nunca antes
+  // (ver hasChosenColor más arriba: la swatch "base" también cuenta como
+  // elección explícita).
+  const selectedColorName = hasChosenColor
+    ? (activeVariant?.color?.name ?? product?.color?.name ?? null)
+    : null;
+
   const selectedImage = useMemo(() => {
     if (manualImage && images.some((image) => image.url === manualImage)) {
       return manualImage;
@@ -176,15 +218,17 @@ export default function ProductDetail() {
   const requiresVariant = (product?.variants.length ?? 0) > 0;
   // `hasChosenColor` (no `activeVariant !== null`): elegir la swatch
   // "base" también deja `activeVariant` en null, y debe habilitar la
-  // compra igual que elegir cualquier otra variante (ver diagnóstico del
-  // bug de "producto con variantes bloquea su propia compra base").
+  // compra igual que elegir cualquier otra variante.
   const canAddToCart = !requiresVariant || hasChosenColor;
 
   const handleAddToCart = async (redirectToCart: boolean) => {
     if (!product) return;
 
     if (role === null) {
-      navigate("/login");
+      // Conserva /products/:id como destino de retorno (ver AUDITORÍA >
+      // CASO 1) en vez del navigate("/login") plano que había antes, que
+      // perdía el producto y siempre terminaba en Home tras autenticar.
+      redirectToLogin();
       return;
     }
 
@@ -192,8 +236,7 @@ export default function ProductDetail() {
 
     // Guardia defensiva: los botones ya se deshabilitan con `stock <= 0`
     // (ver BOTONES más abajo), pero se repite acá por si el estado cambia
-    // entre el render y el click (mismo patrón de guardias redundantes que
-    // `_require_buyer` en el backend).
+    // entre el render y el click.
     if (stock <= 0) return;
 
     try {
@@ -207,24 +250,13 @@ export default function ProductDetail() {
     } catch (error) {
       console.error("Error agregando al carrito:", error);
 
-      // Se muestra el mensaje real que devuelve la API (ej. "Solo hay 1
-      // unidades disponibles.") en vez de uno genérico que hacía parecer
-      // un error transitorio cuando en realidad no lo era (reintentar
-      // siempre fallaba igual). Usa el mismo componente global de
-      // alertas que ya consume el resto del proyecto (AlertMessage vía
-      // useAlert) - nunca alert()/confirm() del navegador. Cubre
-      // cualquier código de error (401/403/404/409/500): siempre que la
-      // API responda con detail.message, es lo que se muestra.
       const detail = axios.isAxiosError(error) ? error.response?.data?.detail : undefined;
 
-      // Caso puntual INSUFFICIENT_STOCK: el mensaje del backend
-      // ("Solo hay N unidades disponibles.") ya es correcto y se muestra
-      // tal cual, pero cuando la cantidad solicitada coincide con lo que
-      // ya está en el carrito (N disponibles == N ya en el carrito) ese
-      // mensaje puede leerse como "no hay nada disponible" aunque sí lo
-      // hay, ya en el carrito. Se aclara con una frase adicional en vez
-      // de inventar un mensaje genérico tipo "Intenta nuevamente" (el
-      // problema no es temporal - ver ALCANCE > MEJORA UX ADICIONAL).
+      // Caso puntual INSUFFICIENT_STOCK: el mensaje del backend ("Solo
+      // hay N unidades disponibles.") ya es correcto y se muestra tal
+      // cual, pero cuando la cantidad solicitada coincide con lo que ya
+      // está en el carrito puede leerse como "no hay nada disponible"
+      // aunque sí lo hay, ya en el carrito.
       const message =
         detail?.code === ErrorCode.INSUFFICIENT_STOCK
           ? (detail?.message ?? "Ya tienes la cantidad máxima disponible en tu carrito.")
@@ -234,6 +266,15 @@ export default function ProductDetail() {
     } finally {
       setAddingToCart(false);
     }
+  };
+
+  const handleReportClick = () => {
+    if (role === null) {
+      redirectToLogin();
+      return;
+    }
+
+    setReportModalOpen(true);
   };
 
   if (loading) {
@@ -259,7 +300,7 @@ export default function ProductDetail() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
+    <div className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-2 py-6 sm:px-4 sm:py-8 lg:px-8">
       <Link
         to="/products"
         className="mb-6 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900"
@@ -268,254 +309,217 @@ export default function ProductDetail() {
         Volver a productos
       </Link>
 
-      <div className="grid gap-10 lg:grid-cols-2">
-        {/* GALERÍA */}
-        <div>
-          <div className="overflow-hidden rounded-3xl border bg-white">
-            {selectedImage ? (
-              <img
-                src={selectedImage}
-                alt={product.name}
-                className="aspect-square w-full object-cover"
-              />
-            ) : (
-              <div className="flex aspect-square w-full items-center justify-center bg-gray-100 text-gray-300">
-                <ImageOff size={48} />
-              </div>
-            )}
+      {/* GALERÍA + INFORMACIÓN - una sola tarjeta (ver ALCANCE > referencia
+          design/product-detail-reference.png), con las dos columnas
+          estiradas a la misma altura (items-stretch, default de grid) para
+          que la parte inferior de la imagen quede alineada con la parte
+          inferior del panel de compra, sin importar cuál de las dos tenga
+          más contenido. */}
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="grid items-stretch lg:grid-cols-2">
+          <div className="border-b border-gray-100 p-4 sm:p-6 lg:border-b-0 lg:border-r">
+            <ProductGallery
+              images={images}
+              productName={product.name}
+              selectedUrl={selectedImage}
+              onSelect={setManualImage}
+            />
           </div>
 
-          {images.length > 0 && (
-            <div className="mt-4 flex gap-3 overflow-auto">
-              {images.map((image) => (
+          {/* INFORMACIÓN */}
+          <div className="p-4 sm:p-6 lg:p-8">
+            <p className="text-sm font-medium uppercase tracking-wide text-[#6D0F2D]">
+              {product.catalog_name}
+            </p>
+
+            <div className="mt-1 flex items-start justify-between gap-3">
+              <h1 className="text-3xl font-bold leading-tight text-gray-900">
+                {product.name}
+              </h1>
+
+              {canPurchase && (
                 <button
-                  key={image.id}
-                  onClick={() => setManualImage(image.url)}
-                  className="overflow-hidden rounded-xl border"
+                  type="button"
+                  onClick={handleReportClick}
+                  className="mt-1 flex shrink-0 items-center gap-1.5 text-xs font-medium text-gray-400 transition hover:text-red-600"
+                  title="Reportar producto"
                 >
-                  <img
-                    src={image.url}
-                    alt=""
-                    className="h-20 w-20 object-cover"
-                  />
+                  <Flag size={14} />
+                  Reportar
                 </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* INFORMACIÓN */}
-        <div>
-          <span className="text-sm text-gray-500">
-            {product.catalog_name}
-          </span>
-
-          <h1 className="mt-2 text-3xl font-bold">
-            {product.name}
-          </h1>
-
-          {/* VENDIDO POR */}
-          <Link
-            to={`/company/${product.company_id}`}
-            className="mt-4 flex items-center gap-3 rounded-2xl border bg-white p-4 transition hover:shadow-md"
-          >
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-100">
-              {product.company_logo ? (
-                <img
-                  src={product.company_logo}
-                  alt={product.company_name}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <Store size={20} className="text-gray-400" />
               )}
             </div>
 
-            <div className="min-w-0 flex-1">
-              <p className="text-xs text-gray-500">Vendido por</p>
+            <ProductRatingBadge
+              averageRating={product.average_rating}
+              reviewCount={product.review_count}
+            />
 
-              <p className="truncate font-semibold text-gray-900">
-                {product.company_name}
-              </p>
+            <div className="mt-4">
+              <ProductPrice
+                price={displayPrice}
+                discountEnabled={discountEnabled}
+                discountPercentage={discountPercentage}
+                finalPrice={displayFinalPrice}
+              />
             </div>
 
-            <span className="shrink-0 text-sm font-medium text-[#6D0F2D] hover:underline">
-              Ver perfil de empresa
-            </span>
-          </Link>
+            {/* EMPRESA */}
+            <SellerCard
+              companyId={product.company_id}
+              companyName={product.company_name}
+              companyLogo={product.company_logo}
+              isVerified={product.company_is_verified}
+            />
 
-          <div className="mt-6">
-            {discountEnabled && (
-              <p className="text-lg text-gray-400 line-through">
-                {formatPrice(displayPrice)}
-              </p>
-            )}
+            {/* COLORES + CANTIDAD */}
+            <div className="mt-6 flex flex-wrap items-start justify-between gap-6">
+              {colorOptions.length > 0 && (
+                <div>
+                  <h3 className="mb-2 text-sm font-semibold text-gray-900">
+                    Color{selectedColorName ? `: ${selectedColorName}` : ""}
+                  </h3>
 
-            <p className="text-4xl font-bold text-[#6D0F2D]">
-              {formatPrice(discountEnabled ? displayFinalPrice : displayPrice)}
-            </p>
-          </div>
+                  <div className="flex flex-wrap gap-3">
+                    {colorOptions.map((option) => (
+                      <button
+                        key={option.key}
+                        type="button"
+                        title={option.outOfStock ? `${option.name} (Sin stock)` : option.name}
+                        disabled={option.outOfStock}
+                        onClick={() => {
+                          if (option.outOfStock) return;
 
-          {/* COLORES */}
-          {colorOptions.length > 0 && (
-            <div className="mt-8">
-              <h3 className="mb-3 font-semibold">
-                Colores disponibles
-              </h3>
-
-              <div className="flex flex-wrap gap-4">
-                {colorOptions.map((option) => (
-                  <div key={option.key} className="flex flex-col items-center gap-1.5">
-                    <button
-                      type="button"
-                      title={option.outOfStock ? `${option.name} (Sin stock)` : option.name}
-                      disabled={option.outOfStock}
-                      onClick={() => {
-                        if (option.outOfStock) return;
-
-                        setActiveVariant(option.variant);
-                        setHasChosenColor(true);
-                        setQuantity(1);
-                      }}
-                      className={`h-10 w-10 rounded-full border-2 transition ${
-                        option.outOfStock
-                          ? "cursor-not-allowed border-gray-200 opacity-40"
-                          : (activeVariant?.id ?? "base") === option.key
-                            ? "border-[#6D0F2D]"
-                            : "border-gray-300"
-                      }`}
-                      style={{ backgroundColor: option.hex }}
-                    />
-
-                    <span
-                      className={`text-xs ${
-                        option.outOfStock ? "text-gray-400" : "text-gray-600"
-                      }`}
-                    >
-                      {option.name}
-                      {option.outOfStock && " (Sin stock)"}
-                    </span>
+                          setActiveVariant(option.variant);
+                          setHasChosenColor(true);
+                          setQuantity(1);
+                          setManualImage(null);
+                        }}
+                        className={`h-9 w-9 rounded-full border-2 transition ${
+                          option.outOfStock
+                            ? "cursor-not-allowed border-gray-200 opacity-40"
+                            : (activeVariant?.id ?? "base") === option.key
+                              ? "border-[#6D0F2D]"
+                              : "border-gray-300 hover:border-gray-400"
+                        }`}
+                        style={{ backgroundColor: option.hex }}
+                      />
+                    ))}
                   </div>
-                ))}
+                </div>
+              )}
+
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-gray-900">Cantidad</h3>
+
+                <div className="flex w-fit items-center rounded-xl border border-gray-300">
+                  <button
+                    type="button"
+                    className="px-3.5 py-2 text-gray-600 hover:bg-gray-50"
+                    onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                  >
+                    −
+                  </button>
+
+                  <span className="w-10 text-center text-sm font-medium">{quantity}</span>
+
+                  <button
+                    type="button"
+                    className="px-3.5 py-2 text-gray-600 hover:bg-gray-50"
+                    onClick={() => setQuantity((prev) => Math.min(stock || 1, prev + 1))}
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             </div>
-          )}
 
-          {/* CANTIDAD */}
-          <div className="mt-8">
-            <h3 className="mb-3 font-semibold">
-              Cantidad
-            </h3>
+            {/* STOCK */}
+            <p className="mt-4 text-sm">
+              {requiresVariant && !hasChosenColor ? (
+                anyVariantInStock ? (
+                  <span className="text-gray-500">
+                    Selecciona un color para ver el stock disponible.
+                  </span>
+                ) : (
+                  <span className="font-semibold text-red-600">Sin stock</span>
+                )
+              ) : stock > 0 ? (
+                <>
+                  <span className="text-gray-500">Stock disponible: </span>
+                  <span className="font-semibold text-green-600">{stock} unidades</span>
+                </>
+              ) : (
+                <span className="font-semibold text-red-600">Sin stock</span>
+              )}
+            </p>
 
-            <div className="flex w-fit items-center rounded-xl border">
-              <button
-                className="px-4 py-2"
-                onClick={() =>
-                  setQuantity((prev) => Math.max(1, prev - 1))
-                }
-              >
-                -
-              </button>
+            {/* BOTONES */}
+            <div className="mt-6 flex flex-col gap-3">
+              {canPurchase ? (
+                <>
+                  {requiresVariant && !hasChosenColor && (
+                    <p className="text-sm text-amber-600">
+                      Selecciona un color antes de continuar.
+                    </p>
+                  )}
 
-              <span className="px-6 py-2">
-                {quantity}
-              </span>
+                  <button
+                    onClick={() => handleAddToCart(false)}
+                    disabled={addingToCart || !canAddToCart || stock <= 0}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-[#6D0F2D] py-3.5 font-medium text-white transition hover:bg-[#530A20] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <ShoppingCart size={18} />
+                    {addingToCart ? "Agregando..." : "Agregar al carrito"}
+                  </button>
 
-              <button
-                className="px-4 py-2"
-                onClick={() =>
-                  setQuantity((prev) => Math.min(stock || 1, prev + 1))
-                }
-              >
-                +
-              </button>
+                  <button
+                    onClick={() => handleAddToCart(true)}
+                    disabled={addingToCart || !canAddToCart || stock <= 0}
+                    className="rounded-xl border border-gray-300 py-3.5 font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Comprar ahora
+                  </button>
+                </>
+              ) : (
+                <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 py-4 text-center text-sm text-gray-500">
+                  Las cuentas de empresa o administración no pueden realizar compras.
+                </p>
+              )}
             </div>
-
-            {stock > 0 ? (
-              <p className="mt-2 text-sm text-green-600">
-                {stock} unidades disponibles
-              </p>
-            ) : (
-              <p className="mt-2 text-sm font-medium text-red-600">
-                Sin stock
-              </p>
-            )}
-          </div>
-
-          {/* BOTONES */}
-          <div className="mt-8 flex flex-col gap-3">
-            {canPurchase ? (
-              <>
-                {requiresVariant && !hasChosenColor && (
-                  <p className="text-sm text-amber-600">
-                    Selecciona un color antes de continuar.
-                  </p>
-                )}
-
-                <button
-                  onClick={() => handleAddToCart(false)}
-                  disabled={addingToCart || !canAddToCart || stock <= 0}
-                  className="rounded-xl bg-[#6D0F2D] py-4 font-medium text-white transition hover:bg-[#530A20] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {addingToCart ? "Agregando..." : "Agregar al carrito"}
-                </button>
-
-                <button
-                  onClick={() => handleAddToCart(true)}
-                  disabled={addingToCart || !canAddToCart || stock <= 0}
-                  className="rounded-xl border py-4 font-medium transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Comprar ahora
-                </button>
-              </>
-            ) : (
-              <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 py-4 text-center text-sm text-gray-500">
-                Las cuentas de empresa o administración no pueden realizar compras.
-              </p>
-            )}
           </div>
         </div>
       </div>
 
-      {/* DESCRIPCIÓN */}
-      <section className="mt-16">
-        <h2 className="mb-4 text-2xl font-bold">
-          Descripción
-        </h2>
+      {/* DESCRIPCIÓN / ESPECIFICACIONES / OPINIONES (tabs) */}
+      <div className="mt-12">
+        <ProductTabs
+          description={product.descripcion}
+          specifications={specifications}
+          reviewCount={product.review_count}
+        />
+      </div>
 
-        <p className="leading-7 text-gray-600">
-          {product.descripcion}
-        </p>
+      {/* OPINIONES */}
+      <section className="mt-8">
+        <ReviewsSection
+          productId={product.id}
+          averageRating={product.average_rating}
+          reviewCount={product.review_count}
+          distribution={product.rating_distribution}
+        />
       </section>
 
-      {/* ESPECIFICACIONES */}
-      {specifications.length > 0 && (
-        <section className="mt-12">
-          <h2 className="mb-4 text-2xl font-bold">
-            Especificaciones
-          </h2>
+      {/* PRODUCTOS RELACIONADOS */}
+      <RelatedProducts catalogId={product.catalog_id} excludeProductId={product.id} />
 
-          <div className="overflow-hidden rounded-2xl border">
-            {specifications.map((spec, index) => (
-              <div
-                key={index}
-                className="flex justify-between border-b p-4 last:border-b-0"
-              >
-                <span className="font-medium">
-                  {spec.name}
-                </span>
-
-                <span className="text-gray-600">
-                  {spec.value}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* RESEÑAS */}
-      <ReviewsSection productId={product.id} />
+      <ReportModal
+        isOpen={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        targetType="product"
+        targetId={product.id}
+        targetLabel={product.name}
+      />
     </div>
   );
 }

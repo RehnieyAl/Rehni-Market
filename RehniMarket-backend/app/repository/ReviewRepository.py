@@ -71,6 +71,54 @@ def list_product_reviews(database: Session, product_id: UUID, page: int, limit: 
     return reviews, total
 
 
+def get_product_rating_summary(database: Session, product_id: UUID) -> dict[int, int]:
+    """
+    Conteo de reseñas ACTIVAS de un producto agrupado por rating (1-5) -
+    para el detalle público (ver ALCANCE > rediseño detalle de producto,
+    "Opiniones de compradores"). Un solo query agrupado (GROUP BY rating),
+    no un COUNT por estrella - el promedio se deriva de este mismo
+    resultado en el servicio (ver publicService/Products.py), sin otro
+    query aparte.
+    """
+
+    rows = (
+        database.query(Review.rating, func.count(Review.id))
+        .filter(Review.product_id == product_id, Review.is_active.is_(True))
+        .group_by(Review.rating)
+        .all()
+    )
+
+    return {rating: count for rating, count in rows}
+
+
+def get_products_rating_summary(
+    database: Session, product_ids: list[UUID]
+) -> dict[UUID, tuple[float | None, int]]:
+    """
+    Igual que get_product_rating_summary pero para varios productos a la
+    vez (AVG + COUNT agrupado por product_id, GROUP BY) - la usan las
+    tarjetas de listado publico (ver publicService/Products.py >
+    _to_card_response) para no repetir un query por producto en un loop
+    (N+1) al armar una pagina completa de tarjetas, mismo criterio
+    anti-N+1 que ya usa get_catalogs_service > product_count.
+    """
+
+    if not product_ids:
+        return {}
+
+    rows = (
+        database.query(Review.product_id, func.avg(Review.rating), func.count(Review.id))
+        .filter(Review.product_id.in_(product_ids), Review.is_active.is_(True))
+        .group_by(Review.product_id)
+        .all()
+    )
+
+    return {
+        product_id: (float(average_rating) if average_rating is not None else None, count)
+        for product_id, average_rating, count in rows
+    }
+
+
 def get_company_rating(database: Session, company_id: UUID) -> tuple[float | None, int]:
     """
     Reputación de empresa = promedio + conteo de TODAS las reseñas

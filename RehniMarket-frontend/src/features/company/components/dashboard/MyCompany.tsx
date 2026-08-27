@@ -105,8 +105,6 @@ export default function Company() {
       }));
 
       setMedia({});
-
-      console.log("Logo y banner actualizados");
     } catch (error) {
       console.error("Error actualizando imágenes", error);
     }

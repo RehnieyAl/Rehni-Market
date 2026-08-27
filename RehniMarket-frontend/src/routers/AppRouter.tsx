@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import RequireAuth from "@/shared/components/auth/RequireAuth";
+import ScrollToTop from "@/shared/components/ScrollToTop";
+
 import Home from "../pages/public/Home";
 import Categories from "../pages/public/Categories";
 import Products from "../pages/public/Products";
@@ -22,6 +25,7 @@ import UserDashboard from "../pages/user/Dashboard";
 export default function AppRouter() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Routes>
         {/* Public */}
         <Route path="/" element={<Home />} />
@@ -30,7 +34,14 @@ export default function AppRouter() {
         <Route path="/products/:id" element={<ProductsDetail />} />
         <Route path="/company/:companyId" element={<CompanyProfilePage />} />
         <Route path="/cart" element={<CartPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route
+          path="/checkout"
+          element={
+            <RequireAuth>
+              <CheckoutPage />
+            </RequireAuth>
+          }
+        />
         <Route path="/register-user" element={<RegisterUser />} />
         <Route path="/register-company" element={<RegisterCompany />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
@@ -39,9 +50,30 @@ export default function AppRouter() {
         <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Dashboards */}
-        <Route path="/company/dashboard" element={<Company />} />
-        <Route path="/admin/dashboard" element={<Admin />} />
-        <Route path="/user/dashboard" element={<UserDashboard />} />
+        <Route
+          path="/company/dashboard"
+          element={
+            <RequireAuth>
+              <Company />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/admin/dashboard"
+          element={
+            <RequireAuth>
+              <Admin />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/user/dashboard"
+          element={
+            <RequireAuth>
+              <UserDashboard />
+            </RequireAuth>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

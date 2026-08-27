@@ -4,8 +4,23 @@ from app.services.email.EmailService import send_email
 def EmailCompanyBlocked(
     to_email: str,
     company_name: str,
+    reason: str | None = None,
 ):
     subject = "Cuenta empresarial bloqueada | Rehni Market"
+
+    # Motivo opcional (ver ALCANCE > Suspensión de empresa, punto 13) -
+    # None para llamadas antiguas/otros flujos que no lo tengan, la
+    # sección simplemente no aparece.
+    reason_section = (
+        f"""
+
+Motivo de la suspensión:
+
+{reason}
+"""
+        if reason
+        else ""
+    )
 
     body = f"""
 Rehni Market
@@ -21,12 +36,12 @@ Hola,
 Te informamos que la cuenta empresarial de
 {company_name}
 ha sido bloqueada por el equipo de Rehni Market.
-
+{reason_section}
 
 Estado de la cuenta:
 
-✕ Cuenta bloqueada
-✕ Acceso a las funciones empresariales suspendido
+- Cuenta bloqueada
+- Acceso a las funciones empresariales suspendido
 
 
 Mientras la cuenta permanezca bloqueada, no podrás utilizar
@@ -83,8 +98,8 @@ ha sido desbloqueada por el equipo de Rehni Market.
 
 Estado de la cuenta:
 
-✓ Cuenta activa
-✓ Acceso a las funciones empresariales habilitado
+- Cuenta activa
+- Acceso a las funciones empresariales habilitado
 
 
 Ya puedes ingresar nuevamente a Rehni Market y utilizar las

@@ -104,7 +104,7 @@ export default function AdvertisementPreviewModal({
                   : "bg-gray-100 text-gray-500"
               }`}
             >
-              {advertisement.is_active ? "🟢 Activo" : "🔴 Inactivo"}
+              {advertisement.is_active ? "Activo" : "Inactivo"}
             </span>
 
             <span>Orden: {advertisement.order}</span>

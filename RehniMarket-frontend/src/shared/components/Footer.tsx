@@ -1,101 +1,34 @@
 import { Link } from "react-router-dom";
 
 export default function Footer() {
+  const links = [
+    { to: "/productos", label: "Productos" },
+    { to: "/categorias", label: "Categorías" },
+    { to: "/register-company", label: "Registrar empresa" },
+    { to: "/como-vender", label: "¿Cómo vender?" },
+    { to: "/contacto", label: "Contacto" },
+    { to: "/terminos", label: "Términos" },
+    { to: "/privacidad", label: "Privacidad" },
+  ];
+
   return (
-    <footer className="mt-20 bg-gradient-to-b from-[#7A1024] to-[#4A0B18] text-white">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 sm:py-14 md:grid-cols-2 lg:grid-cols-4 lg:px-8">
-        {/* Logo */}
-        <div>
-          {/*<div className="flex items-center gap-3">
-            <img
-              src="src/assets/logo.png"
-              alt="RehniMarket"
-              className="h-12 w-12 rounded-full"
-            />
+    <footer className="mt-8 bg-gradient-to-b from-[#7A1024] to-[#4A0B18] text-white sm:mt-10">
+      <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-4 py-5 sm:flex-row sm:justify-between sm:px-6 lg:px-8">
+        <p className="text-xs text-gray-300">
+          © {new Date().getFullYear()} RehniMarket
+        </p>
 
-            <div>
-              <h2 className="text-2xl font-bold">
-                Rehni<span className="text-red-300">Market</span>
-              </h2>
-
-              <p className="text-sm text-gray-300">
-                Compra. Vende. Conecta.
-              </p>
-            </div>
-          </div>*/}
-
-          <p className="mt-5 text-sm leading-7 text-gray-300">
-            Marketplace donde puedes comprar y vender productos de forma
-            sencilla y segura.
-          </p>
-        </div>
-
-        {/* Productos */}
-        <div>
-          <h3 className="mb-4 font-semibold">Productos</h3>
-
-          <ul className="space-y-2 text-sm text-gray-300">
-            <li>
-              <Link to="/products" className="hover:text-white">
-                Explorar productos
-              </Link>
-            </li>
-
-            <li>
-              <Link to="/categories" className="hover:text-white">
-                Categorías
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        {/* Empresas */}
-        <div>
-          <h3 className="mb-4 font-semibold">Empresas</h3>
-
-          <ul className="space-y-2 text-sm text-gray-300">
-            <li>
-              <Link to="/register-company" className="hover:text-white">
-                Registrar empresa
-              </Link>
-            </li>
-
-            <li>
-              <Link to="/como-vender" className="hover:text-white">
-                ¿Cómo vender?
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        {/* Información */}
-        <div>
-          <h3 className="mb-4 font-semibold">Información</h3>
-
-          <ul className="space-y-2 text-sm text-gray-300">
-            <li>
-              <Link to="/contacto" className="hover:text-white">
-                Contacto
-              </Link>
-            </li>
-
-            <li>
-              <Link to="/terminos" className="hover:text-white">
-                Términos y condiciones
-              </Link>
-            </li>
-
-            <li>
-              <Link to="/privacidad" className="hover:text-white">
-                Política de privacidad
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="border-t border-white/10 py-5 text-center text-sm text-gray-300">
-        © {new Date().getFullYear()} RehniMarket. Todos los derechos reservados.
+        <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+          {links.map(({ to, label }) => (
+            <Link
+              key={to}
+              to={to}
+              className="text-xs text-gray-300 transition hover:text-white"
+            >
+              {label}
+            </Link>
+          ))}
+        </nav>
       </div>
     </footer>
   );

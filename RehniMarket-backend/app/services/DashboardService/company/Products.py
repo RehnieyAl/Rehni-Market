@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
+from datetime import datetime
 import json
 
 from app.models.ModelUser import Users
@@ -226,6 +227,7 @@ def get_product_detail_service(user_id, product_id, database: Session) -> Produc
         descripcion=product.descripcion,
         is_active=product.is_active,
         created_at=product.created_at,
+        deleted_at=product.deleted_at,
         catalog_id=product.catalog_id,
         # catalog_id es NOT NULL con FK obligatoria (ver esquema real de
         # PostgreSQL) - un producto siempre tiene catalogo.
@@ -433,6 +435,19 @@ def update_product_service(
 
 
 def change_product_status_service(user_id,product_id,is_active,database: Session):
+    """
+    Toggle Activo/Inactivo - accion DISTINTA de eliminar (ver
+    delete_product_service y ModelProduct.py > Product.deleted_at):
+    reversible en ambos sentidos, no toca deleted_at.
+
+    Un producto con deleted_at != NULL (eliminado) se trata como "no
+    encontrado" acá tambien - a proposito, para que este toggle nunca
+    pueda reactivar (is_active=True) un producto eliminado. Esta tarea
+    NO implementa una funcion de restauracion (ver ALCANCE > punto 18:
+    "si no existe, no implementarla acá"), asi que mientras no exista,
+    el camino mas seguro es que ningun endpoint pueda deshacer un
+    deleted_at de forma implicita.
+    """
 
     try:
         search_user = database.query(Users).filter(Users.id == user_id).first()
@@ -442,7 +457,7 @@ def change_product_status_service(user_id,product_id,is_active,database: Session
 
         product = database.query(Product).filter(Product.id == product_id, Product.company_id == search_user.company.id).first()
 
-        if not product:
+        if not product or product.deleted_at is not None:
             api_error(404, ErrorCodes.PRODUCT_NOT_FOUND, "Producto no encontrado")
 
         product.is_active = is_active
@@ -466,6 +481,33 @@ def change_product_status_service(user_id,product_id,is_active,database: Session
 
 
 def delete_product_service(user_id,product_id,database: Session):
+    """
+    Soft-delete (mismo patron que Review.is_active, ver
+    ReviewService.delete_my_review_service): un producto puede tener
+    historial real que otras tablas referencian por FK sin ON DELETE
+    CASCADE -a proposito, para no perder ese historial- (OrderItem con
+    el detalle de pedidos ya facturados, Review con las reseñas de
+    compradores, Favorite con los favoritos guardados, Report con
+    reportes historicos; ver ModelOrder.py, ModelReview.py,
+    ModelFavorite.py y ModelReport.py). Un DELETE fisico del producto
+    rompe esas FK apenas alguna de esas tablas tiene una fila (ver
+    "violates foreign key constraint" en Postgres), asi que "eliminar"
+    nunca borra la fila: se marca is_active=False + deleted_at=ahora.
+
+    is_active=False por si solo NO significa "eliminado" - tambien lo usa
+    el toggle Activo/Inactivo (ver change_product_status_service), que es
+    una accion distinta y reversible. deleted_at es lo que distingue
+    "eliminado" (con fecha) de "simplemente desactivado" (NULL) - ver
+    ModelProduct.py > Product.deleted_at para la tabla completa de
+    combinaciones. Los listados/busquedas/detalle publicos ya filtran por
+    is_active=True (ver publicService/Products.py y publicService/
+    Company.py) y el checkout ya rechaza productos inactivos (ver
+    CartService/CheckoutService) - como un producto eliminado siempre
+    tiene is_active=False, esos filtros ya alcanzan para que un producto
+    eliminado deje de ser visible/comprable sin necesitar chequear
+    deleted_at ahi tambien.
+    """
+
     try:
         search_user = (database.query(Users).filter(Users.id == user_id).first())
 
@@ -474,10 +516,17 @@ def delete_product_service(user_id,product_id,database: Session):
 
         product = (database.query(Product).filter(Product.id == product_id,Product.company_id == search_user.company.id).first())
 
-        if not product:
+        # Idempotente: un producto ya eliminado (deleted_at != NULL) se
+        # trata como "no encontrado" para este endpoint - no se re-marca
+        # ni se reintenta nada, evitando cualquier UPDATE/IntegrityError
+        # innecesario. OJO: esto es distinto de "esta desactivado" -
+        # un producto simplemente desactivado (is_active=False,
+        # deleted_at=NULL) SI puede eliminarse normalmente.
+        if not product or product.deleted_at is not None:
             api_error(404, ErrorCodes.PRODUCT_NOT_FOUND, "Producto no encontrado")
 
-        database.delete(product)
+        product.is_active = False
+        product.deleted_at = datetime.utcnow()
         database.commit()
 
         return {

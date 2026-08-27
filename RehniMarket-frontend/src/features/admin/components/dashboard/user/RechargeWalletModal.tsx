@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Coins, X } from "lucide-react";
 
 import { rechargeWallet } from "@/features/wallet/api/walletService";
+import { useAlert } from "@/shared/components/alert/useAlert";
 
 interface RechargeWalletModalProps {
   isOpen: boolean;
@@ -20,6 +21,8 @@ export default function RechargeWalletModal({
   onClose,
   onSuccess,
 }: RechargeWalletModalProps) {
+  const { showAlert } = useAlert();
+
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
@@ -42,7 +45,7 @@ export default function RechargeWalletModal({
       onClose();
     } catch (error) {
       console.error("Error recargando RehniCoin:", error);
-      alert("No se pudo recargar el saldo.");
+      showAlert("error", "No se pudo recargar el saldo.");
     } finally {
       setSaving(false);
     }

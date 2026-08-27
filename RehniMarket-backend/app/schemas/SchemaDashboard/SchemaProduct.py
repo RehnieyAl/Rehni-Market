@@ -52,6 +52,11 @@ class ProductDetailResponse(BaseModel):
     descripcion: str
     is_active: bool
     created_at: datetime
+    # None = nunca eliminado (activo o solo desactivado con el toggle,
+    # ver ModelProduct.py > Product.deleted_at). Con fecha = eliminado
+    # por la empresa - así el dashboard puede distinguir "Inactivo" de
+    # "Eliminado" en vez de tratarlos como el mismo estado.
+    deleted_at: datetime | None = None
 
     catalog_id: UUID
     catalog_name: str

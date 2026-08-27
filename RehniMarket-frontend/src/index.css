@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans:
+    "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji";
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;

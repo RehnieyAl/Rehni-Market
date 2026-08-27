@@ -101,7 +101,7 @@ export default function RehniCoin() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">💰 RehniCoin</h1>
+      <h1 className="text-3xl font-bold">RehniCoin</h1>
 
       <p className="mt-2 text-gray-500">
         Recarga saldo de RehniCoin a un usuario registrado. 1 RehniCoin = 1

@@ -17,6 +17,8 @@ import {
   deleteMyProduct,
 } from "@/features/company/api/productService";
 import { getProductsSummary } from "@/features/company/api/companyService";
+import ConfirmModal from "@/shared/components/ConfirmModal";
+import { useAlert } from "@/shared/components/alert/useAlert";
 
 import type {
   MyProductResponse,
@@ -24,6 +26,8 @@ import type {
 } from "@/features/company/types/response";
 
 export default function Products() {
+  const { showAlert } = useAlert();
+
   const [products, setProducts] = useState<MyProductResponse[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -37,6 +41,9 @@ export default function Products() {
   const [openProductModal, setOpenProductModal] = useState(false);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
+
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deletingProduct, setDeletingProduct] = useState(false);
 
   const loadProducts = useCallback(async () => {
     try {
@@ -144,20 +151,29 @@ export default function Products() {
         "Error cambiando estado del producto:",
         error,
       );
+      showAlert("error", "No se pudo cambiar el estado del producto.");
     }
   };
 
-  const handleDeleteProduct = async (productId: string) => {
-    if (!window.confirm("¿Eliminar este producto? Esta acción no se puede deshacer.")) {
-      return;
-    }
+  const handleDeleteProduct = async () => {
+    if (!confirmDeleteId) return;
 
     try {
-      await deleteMyProduct(productId);
+      setDeletingProduct(true);
 
+      await deleteMyProduct(confirmDeleteId);
+
+      // Eliminación lógica (ver delete_product_service en el backend): el
+      // producto pasa a is_active=false + deleted_at=ahora, no se borra
+      // la fila. Se saca de la lista en memoria para el feedback
+      // inmediato - al recargar aparecerá con el badge "Eliminado" (ver
+      // más abajo, distinto de "Inactivo") en vez de desaparecer del
+      // todo.
       setProducts((prev) =>
-        prev.filter((product) => product.id !== productId),
+        prev.filter((product) => product.id !== confirmDeleteId),
       );
+
+      showAlert("success", "Producto eliminado correctamente.");
 
       loadSummary();
     } catch (error) {
@@ -165,6 +181,10 @@ export default function Products() {
         "Error eliminando producto:",
         error,
       );
+      showAlert("error", "No se pudo eliminar el producto.");
+    } finally {
+      setDeletingProduct(false);
+      setConfirmDeleteId(null);
     }
   };
 
@@ -284,36 +304,49 @@ export default function Products() {
 
                         <span
                           className={`rounded-full px-3 py-1 text-xs ${
-                            product.is_active
-                              ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
+                            product.deleted_at
+                              ? "bg-red-100 text-red-700"
+                              : product.is_active
+                                ? "bg-green-100 text-green-700"
+                                : "bg-yellow-100 text-yellow-700"
                           }`}
                         >
-                          {product.is_active
-                            ? "Activo"
-                            : "Inactivo"}
+                          {product.deleted_at
+                            ? "Eliminado"
+                            : product.is_active
+                              ? "Activo"
+                              : "Inactivo"}
                         </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex gap-2">
-                    <button
-                      onClick={() =>
-                        handleChangeStatus(
-                          product.id,
-                          !product.is_active,
-                        )
-                      }
-                      className="rounded-xl p-3 hover:bg-gray-100"
-                      title={
-                        product.is_active
-                          ? "Desactivar producto"
-                          : "Activar producto"
-                      }
-                    >
-                      <Eye size={18} />
-                    </button>
+                    {/* Un producto eliminado ya no puede activarse ni
+                        volver a "eliminarse" (ver backend >
+                        change_product_status_service/
+                        delete_product_service, ambos rechazan con 404
+                        cuando deleted_at != NULL) - se ocultan estos dos
+                        botones en vez de dejarlos fallar con un error
+                        genérico al hacer click. */}
+                    {!product.deleted_at && (
+                      <button
+                        onClick={() =>
+                          handleChangeStatus(
+                            product.id,
+                            !product.is_active,
+                          )
+                        }
+                        className="rounded-xl p-3 hover:bg-gray-100"
+                        title={
+                          product.is_active
+                            ? "Desactivar producto"
+                            : "Activar producto"
+                        }
+                      >
+                        <Eye size={18} />
+                      </button>
+                    )}
 
                     <button
                       onClick={() => {
@@ -326,15 +359,15 @@ export default function Products() {
                       <Pencil size={18} />
                     </button>
 
-                    <button
-                      onClick={() =>
-                        handleDeleteProduct(product.id)
-                      }
-                      className="rounded-xl p-3 text-red-700 hover:bg-red-50"
-                      title="Eliminar producto"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    {!product.deleted_at && (
+                      <button
+                        onClick={() => setConfirmDeleteId(product.id)}
+                        className="rounded-xl p-3 text-red-700 hover:bg-red-50"
+                        title="Eliminar producto"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))
@@ -379,6 +412,16 @@ export default function Products() {
           setEditingProductId(null);
         }}
         onSuccess={handleProductSaved}
+      />
+
+      <ConfirmModal
+        isOpen={confirmDeleteId !== null}
+        title="Eliminar producto"
+        message="¿Eliminar este producto? Dejará de estar visible en el catálogo público, pero podrás reactivarlo cambiando su estado a Activo."
+        confirmLabel="Eliminar"
+        loading={deletingProduct}
+        onConfirm={handleDeleteProduct}
+        onClose={() => setConfirmDeleteId(null)}
       />
     </>
   );

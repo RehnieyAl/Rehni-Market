@@ -1,4 +1,5 @@
 import traceback
+from decimal import Decimal
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -7,10 +8,14 @@ from sqlalchemy.orm import Session
 from app.core.ErrorCodes import ErrorCodes
 from app.core.Exceptions import api_error
 
+from app.models.ModelCompany import Company
 from app.models.ModelOrder import Order, OrderStatusEnum
+from app.models.ModelProduct import Product
 from app.models.ModelUser import Users
+from app.models.ModelVariant import ProductVariant
 
 from app.repository import OrderRepository as repo
+from app.repository import WalletRepository as wallet_repo
 
 from app.schemas.SchemaCommerce.SchemaOrder import (
     OrderResponse,
@@ -21,6 +26,7 @@ from app.schemas.SchemaCommerce.SchemaOrder import (
 )
 
 from app.services.NasService import build_media_url
+from app.services.commerce.WalletService import refund_wallet
 from app.services.email.OrderEmailService import send_order_status_email
 
 
@@ -39,6 +45,21 @@ ALLOWED_TRANSITIONS: dict[OrderStatusEnum, set[OrderStatusEnum]] = {
 }
 
 CANCELLABLE_STATUSES = {OrderStatusEnum.PENDING, OrderStatusEnum.PAID}
+
+# Estados que SÍ se cancelan y reembolsan automáticamente cuando se
+# suspende la empresa (ver ALCANCE > Suspensión de empresa - REGLA DE
+# REEMBOLSO). SHIPPED/DELIVERED/CANCELLED quedan fuera a propósito:
+# - SHIPPED: ya salió de la empresa, no hay nada que la empresa
+#   suspendida pueda seguir haciendo con él, y una devolución de un
+#   pedido en camino es un proceso propio (post-venta) que este sistema
+#   no tiene implementado - no se inventa uno acá.
+# - DELIVERED: pedido finalizado, parte del historial.
+# - CANCELLED: ya está cancelado, se ignora (evita reprocesarlo).
+REFUNDABLE_ON_SUSPENSION_STATUSES = {
+    OrderStatusEnum.PENDING,
+    OrderStatusEnum.PAID,
+    OrderStatusEnum.PROCESSING,
+}
 
 
 def _to_order_response(order: Order) -> OrderResponse:
@@ -144,16 +165,6 @@ def get_my_order_detail_service(
         api_error(404, ErrorCodes.ORDER_NOT_FOUND, "Pedido no encontrado.")
 
     return _to_order_response(order)
-
-
-def get_last_order_service(user_id: UUID, database: Session) -> OrderResponse | None:
-    order = repo.get_last_user_order(database, user_id)
-
-    return _to_order_response(order) if order else None
-
-
-def count_pending_orders_service(user_id: UUID, database: Session) -> int:
-    return repo.count_pending_user_orders(database, user_id)
 
 
 def cancel_my_order_service(
@@ -347,3 +358,111 @@ def update_company_order_status_service(
         database.rollback()
         traceback.print_exc()
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
+
+
+# ==============================
+# SUSPENSIÓN DE EMPRESA (ADMIN)
+# ==============================
+
+def cancel_and_refund_company_orders_for_suspension(
+    database: Session, company: Company, reason: str
+) -> list[Order]:
+    """
+    Cancela y reembolsa (RehniCoin) los pedidos de `company` que todavía
+    están en PENDING/PAID/PROCESSING (ver REFUNDABLE_ON_SUSPENSION_
+    STATUSES) - se llama desde CompanyService.update_company_status_
+    service SOLO cuando CompanyStatus pasa de true a false (ver ALCANCE >
+    Suspensión de empresa, punto 6: nunca al desbloquear ni al repetir
+    una suspensión ya vigente).
+
+    Relación usada para encontrar los pedidos: Order.company_id
+    (columna directa del pedido, ver ModelOrder.py) - NO se pasa por
+    Product.company_id/OrderItem, un pedido ya sabe a qué empresa
+    pertenece desde el checkout.
+
+    El monto reembolsado es SIEMPRE order.total, el snapshot histórico de
+    lo que el comprador realmente pagó en el checkout (ver
+    CheckoutService.checkout_service) - nunca se recalcula con precios
+    actuales de producto/variante.
+
+    Además del reembolso, se devuelve el stock de cada OrderItem (ver
+    ALCANCE > BUG 1 - suspensión de empresa): checkout_service descontó
+    `variant.stock`/`product.stock` según hubiera o no variante
+    seleccionada (ver CheckoutService.checkout_service) - acá se hace
+    exactamente lo inverso, sobre la MISMA relación que se usó para
+    descontar (OrderItem.variant_id si existe, si no OrderItem.
+    product_id), para no sumarle stock al producto equivocado. Reutiliza
+    el mismo guard de idempotencia de arriba (has_order_been_refunded):
+    como la devolución de stock vive en la misma rama que nunca se
+    reejecuta para un pedido ya reembolsado, no hace falta un segundo
+    mecanismo para evitar sumar stock dos veces.
+
+    NO hace commit ni envía los correos de cancelación - eso lo controla
+    el llamador (ver ALCANCE > punto 5: bloqueo de empresa + cancelación
+    + reembolso deben ser una sola transacción atómica; los correos,
+    igual que en checkout_service/update_company_order_status_service, se
+    envían después, una vez que ya se confirmó que todo se guardó bien).
+
+    Devuelve los pedidos efectivamente cancelados/reembolsados en esta
+    ejecución (para el mensaje de feedback al admin y para poder enviar
+    el correo de cada uno después del commit).
+    """
+
+    orders = repo.list_company_orders_by_statuses(
+        database, company.id, REFUNDABLE_ON_SUSPENSION_STATUSES
+    )
+
+    refunded_orders: list[Order] = []
+
+    for order in orders:
+        # Doble reembolso (ver ALCANCE > punto 4, CRÍTICO): nunca se
+        # confía solo en order.status == CANCELLED para decidir si ya se
+        # reembolsó - un pedido pudo cancelarse por otro motivo sin
+        # pasar por acá. Se verifica el ledger de RehniCoin (ver
+        # WalletRepository.has_order_been_refunded), que es lo único que
+        # de verdad certifica que YA se acreditó el saldo para este
+        # pedido puntual. Si la suspensión se vuelve a ejecutar (empresa
+        # ya estaba en false, o una re-ejecución cualquiera), este
+        # `continue` es lo que hace que el proceso sea idempotente.
+        if wallet_repo.has_order_been_refunded(database, order.id):
+            continue
+
+        refund_wallet(
+            database,
+            order.user_id,
+            order.total,
+            description=(
+                f"Reembolso por suspensión de la empresa {company.nameCompany} "
+                f"(pedido RM-{order.order_number:06d})."
+            ),
+            order_id=order.id,
+        )
+
+        order.status = OrderStatusEnum.CANCELLED
+
+        # Devolver stock (ver ALCANCE > BUG 1): misma relación que
+        # descontó checkout_service - variante si el ítem tenía una
+        # seleccionada, si no el producto base.
+        for item in order.items:
+            if item.variant_id:
+                variant = (
+                    database.query(ProductVariant)
+                    .filter(ProductVariant.id == item.variant_id)
+                    .first()
+                )
+
+                if variant:
+                    variant.stock += item.quantity
+            else:
+                product = (
+                    database.query(Product)
+                    .filter(Product.id == item.product_id)
+                    .first()
+                )
+
+                if product:
+                    product.stock += item.quantity
+
+        refunded_orders.append(order)
+
+    return refunded_orders

@@ -55,7 +55,7 @@ def company_dashboard_my_profile_service(user_id: str, database: Session):
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    company = user.company  # relationship por si se me olvida xd
+    company = user.company
 
     logo = (build_media_url(f"uploads/{company.CompanyLogo}")
             if company.CompanyLogo
@@ -89,7 +89,7 @@ def company_dashboard_upgrade_my_profile_service(user_id: str, CompanyRequest:Up
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    company = user.company  # relationship por si se me olvida xd
+    company = user.company
 
     try:
 
@@ -113,10 +113,9 @@ def company_dashboard_upgrade_my_profile_service(user_id: str, CompanyRequest:Up
         database.rollback()
         raise
 
-    except Exception as e:
+    except Exception:
         database.rollback()
 
-        print("ERROR:",e)
         raise HTTPException(status_code=500, detail="En actualizar datos")
 
     return {
@@ -172,7 +171,15 @@ def company_dashboard_get_my_products(user_id,search,page,limit,database: Sessio
 
         offset = (page - 1) * limit
 
-        query = database.query(Product).filter(Product.company_id == company.id)
+        # deleted_at IS NULL: el listado normal de "Mis productos" excluye
+        # eliminados (ver ModelProduct.py > Product.deleted_at) - solo
+        # is_active=False no alcanza porque tambien lo usa el toggle
+        # Activo/Inactivo (ver change_product_status_service), que es
+        # reversible y NO debe hacer desaparecer el producto de acá.
+        query = database.query(Product).filter(
+            Product.company_id == company.id,
+            Product.deleted_at.is_(None),
+        )
 
         if search:
             query = query.filter(Product.name.ilike(f"%{search}%"))
@@ -216,10 +223,19 @@ def company_dashboard_get_my_products(user_id,search,page,limit,database: Sessio
                 # que cualquier string no vacio evaluaba a "true" y el
                 # badge/los toggles de estado nunca reflejaban el estado
                 # real del producto. Se envia el boolean real.
-                "is_active": product.is_active
+                "is_active": product.is_active,
+                # None = nunca eliminado (activo o solo desactivado con
+                # el toggle). Con fecha = eliminado por la empresa - ver
+                # ModelProduct.py > Product.deleted_at y
+                # delete_product_service. Permite al dashboard mostrar
+                # "Eliminado" en vez de confundirlo con "Inactivo" (ver
+                # ALCANCE > EMPRESA -> ELIMINAR PRODUCTO, punto 17).
+                "deleted_at": (
+                    product.deleted_at.isoformat()
+                    if product.deleted_at
+                    else None
+                ),
                 })
-        
-        print("PRODUCTOS ENVIADOS:", len(result))
 
         return {
         "page": page,
@@ -230,7 +246,6 @@ def company_dashboard_get_my_products(user_id,search,page,limit,database: Sessio
         }
         
     except Exception as e:
-        print("Error get product", str(e))
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -249,8 +264,12 @@ def company_dashboard_products_summary_service(user_id, database: Session):
     if not search_user or not search_user.company:
         raise HTTPException(status_code=404, detail="Empresa no encontrada")
 
+    # Mismo criterio que company_dashboard_get_my_products: un producto
+    # eliminado (deleted_at != NULL) no debe contarse como "desactivado"
+    # (hidden) ni sumar al total de este resumen.
     base_query = database.query(Product).filter(
-        Product.company_id == search_user.company.id
+        Product.company_id == search_user.company.id,
+        Product.deleted_at.is_(None),
     )
 
     total = base_query.count()

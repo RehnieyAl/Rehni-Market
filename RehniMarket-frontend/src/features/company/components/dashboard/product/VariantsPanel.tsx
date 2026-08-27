@@ -8,6 +8,8 @@ import {
 
 import type { VariantResponse } from "@/features/company/types/response";
 
+import ConfirmModal from "@/shared/components/ConfirmModal";
+import { useAlert } from "@/shared/components/alert/useAlert";
 import VariantModal from "./VariantModal";
 
 interface VariantsPanelProps {
@@ -16,9 +18,12 @@ interface VariantsPanelProps {
 }
 
 export default function VariantsPanel({ productId, catalogId }: VariantsPanelProps) {
+  const { showAlert } = useAlert();
+
   const [variants, setVariants] = useState<VariantResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const [openModal, setOpenModal] = useState(false);
   const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
@@ -43,19 +48,19 @@ export default function VariantsPanel({ productId, catalogId }: VariantsPanelPro
     return () => clearTimeout(timeout);
   }, [loadVariants]);
 
-  const handleDelete = async (variantId: string) => {
-    if (!window.confirm("¿Eliminar esta variante? Esta acción no se puede deshacer.")) {
-      return;
-    }
+  const handleDelete = async () => {
+    if (!confirmDeleteId) return;
 
     try {
-      setDeletingId(variantId);
-      await deleteVariant(productId, variantId);
-      setVariants((prev) => prev.filter((variant) => variant.id !== variantId));
+      setDeletingId(confirmDeleteId);
+      await deleteVariant(productId, confirmDeleteId);
+      setVariants((prev) => prev.filter((variant) => variant.id !== confirmDeleteId));
     } catch (error) {
       console.error("Error eliminando variante:", error);
+      showAlert("error", "No se pudo eliminar la variante.");
     } finally {
       setDeletingId(null);
+      setConfirmDeleteId(null);
     }
   };
 
@@ -138,7 +143,7 @@ export default function VariantsPanel({ productId, catalogId }: VariantsPanelPro
                 </button>
 
                 <button
-                  onClick={() => handleDelete(variant.id)}
+                  onClick={() => setConfirmDeleteId(variant.id)}
                   disabled={deletingId === variant.id}
                   className="rounded-lg p-2 text-red-700 hover:bg-red-50 disabled:opacity-50"
                   title="Eliminar variante"
@@ -169,6 +174,16 @@ export default function VariantsPanel({ productId, catalogId }: VariantsPanelPro
           .filter((variant) => variant.id !== editingVariantId)
           .map((variant) => variant.color?.id)
           .filter((id): id is string => Boolean(id))}
+      />
+
+      <ConfirmModal
+        isOpen={confirmDeleteId !== null}
+        title="Eliminar variante"
+        message="¿Eliminar esta variante? Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        loading={deletingId !== null}
+        onConfirm={handleDelete}
+        onClose={() => setConfirmDeleteId(null)}
       />
     </div>
   );

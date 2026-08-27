@@ -29,7 +29,7 @@ export default function CategoriesFilterBar({
   onSortChange,
 }: CategoriesFilterBarProps) {
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-4 sm:flex-row sm:items-center sm:gap-4">
+    <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:gap-4">
       <div className="relative flex-1">
         <Search
           size={18}
@@ -49,9 +49,9 @@ export default function CategoriesFilterBar({
         <select
           value={selectedName}
           onChange={(e) => onSelectedNameChange(e.target.value)}
-          className="rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-[#6D0F2D] sm:w-44"
+          className="rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm outline-none transition focus:border-[#6D0F2D] sm:w-52"
         >
-          <option value="">Todas</option>
+          <option value="">Todas las categorías</option>
           {categoryNames.map((name) => (
             <option key={name} value={name}>
               {name}

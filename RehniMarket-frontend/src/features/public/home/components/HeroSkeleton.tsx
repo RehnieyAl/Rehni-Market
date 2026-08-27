@@ -1,6 +1,9 @@
 export default function HeroSkeleton() {
   return (
-    <section className="w-full pt-2 lg:max-w-[1500px] lg:mx-auto lg:px-6">
+    // Mismo contenedor que Hero.tsx (ver ALCANCE > auditoría de
+    // alineación del logo) - deben permanecer idénticos, incluido el
+    // padding a todos los tamaños (ya no solo desde lg).
+    <section className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-2 pt-2 sm:px-4 lg:px-8">
       <div
         className="
           relative
@@ -14,8 +17,8 @@ export default function HeroSkeleton() {
           md:h-[420px]
           lg:h-[460px]
 
-          rounded-none
-          lg:rounded-[28px]
+          rounded-2xl
+          lg:rounded-3xl
 
           shadow-xl
         "

@@ -53,11 +53,17 @@ export default function DailyProducts() {
   }
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
+    // Sin contenedor/ancho propio (ver ALCANCE > auditoría visual,
+    // "Unificar contenedores") - hereda el max-w-7xl/px de Home.tsx, así
+    // no vuelve a acotar/paddear por dentro del contenedor que ya lo
+    // hace. Margen superior propio, mismo valor que CategoriesSection.tsx
+    // (ritmo uniforme + evita el margen huérfano si abajo se retorna
+    // null).
+    <section className="mt-10 sm:mt-12">
       {/* ENCABEZADO */}
       <div className="flex items-end justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-gray-900">
+          <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
             Productos del día
           </h2>
 
@@ -81,7 +87,7 @@ export default function DailyProducts() {
       </div>
 
       {/* GRID */}
-      <div className="mt-7 grid w-full grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-6">
+      <div className="mt-7 grid w-full grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-5 lg:grid-cols-4">
         {loading ? (
           Array.from({ length: DAILY_PRODUCTS_LIMIT }).map((_, index) => (
             <ProductCardSkeleton key={index} />

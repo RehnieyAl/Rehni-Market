@@ -17,6 +17,14 @@ ROLES_PERMISSIONS_ROUTERS = {
         "/admin/dashboard/user/update-information/",
         "/admin/dashboard/user/update-information/status/",
         "/admin/dashboard/user/delete/",
+        # Módulo de liquidaciones (ver ALCANCE > Módulo de liquidaciones,
+        # Fase 7) - en la práctica nunca se evalúa (admin/owner bypasean
+        # esta lista via FULL_ACCESS_ROLES), se deja por consistencia con
+        # el resto de rutas admin documentadas acá.
+        "/admin/payouts",
+        # Centro único de gestión de reportes (ver ALCANCE > Reportes) -
+        # mismo motivo que /admin/payouts arriba.
+        "/admin/reports",
         "/auth/me",
     ],
 
@@ -36,6 +44,14 @@ ROLES_PERMISSIONS_ROUTERS = {
         "/admin/dashboard/user/update-information/",
         "/admin/dashboard/user/update-information/status/",
         "/admin/dashboard/user/delete/",
+        # Módulo de liquidaciones (ver ALCANCE > Módulo de liquidaciones,
+        # Fase 7) - en la práctica nunca se evalúa (admin/owner bypasean
+        # esta lista via FULL_ACCESS_ROLES), se deja por consistencia con
+        # el resto de rutas admin documentadas acá.
+        "/admin/payouts",
+        # Centro único de gestión de reportes (ver ALCANCE > Reportes) -
+        # mismo motivo que /admin/payouts arriba.
+        "/admin/reports",
         "/auth/me",
     ],
 
@@ -57,6 +73,12 @@ ROLES_PERMISSIONS_ROUTERS = {
         "/company/dashboard/products/",
         # Pedidos recibidos por la empresa (ver ALCANCE > Fase 5).
         "/company/dashboard/orders",
+        # Módulo de liquidaciones: cuentas bancarias, liquidaciones y
+        # balance propios (ver ALCANCE > Módulo de liquidaciones, Fase 1
+        # y 6).
+        "/company/bank-accounts",
+        "/company/payouts",
+        "/company/balance",
         "/auth/me",
     ],
 
@@ -80,5 +102,10 @@ ROLES_PERMISSIONS_ROUTERS = {
         # Calificaciones de empresa) - el listado publico de reseñas de
         # un producto vive en /public/products/{id}/reviews, no aca.
         "/reviews",
+        # Reportar un producto o una empresa (ver ALCANCE > Reportes,
+        # secciones 3 y 4) - la gestión de esos reportes es exclusiva de
+        # ADMIN/OWNER (ver "/admin/reports" arriba), acá solo se permite
+        # crearlos.
+        "/reports",
     ],
 }

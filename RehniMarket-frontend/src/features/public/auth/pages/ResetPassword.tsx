@@ -5,11 +5,13 @@ import axios from "axios";
 
 import { resetPassword } from "@/features/public/auth/api/authService";
 
+import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { showAlert } = useAlert();
 
   const email = location.state?.email ?? "";
 
@@ -53,12 +55,12 @@ export default function ResetPassword() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      alert("Las contraseñas no coinciden.");
+      showAlert("error", "Las contraseñas no coinciden.");
       return;
     }
 
     if (code.join("").length !== 6) {
-      alert("Ingresa el código completo.");
+      showAlert("error", "Ingresa el código completo.");
       return;
     }
 
@@ -71,7 +73,7 @@ export default function ResetPassword() {
         new_password: password,
       });
 
-      alert("Contraseña actualizada correctamente.");
+      showAlert("success", "Contraseña actualizada correctamente.");
       navigate("/login", {
         state: {
           email,
@@ -85,27 +87,27 @@ export default function ResetPassword() {
 
         switch (error?.code) {
           case ErrorCode.CODE_EXPIRED:
-            alert(error.message);
+            showAlert("error", error.message);
             break;
 
           case ErrorCode.INVALID_CODE:
-            alert(error.message);
+            showAlert("error", error.message);
             break;
 
           case ErrorCode.CODE_ALREADY_USED:
-            alert(error.message);
+            showAlert("error", error.message);
             break;
 
           case ErrorCode.USER_NOT_FOUND:
-            alert(error.message);
+            showAlert("error", error.message);
             break;
 
           default:
-            alert(error?.message ?? "Ocurrió un error inesperado.");
+            showAlert("error", error?.message ?? "Ocurrió un error inesperado.");
             break;
         }
       } else {
-        alert("Ocurrió un error inesperado.");
+        showAlert("error", "Ocurrió un error inesperado.");
       }
     } finally {
       setLoading(false);
@@ -115,7 +117,7 @@ export default function ResetPassword() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-8">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
           <div className="flex justify-center mb-6">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#6D0F2D]/10">
               <ShieldCheck size={30} className="text-[#6D0F2D]" />

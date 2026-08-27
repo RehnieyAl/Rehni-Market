@@ -309,6 +309,7 @@ def EmailOrderCancelled(
     total: Decimal,
     reason: str | None = None,
     refunded_amount: Decimal | None = None,
+    company_name: str | None = None,
 ):
     subject = f"Pedido #{reference} cancelado"
 
@@ -316,6 +317,9 @@ def EmailOrderCancelled(
         ("Referencia", reference),
         ("Fecha de cancelación", cancelled_at_label),
     ]
+
+    if company_name:
+        info_pairs.append(("Empresa", company_name))
 
     if reason:
         info_pairs.append(("Motivo", reason))

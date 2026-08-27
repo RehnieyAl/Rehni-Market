@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from enum import Enum as PyEnum
 import uuid
 
-from sqlalchemy import DateTime, Enum, ForeignKey
+from sqlalchemy import DateTime, Enum, ForeignKey, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -65,6 +65,19 @@ class AdminActivity(Base):
             "company.id",
             ondelete="SET NULL",
         ),
+        nullable=True,
+    )
+
+    # Motivo en texto libre, provisto por el admin/owner (ver ALCANCE >
+    # Suspensión de empresa - "trazabilidad del motivo"). Nulo para
+    # acciones que no lo requieren (todas las anteriores a este campo).
+    # Por ahora solo lo llena COMPANY_BLOCKED (ver
+    # CompanyService.update_company_status_service); se deja como campo
+    # general del log, no exclusivo de empresas, para no tener que crear
+    # una tabla de historial aparte si mañana otra accion tambien lo
+    # necesita.
+    reason: Mapped[str | None] = mapped_column(
+        Text,
         nullable=True,
     )
 

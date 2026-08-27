@@ -111,7 +111,15 @@ export default function Hero() {
 }
 
   return (
-    <section className="w-full pt-2 lg:max-w-[1500px] lg:mx-auto lg:px-6">
+    // mx-auto max-w-[clamp(1280px,90vw,1600px)] px-4 sm:px-6 lg:px-8 (ver
+    // ALCANCE > auditoría de alineación del logo): antes el Hero era
+    // full-bleed (sin padding/max-w) por debajo de lg, mientras
+    // Navbar/Home/Footer sí tenían px-4 sm:px-6 desde el breakpoint base
+    // - eso desalineaba el borde izquierdo del Hero 16px en móvil y 24px
+    // en tablet respecto al logo. Ahora usa el mismo contenedor a TODOS
+    // los tamaños (antes solo se compartía desde lg), causa raíz
+    // corregida en vez de mover solo el logo.
+    <section className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-2 pt-2 sm:px-4 lg:px-8">
       <div
   className="
     relative
@@ -122,7 +130,7 @@ export default function Hero() {
     sm:h-[300px]
     md:h-[420px]
     lg:h-[460px]
-    rounded-none
+    rounded-2xl
     lg:rounded-3xl
     shadow-xl
     animate-hero-premium
