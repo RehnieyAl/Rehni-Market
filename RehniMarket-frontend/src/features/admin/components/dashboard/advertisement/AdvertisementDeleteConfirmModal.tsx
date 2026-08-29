@@ -2,7 +2,6 @@ import { AlertTriangle, X } from "lucide-react";
 
 interface AdvertisementDeleteConfirmModalProps {
   isOpen: boolean;
-  advertisementTitle: string;
   loading: boolean;
   onConfirm: () => void;
   onClose: () => void;
@@ -10,7 +9,6 @@ interface AdvertisementDeleteConfirmModalProps {
 
 export default function AdvertisementDeleteConfirmModal({
   isOpen,
-  advertisementTitle,
   loading,
   onConfirm,
   onClose,
@@ -46,11 +44,8 @@ export default function AdvertisementDeleteConfirmModal({
               </h3>
 
               <p className="mt-2 text-sm leading-6 text-gray-500">
-                Estás a punto de eliminar{" "}
-                <span className="font-semibold text-gray-900">
-                  {advertisementTitle}
-                </span>
-                . Dejará de mostrarse en el Home inmediatamente.
+                Estás a punto de eliminar este anuncio. Dejará de mostrarse en el
+                Home inmediatamente.
               </p>
 
               <p className="mt-3 text-sm font-medium text-red-600">

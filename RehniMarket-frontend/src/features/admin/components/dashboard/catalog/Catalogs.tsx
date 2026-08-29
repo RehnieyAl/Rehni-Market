@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, ListTree, ImageOff, Power } from "lucide-react";
+import { Plus, Pencil, Trash2, SlidersHorizontal, ImageOff, Power } from "lucide-react";
 
 import CatalogFormModal from "./CatalogFormModal";
 import CatalogDeleteConfirmModal from "./CatalogDeleteConfirmModal";
-import SpecificationsModal from "./SpecificationsModal";
+import AttributesModal from "./AttributesModal";
 
 import {
   getAdminCatalogs,
@@ -32,7 +32,7 @@ export default function Catalogs() {
     useState<AdminCatalogResponse | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const [specsCatalog, setSpecsCatalog] =
+  const [attributesCatalog, setAttributesCatalog] =
     useState<AdminCatalogResponse | null>(null);
 
   const [statusChangingId, setStatusChangingId] = useState<string | null>(null);
@@ -160,7 +160,7 @@ export default function Catalogs() {
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Categorías</h2>
           <p className="mt-1 text-sm text-gray-500">
-            Categorías del marketplace y sus especificaciones técnicas.
+            Categorías del marketplace y sus atributos.
           </p>
         </div>
 
@@ -249,11 +249,11 @@ export default function Catalogs() {
                       <div className="flex items-center justify-center gap-1">
                         <button
                           type="button"
-                          onClick={() => setSpecsCatalog(catalog)}
+                          onClick={() => setAttributesCatalog(catalog)}
                           className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
-                          title="Especificaciones"
+                          title="Atributos y variantes"
                         >
-                          <ListTree size={18} />
+                          <SlidersHorizontal size={18} />
                         </button>
 
                         <button
@@ -312,11 +312,11 @@ export default function Catalogs() {
         onClose={handleCloseDelete}
       />
 
-      <SpecificationsModal
-        key={specsCatalog?.id ?? "closed"}
-        isOpen={specsCatalog !== null}
-        catalog={specsCatalog}
-        onClose={() => setSpecsCatalog(null)}
+      <AttributesModal
+        key={attributesCatalog?.id ?? "attrs-closed"}
+        isOpen={attributesCatalog !== null}
+        catalog={attributesCatalog}
+        onClose={() => setAttributesCatalog(null)}
       />
     </div>
   );

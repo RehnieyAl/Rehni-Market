@@ -9,6 +9,7 @@ from app.middleware.PublicRoutes import (
     PUBLIC_ROUTES,
     PUBLIC_CATALOG_SPECIFICATIONS_PREFIX,
     PUBLIC_CATALOG_SPECIFICATIONS_SUFFIX,
+    PUBLIC_CATALOG_ATTRIBUTES_SUFFIX,
     PUBLIC_PRODUCT_DETAIL_PREFIX,
     PUBLIC_COMPANY_PROFILE_PREFIX,
 )
@@ -27,9 +28,8 @@ async def auth_middleware(request: Request, call_next):
     if path in PUBLIC_ROUTES:
         return await call_next(request)
 
-    if (
-        path.startswith(PUBLIC_CATALOG_SPECIFICATIONS_PREFIX)
-        and path.endswith(PUBLIC_CATALOG_SPECIFICATIONS_SUFFIX)
+    if path.startswith(PUBLIC_CATALOG_SPECIFICATIONS_PREFIX) and path.endswith(
+        (PUBLIC_CATALOG_SPECIFICATIONS_SUFFIX, PUBLIC_CATALOG_ATTRIBUTES_SUFFIX)
     ):
         return await call_next(request)
 

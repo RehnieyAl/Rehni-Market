@@ -79,6 +79,18 @@ export default function CheckoutView() {
         return;
       }
 
+      // Stock agotado o variante retirada mientras el carrito estaba abierto: el backend rechaza
+      // y aquí se recarga para reflejar el estado real antes de reintentar.
+      if (
+        detail?.code === ErrorCode.INSUFFICIENT_STOCK ||
+        detail?.code === ErrorCode.PRODUCT_NOT_FOUND ||
+        detail?.code === ErrorCode.VARIANT_NOT_FOUND
+      ) {
+        await refreshCart();
+        showAlert("error", detail.message ?? "Un producto de tu carrito ya no está disponible.");
+        return;
+      }
+
       showAlert("error", detail?.message ?? "No se pudo completar la compra. Intenta de nuevo.");
     } finally {
       setConfirming(false);
@@ -186,15 +198,22 @@ export default function CheckoutView() {
             <h2 className="mb-4 font-semibold text-gray-900">Productos</h2>
 
             <div className="divide-y divide-gray-100">
-              {items.map((item) => (
-                <div key={item.id} className="flex justify-between py-3 text-sm">
-                  <span className="text-gray-700">
-                    {item.quantity} × {item.name}
-                    {item.variantName ? ` (${item.variantName})` : ""}
-                  </span>
-                  <span className="font-medium">{formatPrice(item.subtotal)}</span>
-                </div>
-              ))}
+              {items.map((item) => {
+                const optionsLabel =
+                  item.options.length > 0
+                    ? item.options.map((option) => option.value).join(" / ")
+                    : item.variantName;
+
+                return (
+                  <div key={item.id} className="flex justify-between gap-3 py-3 text-sm">
+                    <span className="text-gray-700">
+                      {item.quantity} × {item.name}
+                      {optionsLabel ? ` (${optionsLabel})` : ""}
+                    </span>
+                    <span className="font-medium">{formatPrice(item.subtotal)}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

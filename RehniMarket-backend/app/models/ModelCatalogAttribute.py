@@ -1,16 +1,19 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.Connection import Base
 
+ATTRIBUTE_ROLES = ("product", "variant")
+ATTRIBUTE_INPUT_TYPES = ("select", "color", "text", "number")
 
-ATTRIBUTE_ROLES = ("variant", "spec")
-ATTRIBUTE_INPUT_TYPES = ("option", "color", "text", "number")
+# Solo estos tipos aceptan valores predefinidos.
+OPTION_INPUT_TYPES = ("select", "color")
 
 
 class CatalogAttribute(Base):
@@ -18,7 +21,9 @@ class CatalogAttribute(Base):
     __tablename__ = "catalog_attributes"
 
     __table_args__ = (
-        UniqueConstraint("catalog_id", "name", name="uq_catalog_attribute_name"),
+        UniqueConstraint(
+            "catalog_id", "name", name="uq_catalog_attribute_catalog_name"
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -34,26 +39,21 @@ class CatalogAttribute(Base):
 
     name: Mapped[str] = mapped_column(String(80), nullable=False)
 
-    # "variant" | "spec"
+    # "product" define al producto principal; "variant" es eje de variante.
     role: Mapped[str] = mapped_column(String(16), nullable=False)
 
-    # "option" | "color" | "text" | "number"
-    input_type: Mapped[str] = mapped_column(String(16), nullable=False, default="option")
+    input_type: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="select"
+    )
 
-    # Unidad opcional ("GB", "MHz").
     unit: Mapped[str | None] = mapped_column(String(24), nullable=True)
 
-    # Solo role="spec": si el valor es obligatorio al publicar.
-    required: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
-    # Marca el atributo (típicamente Color) que define la galería de imágenes.
-    image_defining: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-
-    # Traza al modelo viejo; NULL para atributos nuevos.
-    legacy_template_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), nullable=True
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.utcnow
     )
 
     catalog = relationship("Catalog", back_populates="attributes")
@@ -71,7 +71,9 @@ class CatalogAttributeOption(Base):
     __tablename__ = "catalog_attribute_options"
 
     __table_args__ = (
-        UniqueConstraint("attribute_id", "value", name="uq_catalog_attribute_option_value"),
+        UniqueConstraint(
+            "attribute_id", "value", name="uq_catalog_attribute_option_value"
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -85,26 +87,11 @@ class CatalogAttributeOption(Base):
         index=True,
     )
 
-    # Etiqueta visible ("Verde", "256 GB").
-    label: Mapped[str] = mapped_column(String(80), nullable=False)
-
-    # Valor canónico, para comparar y para combo_key.
     value: Mapped[str] = mapped_column(String(80), nullable=False)
 
     # Solo input_type="color".
-    hex: Mapped[str | None] = mapped_column(String(7), nullable=True)
+    hex_color: Mapped[str | None] = mapped_column(String(7), nullable=True)
 
     position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
-    # Traza al color viejo; NULL salvo opciones migradas desde color_variants.
-    legacy_color_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), nullable=True
-    )
-
     attribute = relationship("CatalogAttribute", back_populates="options")
-
-    variant_links: Mapped[list["VariantOption"]] = relationship(
-        "VariantOption",
-        back_populates="option",
-        cascade="all, delete-orphan",
-    )

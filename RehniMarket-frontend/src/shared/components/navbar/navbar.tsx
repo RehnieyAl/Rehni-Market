@@ -37,22 +37,17 @@ const NAV_ITEMS: {
   {
     label: "Productos",
     to: "/products",
-    isActive: (location) =>
-      location.pathname === "/products" &&
-      !location.search.includes("discount=1") &&
-      !location.search.includes("days="),
+    isActive: (location) => location.pathname === "/products",
   },
   {
     label: "Ofertas",
-    to: "/products?discount=1",
-    isActive: (location) =>
-      location.pathname === "/products" && location.search.includes("discount=1"),
+    to: "/offers",
+    isActive: (location) => location.pathname === "/offers",
   },
   {
     label: "Novedades",
-    to: "/products?days=30",
-    isActive: (location) =>
-      location.pathname === "/products" && location.search.includes("days="),
+    to: "/new",
+    isActive: (location) => location.pathname === "/new",
   },
 ];
 

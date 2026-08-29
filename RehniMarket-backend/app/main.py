@@ -7,11 +7,13 @@ from app.database.Connection import SessionLocal
 from app.routers import AuthRouters
 from app.routers import HealthRouter
 from app.routers import CompanyRouter
+from app.routers import CompanyProductArchitectureRouters
 from app.routers import mediaRouter
 from app.routers import publicRouters
 from app.routers import AdminCompanyRouters
 from app.routers import AdminUserRouters
 from app.routers import AdminDashboardRouters
+from app.routers import AdminCatalogAttributeRouters
 from app.routers import CartRouter
 from app.routers import CheckoutRouter
 from app.routers import OrderRouter
@@ -49,8 +51,6 @@ async def lifespan(app):
 app = FastAPI(lifespan=lifespan)
 
 
-# Los endpoints con as_form(...) lanzan ValidationError fuera de la validación
-# automática de FastAPI; sin este handler quedaría como 500 en vez de 422.
 @app.exception_handler(ValidationError)
 async def pydantic_validation_exception_handler(request: Request, exc: ValidationError):
     errors = exc.errors()
@@ -68,18 +68,20 @@ async def pydantic_validation_exception_handler(request: Request, exc: Validatio
 
 
 app.middleware("http")(auth_middleware)
-app.middleware("http")(rate_limit_middleware)
+#app.middleware("http")(rate_limit_middleware)
 setup_cors(app)
 
 
 app.include_router(AuthRouters.router)
 app.include_router(HealthRouter.router)
 app.include_router(CompanyRouter.router)
+app.include_router(CompanyProductArchitectureRouters.router)
 app.include_router(mediaRouter.router)
 app.include_router(publicRouters.router)
 
 
 app.include_router(AdminDashboardRouters.router)
+app.include_router(AdminCatalogAttributeRouters.router)
 app.include_router(AdminCompanyRouters.router)
 app.include_router(AdminUserRouters.router)
 app.include_router(AdminWalletRouter.router)

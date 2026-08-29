@@ -1,7 +1,3 @@
-"""Tabla puente variante <-> opción de atributo: una fila por eje de variante.
-A lo sumo una opción por atributo (uq_variant_option_pair); la combinación
-completa se resume en ProductVariant.combo_key."""
-
 from __future__ import annotations
 
 import uuid
@@ -18,8 +14,9 @@ class VariantOption(Base):
     __tablename__ = "variant_options"
 
     __table_args__ = (
+        # Una sola opción por eje de variante.
         UniqueConstraint(
-            "variant_id", "attribute_option_id", name="uq_variant_option_pair"
+            "variant_id", "attribute_id", name="uq_variant_option_axis"
         ),
     )
 
@@ -28,12 +25,24 @@ class VariantOption(Base):
     )
 
     variant_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("product_variants.id"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("product_variants.id"),
+        nullable=False,
+        index=True,
     )
 
-    attribute_option_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("catalog_attribute_options.id"), nullable=False
+    attribute_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("catalog_attributes.id"),
+        nullable=False,
+    )
+
+    option_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("catalog_attribute_options.id"),
+        nullable=False,
     )
 
     variant = relationship("ProductVariant", back_populates="options")
-    option = relationship("CatalogAttributeOption", back_populates="variant_links")
+    attribute = relationship("CatalogAttribute")
+    option = relationship("CatalogAttributeOption")

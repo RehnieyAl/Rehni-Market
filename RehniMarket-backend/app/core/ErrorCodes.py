@@ -79,6 +79,33 @@ class ErrorCodes:
     CATALOG_NOT_FOUND = "CATALOG_NOT_FOUND"
 
     # ==========================
+    # ATRIBUTOS DE CATÁLOGO
+    # ==========================
+    CATALOG_ATTRIBUTE_NOT_FOUND = "CATALOG_ATTRIBUTE_NOT_FOUND"
+    CATALOG_ATTRIBUTE_ALREADY_EXISTS = "CATALOG_ATTRIBUTE_ALREADY_EXISTS"
+    CATALOG_ATTRIBUTE_OPTION_NOT_FOUND = "CATALOG_ATTRIBUTE_OPTION_NOT_FOUND"
+    CATALOG_ATTRIBUTE_OPTION_ALREADY_EXISTS = "CATALOG_ATTRIBUTE_OPTION_ALREADY_EXISTS"
+    # El atributo pertenece a un catálogo distinto al del recurso solicitado.
+    CATALOG_ATTRIBUTE_CATALOG_MISMATCH = "CATALOG_ATTRIBUTE_CATALOG_MISMATCH"
+    # Se intentó dar valores a un atributo de texto/número, o cambiar el tipo
+    # de un atributo que ya tiene valores.
+    CATALOG_ATTRIBUTE_TYPE_MISMATCH = "CATALOG_ATTRIBUTE_TYPE_MISMATCH"
+    # El atributo está en uso por productos o variantes y no puede eliminarse.
+    CATALOG_ATTRIBUTE_IN_USE = "CATALOG_ATTRIBUTE_IN_USE"
+    # El atributo está inactivo y no puede usarse para nuevos datos.
+    CATALOG_ATTRIBUTE_INACTIVE = "CATALOG_ATTRIBUTE_INACTIVE"
+
+    # ==========================
+    # ATRIBUTOS DE PRODUCTO / COMBINACIONES DE VARIANTE
+    # ==========================
+    PRODUCT_ATTRIBUTE_INVALID = "PRODUCT_ATTRIBUTE_INVALID"
+    VARIANT_COMBINATION_INVALID = "VARIANT_COMBINATION_INVALID"
+    VARIANT_COMBINATION_DUPLICATE = "VARIANT_COMBINATION_DUPLICATE"
+    VARIANT_OPTION_MISMATCH = "VARIANT_OPTION_MISMATCH"
+    VARIANT_AXIS_ROLE_INVALID = "VARIANT_AXIS_ROLE_INVALID"
+    VARIANT_ALREADY_DELETED = "VARIANT_ALREADY_DELETED"
+
+    # ==========================
     # VARIANTES
     # ==========================
     VARIANT_NOT_FOUND = "VARIANT_NOT_FOUND"

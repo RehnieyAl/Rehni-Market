@@ -16,6 +16,18 @@ import {
 
 import type { AdminAdvertisementResponse } from "@/features/admin/types/response";
 
+// Etiqueta legible por tipo de targeting; "" (manual) cae al texto por defecto.
+const TARGET_TYPE_LABELS: Record<string, string> = {
+  PRODUCT: "Producto específico",
+  CATEGORY: "Categoría",
+  COMPANY: "Empresa",
+  PROMOTION: "Promoción",
+  BLACK_FRIDAY: "Black Friday",
+  CYBER_DAYS: "Cyber Days",
+  LIQUIDATION: "Liquidación",
+  NEW_RELEASE: "Nuevos lanzamientos",
+};
+
 export default function Advertisements() {
   const [advertisements, setAdvertisements] = useState<AdminAdvertisementResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,7 +80,9 @@ export default function Advertisements() {
   };
 
   const sortAdvertisements = (items: AdminAdvertisementResponse[]) =>
-    [...items].sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
+    [...items].sort(
+      (a, b) => a.order - b.order || a.created_at.localeCompare(b.created_at),
+    );
 
   // Config del target elegido - un
   // solo lugar que arma estos 7 campos, reutilizado por create/update en
@@ -98,9 +112,6 @@ export default function Advertisements() {
 
       if (editingAdvertisement) {
         const updated = await updateAdminAdvertisement(editingAdvertisement.id, {
-          title: values.title,
-          description: values.description,
-          button_text: values.buttonText,
           button_link: values.buttonLink,
           order: values.order,
           is_active: values.isActive,
@@ -122,9 +133,6 @@ export default function Advertisements() {
         if (!values.image) return;
 
         const created = await createAdminAdvertisement({
-          title: values.title,
-          description: values.description || undefined,
-          button_text: values.buttonText || undefined,
           button_link: values.buttonLink || undefined,
           order: values.order,
           is_active: values.isActive,
@@ -228,12 +236,14 @@ export default function Advertisements() {
               <div className="flex items-center gap-4">
                 <img
                   src={advertisement.image_url}
-                  alt={advertisement.title}
-                  className="h-16 w-16 shrink-0 rounded-lg object-cover"
+                  alt=""
+                  className="h-14 w-24 shrink-0 rounded-lg object-cover"
                 />
 
                 <div>
-                  <p className="font-medium text-gray-900">{advertisement.title}</p>
+                  <p className="font-medium text-gray-900">
+                    {TARGET_TYPE_LABELS[advertisement.target_type ?? ""] ?? "Banner manual"}
+                  </p>
 
                   <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
                     <span
@@ -245,6 +255,10 @@ export default function Advertisements() {
                     </span>
 
                     <span>Orden: {advertisement.order}</span>
+
+                    {advertisement.button_link && (
+                      <span className="truncate">Destino: {advertisement.button_link}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -315,7 +329,6 @@ export default function Advertisements() {
 
       <AdvertisementDeleteConfirmModal
         isOpen={deleteTarget !== null}
-        advertisementTitle={deleteTarget?.title ?? ""}
         loading={deleting}
         onConfirm={handleConfirmDelete}
         onClose={handleCloseDelete}

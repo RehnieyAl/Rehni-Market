@@ -18,11 +18,12 @@ from app.schemas.SchemaCommerce.SchemaCart import (
     CartResponse,
     CartItemResponse,
     CartItemColorResponse,
+    CartItemOptionResponse,
 )
 
 from app.services.NasService import build_media_url
-# Mismo cálculo de precio final que el catálogo público.
-from app.services.publicService.Products import _compute_price_fields
+from app.services.pricing import resolve_price
+from app.services.variants import attributes as attrs
 
 
 def _require_buyer(role: str):
@@ -46,34 +47,46 @@ def get_or_create_cart(database: Session, user_id: UUID):
 
 
 def _to_item_response(item: CartItem) -> CartItemResponse:
-    entity = item.variant if item.variant_id else item.product
+    variant = item.variant if item.variant_id else None
+    price = resolve_price(item.product, variant)
 
-    final_price, _, _ = _compute_price_fields(entity)
-
-    images = item.variant.images if item.variant_id else item.product.images
+    images = variant.images if variant else item.product.images
     main_image = next((image for image in images if image.is_main), None)
 
-    color = item.variant.color if item.variant_id else item.product.main_color
+    color = variant.color if variant else item.product.main_color
 
-    available_stock = item.variant.stock if item.variant_id else item.product.stock
+    options = (
+        [
+            CartItemOptionResponse(attribute=pair["attribute"], value=pair["value"])
+            for pair in attrs.variant_option_pairs(variant)
+        ]
+        if variant
+        else []
+    )
+
+    available_stock = variant.stock if variant else item.product.stock
 
     return CartItemResponse(
         id=item.id,
         productId=item.product_id,
         variantId=item.variant_id,
         name=item.product.name,
-        variantName=item.variant.name if item.variant_id else None,
+        variantName=variant.name if variant else None,
+        sku=variant.sku if variant else None,
         image=build_media_url(main_image.url) if main_image else None,
         color=(
             CartItemColorResponse(name=color.name, hex_color=color.hex_color)
             if color
             else None
         ),
+        options=options,
         companyId=item.product.company_id,
         companyName=item.product.company.nameCompany,
-        unitPrice=final_price,
+        basePrice=price.base_price,
+        unitPrice=price.final_price,
+        discountPercentage=price.discount_percentage,
         quantity=item.quantity,
-        subtotal=final_price * item.quantity,
+        subtotal=price.final_price * item.quantity,
         availableStock=available_stock,
     )
 
@@ -114,12 +127,14 @@ def add_to_cart_service(
         if data.variantId is not None:
             variant = repo.get_variant_by_id(database, data.variantId)
 
-            if not variant or variant.product_id != product.id:
+            if (
+                not variant
+                or variant.product_id != product.id
+                or variant.deleted_at is not None
+            ):
                 api_error(404, ErrorCodes.VARIANT_NOT_FOUND, "Variante no encontrada.")
 
-        elif product.has_variants and product.main_color_id is None:
-            # Solo se exige variante si el producto tiene variantes y no tiene color base propio;
-            # con color base, el producto base es una elección válida.
+        elif product.has_variants:
             api_error(
                 400,
                 ErrorCodes.VALIDATION_ERROR,

@@ -13,6 +13,9 @@ export interface OrderItem {
   variantId: string | null;
   productName: string;
   variantName: string | null;
+  // Combinación comprada, congelada al checkout ({"Color": "Negro", "Talla": "40"}).
+  // null en pedidos anteriores a la nueva arquitectura.
+  attributes: Record<string, string> | null;
   // Precio final ya con descuento: lo que se pagó.
   unitPrice: string;
   // Precio antes del descuento, snapshot al comprar. null si no había descuento.

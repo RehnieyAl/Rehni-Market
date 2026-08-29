@@ -76,20 +76,58 @@ class PublicProductColorResponse(BaseModel):
     hex_color: str
 
 
+class PublicAttributePairResponse(BaseModel):
+    attribute: str
+    value: str
+
+
+class PublicVariantOptionResponse(BaseModel):
+    attribute: str
+    value: str
+    hex_color: str | None = None
+
+
 class PublicProductVariantResponse(BaseModel):
     id: UUID
     name: str
+    sku: str | None = None
     price: Decimal
 
-    # Descuento propio de la variante, independiente del producto base.
+    # Descuento efectivo: variante propia o, si no tiene, el del producto.
     discount_enabled: bool
     discount_percentage: int | None
     final_price: Decimal
 
     stock: int
+    options: list[PublicVariantOptionResponse]
     color: PublicProductColorResponse | None
     images: list[PublicProductImageResponse]
     specifications: list[PublicProductSpecificationResponse]
+
+
+class PublicCatalogAttributeOptionResponse(BaseModel):
+    id: UUID
+    value: str
+    hex_color: str | None = None
+    position: int
+
+    model_config = {"from_attributes": True}
+
+
+class PublicCatalogAttributeResponse(BaseModel):
+    id: UUID
+    name: str
+    input_type: str
+    unit: str | None = None
+    position: int
+    options: list[PublicCatalogAttributeOptionResponse]
+
+    model_config = {"from_attributes": True}
+
+
+class PublicCatalogAttributesResponse(BaseModel):
+    product_attributes: list[PublicCatalogAttributeResponse]
+    variant_attributes: list[PublicCatalogAttributeResponse]
 
 
 class PublicRatingDistributionResponse(BaseModel):
@@ -128,6 +166,7 @@ class PublicProductDetailResponse(BaseModel):
 
     color: PublicProductColorResponse | None
     images: list[PublicProductImageResponse]
+    attributes: list[PublicAttributePairResponse]
     specifications: list[PublicProductSpecificationResponse]
     variants: list[PublicProductVariantResponse]
 

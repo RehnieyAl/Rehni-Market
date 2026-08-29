@@ -118,8 +118,6 @@ def _to_response(
 ) -> AdvertisementResponse:
     return AdvertisementResponse(
         id=advertisement.id,
-        title=advertisement.title,
-        description=advertisement.description,
 
         # Desktop
         image_url=build_media_url(
@@ -135,7 +133,6 @@ def _to_response(
             else None
         ),
 
-        button_text=advertisement.button_text,
         button_link=advertisement.button_link,
         is_active=advertisement.is_active,
         order=advertisement.order,
@@ -252,23 +249,9 @@ def create_advertisement_service(
         resolved_link = _resolve_and_require_destination(data)
 
         advertisement = Advertisement(
-            title=data.title.strip(),
-
-            description=(
-                data.description.strip()
-                if data.description
-                else None
-            ),
-
             image_url=desktop_result["path"],
 
             mobile_image_url=mobile_path,
-
-            button_text=(
-                data.button_text.strip()
-                if data.button_text
-                else None
-            ),
 
             button_link=(
                 resolved_link
@@ -329,22 +312,6 @@ def update_advertisement_service(
             database,
             advertisement_id,
         )
-
-
-        if data.title is not None:
-            advertisement.title = data.title.strip()
-
-        if data.description is not None:
-            advertisement.description = (
-                data.description.strip()
-                or None
-            )
-
-        if data.button_text is not None:
-            advertisement.button_text = (
-                data.button_text.strip()
-                or None
-            )
 
         # `clear_target` vuelve el anuncio a manual clásico (un PATCH con target_type=None
         # es ambiguo). Un target_type nuevo reemplaza toda la configuración de target junta.

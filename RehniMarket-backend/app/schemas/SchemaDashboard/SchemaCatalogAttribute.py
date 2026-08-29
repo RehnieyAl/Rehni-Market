@@ -1,18 +1,21 @@
-"""Schemas de gestión de atributos de catálogo (Admin/Owner). Ver ModelCatalogAttribute.py."""
-
+from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
+AttributeRole = Literal["product", "variant"]
+AttributeInputType = Literal["select", "color", "text", "number"]
+
+HEX_PATTERN = r"^#[0-9A-Fa-f]{6}$"
 
 
 class CatalogAttributeOptionResponse(BaseModel):
     id: UUID
-    label: str
     value: str
-    hex: str | None = None
+    hex_color: str | None = None
     position: int
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CatalogAttributeResponse(BaseModel):
@@ -22,43 +25,40 @@ class CatalogAttributeResponse(BaseModel):
     role: str
     input_type: str
     unit: str | None = None
-    required: bool
+    is_active: bool
     position: int
-    image_defining: bool
     options: list[CatalogAttributeOptionResponse] = []
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CreateCatalogAttributeRequest(BaseModel):
     name: str = Field(min_length=1, max_length=80)
-    role: str  # "variant" | "spec" - validado en el servicio
-    input_type: str = "option"  # "option" | "color" | "text" | "number"
+    role: AttributeRole
+    input_type: AttributeInputType = "select"
     unit: str | None = Field(default=None, max_length=24)
-    required: bool = False
     position: int = Field(default=0, ge=0)
-    image_defining: bool = False
 
 
 class UpdateCatalogAttributeRequest(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=80)
-    role: str | None = None
-    input_type: str | None = None
+    role: AttributeRole | None = None
+    input_type: AttributeInputType | None = None
     unit: str | None = Field(default=None, max_length=24)
-    required: bool | None = None
     position: int | None = Field(default=None, ge=0)
-    image_defining: bool | None = None
+
+
+class CatalogAttributeStatusRequest(BaseModel):
+    is_active: bool
 
 
 class CreateAttributeOptionRequest(BaseModel):
-    label: str = Field(min_length=1, max_length=80)
-    value: str | None = Field(default=None, max_length=80)
-    hex: str | None = Field(default=None, max_length=7)
+    value: str = Field(min_length=1, max_length=80)
+    hex_color: str | None = Field(default=None, pattern=HEX_PATTERN)
     position: int = Field(default=0, ge=0)
 
 
 class UpdateAttributeOptionRequest(BaseModel):
-    label: str | None = Field(default=None, min_length=1, max_length=80)
-    value: str | None = Field(default=None, max_length=80)
-    hex: str | None = Field(default=None, max_length=7)
+    value: str | None = Field(default=None, min_length=1, max_length=80)
+    hex_color: str | None = Field(default=None, pattern=HEX_PATTERN)
     position: int | None = Field(default=None, ge=0)

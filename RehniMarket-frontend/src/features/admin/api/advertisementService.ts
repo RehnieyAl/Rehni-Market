@@ -48,9 +48,6 @@ export async function createAdminAdvertisement(
 ): Promise<AdminAdvertisementResponse> {
   const formData = new FormData();
 
-  formData.append("title", data.title);
-  if (data.description) formData.append("description", data.description);
-  if (data.button_text) formData.append("button_text", data.button_text);
   if (data.button_link) formData.append("button_link", data.button_link);
   formData.append("order", data.order.toString());
   formData.append("is_active", data.is_active.toString());
@@ -72,9 +69,6 @@ export async function updateAdminAdvertisement(
 ): Promise<AdminAdvertisementResponse> {
   const formData = new FormData();
 
-  if (data.title !== undefined) formData.append("title", data.title);
-  if (data.description !== undefined) formData.append("description", data.description);
-  if (data.button_text !== undefined) formData.append("button_text", data.button_text);
   if (data.button_link !== undefined) formData.append("button_link", data.button_link);
   if (data.order !== undefined) formData.append("order", data.order.toString());
   if (data.is_active !== undefined) formData.append("is_active", data.is_active.toString());

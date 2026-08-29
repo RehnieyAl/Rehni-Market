@@ -2,6 +2,7 @@ import { api } from "@/api/Client";
 
 import type {
   PublicCatalog,
+  PublicCatalogAttributes,
   PublicProductDetail,
   PublicProductsFilters,
   PublicProductsPaginated,
@@ -11,6 +12,17 @@ export async function getPublicProductDetail(
   productId: string,
 ): Promise<PublicProductDetail> {
   const { data } = await api.get<PublicProductDetail>(`/public/products/${productId}`);
+
+  return data;
+}
+
+// Atributos configurados de una categoría (product vs variant), fuente única de la UI.
+export async function getCatalogAttributes(
+  catalogId: string,
+): Promise<PublicCatalogAttributes> {
+  const { data } = await api.get<PublicCatalogAttributes>(
+    `/public/catalogs/${catalogId}/attributes`,
+  );
 
   return data;
 }
@@ -42,6 +54,31 @@ export async function getPublicProducts(
   params.set("limit", String(filters.limit ?? 24));
 
   const { data } = await api.get<PublicProductsPaginated>("/public/products", { params });
+
+  return data;
+}
+
+// Productos realmente en oferta (descuento vigente en una variante viva con stock,
+// o descuento del producto padre). Paginado, misma card que el catálogo.
+export async function getPublicOffers(
+  page = 1,
+  limit = 24,
+): Promise<PublicProductsPaginated> {
+  const { data } = await api.get<PublicProductsPaginated>("/public/products/offers", {
+    params: { page, limit },
+  });
+
+  return data;
+}
+
+// "Novedades": productos publicados recientemente (Product.created_at), más nuevos primero.
+export async function getPublicNewProducts(
+  page = 1,
+  limit = 24,
+): Promise<PublicProductsPaginated> {
+  const { data } = await api.get<PublicProductsPaginated>("/public/products/new", {
+    params: { page, limit },
+  });
 
   return data;
 }

@@ -11,14 +11,8 @@ from app.models.ModelAdvertisement import AdvertisementTargetType
 class AdvertisementResponse(BaseModel):
     id: UUID
 
-    title: str
-
-    description: str | None
-
     image_url: str
     mobile_image_url: str | None
-
-    button_text: str | None
 
     # Con target_type != None lo calcula el backend; con None se usa lo que escribió el admin.
     button_link: str | None
@@ -43,22 +37,8 @@ class AdvertisementResponse(BaseModel):
 
 
 class CreateAdvertisementRequest(BaseModel):
-    """multipart/form-data: las imágenes llegan como UploadFile desde el router."""
-
-    title: str = Field(
-        min_length=2,
-        max_length=150
-    )
-
-    description: str | None = Field(
-        default=None,
-        max_length=2000
-    )
-
-    button_text: str | None = Field(
-        default=None,
-        max_length=50
-    )
+    """multipart/form-data: las imágenes llegan como UploadFile desde el router.
+    El anuncio es un banner visual: no tiene texto (título/descripción/botón)."""
 
     # Solo se usa con target_type None; con otro valor lo calcula el backend.
     button_link: str | None = Field(
@@ -84,9 +64,6 @@ class CreateAdvertisementRequest(BaseModel):
     @classmethod
     def as_form(
         cls,
-        title: Annotated[str, Form()],
-        description: Annotated[str | None, Form()] = None,
-        button_text: Annotated[str | None, Form()] = None,
         button_link: Annotated[str | None, Form()] = None,
         order: Annotated[int, Form()] = 0,
         is_active: Annotated[bool, Form()] = True,
@@ -99,9 +76,6 @@ class CreateAdvertisementRequest(BaseModel):
         max_age_days: Annotated[int | None, Form()] = None,
     ):
         return cls(
-            title=title,
-            description=description,
-            button_text=button_text,
             button_link=button_link,
             order=order,
             is_active=is_active,
@@ -117,22 +91,6 @@ class CreateAdvertisementRequest(BaseModel):
 
 class UpdateAdvertisementRequest(BaseModel):
     """PATCH parcial; los campos ausentes conservan su valor."""
-
-    title: str | None = Field(
-        default=None,
-        min_length=2,
-        max_length=150
-    )
-
-    description: str | None = Field(
-        default=None,
-        max_length=2000
-    )
-
-    button_text: str | None = Field(
-        default=None,
-        max_length=50
-    )
 
     button_link: str | None = Field(
         default=None,
@@ -162,9 +120,6 @@ class UpdateAdvertisementRequest(BaseModel):
     @classmethod
     def as_form(
         cls,
-        title: Annotated[str | None, Form()] = None,
-        description: Annotated[str | None, Form()] = None,
-        button_text: Annotated[str | None, Form()] = None,
         button_link: Annotated[str | None, Form()] = None,
         order: Annotated[int | None, Form()] = None,
         is_active: Annotated[bool | None, Form()] = None,
@@ -179,9 +134,6 @@ class UpdateAdvertisementRequest(BaseModel):
         max_age_days: Annotated[int | None, Form()] = None,
     ):
         return cls(
-            title=title,
-            description=description,
-            button_text=button_text,
             button_link=button_link,
             order=order,
             is_active=is_active,

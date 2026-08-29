@@ -5,14 +5,15 @@ import json
 
 from app.models.ModelUser import Users
 from app.models.ModelProduct import Product, ProductImage
-from app.models.ModelCatalog import Catalog, SpecificationTemplate
+from app.models.ModelCatalog import Catalog
+from app.models.ModelCatalogAttribute import CatalogAttribute
 from app.models.ModelColor import ColorVariant
-from app.models.ModelSpecification import ProductSpecification
+from app.models.ModelAttributeValue import ProductAttributeValue
 from app.schemas.SchemaDashboard.SchemaProduct import (
     UpdateProductRequest,
     ProductDetailResponse,
     ProductImageResponse,
-    ProductSpecificationResponse,
+    ProductAttributePairResponse,
     ProductColorResponse,
 )
 from app.services.NasService import build_media_url
@@ -22,7 +23,7 @@ from app.core.Exceptions import api_error
 
 
 def _normalize_specifications(technical_spec):
-    """Acepta una lista de dicts o el string JSON del formulario: [{specificationTemplateId, value}, ...]."""
+    """Acepta una lista de dicts o el string JSON del formulario: [{attributeId, value}, ...]."""
 
     if isinstance(technical_spec, str):
         return json.loads(technical_spec) if technical_spec else []
@@ -30,50 +31,62 @@ def _normalize_specifications(technical_spec):
     return technical_spec or []
 
 
-def _validate_specifications_belong_to_catalog(database: Session, specifications, catalog_id):
-    """La plantilla elegida debe pertenecer al catálogo del producto y no repetirse en el envío."""
+def _resolve_product_attributes(database: Session, items, catalog_id):
+    """[{attributeId, value}, ...] contra los atributos role='product' activos del catálogo."""
 
-    seen_template_ids = set()
+    seen: set = set()
+    resolved: list[tuple[CatalogAttribute, str]] = []
 
-    for specification in specifications:
-        template_id = specification.get("specificationTemplateId")
-        value = specification.get("value")
+    for item in items:
+        attribute_id = item.get("attributeId")
+        value = item.get("value")
 
-        if not template_id or not value:
+        if not attribute_id or not value:
             api_error(
                 400,
                 ErrorCodes.VALIDATION_ERROR,
-                "Cada especificación requiere una plantilla y un valor.",
+                "Cada atributo requiere un identificador y un valor.",
             )
 
-        if template_id in seen_template_ids:
+        if attribute_id in seen:
             api_error(
                 409,
-                ErrorCodes.VALIDATION_ERROR,
-                "No se puede asignar dos valores a la misma especificación.",
+                ErrorCodes.PRODUCT_ATTRIBUTE_INVALID,
+                "No se puede asignar dos valores al mismo atributo.",
             )
+        seen.add(attribute_id)
 
-        seen_template_ids.add(template_id)
+        attribute = database.get(CatalogAttribute, attribute_id)
 
-        template = (
-            database.query(SpecificationTemplate)
-            .filter(SpecificationTemplate.id == template_id)
-            .first()
-        )
-
-        if not template:
+        if not attribute:
             api_error(
-                404,
-                ErrorCodes.SPECIFICATION_TEMPLATE_NOT_FOUND,
-                "Especificación no encontrada",
+                404, ErrorCodes.CATALOG_ATTRIBUTE_NOT_FOUND, "Atributo no encontrado"
             )
 
-        if str(template.catalog_id) != str(catalog_id):
+        if str(attribute.catalog_id) != str(catalog_id):
             api_error(
                 409,
-                ErrorCodes.SPECIFICATION_TEMPLATE_CATALOG_MISMATCH,
-                "La especificación seleccionada no pertenece al catálogo del producto.",
+                ErrorCodes.CATALOG_ATTRIBUTE_CATALOG_MISMATCH,
+                "El atributo seleccionado no pertenece al catálogo del producto.",
             )
+
+        if attribute.role != "product":
+            api_error(
+                409,
+                ErrorCodes.PRODUCT_ATTRIBUTE_INVALID,
+                f"'{attribute.name}' no es un atributo de producto.",
+            )
+
+        if not attribute.is_active:
+            api_error(
+                409,
+                ErrorCodes.CATALOG_ATTRIBUTE_INACTIVE,
+                f"El atributo '{attribute.name}' está inactivo.",
+            )
+
+        resolved.append((attribute, str(value).strip()))
+
+    return resolved
 
 
 def create_product_service(user_id,nameProduct,catalogId,priceProduct,stockProduct,descripcionProduct,technicalSpecProduct,imagesProduct,nas,database: Session,mainColorId=None):
@@ -101,10 +114,12 @@ def create_product_service(user_id,nameProduct,catalogId,priceProduct,stockProdu
             if not main_color:
                 api_error(404, ErrorCodes.COLOR_NOT_FOUND, "Color no encontrado")
 
-        technical_spec = _normalize_specifications(technicalSpecProduct)
-
-        if technical_spec:
-            _validate_specifications_belong_to_catalog(database, technical_spec, catalog.id)
+        attribute_items = _normalize_specifications(technicalSpecProduct)
+        resolved_attributes = (
+            _resolve_product_attributes(database, attribute_items, catalog.id)
+            if attribute_items
+            else []
+        )
 
         new_product = Product(
             name=nameProduct,
@@ -126,11 +141,11 @@ def create_product_service(user_id,nameProduct,catalogId,priceProduct,stockProdu
                 image = ProductImage(url=result["path"],is_main=(index == 0),product_id=new_product.id)
                 database.add(image)
 
-        for specification in technical_spec:
+        for attribute, value in resolved_attributes:
             database.add(
-                ProductSpecification(
-                    value=specification["value"],
-                    specification_template_id=specification["specificationTemplateId"],
+                ProductAttributeValue(
+                    value=value,
+                    attribute_id=attribute.id,
                     product_id=new_product.id,
                 )
             )
@@ -183,13 +198,16 @@ def get_product_detail_service(user_id, product_id, database: Session) -> Produc
         for image in product.images
     ]
 
-    specifications = [
-        ProductSpecificationResponse(
-            id=specification.id,
-            specification_template_id=specification.specification_template_id,
-            value=specification.value,
+    attributes = [
+        ProductAttributePairResponse(
+            attribute_id=value.attribute_id,
+            attribute_name=value.attribute.name,
+            value=value.value,
         )
-        for specification in product.specifications
+        for value in sorted(
+            product.attribute_values,
+            key=lambda v: (v.attribute.position, v.attribute.name),
+        )
     ]
 
     main_color = (
@@ -208,6 +226,9 @@ def get_product_detail_service(user_id, product_id, database: Session) -> Produc
         price=product.price,
         discount_enable=product.discount_enable,
         discount_value=product.discount_value,
+        discount_type=product.discount_type,
+        discount_starts_at=product.discount_starts_at,
+        discount_ends_at=product.discount_ends_at,
         stock=product.stock,
         has_variants=product.has_variants,
         descripcion=product.descripcion,
@@ -219,7 +240,7 @@ def get_product_detail_service(user_id, product_id, database: Session) -> Produc
         main_color_id=product.main_color_id,
         main_color=main_color,
         images=images,
-        specifications=specifications,
+        attributes=attributes,
     )
 
 
@@ -366,20 +387,21 @@ def update_product_service(
                 remaining_images[0].is_main = True
 
         if data.technicalSpecProduct is not None:
-            technical_spec = _normalize_specifications(data.technicalSpecProduct)
+            attribute_items = _normalize_specifications(data.technicalSpecProduct)
 
-            # Se valida contra el catálogo vigente del producto (ya aplicado si venía en el patch).
-            _validate_specifications_belong_to_catalog(database, technical_spec, product.catalog_id)
+            resolved_attributes = _resolve_product_attributes(
+                database, attribute_items, product.catalog_id
+            )
 
-            database.query(ProductSpecification).filter(
-                ProductSpecification.product_id == product.id
+            database.query(ProductAttributeValue).filter(
+                ProductAttributeValue.product_id == product.id
             ).delete()
 
-            for specification in technical_spec:
+            for attribute, value in resolved_attributes:
                 database.add(
-                    ProductSpecification(
-                        value=specification["value"],
-                        specification_template_id=specification["specificationTemplateId"],
+                    ProductAttributeValue(
+                        value=value,
+                        attribute_id=attribute.id,
                         product_id=product.id,
                     )
                 )

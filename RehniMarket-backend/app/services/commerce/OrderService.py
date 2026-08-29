@@ -59,6 +59,7 @@ def _to_order_response(order: Order) -> OrderResponse:
             variantId=item.variant_id,
             productName=item.product_name,
             variantName=item.variant_name,
+            attributes=item.attributes_snapshot or None,
             unitPrice=item.unit_price,
             originalUnitPrice=item.original_unit_price,
             quantity=item.quantity,

@@ -7,6 +7,7 @@ import OrderDetailModal from "@/features/orders/components/OrderDetailModal";
 import { getMyOrders, cancelMyOrder } from "@/features/orders/api/orderService";
 import { ORDER_STATUS_LABEL, ORDER_STATUS_BADGE } from "@/features/orders/utils/orderStatus";
 import { formatPrice } from "@/shared/utils/formatPrice";
+import { formatAttributePairs } from "@/shared/utils/formatAttributes";
 import { useAlert } from "@/shared/components/alert/useAlert";
 
 import type { Order } from "@/features/orders/types/response";
@@ -100,15 +101,19 @@ export default function Orders() {
               </div>
 
               <div className="mt-3 divide-y divide-gray-100 border-t border-gray-100 pt-3">
-                {order.items.map((item) => (
-                  <div key={item.id} className="flex justify-between py-1.5 text-sm">
-                    <span className="text-gray-600">
-                      {item.quantity} × {item.productName}
-                      {item.variantName ? ` (${item.variantName})` : ""}
-                    </span>
-                    <span className="font-medium">{formatPrice(item.subtotal)}</span>
-                  </div>
-                ))}
+                {order.items.map((item) => {
+                  const combo = formatAttributePairs(item.attributes) || item.variantName;
+
+                  return (
+                    <div key={item.id} className="flex justify-between gap-3 py-1.5 text-sm">
+                      <span className="text-gray-600">
+                        {item.quantity} × {item.productName}
+                        {combo ? ` (${combo})` : ""}
+                      </span>
+                      <span className="font-medium">{formatPrice(item.subtotal)}</span>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">

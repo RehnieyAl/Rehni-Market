@@ -32,6 +32,11 @@ PUBLIC_ROUTES = [
     # maneja igual que las especificaciones de catalogo, ver
     # PUBLIC_PRODUCT_DETAIL_PREFIX mas abajo.
     "/public/products/daily",
+    # "Ofertas" y "Novedades": rutas estaticas, sin segmento dinamico. El
+    # prefijo PUBLIC_PRODUCT_DETAIL_PREFIX tambien las cubriria; se listan aqui
+    # de forma explicita por claridad.
+    "/public/products/offers",
+    "/public/products/new",
     # Catalogo publico completo con filtros (Categoria, Precio, Descuento,
     # Disponibilidad, Ordenamiento - ver ALCANCE > pagina Categorias).
     # Estatica ("/public/products", sin segmento dinamico) - no confundir
@@ -47,6 +52,9 @@ PUBLIC_ROUTES = [
 # AuthMiddleware.py la deja pasar cuando el path empieza y termina asi.
 PUBLIC_CATALOG_SPECIFICATIONS_PREFIX = "/public/catalogs/"
 PUBLIC_CATALOG_SPECIFICATIONS_SUFFIX = "/specifications"
+
+# GET /public/catalogs/{catalog_id}/attributes (atributos configurados del catálogo).
+PUBLIC_CATALOG_ATTRIBUTES_SUFFIX = "/attributes"
 
 # Ruta publica con segmento dinamico (product_id): GET
 # /public/products/{product_id} (detalle publico de producto, ver

@@ -1,5 +1,6 @@
 import { X, Upload, Trash2, Loader2, Star } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import axios from "axios";
 
 import {
   getVariantDetail,
@@ -8,26 +9,22 @@ import {
   uploadVariantImages,
   deleteVariantImage,
   setMainVariantImage,
-  createVariantSpecification,
-  updateVariantSpecification,
-  deleteVariantSpecification,
 } from "@/features/company/api/variantService";
+import { getCatalogAttributes } from "@/features/company/api/catalogService";
 
-import { getColors } from "@/features/company/api/colorService";
-import { getCatalogSpecifications } from "@/features/company/api/catalogService";
-
-import SpecificationChecklist from "./SpecificationChecklist";
+import DiscountFields from "./DiscountFields";
+import {
+  discountToLocalState,
+  localStateToDiscountInput,
+  type DiscountFormState,
+} from "./discountForm";
 import ConfirmModal from "@/shared/components/ConfirmModal";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { parseNumericField } from "@/shared/utils/parseNumericField";
 
-import type {
-  ColorResponse,
-  SpecificationResponse,
-  VariantDetailResponse,
-} from "@/features/company/types/response";
-
-import type { ProductSpecification, VariantImage } from "@/features/company/types/request";
+import type { VariantDetailResponse } from "@/features/company/types/response";
+import type { VariantImage } from "@/features/company/types/request";
+import type { CatalogAttribute } from "@/features/company/types/catalogAttributes";
 
 interface VariantModalProps {
   isOpen: boolean;
@@ -35,10 +32,11 @@ interface VariantModalProps {
   onSuccess: () => void;
   productId: string;
   catalogId: string;
-  // null = modo creación; con valor = edición de esa variante.
   variantId: string | null;
-  // Colores usados por otras variantes del producto, para no crear duplicados.
-  usedColorIds: string[];
+}
+
+function extractDetail(error: unknown) {
+  return axios.isAxiosError(error) ? error.response?.data?.detail : undefined;
 }
 
 export default function VariantModal({
@@ -48,61 +46,46 @@ export default function VariantModal({
   productId,
   catalogId,
   variantId,
-  usedColorIds,
 }: VariantModalProps) {
   const isEditMode = variantId !== null;
-
   const { showAlert } = useAlert();
-
-  const [confirmDeleteImageId, setConfirmDeleteImageId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const [colors, setColors] = useState<ColorResponse[]>([]);
-  const [specTemplates, setSpecTemplates] = useState<SpecificationResponse[]>([]);
+  const [axes, setAxes] = useState<CatalogAttribute[]>([]);
 
   const [name, setName] = useState("");
-  // String crudo mientras se escribe; la conversión a número ocurre al enviar.
+  const [sku, setSku] = useState("");
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
-  const [colorId, setColorId] = useState("");
-  const [errors, setErrors] = useState<{ price?: string; stock?: string; discount?: string }>({});
+  // { [attributeId]: optionId }
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  const [discount, setDiscount] = useState<DiscountFormState>(discountToLocalState(null));
+  const [errors, setErrors] = useState<{ price?: string; stock?: string }>({});
 
-  // Descuento propio de la variante; solo editable en modo edición.
-  const [discountEnable, setDiscountEnable] = useState(false);
-  const [discountValue, setDiscountValue] = useState("");
-
-  // Modo creación: especificaciones e imágenes viajan en el mismo POST.
-  const [newSpecifications, setNewSpecifications] = useState<ProductSpecification[]>([]);
   const [newImages, setNewImages] = useState<VariantImage[]>([]);
-
-  // Modo edición: cada acción llama a su propio endpoint y refresca el detalle.
   const [variant, setVariant] = useState<VariantDetailResponse | null>(null);
   const [imageActionId, setImageActionId] = useState<string | null>(null);
   const [uploadingImages, setUploadingImages] = useState(false);
-
-  // Modo edición: plantillas marcadas sin valor guardado aún (checkbox on, input vacío).
-  const [pendingSpecTemplateIds, setPendingSpecTemplateIds] = useState<Set<string>>(new Set());
-  const [specActionTemplateId, setSpecActionTemplateId] = useState<string | null>(null);
+  const [confirmDeleteImageId, setConfirmDeleteImageId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetForm = () => {
     newImages.forEach((image) => URL.revokeObjectURL(image.preview));
-
     setName("");
+    setSku("");
     setPrice("");
     setStock("");
-    setColorId("");
-    setDiscountEnable(false);
-    setDiscountValue("");
-    setNewSpecifications([]);
+    setSelectedOptions({});
+    setDiscount(discountToLocalState(null));
     setNewImages([]);
     setVariant(null);
     setLoadError(null);
-    setPendingSpecTemplateIds(new Set());
+    setFormError(null);
     setErrors({});
   };
 
@@ -111,7 +94,6 @@ export default function VariantModal({
     onClose();
   };
 
-  // Carga colores/especificaciones del catálogo al abrir, y el detalle de la variante si es edición.
   useEffect(() => {
     if (!isOpen) return;
 
@@ -122,29 +104,33 @@ export default function VariantModal({
         setLoading(true);
         setLoadError(null);
 
-        const [colorsResponse, specsResponse] = await Promise.all([
-          getColors(),
-          getCatalogSpecifications(catalogId),
-        ]);
-
+        const attributes = await getCatalogAttributes(catalogId);
         if (cancelled) return;
-
-        setColors(colorsResponse);
-        setSpecTemplates(specsResponse);
+        setAxes(attributes.variant_attributes);
 
         if (variantId) {
           const detail = await getVariantDetail(productId, variantId);
-
           if (cancelled) return;
 
           setVariant(detail);
           setName(detail.name);
-          // detail.price / detail.discount_value llegan como string (Decimal); se usan tal cual.
+          setSku(detail.sku ?? "");
           setPrice(detail.price);
           setStock(String(detail.stock));
-          setColorId(detail.color?.id ?? "");
-          setDiscountEnable(detail.discount_enable);
-          setDiscountValue(detail.discount_value);
+          setSelectedOptions(
+            Object.fromEntries(
+              detail.options.map((option) => [option.attribute_id, option.option_id]),
+            ),
+          );
+          setDiscount(
+            discountToLocalState({
+              discount_enable: detail.discount_enable,
+              discount_value: detail.discount_value,
+              discount_type: detail.discount_type,
+              discount_starts_at: detail.discount_starts_at,
+              discount_ends_at: detail.discount_ends_at,
+            }),
+          );
         }
       } catch (error) {
         if (!cancelled) {
@@ -163,9 +149,19 @@ export default function VariantModal({
     };
   }, [isOpen, variantId, productId, catalogId]);
 
+  // Nombre por defecto a partir de las opciones elegidas (Negro / 40).
+  const suggestedName = useMemo(() => {
+    const parts = axes
+      .map((axis) => {
+        const optionId = selectedOptions[axis.id];
+        return axis.options.find((option) => option.id === optionId)?.value;
+      })
+      .filter((value): value is string => Boolean(value));
+    return parts.join(" / ");
+  }, [axes, selectedOptions]);
+
   const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-
     if (!files) return;
 
     const added = Array.from(files).map((file) => ({
@@ -175,7 +171,6 @@ export default function VariantModal({
 
     if (isEditMode && variantId) {
       setUploadingImages(true);
-
       uploadVariantImages(productId, variantId, Array.from(files))
         .then((detail) => {
           setVariant(detail);
@@ -234,185 +229,89 @@ export default function VariantModal({
     }
   };
 
-  // Especificaciones ya guardadas, indexadas por plantilla (modo edición).
-  const existingSpecByTemplateId = new Map(
-    (variant?.specifications ?? []).map((spec) => [spec.specification_template_id, spec]),
-  );
-
-  // Valores del checklist: en creación la lista local; en edición lo guardado + lo pendiente.
-  const specValues: ProductSpecification[] = isEditMode
-    ? [
-        ...(variant?.specifications ?? []).map((spec) => ({
-          specificationTemplateId: spec.specification_template_id,
-          value: spec.value,
-        })),
-        ...Array.from(pendingSpecTemplateIds)
-          .filter((templateId) => !existingSpecByTemplateId.has(templateId))
-          .map((templateId) => ({ specificationTemplateId: templateId, value: "" })),
-      ]
-    : newSpecifications;
-
-  // Al marcar: en creación se agrega localmente; en edición queda "pendiente" hasta que haya valor.
-  //
-  // Al desmarcar: en creación se descarta; en edición, si tenía valor guardado se elimina vía endpoint.
-  const handleToggleSpecification = async (templateId: string, checked: boolean) => {
-    if (!isEditMode) {
-      setNewSpecifications((prev) =>
-        checked
-          ? [...prev, { specificationTemplateId: templateId, value: "" }]
-          : prev.filter((spec) => spec.specificationTemplateId !== templateId),
-      );
-      return;
-    }
-
-    if (!variantId) return;
-
-    if (checked) {
-      setPendingSpecTemplateIds((prev) => new Set(prev).add(templateId));
-      return;
-    }
-
-    setPendingSpecTemplateIds((prev) => {
-      const next = new Set(prev);
-      next.delete(templateId);
-      return next;
-    });
-
-    const existing = existingSpecByTemplateId.get(templateId);
-    if (!existing) return;
-
-    try {
-      setSpecActionTemplateId(templateId);
-      const detail = await deleteVariantSpecification(productId, variantId, existing.id);
-      setVariant(detail);
-      onSuccess();
-    } catch (error) {
-      console.error("Error eliminando especificación:", error);
-      showAlert("error", "No se pudo eliminar la especificación.");
-      setPendingSpecTemplateIds((prev) => new Set(prev).add(templateId));
-    } finally {
-      setSpecActionTemplateId(null);
-    }
-  };
-
-  // Al salir del campo con valor: en creación se guarda local; en edición se crea/actualiza contra el backend.
-  const handleSpecificationValueChange = async (templateId: string, value: string) => {
-    const trimmed = value.trim();
-
-    if (!isEditMode) {
-      if (trimmed === "") return;
-
-      setNewSpecifications((prev) =>
-        prev.map((spec) =>
-          spec.specificationTemplateId === templateId ? { ...spec, value: trimmed } : spec,
-        ),
-      );
-      return;
-    }
-
-    if (!variantId || trimmed === "") return;
-
-    const existing = existingSpecByTemplateId.get(templateId);
-
-    try {
-      setSpecActionTemplateId(templateId);
-
-      const detail = existing
-        ? await updateVariantSpecification(productId, variantId, existing.id, { value: trimmed })
-        : await createVariantSpecification(productId, variantId, {
-            specificationTemplateId: templateId,
-            value: trimmed,
-          });
-
-      setVariant(detail);
-
-      setPendingSpecTemplateIds((prev) => {
-        const next = new Set(prev);
-        next.delete(templateId);
-        return next;
-      });
-
-      onSuccess();
-    } catch (error) {
-      console.error("Error guardando especificación:", error);
-      showAlert("error", "No se pudo guardar la especificación.");
-    } finally {
-      setSpecActionTemplateId(null);
-    }
-  };
+  const missingAxis = axes.some((axis) => !selectedOptions[axis.id]);
+  const effectiveName = name.trim() || suggestedName;
 
   const handleSubmit = async () => {
-    if (!name.trim() || !colorId || price === "" || stock === "") return;
-
-    // La conversión a número ocurre solo aquí, al enviar.
     const parsedPrice = parseNumericField(price);
     const parsedStock = parseNumericField(stock, { integer: true });
-    const parsedDiscount = discountValue === "" ? null : parseNumericField(discountValue);
 
     const nextErrors: typeof errors = {};
-
     if (parsedPrice === null || parsedPrice < 0) {
       nextErrors.price = "Ingresa un precio válido (un número mayor o igual a 0).";
     }
-
     if (parsedStock === null || parsedStock < 0) {
       nextErrors.stock =
         "Ingresa una cantidad de stock válida (un número entero mayor o igual a 0).";
     }
-
-    if (
-      discountEnable &&
-      discountValue !== "" &&
-      (parsedDiscount === null || parsedDiscount < 0 || parsedDiscount > 100)
-    ) {
-      nextErrors.discount = "Ingresa un porcentaje de descuento válido (entre 0 y 100).";
-    }
-
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
       return;
     }
-
     setErrors({});
+    setFormError(null);
 
-    // parsedPrice/parsedStock ya validados arriba como números finitos.
-    const validPrice = parsedPrice as number;
-    const validStock = parsedStock as number;
+    if (!effectiveName) {
+      setFormError("Asigna un nombre o elige las opciones de la variante.");
+      return;
+    }
+    if (missingAxis) {
+      setFormError("Selecciona una opción para cada eje de variante.");
+      return;
+    }
+
+    const discountResult = localStateToDiscountInput(discount);
+    if ("error" in discountResult) {
+      setFormError(discountResult.error);
+      return;
+    }
+    const discountInput = discountResult.value;
+
+    const optionIds = axes
+      .map((axis) => selectedOptions[axis.id])
+      .filter((id): id is string => Boolean(id));
 
     try {
       setSaving(true);
 
-      if (isEditMode && variantId) {
-        const patch: Parameters<typeof updateVariant>[2] = {};
-
-        if (variant && name !== variant.name) patch.name = name;
-        if (variant && validPrice !== Number(variant.price)) patch.price = validPrice;
-        if (variant && discountEnable !== variant.discount_enable) {
-          patch.discountEnable = discountEnable;
-        }
-        if (
-          variant &&
-          parsedDiscount !== null &&
-          parsedDiscount !== Number(variant.discount_value)
-        ) {
-          patch.discountValue = parsedDiscount;
-        }
-        if (variant && validStock !== variant.stock) patch.stock = validStock;
-        if (variant && colorId !== (variant.color?.id ?? "")) patch.colorId = colorId;
-
-        if (Object.keys(patch).length > 0) {
-          await updateVariant(productId, variantId, patch);
-        }
-      } else {
-        await createVariant(productId, {
-          name: name.trim(),
-          price: String(validPrice),
-          stock: String(validStock),
-          colorId,
-          // No se envían especificaciones marcadas pero sin valor todavía.
-          specifications: newSpecifications.filter((spec) => spec.value.trim() !== ""),
-          images: newImages,
+      if (isEditMode && variantId && variant) {
+        await updateVariant(productId, variantId, {
+          name: effectiveName !== variant.name ? effectiveName : undefined,
+          sku: (sku.trim() || null) !== variant.sku ? sku.trim() || null : undefined,
+          price:
+            (parsedPrice as number) !== Number(variant.price)
+              ? (parsedPrice as number)
+              : undefined,
+          stock: (parsedStock as number) !== variant.stock ? (parsedStock as number) : undefined,
+          option_ids: optionIds,
+          discount_enable: discountInput.discount_enable,
+          discount_value: discountInput.discount_value,
+          discount_type: discountInput.discount_type,
+          discount_starts_at: discountInput.discount_starts_at,
+          discount_ends_at: discountInput.discount_ends_at,
         });
+      } else {
+        const created = await createVariant(productId, {
+          name: effectiveName,
+          sku: sku.trim() || null,
+          price: parsedPrice as number,
+          stock: parsedStock as number,
+          option_ids: optionIds,
+          attribute_values: [],
+          discount_enable: discountInput.discount_enable,
+          discount_value: discountInput.discount_value,
+          discount_type: discountInput.discount_type,
+          discount_starts_at: discountInput.discount_starts_at,
+          discount_ends_at: discountInput.discount_ends_at,
+        });
+
+        if (newImages.length > 0) {
+          await uploadVariantImages(
+            productId,
+            created.id,
+            newImages.map((image) => image.file),
+          );
+        }
       }
 
       resetForm();
@@ -420,7 +319,8 @@ export default function VariantModal({
       onSuccess();
     } catch (error) {
       console.error("Error guardando la variante:", error);
-      showAlert("error", "No se pudo guardar la variante.");
+      const detail = extractDetail(error);
+      setFormError(detail?.message ?? "No se pudo guardar la variante.");
     } finally {
       setSaving(false);
     }
@@ -429,6 +329,7 @@ export default function VariantModal({
   if (!isOpen) return null;
 
   const existingImages = variant?.images ?? [];
+  const isDeleted = variant?.deleted_at != null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-6">
@@ -452,126 +353,127 @@ export default function VariantModal({
           <div className="p-16 text-center text-red-600">{loadError}</div>
         ) : (
           <div className="space-y-6 p-6">
+            {isDeleted && (
+              <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                Esta variante fue eliminada. El backend no permite editarla; vuelve a crear la
+                combinación si la necesitas.
+              </p>
+            )}
+
+            {axes.length > 0 ? (
+              <div className="space-y-4">
+                {axes.map((axis) => (
+                  <div key={axis.id}>
+                    <label className="mb-2 block text-sm text-gray-700">
+                      {axis.name} <span className="text-red-500">*</span>
+                    </label>
+
+                    <div className="flex flex-wrap gap-2">
+                      {axis.options.map((option) => {
+                        const active = selectedOptions[axis.id] === option.id;
+                        const isColor = axis.input_type === "color";
+
+                        return (
+                          <button
+                            key={option.id}
+                            type="button"
+                            disabled={isDeleted}
+                            onClick={() =>
+                              setSelectedOptions((prev) => ({
+                                ...prev,
+                                [axis.id]: option.id,
+                              }))
+                            }
+                            className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition disabled:opacity-50 ${
+                              active
+                                ? "border-red-600 bg-red-600 text-white"
+                                : "border-gray-300 text-gray-700 hover:border-gray-400"
+                            }`}
+                          >
+                            {isColor && option.hex_color && (
+                              <span
+                                className="h-3.5 w-3.5 rounded-full border border-white/40"
+                                style={{ backgroundColor: option.hex_color }}
+                              />
+                            )}
+                            {option.value}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">
+                La categoría de este producto no tiene ejes de variante configurados.
+              </p>
+            )}
+
             <div>
               <label className="mb-2 block text-sm text-gray-700">Nombre</label>
-
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ej. Camiseta talla M color negro"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500"
+                disabled={isDeleted}
+                placeholder={suggestedName || "Nombre de la variante"}
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500 disabled:opacity-50"
               />
+              {!name.trim() && suggestedName && (
+                <p className="mt-1 text-xs text-gray-400">Se usará: {suggestedName}</p>
+              )}
             </div>
 
-            <div>
-              <label className="mb-2 block text-sm text-gray-700">
-                Color <span className="text-red-500">*</span>
-              </label>
-
-              <div className="flex items-center gap-3">
-                <select
-                  value={colorId}
-                  onChange={(e) => setColorId(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500"
-                >
-                  <option value="">Seleccione un color</option>
-
-                  {colors.map((color) => {
-                    const isCurrentColor = isEditMode && color.id === (variant?.color?.id ?? "");
-                    const isDuplicate = usedColorIds.includes(color.id) && !isCurrentColor;
-
-                    return (
-                      <option key={color.id} value={color.id} disabled={isDuplicate}>
-                        {color.name}
-                        {isDuplicate ? " (ya usado en otra variante)" : ""}
-                      </option>
-                    );
-                  })}
-                </select>
-
-                {colorId && (
-                  <span
-                    className="h-9 w-9 shrink-0 rounded-full border border-gray-300"
-                    style={{
-                      backgroundColor: colors.find((color) => color.id === colorId)?.hex_color,
-                    }}
-                  />
-                )}
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+              <div>
+                <label className="mb-2 block text-sm text-gray-700">SKU</label>
+                <input
+                  value={sku}
+                  onChange={(e) => setSku(e.target.value)}
+                  disabled={isDeleted}
+                  placeholder="Opcional"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500 disabled:opacity-50"
+                />
               </div>
 
-              <p className="mt-2 text-xs text-gray-500">
-                Cada variante debe tener exactamente un color, y no puede repetirse dentro del
-                mismo producto.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm text-gray-700">Precio</label>
-
                 <input
                   type="text"
                   inputMode="numeric"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500"
+                  disabled={isDeleted}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500 disabled:opacity-50"
                 />
-
-                {errors.price && (
-                  <p className="mt-1 text-xs text-red-600">{errors.price}</p>
-                )}
+                {errors.price && <p className="mt-1 text-xs text-red-600">{errors.price}</p>}
               </div>
 
               <div>
                 <label className="mb-2 block text-sm text-gray-700">Stock</label>
-
                 <input
                   type="text"
                   inputMode="numeric"
                   value={stock}
                   onChange={(e) => setStock(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500"
+                  disabled={isDeleted}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500 disabled:opacity-50"
                 />
-
-                {errors.stock && (
-                  <p className="mt-1 text-xs text-red-600">{errors.stock}</p>
-                )}
+                {errors.stock && <p className="mt-1 text-xs text-red-600">{errors.stock}</p>}
               </div>
             </div>
 
-            {/* Descuento: solo disponible al editar */}
-            {isEditMode && (
-              <div>
-                <label className="mb-2 flex items-center gap-2 text-sm text-gray-700">
-                  <input
-                    type="checkbox"
-                    checked={discountEnable}
-                    onChange={(e) => {
-                      setDiscountEnable(e.target.checked);
-                      if (!e.target.checked) setDiscountValue("0");
-                    }}
-                  />
-                  Variante en descuento
-                </label>
-
-                {discountEnable && (
-                  <>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={discountValue}
-                      onChange={(e) => setDiscountValue(e.target.value)}
-                      placeholder="Porcentaje de descuento (%)"
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500"
-                    />
-
-                    {errors.discount && (
-                      <p className="mt-1 text-xs text-red-600">{errors.discount}</p>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
+            <div>
+              <p className="mb-2 text-sm font-medium text-gray-700">Descuento de la variante</p>
+              <DiscountFields
+                state={discount}
+                onChange={setDiscount}
+                label="Variante con descuento propio"
+              />
+              <p className="mt-2 text-xs text-gray-500">
+                Sin descuento propio, el backend aplica el del producto si lo hay.
+              </p>
+            </div>
 
             <div>
               <div className="mb-2 flex items-center justify-between">
@@ -580,7 +482,7 @@ export default function VariantModal({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingImages}
+                  disabled={uploadingImages || isDeleted}
                   className="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:border-red-500 hover:text-red-600 disabled:opacity-50"
                 >
                   {uploadingImages ? (
@@ -591,12 +493,6 @@ export default function VariantModal({
                   Agregar imágenes
                 </button>
               </div>
-
-              <p className="mb-4 text-xs text-gray-500">
-                {isEditMode
-                  ? "Haz clic sobre una imagen existente para convertirla en la principal."
-                  : "La primera imagen que agregues será la principal. Podrás cambiarla después de crear la variante."}
-              </p>
 
               <input
                 ref={fileInputRef}
@@ -662,10 +558,7 @@ export default function VariantModal({
 
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveNewImage(index);
-                      }}
+                      onClick={() => handleRemoveNewImage(index)}
                       className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white shadow hover:bg-red-700"
                     >
                       <Trash2 size={13} />
@@ -681,37 +574,21 @@ export default function VariantModal({
               </div>
             </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Especificaciones disponibles
-              </label>
-
-              <p className="mb-4 text-xs text-gray-500">
-                Estas especificaciones las administra el equipo de
-                Rehni-Market para cada categoría. Selecciona las que
-                apliquen a esta variante y asigna su valor (por ejemplo,
-                Talla → M).
-              </p>
-
-              <SpecificationChecklist
-                templates={specTemplates}
-                values={specValues}
-                onToggle={handleToggleSpecification}
-                onValueChange={handleSpecificationValueChange}
-                savingTemplateId={specActionTemplateId}
-              />
-            </div>
+            {formError && <p className="text-sm text-red-600">{formError}</p>}
           </div>
         )}
 
         <div className="flex justify-end gap-4 border-t border-gray-200 px-6 py-5">
-          <button onClick={handleClose} className="rounded-lg border border-gray-300 px-5 py-2 hover:bg-gray-100">
+          <button
+            onClick={handleClose}
+            className="rounded-lg border border-gray-300 px-5 py-2 hover:bg-gray-100"
+          >
             Cancelar
           </button>
 
           <button
             onClick={handleSubmit}
-            disabled={saving || loading || !name.trim() || !colorId || price === "" || stock === ""}
+            disabled={saving || loading || isDeleted || price === "" || stock === ""}
             className="rounded-lg bg-red-700 px-6 py-2 text-white hover:bg-red-800 disabled:opacity-50"
           >
             {saving ? "Guardando..." : isEditMode ? "Guardar cambios" : "Crear variante"}

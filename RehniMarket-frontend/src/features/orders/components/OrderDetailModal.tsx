@@ -7,6 +7,7 @@ import ConfirmModal from "@/shared/components/ConfirmModal";
 import { getMyOrderDetail, cancelMyOrder } from "@/features/orders/api/orderService";
 import { ORDER_STATUS_LABEL, ORDER_STATUS_BADGE } from "@/features/orders/utils/orderStatus";
 import { formatPrice } from "@/shared/utils/formatPrice";
+import { formatAttributePairs } from "@/shared/utils/formatAttributes";
 import { useAlert } from "@/shared/components/alert/useAlert";
 
 import type { Order } from "@/features/orders/types/response";
@@ -188,13 +189,19 @@ export default function OrderDetailModal({
                 <h3 className="mb-3 font-semibold text-gray-900">Productos</h3>
 
                 <div className="divide-y divide-gray-100 rounded-2xl border">
-                  {order.items.map((item) => (
+                  {order.items.map((item) => {
+                    const combo = formatAttributePairs(item.attributes) || item.variantName;
+
+                    return (
                     <div key={item.id} className="flex items-center justify-between gap-3 p-4">
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-gray-900">
                           {item.productName}
-                          {item.variantName ? ` (${item.variantName})` : ""}
                         </p>
+
+                        {combo && (
+                          <p className="text-xs text-gray-500">{combo}</p>
+                        )}
 
                         <p className="text-xs text-gray-500">
                           {item.quantity} ×{" "}
@@ -211,7 +218,8 @@ export default function OrderDetailModal({
                         {formatPrice(item.subtotal)}
                       </span>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
 

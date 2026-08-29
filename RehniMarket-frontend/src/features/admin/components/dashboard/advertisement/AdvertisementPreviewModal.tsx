@@ -47,28 +47,10 @@ export default function AdvertisementPreviewModal({
               )}
               <img
                 src={advertisement.image_url}
-                alt={advertisement.title}
+                alt=""
                 className="h-full w-full object-cover"
               />
             </picture>
-
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-
-            <div className="absolute inset-x-0 bottom-0 p-6 text-white">
-              <h3 className="text-xl font-bold sm:text-2xl">{advertisement.title}</h3>
-
-              {advertisement.description && (
-                <p className="mt-2 max-w-md text-sm text-white/90">
-                  {advertisement.description}
-                </p>
-              )}
-
-              {advertisement.button_text && advertisement.button_link && (
-                <span className="mt-4 inline-block rounded-xl bg-[#6D0F2D] px-5 py-2.5 text-sm font-medium text-white">
-                  {advertisement.button_text}
-                </span>
-              )}
-            </div>
           </div>
 
           <div className="mt-3 flex flex-wrap gap-3">

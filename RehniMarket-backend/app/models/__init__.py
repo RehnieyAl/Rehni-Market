@@ -7,6 +7,9 @@ from .ModelUser import Users
 from .ModelRole import Role
 
 from .ModelCatalog import Catalog, SpecificationTemplate
+from .ModelCatalogAttribute import CatalogAttribute, CatalogAttributeOption
+from .ModelVariantOption import VariantOption
+from .ModelAttributeValue import ProductAttributeValue, VariantAttributeValue
 from .ModelProduct import Product, ProductImage
 from .ModelVariant import ProductVariant
 from .ModelSpecification import ProductSpecification

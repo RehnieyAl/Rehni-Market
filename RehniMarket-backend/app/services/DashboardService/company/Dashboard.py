@@ -5,6 +5,7 @@ from app.models.ModelCompany import CompanyCertificateEnum
 from fastapi import HTTPException
 from app.schemas.SchemaDashboard.ShemaCompany import UpdateInformationCompanyRequest
 from app.services.NasService import build_media_url
+from app.services.variants.images import product_display_image_url
 
 
 
@@ -185,12 +186,6 @@ def company_dashboard_get_my_products(user_id,search,page,limit,database: Sessio
         
 
         for product in products:
-            main_image=None
-
-            for image in product.images:
-                if image.is_main:
-                    main_image = build_media_url(image.url)
-            
             result.append({
                 "id": str(product.id),
                 "name": product.name,
@@ -198,7 +193,8 @@ def company_dashboard_get_my_products(user_id,search,page,limit,database: Sessio
                 "category": product.catalog.name if product.catalog else None,
                 "price": float(product.price),
                 "stock": product.stock,
-                "image": main_image,
+                # Imagen inicial = primera variante viva con imágenes (ver services/variants/images.py).
+                "image": product_display_image_url(product),
                 "is_active": product.is_active,
                 # None = nunca eliminado; con fecha = eliminado por la empresa (distinto de "Inactivo").
                 "deleted_at": (

@@ -1,18 +1,13 @@
-"""Reglas de la combinación de una variante: el producto en una combinación concreta
-de valores, uno por cada eje de variante de su categoría."""
-
 from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
 from app.core.ErrorCodes import ErrorCodes
 from app.core.Exceptions import api_error
-
 from app.models.ModelCatalogAttribute import CatalogAttributeOption
 from app.models.ModelProduct import Product
 from app.models.ModelVariant import ProductVariant
 from app.models.ModelVariantOption import VariantOption
-
 from app.services.variants import attributes as attrs
 from app.services.variants.combo_key import build_combo_key
 
@@ -20,10 +15,7 @@ from app.services.variants.combo_key import build_combo_key
 def resolve_option_set(
     database: Session, product: Product, option_ids
 ) -> list[CatalogAttributeOption]:
-    """Valida que `option_ids` sea una combinación completa y válida para `product`
-    (cada opción existe, su atributo es role="variant" del catálogo, exactamente una
-    por eje, cubre todos los ejes) y devuelve las opciones ordenadas por posición del eje.
-    Sin ejes de variante exige `option_ids` vacío (SKU único)."""
+    """Una opción por cada eje de variante activo del catálogo; devuelve las opciones ordenadas por eje."""
 
     axes = attrs.get_variant_axes(database, product.catalog_id)
     axis_ids = {axis.id for axis in axes}
@@ -34,7 +26,7 @@ def resolve_option_set(
         if normalized_ids:
             api_error(
                 400,
-                ErrorCodes.VARIANT_OPTION_SET_INVALID,
+                ErrorCodes.VARIANT_COMBINATION_INVALID,
                 "La categoría de este producto no define ejes de variante.",
             )
         return []
@@ -42,7 +34,7 @@ def resolve_option_set(
     if not normalized_ids:
         api_error(
             400,
-            ErrorCodes.VARIANT_OPTION_SET_INVALID,
+            ErrorCodes.VARIANT_COMBINATION_INVALID,
             "Debes elegir un valor para cada atributo de variante: "
             + ", ".join(axis.name for axis in axes)
             + ".",
@@ -61,29 +53,44 @@ def resolve_option_set(
                 "Una de las opciones seleccionadas no existe.",
             )
 
-        if option.attribute.role != "variant" or option.attribute_id not in axis_ids:
+        attribute = option.attribute
+
+        if attribute.role != "variant":
             api_error(
                 409,
-                ErrorCodes.CATALOG_ATTRIBUTE_MISMATCH,
-                f"La opción '{option.label}' no pertenece a un atributo de variante "
-                "de la categoría de este producto.",
+                ErrorCodes.VARIANT_AXIS_ROLE_INVALID,
+                f"'{attribute.name}' no es un atributo de variante.",
             )
 
-        if option.attribute_id in seen_attribute_ids:
+        if not attribute.is_active:
+            api_error(
+                409,
+                ErrorCodes.CATALOG_ATTRIBUTE_INACTIVE,
+                f"El atributo '{attribute.name}' está inactivo.",
+            )
+
+        if attribute.id not in axis_ids:
+            api_error(
+                409,
+                ErrorCodes.VARIANT_OPTION_MISMATCH,
+                f"'{option.value}' no pertenece a un eje de variante de esta categoría.",
+            )
+
+        if attribute.id in seen_attribute_ids:
             api_error(
                 400,
-                ErrorCodes.VARIANT_OPTION_SET_INVALID,
-                f"No puedes elegir dos valores para '{option.attribute.name}'.",
+                ErrorCodes.VARIANT_COMBINATION_INVALID,
+                f"No puedes elegir dos valores para '{attribute.name}'.",
             )
 
-        seen_attribute_ids.add(option.attribute_id)
+        seen_attribute_ids.add(attribute.id)
         options.append(option)
 
     if seen_attribute_ids != axis_ids:
         missing = [axis.name for axis in axes if axis.id not in seen_attribute_ids]
         api_error(
             400,
-            ErrorCodes.VARIANT_OPTION_SET_INVALID,
+            ErrorCodes.VARIANT_COMBINATION_INVALID,
             "Falta elegir un valor para: " + ", ".join(missing) + ".",
         )
 
@@ -94,7 +101,7 @@ def resolve_option_set(
 
 
 def combo_key_for_options(options) -> str:
-    return build_combo_key([opt.id for opt in options])
+    return build_combo_key(opt.id for opt in options)
 
 
 def find_variant_by_combo(
@@ -103,15 +110,12 @@ def find_variant_by_combo(
     combo_key: str,
     *,
     exclude_variant_id=None,
-    include_deleted: bool = False,
 ) -> ProductVariant | None:
     query = database.query(ProductVariant).filter(
         ProductVariant.product_id == product_id,
         ProductVariant.combo_key == combo_key,
+        ProductVariant.deleted_at.is_(None),
     )
-
-    if not include_deleted:
-        query = query.filter(ProductVariant.deleted_at.is_(None))
 
     if exclude_variant_id is not None:
         query = query.filter(ProductVariant.id != exclude_variant_id)
@@ -119,20 +123,10 @@ def find_variant_by_combo(
     return query.first()
 
 
-def resolve_variant_by_option_ids(
-    database: Session, product_id, option_ids, *, include_deleted: bool = False
-) -> ProductVariant | None:
-    """Lookup: la variante viva cuya combinación coincide exactamente con `option_ids`.
-    No valida que sea completa (eso es resolve_option_set)."""
-
-    combo = build_combo_key(option_ids)
-    return find_variant_by_combo(
-        database, product_id, combo, include_deleted=include_deleted
-    )
-
-
-def apply_options_to_variant(database: Session, variant: ProductVariant, options) -> None:
-    """Reemplaza las VariantOption de la variante por `options` y recalcula combo_key. No hace commit."""
+def apply_options_to_variant(
+    database: Session, variant: ProductVariant, options
+) -> None:
+    """Reemplaza las VariantOption de la variante y recalcula combo_key. No hace commit."""
 
     database.query(VariantOption).filter(
         VariantOption.variant_id == variant.id
@@ -140,10 +134,14 @@ def apply_options_to_variant(database: Session, variant: ProductVariant, options
 
     for option in options:
         database.add(
-            VariantOption(variant_id=variant.id, attribute_option_id=option.id)
+            VariantOption(
+                variant_id=variant.id,
+                attribute_id=option.attribute_id,
+                option_id=option.id,
+            )
         )
 
-    variant.combo_key = combo_key_for_options(options)
+    variant.combo_key = combo_key_for_options(options) if options else None
     database.flush()
 
 

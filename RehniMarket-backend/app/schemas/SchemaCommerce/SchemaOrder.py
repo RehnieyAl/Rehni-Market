@@ -15,6 +15,8 @@ class OrderItemResponse(BaseModel):
     variantId: UUID | None
     productName: str
     variantName: str | None
+    # Combinación comprada, congelada al checkout: {"Color": "Negro", "Talla": "40"}.
+    attributes: dict[str, str] | None = None
     # Precio final ya con descuento.
     unitPrice: Decimal
     # Precio antes del descuento, snapshot al comprar. None si no había descuento.

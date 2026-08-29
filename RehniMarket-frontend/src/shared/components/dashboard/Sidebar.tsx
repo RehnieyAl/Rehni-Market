@@ -70,7 +70,7 @@ export default function Sidebar({
           <img
             src={logo}
             alt="RehniMarket"
-            className="w-50 h-auto object-contain"
+            className="w-35 h-auto object-contain"
           />
         )}
 

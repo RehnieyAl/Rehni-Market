@@ -169,32 +169,10 @@ export default function Hero() {
 
                   <img
                     src={advertisement.image_url}
-                    alt={advertisement.title}
+                    alt=""
                     className="absolute inset-0 h-full w-full object-cover object-center"
                   />
                 </picture>
-
-                <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent" />
-
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full px-6 sm:px-10 lg:px-14 xl:px-20">
-                    <div className="max-w-xl text-white">
-                      <p className="text-xs font-medium uppercase tracking-wide text-white/80 sm:text-sm">
-                        En promoción
-                      </p>
-
-                      <h1 className="mt-2 text-2xl font-bold leading-tight sm:text-4xl lg:text-5xl">
-                        {advertisement.title}
-                      </h1>
-
-                      {advertisement.description && (
-                        <p className="mt-3 max-w-lg text-sm text-white/90 sm:text-base">
-                          {advertisement.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
               </SlideLink>
             </div>
           );

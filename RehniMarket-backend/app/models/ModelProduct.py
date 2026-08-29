@@ -44,6 +44,25 @@ class Product(Base):
     )
 
 
+    # "percent" | "fixed"; NULL se interpreta como "percent" por compatibilidad.
+    discount_type: Mapped[str | None] = mapped_column(
+        String(8),
+        nullable=True
+    )
+
+
+    discount_starts_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+
+
+    discount_ends_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+
+
     stock: Mapped[int] = mapped_column(
         Integer,
         default=0,
@@ -158,6 +177,13 @@ class Product(Base):
         "ProductSpecification",
         back_populates="product",
         cascade="all, delete"
+    )
+
+
+    attribute_values = relationship(
+        "ProductAttributeValue",
+        back_populates="product",
+        cascade="all, delete-orphan"
     )
 
 

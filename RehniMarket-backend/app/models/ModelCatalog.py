@@ -66,6 +66,14 @@ class Catalog(Base):
         cascade="all, delete"
     )
 
+
+    attributes = relationship(
+        "CatalogAttribute",
+        back_populates="catalog",
+        cascade="all, delete-orphan",
+        order_by="CatalogAttribute.position"
+    )
+
 class SpecificationTemplate(Base):
 
     __tablename__ = "specification_templates"

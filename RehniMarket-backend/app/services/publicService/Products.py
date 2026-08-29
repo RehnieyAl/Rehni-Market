@@ -9,6 +9,7 @@ from app.core.ErrorCodes import ErrorCodes
 from app.core.Exceptions import api_error
 
 from app.models.ModelCatalog import Catalog, SpecificationTemplate
+from app.models.ModelCatalogAttribute import CatalogAttribute
 from app.models.ModelColor import ColorVariant
 from app.models.ModelCompany import Company, CompanyCertificateEnum
 from app.models.ModelProduct import Product
@@ -17,6 +18,8 @@ from app.models.ModelVariant import ProductVariant
 from app.repository.ReviewRepository import get_product_rating_summary, get_products_rating_summary
 
 from app.schemas.SchemaPublic import (
+    PublicAttributePairResponse,
+    PublicCatalogAttributesResponse,
     PublicProductCardResponse,
     PublicProductDetailResponse,
     PublicProductImageResponse,
@@ -25,9 +28,16 @@ from app.schemas.SchemaPublic import (
     PublicProductVariantResponse,
     PublicProductsPaginatedResponse,
     PublicRatingDistributionResponse,
+    PublicVariantOptionResponse,
 )
 
 from app.services.NasService import build_media_url
+from app.services.pricing import resolve_price, resolve_product_card_price
+from app.services.variants import attributes as attrs
+from app.services.variants.images import product_display_image_url
+
+# "Novedades": ventana de antigüedad para considerar un producto como nuevo.
+NEW_PRODUCT_WINDOW_DAYS = 30
 
 
 def get_catalogs_service(database: Session):
@@ -79,46 +89,27 @@ def get_specifications_by_catalog_service(catalog_id: UUID,database: Session,):
     )
 
 
-def _compute_price_fields(entity):
-    """Única fuente de verdad del precio final y el % de descuento (el frontend no lo recalcula).
-    Genérica para Product y ProductVariant. discount_value es un porcentaje (0-100):
-    final_price = price - (price * discount_value / 100)."""
-
-    price = entity.price
-
-    if not entity.discount_enable or not entity.discount_value or entity.discount_value <= 0:
-        return price, None, False
-
-    discount_percentage = int(round(entity.discount_value))
-
-    final_price = price - (price * entity.discount_value / 100)
-
-    if final_price < 0:
-        final_price = Decimal("0")
-
-    return final_price, discount_percentage, True
-
-
 def _to_card_response(
     product: Product, rating_summary: tuple[float | None, int] = (None, 0)
 ) -> PublicProductCardResponse:
-    main_image = next((image for image in product.images if image.is_main), None)
-
-    final_price, discount_percentage, discount_enabled = _compute_price_fields(product)
+    # Precio de la tarjeta = variante viva más barata por precio final efectivo
+    # (incluye descuentos propios de variante). Ver pricing.resolve_product_card_price.
+    price = resolve_product_card_price(product)
 
     average_rating, review_count = rating_summary
 
     return PublicProductCardResponse(
         id=product.id,
         name=product.name,
-        image=build_media_url(main_image.url) if main_image else None,
+        # Imagen inicial = primera variante viva con imágenes (ver services/variants/images.py).
+        image=product_display_image_url(product),
         company_name=product.company.nameCompany,
         catalog_id=product.catalog_id,
         catalog_name=product.catalog.name,
-        price=product.price,
-        discount_enabled=discount_enabled,
-        discount_percentage=discount_percentage,
-        final_price=final_price,
+        price=price.base_price,
+        discount_enabled=price.discount_enabled,
+        discount_percentage=price.discount_percentage,
+        final_price=price.final_price,
         stock=product.stock,
         average_rating=average_rating,
         review_count=review_count,
@@ -143,7 +134,9 @@ def _has_visible_stock():
         and_(Product.has_variants.is_(False), Product.stock > 0),
         and_(
             Product.has_variants.is_(True),
-            Product.variants.any(ProductVariant.stock > 0),
+            Product.variants.any(
+                and_(ProductVariant.stock > 0, ProductVariant.deleted_at.is_(None))
+            ),
         ),
     )
 
@@ -156,6 +149,113 @@ def _is_publicly_visible():
         Product.is_active.is_(True),
         Product.deleted_at.is_(None),
         Company.CompanyStatus.is_(True),
+    )
+
+
+def _discount_window_open(entity_start, entity_end, now):
+    """La ventana de descuento está vigente: sin fecha = siempre; con fecha = dentro del rango."""
+
+    return and_(
+        or_(entity_start.is_(None), entity_start <= now),
+        or_(entity_end.is_(None), entity_end >= now),
+    )
+
+
+def _variant_offer_active():
+    """Variante viva, con stock y con un descuento propio vigente (> 0)."""
+
+    now = datetime.utcnow()
+    return and_(
+        ProductVariant.deleted_at.is_(None),
+        ProductVariant.stock > 0,
+        ProductVariant.discount_enable.is_(True),
+        ProductVariant.discount_value > 0,
+        _discount_window_open(
+            ProductVariant.discount_starts_at, ProductVariant.discount_ends_at, now
+        ),
+    )
+
+
+def _has_active_offer():
+    """Un producto está "en oferta" si:
+      - alguna variante viva con stock tiene descuento propio vigente, o
+      - el producto padre tiene descuento vigente y existe al menos una variante
+        viva con stock a la que aplicárselo (fallback variante→producto).
+    Descuentos de variante eliminada o sin stock no cuentan."""
+
+    now = datetime.utcnow()
+    product_discount_active = and_(
+        Product.discount_enable.is_(True),
+        Product.discount_value > 0,
+        _discount_window_open(
+            Product.discount_starts_at, Product.discount_ends_at, now
+        ),
+    )
+    live_in_stock_variant = and_(
+        ProductVariant.deleted_at.is_(None), ProductVariant.stock > 0
+    )
+
+    return or_(
+        Product.variants.any(_variant_offer_active()),
+        and_(product_discount_active, Product.variants.any(live_in_stock_variant)),
+    )
+
+
+def list_public_offers_service(
+    database: Session, page: int = 1, limit: int = 24
+) -> PublicProductsPaginatedResponse:
+    """Productos realmente en oferta (ver _has_active_offer): descuento vigente en
+    al menos una variante viva con stock, o descuento del producto padre aplicable.
+    Más recientes primero. Misma tarjeta y misma imagen inicial que el resto del sitio."""
+
+    query = (
+        database.query(Product)
+        .join(Product.company)
+        .filter(_is_publicly_visible(), _has_visible_stock(), _has_active_offer())
+        .order_by(Product.created_at.desc())
+    )
+
+    total = query.count()
+    products = query.offset((page - 1) * limit).limit(limit).all()
+
+    return PublicProductsPaginatedResponse(
+        page=page,
+        limit=limit,
+        total=total,
+        total_pages=(total + limit - 1) // limit if total else 0,
+        products=_to_card_responses(database, products),
+    )
+
+
+def list_public_new_products_service(
+    database: Session, page: int = 1, limit: int = 24
+) -> PublicProductsPaginatedResponse:
+    """"Novedades": productos publicados en los últimos NEW_PRODUCT_WINDOW_DAYS días
+    (Product.created_at), visibles y con stock, ordenados de más reciente a más antiguo.
+    Cada producto aparece una sola vez (una fila por Product, no por variante)."""
+
+    cutoff = datetime.utcnow() - timedelta(days=NEW_PRODUCT_WINDOW_DAYS)
+
+    query = (
+        database.query(Product)
+        .join(Product.company)
+        .filter(
+            _is_publicly_visible(),
+            _has_visible_stock(),
+            Product.created_at >= cutoff,
+        )
+        .order_by(Product.created_at.desc())
+    )
+
+    total = query.count()
+    products = query.offset((page - 1) * limit).limit(limit).all()
+
+    return PublicProductsPaginatedResponse(
+        page=page,
+        limit=limit,
+        total=total,
+        total_pages=(total + limit - 1) // limit if total else 0,
+        products=_to_card_responses(database, products),
     )
 
 
@@ -225,7 +325,9 @@ def list_public_products_service(
         query = query.filter(final_price_expr <= max_price)
 
     if discount:
-        query = query.filter(Product.discount_enable.is_(True), Product.discount_value > 0)
+        # "Solo con descuento": misma definición que /public/products/offers
+        # (descuento vigente en una variante viva con stock, o del producto padre).
+        query = query.filter(_has_active_offer())
 
     if in_stock:
         query = query.filter(_has_visible_stock())
@@ -292,17 +394,33 @@ def _to_specification_responses(specifications) -> list[PublicProductSpecificati
     ]
 
 
-def _to_public_variant_response(variant) -> PublicProductVariantResponse:
-    final_price, discount_percentage, discount_enabled = _compute_price_fields(variant)
+def _to_variant_option_responses(variant) -> list[PublicVariantOptionResponse]:
+    return [
+        PublicVariantOptionResponse(
+            attribute=link.attribute.name,
+            value=link.option.value,
+            hex_color=link.option.hex_color,
+        )
+        for link in sorted(
+            variant.options,
+            key=lambda link: (link.attribute.position, link.attribute.name),
+        )
+    ]
+
+
+def _to_public_variant_response(product, variant) -> PublicProductVariantResponse:
+    price = resolve_price(product, variant)
 
     return PublicProductVariantResponse(
         id=variant.id,
         name=variant.name,
+        sku=variant.sku,
         price=variant.price,
-        discount_enabled=discount_enabled,
-        discount_percentage=discount_percentage,
-        final_price=final_price,
+        discount_enabled=price.discount_enabled,
+        discount_percentage=price.discount_percentage,
+        final_price=price.final_price,
         stock=variant.stock,
+        options=_to_variant_option_responses(variant),
         color=_to_color_response(variant.color),
         images=_to_image_responses(variant.images),
         specifications=_to_specification_responses(variant.specifications),
@@ -321,9 +439,15 @@ def get_public_product_detail_service(database: Session, product_id: UUID) -> Pu
     if not product:
         api_error(404, ErrorCodes.PRODUCT_NOT_FOUND, "Producto no encontrado")
 
-    final_price, discount_percentage, discount_enabled = _compute_price_fields(product)
+    # Precio "Desde" (antes de elegir variante) = misma variante más barata que la
+    # tarjeta del catálogo, para que card y detalle muestren lo mismo.
+    card_price = resolve_product_card_price(product)
 
-    variants = [_to_public_variant_response(variant) for variant in product.variants]
+    variants = [
+        _to_public_variant_response(product, variant)
+        for variant in product.variants
+        if variant.deleted_at is None
+    ]
 
     # CompanyLogo se guarda como object_name.
     company_logo = (
@@ -354,10 +478,10 @@ def get_public_product_detail_service(database: Session, product_id: UUID) -> Pu
             product.company.CompanyCertificateStatus == CompanyCertificateEnum.APPROVED
         ),
         is_active=product.is_active,
-        price=product.price,
-        discount_enabled=discount_enabled,
-        discount_percentage=discount_percentage,
-        final_price=final_price,
+        price=card_price.base_price,
+        discount_enabled=card_price.discount_enabled,
+        discount_percentage=card_price.discount_percentage,
+        final_price=card_price.final_price,
         stock=product.stock,
         average_rating=average_rating,
         review_count=review_count,
@@ -370,6 +494,32 @@ def get_public_product_detail_service(database: Session, product_id: UUID) -> Pu
         ),
         color=_to_color_response(product.main_color),
         images=_to_image_responses(product.images),
+        attributes=[
+            PublicAttributePairResponse(attribute=pair["attribute"], value=pair["value"])
+            for pair in attrs.product_attribute_pairs(product)
+        ],
         specifications=_to_specification_responses(product.specifications),
         variants=variants,
+    )
+
+
+def get_catalog_attributes_public_service(database: Session, catalog_id: UUID):
+    catalog = database.get(Catalog, catalog_id)
+
+    if not catalog:
+        api_error(404, ErrorCodes.CATALOG_NOT_FOUND, "Catálogo no encontrado")
+
+    attributes = (
+        database.query(CatalogAttribute)
+        .filter(
+            CatalogAttribute.catalog_id == catalog_id,
+            CatalogAttribute.is_active.is_(True),
+        )
+        .order_by(CatalogAttribute.position.asc(), CatalogAttribute.name.asc())
+        .all()
+    )
+
+    return PublicCatalogAttributesResponse(
+        product_attributes=[a for a in attributes if a.role == "product"],
+        variant_attributes=[a for a in attributes if a.role == "variant"],
     )

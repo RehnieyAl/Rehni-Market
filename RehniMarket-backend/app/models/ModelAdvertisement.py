@@ -1,4 +1,4 @@
-from sqlalchemy import String, Boolean, Text, Integer, DateTime, ForeignKey, Enum
+from sqlalchemy import String, Boolean, Integer, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
@@ -32,16 +32,6 @@ class Advertisement(Base):
         default=uuid.uuid4
     )
 
-    title: Mapped[str] = mapped_column(
-        String(150),
-        nullable=False
-    )
-
-    description: Mapped[str | None] = mapped_column(
-        Text,
-        nullable=True
-    )
-
     # Escritorio/tablet. Recomendado: 1920x600 px.
     image_url: Mapped[str] = mapped_column(
         String(255),
@@ -51,11 +41,6 @@ class Advertisement(Base):
     # Móvil. Recomendado: 1080x1000 px.
     mobile_image_url: Mapped[str | None] = mapped_column(
         String(255),
-        nullable=True
-    )
-
-    button_text: Mapped[str | None] = mapped_column(
-        String(50),
         nullable=True
     )
 

@@ -3,7 +3,8 @@ import Footer from "@/shared/components/Footer";
 
 import Hero from "@/features/public/home/components/Hero";
 import CategoriesSection from "@/features/public/home/components/CategoriesSection";
-import DailyProducts from "@/features/public/home/components/DailyProducts";
+import OffersSection from "@/features/public/home/components/OffersSection";
+import NewProductsSection from "@/features/public/home/components/NewProductsSection";
 
 export default function Home() {
   return (
@@ -17,7 +18,8 @@ export default function Home() {
 
         <div className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-2 sm:px-4 lg:px-8">
           <CategoriesSection />
-          <DailyProducts />
+          <OffersSection />
+          <NewProductsSection />
         </div>
       </main>
 

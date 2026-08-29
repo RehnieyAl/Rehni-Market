@@ -1,12 +1,10 @@
+// Banner visual: solo imágenes + navegación, sin texto.
 export interface PublicAdvertisement {
   id: string;
-  title: string;
-  description: string | null;
   // Desktop/tablet
   image_url: string;
   // Móvil, nullable: fallback a image_url si es null
   mobile_image_url: string | null;
-  button_text: string | null;
   button_link: string | null;
   is_active: boolean;
   order: number;

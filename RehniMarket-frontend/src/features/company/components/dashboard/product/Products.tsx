@@ -6,6 +6,7 @@ import {
   Eye,
   Pencil,
   Trash2,
+  ImageOff,
 } from "lucide-react";
 
 import ProductForm from "./ProductForm";
@@ -116,6 +117,14 @@ export default function Products() {
   const handleProductSaved = () => {
     loadProducts();
     loadSummary();
+  };
+
+  // Tras crear el producto padre se abre su edición para definir las variantes.
+  const handleProductCreated = (productId: string) => {
+    loadProducts();
+    loadSummary();
+    setEditingProductId(productId);
+    setOpenEditModal(true);
   };
 
   const handleChangeStatus = async (
@@ -260,14 +269,18 @@ export default function Products() {
                   className="flex items-center justify-between rounded-2xl border border-gray-200 p-5 transition hover:shadow-md"
                 >
                   <div className="flex items-center gap-5">
-                    <img
-                      src={
-                        product.image ??
-                        "https://via.placeholder.com/100"
-                      }
-                      alt={product.name}
-                      className="h-20 w-20 rounded-xl object-cover"
-                    />
+                    {/* Imagen inicial = primera variante viva (la resuelve el backend). */}
+                    {product.image ? (
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="h-20 w-20 rounded-xl object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-dashed border-gray-300 text-gray-300">
+                        <ImageOff size={22} />
+                      </div>
+                    )}
 
                     <div>
                       <h3 className="font-semibold text-gray-900">
@@ -383,7 +396,7 @@ export default function Products() {
       <ProductForm
         isOpen={openProductModal}
         onClose={() => setOpenProductModal(false)}
-        onSuccess={handleProductSaved}
+        onSuccess={handleProductCreated}
       />
 
       <EditProductModal

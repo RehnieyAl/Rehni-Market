@@ -1,12 +1,15 @@
 import { useState } from "react";
 
-import type { PublicProductSpecification } from "../types/response";
-
 type TabId = "description" | "specifications";
+
+interface ProductAttributeRow {
+  name: string;
+  value: string;
+}
 
 interface ProductTabsProps {
   description: string;
-  specifications: PublicProductSpecification[];
+  attributes: ProductAttributeRow[];
   reviewCount: number;
 }
 
@@ -14,7 +17,7 @@ interface ProductTabsProps {
 // que se renderiza siempre debajo de este bloque.
 export default function ProductTabs({
   description,
-  specifications,
+  attributes,
   reviewCount,
 }: ProductTabsProps) {
   const [tab, setTab] = useState<TabId>("description");
@@ -51,19 +54,19 @@ export default function ProductTabs({
       <div className="p-5">
         {tab === "description" ? (
           <p className="whitespace-pre-line leading-7 text-gray-600">{description}</p>
-        ) : specifications.length === 0 ? (
+        ) : attributes.length === 0 ? (
           <p className="text-sm text-gray-500">
             Este producto no tiene especificaciones registradas.
           </p>
         ) : (
           <div className="overflow-hidden rounded-xl border border-gray-100">
-            {specifications.map((spec, index) => (
+            {attributes.map((row, index) => (
               <div
                 key={index}
                 className="flex justify-between gap-4 border-b border-gray-100 p-3 text-sm last:border-b-0 odd:bg-gray-50"
               >
-                <span className="font-medium text-gray-900">{spec.name}</span>
-                <span className="text-right text-gray-600">{spec.value}</span>
+                <span className="font-medium text-gray-900">{row.name}</span>
+                <span className="text-right text-gray-600">{row.value}</span>
               </div>
             ))}
           </div>

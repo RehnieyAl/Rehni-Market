@@ -1,7 +1,7 @@
 from sqlalchemy import String, Numeric, Integer, ForeignKey, DateTime, Enum, Identity
 from decimal import Decimal
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 import uuid
 from datetime import datetime, timezone
 from enum import Enum as PyEnum
@@ -103,6 +103,9 @@ class OrderItem(Base):
 
     product_name: Mapped[str] = mapped_column(String(150), nullable=False)
     variant_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
+
+    # Combinación comprada, congelada: {"Color": "Negro", "Talla": "40"}.
+    attributes_snapshot: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     # Precio final ya con descuento: lo que realmente se cobró.
     unit_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)

@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Filter, RotateCcw, Search, X } from "lucide-react";
 
-import ProductCard from "@/features/public/home/components/ProductCard";
-import ProductCardSkeleton from "@/features/public/home/components/ProductCardSkeleton";
 import { getCatalogs, getPublicProducts } from "../api/productsService";
+import ProductGrid from "./ProductGrid";
 
 import type { PublicProductCard } from "@/features/public/home/types/response";
 import type { PublicCatalog } from "../types/response";
@@ -17,29 +16,6 @@ const SORT_OPTIONS = [
   { value: "price_desc", label: "Mayor precio" },
   { value: "discount", label: "Mayor descuento" },
 ] as const;
-
-// Lista compacta de páginas con "…": ancla 1-3 al inicio, las 2 últimas al final
-// y el entorno de la página actual.
-function buildPageList(current: number, total: number): (number | "ellipsis")[] {
-  const anchors = new Set(
-    [1, 2, 3, total - 1, total, current - 1, current, current + 1].filter(
-      (n) => n >= 1 && n <= total,
-    ),
-  );
-
-  const sorted = [...anchors].sort((a, b) => a - b);
-
-  const result: (number | "ellipsis")[] = [];
-  let previous = 0;
-
-  for (const n of sorted) {
-    if (previous && n - previous > 1) result.push("ellipsis");
-    result.push(n);
-    previous = n;
-  }
-
-  return result;
-}
 
 // Catálogo público con filtros resueltos por GET /public/products.
 // El estado de los filtros vive en la URL (searchParams): links como
@@ -246,10 +222,6 @@ export default function ProductsList() {
 
   const selectedCatalog = catalog ? catalogs.find((c) => c.id === catalog) : undefined;
 
-  const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-  const rangeEnd = Math.min(page * PAGE_SIZE, total);
-  const pageList = buildPageList(page, totalPages);
-
   return (
     <section className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-2 py-6 sm:px-4 sm:py-8 lg:px-8">
       {selectedCatalog && !search ? (
@@ -419,79 +391,17 @@ export default function ProductsList() {
         </aside>
 
         <div>
-          {loading ? (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-              {Array.from({ length: PAGE_SIZE }).map((_, index) => (
-                <ProductCardSkeleton key={index} />
-              ))}
-            </div>
-          ) : failed ? (
-            <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500 shadow-sm">
-              No se pudieron cargar los productos. Intenta de nuevo más tarde.
-            </div>
-          ) : products.length === 0 ? (
-            <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-500 shadow-sm">
-              No se encontraron productos con estos filtros.
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-                {products.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-
-              <div className="mt-8 flex flex-col items-center gap-3">
-                <p className="text-sm text-gray-500">
-                  Mostrando {rangeStart}-{rangeEnd} de {total} productos
-                </p>
-
-                {totalPages > 1 && (
-                  <div className="flex flex-wrap items-center justify-center gap-1.5">
-                    <button
-                      disabled={page === 1}
-                      onClick={() => handlePageChange(page - 1)}
-                      className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-40"
-                    >
-                      Anterior
-                    </button>
-
-                    {pageList.map((item, index) =>
-                      item === "ellipsis" ? (
-                        <span
-                          key={`ellipsis-${index}`}
-                          className="px-1.5 text-sm text-gray-400"
-                        >
-                          …
-                        </span>
-                      ) : (
-                        <button
-                          key={item}
-                          onClick={() => handlePageChange(item)}
-                          aria-current={item === page}
-                          className={`flex h-9 min-w-9 items-center justify-center rounded-xl px-2 text-sm font-medium transition ${
-                            item === page
-                              ? "bg-[#6D0F2D] text-white"
-                              : "border border-gray-200 text-gray-600 hover:bg-gray-50"
-                          }`}
-                        >
-                          {item}
-                        </button>
-                      ),
-                    )}
-
-                    <button
-                      disabled={page === totalPages}
-                      onClick={() => handlePageChange(page + 1)}
-                      className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-50 disabled:pointer-events-none disabled:opacity-40"
-                    >
-                      Siguiente
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
+          <ProductGrid
+            products={products}
+            loading={loading}
+            failed={failed}
+            total={total}
+            page={page}
+            totalPages={totalPages}
+            pageSize={PAGE_SIZE}
+            onPageChange={handlePageChange}
+            emptyMessage="No se encontraron productos con estos filtros."
+          />
         </div>
       </div>
     </section>

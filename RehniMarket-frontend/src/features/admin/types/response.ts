@@ -107,29 +107,35 @@ export interface AdminCatalogResponse {
   product_count: number;
 }
 
-export interface AdminColorResponse {
+export type CatalogAttributeRole = "product" | "variant";
+export type CatalogAttributeInputType = "select" | "color" | "text" | "number";
+
+export interface AdminCatalogAttributeOption {
   id: string;
-  name: string;
-  hex_color: string;
+  value: string;
+  hex_color: string | null;
+  position: number;
 }
 
-export interface AdminSpecificationResponse {
+export interface AdminCatalogAttributeResponse {
   id: string;
-  name: string;
-  type: string;
-  required: boolean;
   catalog_id: string;
+  name: string;
+  role: CatalogAttributeRole;
+  input_type: CatalogAttributeInputType;
+  unit: string | null;
+  is_active: boolean;
+  position: number;
+  options: AdminCatalogAttributeOption[];
 }
 
+// Banner visual: solo imágenes + navegación/targeting, sin texto.
 export interface AdminAdvertisementResponse {
   id: string;
-  title: string;
-  description: string | null;
   // Desktop/tablet
   image_url: string;
   // Móvil, nullable: el Hero hace fallback a image_url
   mobile_image_url: string | null;
-  button_text: string | null;
   // Lo calcula el backend con target_type != null; editable a mano solo con target_type null.
   button_link: string | null;
   is_active: boolean;

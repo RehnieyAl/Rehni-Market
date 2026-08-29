@@ -17,8 +17,6 @@ def get_active_advertisements_service(database: Session) -> list[AdvertisementRe
     return [
         AdvertisementResponse(
             id=advertisement.id,
-            title=advertisement.title,
-            description=advertisement.description,
 
             image_url=build_media_url(advertisement.image_url),
 
@@ -28,7 +26,6 @@ def get_active_advertisements_service(database: Session) -> list[AdvertisementRe
                 else None
             ),
 
-            button_text=advertisement.button_text,
             button_link=advertisement.button_link,
             is_active=advertisement.is_active,
             order=advertisement.order,

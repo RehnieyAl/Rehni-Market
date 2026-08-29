@@ -41,30 +41,51 @@ export interface PublicProductImage {
   is_main: boolean;
 }
 
-export interface PublicProductSpecification {
-  name: string;
+// Par legible de un atributo de producto o de una opción de variante.
+export interface PublicAttributePair {
+  attribute: string;
   value: string;
 }
 
-export interface PublicProductColor {
-  name: string;
-  hex_color: string;
+export interface PublicVariantOption extends PublicAttributePair {
+  hex_color: string | null;
 }
 
 export interface PublicProductVariant {
   id: string;
   name: string;
+  sku: string | null;
   // Pydantic serializa Decimal como string en JSON.
   price: string;
-  // Descuento propio de la variante, independiente del descuento del
-  // producto base.
+  // Descuento efectivo: propio de la variante o, si no tiene, el del producto.
   discount_enabled: boolean;
   discount_percentage: number | null;
   final_price: string;
   stock: number;
-  color: PublicProductColor | null;
+  options: PublicVariantOption[];
   images: PublicProductImage[];
-  specifications: PublicProductSpecification[];
+}
+
+// GET /public/catalogs/{id}/attributes
+export interface PublicCatalogAttributeOption {
+  id: string;
+  value: string;
+  hex_color: string | null;
+  position: number;
+}
+
+export interface PublicCatalogAttribute {
+  id: string;
+  name: string;
+  input_type: "select" | "color" | "text" | "number";
+  unit: string | null;
+  position: number;
+  options: PublicCatalogAttributeOption[];
+}
+
+export interface PublicCatalogAttributes {
+  product_attributes: PublicCatalogAttribute[];
+  variant_attributes: PublicCatalogAttribute[];
 }
 
 // Conteo de reseñas activas por puntaje.
@@ -98,8 +119,8 @@ export interface PublicProductDetail {
   average_rating: number | null;
   review_count: number;
   rating_distribution: PublicRatingDistribution;
-  color: PublicProductColor | null;
   images: PublicProductImage[];
-  specifications: PublicProductSpecification[];
+  // Atributos role="product" del producto (Marca, Modelo, Material…).
+  attributes: PublicAttributePair[];
   variants: PublicProductVariant[];
 }

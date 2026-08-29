@@ -4,9 +4,12 @@ from app.database.Connection import get_db
 from app.services.publicService.Products import (
     get_catalogs_service,
     get_specifications_by_catalog_service,
+    get_catalog_attributes_public_service,
     get_colors_service,
     get_daily_products_service,
     list_public_products_service,
+    list_public_offers_service,
+    list_public_new_products_service,
     get_public_product_detail_service,
 )
 from app.services.publicService.Advertisements import get_active_advertisements_service
@@ -21,6 +24,7 @@ from decimal import Decimal
 from app.schemas.SchemaPublic import (
     CatalogResponse,
     SpecificationResponse,
+    PublicCatalogAttributesResponse,
     ColorResponse,
     PublicProductCardResponse,
     PublicProductsPaginatedResponse,
@@ -45,6 +49,13 @@ def get_catalogs(database: Session = Depends(get_db)):
 @router.get("/catalogs/{catalog_id}/specifications",response_model=list[SpecificationResponse],)
 def get_catalog_specifications(catalog_id: UUID,database: Session = Depends(get_db),):
     return get_specifications_by_catalog_service(catalog_id,database,)
+
+@router.get(
+    "/catalogs/{catalog_id}/attributes",
+    response_model=PublicCatalogAttributesResponse,
+)
+def get_catalog_attributes(catalog_id: UUID, database: Session = Depends(get_db)):
+    return get_catalog_attributes_public_service(database, catalog_id)
 
 @router.get("/colors", response_model=list[ColorResponse])
 def get_colors(database: Session = Depends(get_db)):
@@ -96,6 +107,26 @@ def get_daily_products(
     database: Session = Depends(get_db),
 ):
     return get_daily_products_service(database, limit=limit)
+
+
+# Rutas estáticas: van ANTES de /products/{product_id} para que no las capture
+# el segmento dinámico.
+@router.get("/products/offers", response_model=PublicProductsPaginatedResponse)
+def get_public_offers(
+    page: int = Query(1, ge=1),
+    limit: int = Query(24, ge=1, le=48),
+    database: Session = Depends(get_db),
+):
+    return list_public_offers_service(database, page=page, limit=limit)
+
+
+@router.get("/products/new", response_model=PublicProductsPaginatedResponse)
+def get_public_new_products(
+    page: int = Query(1, ge=1),
+    limit: int = Query(24, ge=1, le=48),
+    database: Session = Depends(get_db),
+):
+    return list_public_new_products_service(database, page=page, limit=limit)
 
 
 @router.get("/products/{product_id}", response_model=PublicProductDetailResponse)

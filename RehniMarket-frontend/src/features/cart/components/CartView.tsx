@@ -1,14 +1,26 @@
 import { Link, useNavigate } from "react-router-dom";
 import { ImageOff, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import axios from "axios";
 
 import { useCart } from "../context/useCart";
 import { formatPrice } from "@/shared/utils/formatPrice";
+import { useAlert } from "@/shared/components/alert/useAlert";
 
 export default function CartView() {
   const navigate = useNavigate();
   const { cart, loading, updateItem, removeItem, clear } = useCart();
+  const { showAlert } = useAlert();
 
   const items = cart?.items ?? [];
+
+  const run = async (action: () => Promise<void>, fallback: string) => {
+    try {
+      await action();
+    } catch (error) {
+      const detail = axios.isAxiosError(error) ? error.response?.data?.detail : undefined;
+      showAlert("error", detail?.message ?? fallback);
+    }
+  };
 
   return (
     <section className="mx-auto max-w-5xl px-4 py-8">
@@ -37,90 +49,126 @@ export default function CartView() {
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
 
           <div className="space-y-4">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-4 rounded-2xl border bg-white p-4"
-              >
-                {item.image ? (
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="h-20 w-20 shrink-0 rounded-xl object-cover"
-                  />
-                ) : (
-                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-300">
-                    <ImageOff size={24} />
-                  </div>
-                )}
+            {items.map((item) => {
+              const outOfStock = item.availableStock <= 0;
+              const hasDiscount =
+                item.discountPercentage != null && item.discountPercentage > 0;
 
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-gray-500">{item.companyName}</p>
-
-                  <h3 className="truncate font-semibold text-gray-900">
-                    {item.name}
-                  </h3>
-
-                  {item.variantName && (
-                    <p className="text-sm text-gray-500">{item.variantName}</p>
-                  )}
-
-                  {item.color && (
-                    <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
-                      <span
-                        className="h-3 w-3 rounded-full border border-gray-300"
-                        style={{ backgroundColor: item.color.hex_color }}
-                      />
-                      {item.color.name}
+              return (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-4 rounded-2xl border bg-white p-4"
+                >
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="h-20 w-20 shrink-0 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-300">
+                      <ImageOff size={24} />
                     </div>
                   )}
 
-                  <p className="mt-2 font-bold text-[#6D0F2D]">
-                    {formatPrice(item.unitPrice)}
-                  </p>
-                </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs text-gray-500">{item.companyName}</p>
 
-                <div className="flex shrink-0 flex-col items-end gap-3">
-                  <button
-                    onClick={() => removeItem(item.id)}
-                    className="text-gray-400 transition hover:text-red-600"
-                    title="Eliminar"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+                    <h3 className="truncate font-semibold text-gray-900">
+                      {item.name}
+                    </h3>
 
-                  <div className="flex items-center rounded-xl border">
+                    {item.options.length > 0 ? (
+                      <p className="mt-0.5 text-sm text-gray-500">
+                        {item.options
+                          .map((option) => `${option.attribute}: ${option.value}`)
+                          .join(" · ")}
+                      </p>
+                    ) : (
+                      item.variantName && (
+                        <p className="mt-0.5 text-sm text-gray-500">{item.variantName}</p>
+                      )
+                    )}
+
+                    {item.sku && (
+                      <p className="mt-0.5 text-xs text-gray-400">SKU: {item.sku}</p>
+                    )}
+
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="font-bold text-[#6D0F2D]">
+                        {formatPrice(item.unitPrice)}
+                      </span>
+
+                      {hasDiscount && (
+                        <>
+                          <span className="text-sm text-gray-400 line-through">
+                            {formatPrice(item.basePrice)}
+                          </span>
+                          <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
+                            -{item.discountPercentage}%
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    {outOfStock && (
+                      <p className="mt-1 text-xs font-semibold text-red-600">
+                        Este producto ya no tiene stock disponible.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex shrink-0 flex-col items-end gap-3">
                     <button
                       onClick={() =>
-                        updateItem(item.id, Math.max(1, item.quantity - 1))
+                        run(() => removeItem(item.id), "No se pudo eliminar el producto.")
                       }
-                      disabled={item.quantity <= 1}
-                      className="px-3 py-1.5 disabled:opacity-40"
+                      className="text-gray-400 transition hover:text-red-600"
+                      title="Eliminar"
                     >
-                      <Minus size={14} />
+                      <Trash2 size={18} />
                     </button>
 
-                    <span className="w-8 text-center text-sm">{item.quantity}</span>
+                    <div className="flex items-center rounded-xl border">
+                      <button
+                        onClick={() =>
+                          run(
+                            () => updateItem(item.id, Math.max(1, item.quantity - 1)),
+                            "No se pudo actualizar la cantidad.",
+                          )
+                        }
+                        disabled={item.quantity <= 1}
+                        className="px-3 py-1.5 disabled:opacity-40"
+                      >
+                        <Minus size={14} />
+                      </button>
 
-                    <button
-                      onClick={() =>
-                        updateItem(
-                          item.id,
-                          Math.min(item.availableStock, item.quantity + 1),
-                        )
-                      }
-                      disabled={item.quantity >= item.availableStock}
-                      className="px-3 py-1.5 disabled:opacity-40"
-                    >
-                      <Plus size={14} />
-                    </button>
+                      <span className="w-8 text-center text-sm">{item.quantity}</span>
+
+                      <button
+                        onClick={() =>
+                          run(
+                            () =>
+                              updateItem(
+                                item.id,
+                                Math.min(item.availableStock, item.quantity + 1),
+                              ),
+                            "No se pudo actualizar la cantidad.",
+                          )
+                        }
+                        disabled={outOfStock || item.quantity >= item.availableStock}
+                        className="px-3 py-1.5 disabled:opacity-40"
+                      >
+                        <Plus size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             <button
-              onClick={() => clear()}
+              onClick={() => run(() => clear(), "No se pudo vaciar el carrito.")}
               className="text-sm font-medium text-red-600 hover:underline"
             >
               Vaciar carrito

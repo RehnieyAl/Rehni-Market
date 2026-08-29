@@ -30,10 +30,8 @@ from app.services.DashboardService.company.Variants import (
     upload_variant_images_service,
     delete_variant_image_service,
     set_main_variant_image_service,
-    list_variant_specifications_service,
-    create_variant_specification_service,
-    update_variant_specification_service,
-    delete_variant_specification_service,
+    list_variant_attribute_values_service,
+    set_variant_attribute_values_service,
 )
 
 from app.schemas.SchemaDashboard.ShemaCompany import UpdateInformationCompanyRequest
@@ -45,12 +43,11 @@ from app.schemas.SchemaDashboard.SchemaProduct import (
 from app.schemas.SchemaDashboard.SchemaVariant import (
     CreateVariantRequest,
     UpdateVariantRequest,
+    VariantAttributeValueItem,
     VariantResponse,
     VariantDetailResponse,
     VariantImageResponse,
-    VariantSpecificationResponse,
-    VariantSpecificationRequest,
-    VariantSpecificationUpdateRequest,
+    VariantAttributeValuePair,
 )
 from app.services.NasService import NasService, get_nas_service
 
@@ -248,9 +245,7 @@ def delete_my_product(request: Request,product_id: UUID, database: Session = Dep
 def create_variant(
     request: Request,
     product_id: UUID,
-    data: CreateVariantRequest = Depends(CreateVariantRequest.as_form),
-    imagesVariant: list[UploadFile] = File(None),
-    nas: NasService = Depends(get_nas_service),
+    data: CreateVariantRequest,
     database: Session = Depends(get_db),
 ):
     user_id = request.state.user_id
@@ -259,8 +254,6 @@ def create_variant(
         user_id=user_id,
         product_id=product_id,
         data=data,
-        imagesVariant=imagesVariant,
-        nas=nas,
         database=database,
     )
 
@@ -269,6 +262,7 @@ def create_variant(
 def list_variants(
     request: Request,
     product_id: UUID,
+    include_deleted: bool = Query(default=False),
     database: Session = Depends(get_db),
 ):
     user_id = request.state.user_id
@@ -277,6 +271,7 @@ def list_variants(
         user_id=user_id,
         product_id=product_id,
         database=database,
+        include_deleted=include_deleted,
     )
 
 
@@ -424,10 +419,10 @@ def set_main_variant_image(
 
 
 @router.get(
-    "/dashboard/products/{product_id}/variants/{variant_id}/specifications",
-    response_model=list[VariantSpecificationResponse],
+    "/dashboard/products/{product_id}/variants/{variant_id}/attribute-values",
+    response_model=list[VariantAttributeValuePair],
 )
-def list_variant_specifications(
+def list_variant_attribute_values(
     request: Request,
     product_id: UUID,
     variant_id: UUID,
@@ -435,7 +430,7 @@ def list_variant_specifications(
 ):
     user_id = request.state.user_id
 
-    return list_variant_specifications_service(
+    return list_variant_attribute_values_service(
         user_id=user_id,
         product_id=product_id,
         variant_id=variant_id,
@@ -443,70 +438,24 @@ def list_variant_specifications(
     )
 
 
-@router.post(
-    "/dashboard/products/{product_id}/variants/{variant_id}/specifications",
+@router.put(
+    "/dashboard/products/{product_id}/variants/{variant_id}/attribute-values",
     response_model=VariantDetailResponse,
 )
-def create_variant_specification(
+def set_variant_attribute_values(
     request: Request,
     product_id: UUID,
     variant_id: UUID,
-    data: VariantSpecificationRequest,
+    data: list[VariantAttributeValueItem],
     database: Session = Depends(get_db),
 ):
     user_id = request.state.user_id
 
-    return create_variant_specification_service(
+    return set_variant_attribute_values_service(
         user_id=user_id,
         product_id=product_id,
         variant_id=variant_id,
-        data=data,
-        database=database,
-    )
-
-
-@router.patch(
-    "/dashboard/products/{product_id}/variants/{variant_id}/specifications/{specification_id}",
-    response_model=VariantDetailResponse,
-)
-def update_variant_specification(
-    request: Request,
-    product_id: UUID,
-    variant_id: UUID,
-    specification_id: UUID,
-    data: VariantSpecificationUpdateRequest,
-    database: Session = Depends(get_db),
-):
-    user_id = request.state.user_id
-
-    return update_variant_specification_service(
-        user_id=user_id,
-        product_id=product_id,
-        variant_id=variant_id,
-        specification_id=specification_id,
-        data=data,
-        database=database,
-    )
-
-
-@router.delete(
-    "/dashboard/products/{product_id}/variants/{variant_id}/specifications/{specification_id}",
-    response_model=VariantDetailResponse,
-)
-def delete_variant_specification(
-    request: Request,
-    product_id: UUID,
-    variant_id: UUID,
-    specification_id: UUID,
-    database: Session = Depends(get_db),
-):
-    user_id = request.state.user_id
-
-    return delete_variant_specification_service(
-        user_id=user_id,
-        product_id=product_id,
-        variant_id=variant_id,
-        specification_id=specification_id,
+        items=data,
         database=database,
     )
 

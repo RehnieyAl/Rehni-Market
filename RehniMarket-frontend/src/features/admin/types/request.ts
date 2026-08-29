@@ -24,26 +24,32 @@ export interface UpdateCatalogRequest {
   remove_image?: boolean;
 }
 
-export interface CreateColorRequest {
+export interface CreateCatalogAttributeRequest {
   name: string;
-  hex_color: string;
+  role: "product" | "variant";
+  input_type: "select" | "color" | "text" | "number";
+  unit?: string | null;
+  position?: number;
 }
 
-export interface UpdateColorRequest {
-  name: string;
-  hex_color: string;
+export interface UpdateCatalogAttributeRequest {
+  name?: string;
+  role?: "product" | "variant";
+  input_type?: "select" | "color" | "text" | "number";
+  unit?: string | null;
+  position?: number;
 }
 
-export interface CreateSpecificationRequest {
-  name: string;
-  type: string;
-  required: boolean;
+export interface CreateAttributeOptionRequest {
+  value: string;
+  hex_color?: string | null;
+  position?: number;
 }
 
-export interface UpdateSpecificationRequest {
-  name: string;
-  type: string;
-  required: boolean;
+export interface UpdateAttributeOptionRequest {
+  value?: string;
+  hex_color?: string | null;
+  position?: number;
 }
 
 // Espejo de AdvertisementTargetType. undefined = anuncio manual clásico (button_link a mano).
@@ -68,10 +74,8 @@ interface AdvertisementTargetFields {
   max_age_days?: number;
 }
 
+// El anuncio es un banner visual: solo imágenes + navegación/targeting, sin texto.
 export interface CreateAdvertisementRequest extends AdvertisementTargetFields {
-  title: string;
-  description?: string;
-  button_text?: string;
   // Solo se usa sin target_type; con uno, el backend calcula el destino.
   button_link?: string;
   order: number;
@@ -84,9 +88,6 @@ export interface CreateAdvertisementRequest extends AdvertisementTargetFields {
 
 // PATCH parcial: un campo ausente (undefined) = "no tocar". Las imágenes ausentes se conservan.
 export interface UpdateAdvertisementRequest extends AdvertisementTargetFields {
-  title?: string;
-  description?: string;
-  button_text?: string;
   button_link?: string;
   order?: number;
   is_active?: boolean;

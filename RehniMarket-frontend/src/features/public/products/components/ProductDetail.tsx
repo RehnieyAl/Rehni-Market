@@ -11,6 +11,8 @@ import ProductRatingBadge from "./ProductRatingBadge";
 import ProductPrice from "./ProductPrice";
 import ProductTabs from "./ProductTabs";
 import RelatedProducts from "./RelatedProducts";
+import VariantAttributePicker from "./VariantAttributePicker";
+import { deriveVariantAxes, firstLiveVariant, resolveVariant } from "../utils/variantAxes";
 import ReviewsSection from "@/features/public/reviews/components/ReviewsSection";
 import ReportModal from "@/features/reports/components/ReportModal";
 import { useRole } from "@/hooks/useRole";
@@ -19,13 +21,12 @@ import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 import { useRedirectToLogin } from "@/features/public/auth/hooks/useRedirectToLogin";
 
-import type { PublicProductDetail, PublicProductVariant } from "../types/response";
+import type { PublicProductDetail } from "../types/response";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  // Solo el rol USER puede comprar; un visitante sin sesión sí ve el botón (puede registrarse).
   const { role } = useRole();
   const canPurchase = role === null || role === "user";
 
@@ -34,20 +35,14 @@ export default function ProductDetail() {
   const redirectToLogin = useRedirectToLogin();
   const [addingToCart, setAddingToCart] = useState(false);
 
-  // "Reportar producto": reutiliza ReportModal. Solo el rol USER; sin sesión va a login.
   const [reportModalOpen, setReportModalOpen] = useState(false);
 
   const [product, setProduct] = useState<PublicProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  // Variante activa; null = datos base del producto.
-  const [activeVariant, setActiveVariant] = useState<PublicProductVariant | null>(null);
-
-  // Distingue "aún no elegí color" de "elegí la opción base"; ambos dejan activeVariant en null.
-  const [hasChosenColor, setHasChosenColor] = useState(false);
-
-  // Miniatura elegida a mano; si es null o ya no está en la galería activa, se usa la principal.
+  // { [attributeName]: value } — la selección del comprador por cada eje de variante.
+  const [selected, setSelected] = useState<Record<string, string>>({});
   const [manualImage, setManualImage] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
 
@@ -65,21 +60,15 @@ export default function ProductDetail() {
 
         if (!cancelled) {
           setProduct(response);
-          setActiveVariant(null);
-          setHasChosenColor(false);
+          setSelected({});
           setQuantity(1);
           setManualImage(null);
         }
       } catch (error) {
         console.error("Error cargando el producto:", error);
-
-        if (!cancelled) {
-          setNotFound(true);
-        }
+        if (!cancelled) setNotFound(true);
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     };
 
@@ -90,123 +79,132 @@ export default function ProductDetail() {
     };
   }, [id]);
 
-  // Datos en pantalla: los de la variante elegida o, por defecto, los del producto base.
-  const images = useMemo(
-    () => (activeVariant ? activeVariant.images : product?.images ?? []),
-    [activeVariant, product],
+  const axes = useMemo(
+    () => (product ? deriveVariantAxes(product.variants) : []),
+    [product],
   );
 
-  const specifications = activeVariant
-    ? activeVariant.specifications
-    : product?.specifications ?? [];
+  const requiresVariant = axes.length > 0;
+  const allAxesChosen = axes.length > 0 && axes.every((axis) => selected[axis.name]);
+
+  const activeVariant = useMemo(() => {
+    if (!product || !allAxesChosen) return null;
+    return resolveVariant(product.variants, axes, selected);
+  }, [product, axes, selected, allAxesChosen]);
+
+  // La combinación elegida no corresponde a ninguna variante existente.
+  const invalidCombination = allAxesChosen && activeVariant === null;
+
+  // Primera variante viva: SOLO fuente de la imagen inicial, no se auto-selecciona
+  // (`activeVariant` sigue null hasta que el usuario elige todos los ejes).
+  const firstVariant = useMemo(
+    () => (product ? firstLiveVariant(product.variants) : null),
+    [product],
+  );
+
+  // Galería (fuente primaria -> fallbacks, nunca queda vacía):
+  //  1. Variante activa (selección completa y válida) con imágenes propias.
+  //  2. Selección parcial / combinación inexistente: una variante que coincida con
+  //     TODOS los ejes ya elegidos y tenga imágenes (solo representación visual).
+  //  3. Sin selección: imágenes de la PRIMERA VARIANTE VIVA (imagen inicial del producto).
+  //  4. Fallback heredado: imágenes generales del producto padre.
+  const images = useMemo(() => {
+    if (!product) return [];
+
+    if (activeVariant && activeVariant.images.length > 0) {
+      return activeVariant.images;
+    }
+
+    const chosen = Object.entries(selected).filter(([, value]) => value);
+    if (chosen.length > 0) {
+      const representative = product.variants.find((variant) => {
+        if (variant.images.length === 0) return false;
+        const optionValues = Object.fromEntries(
+          variant.options.map((option) => [option.attribute, option.value]),
+        );
+        return chosen.every(([name, value]) => optionValues[name] === value);
+      });
+      if (representative) return representative.images;
+    }
+
+    if (firstVariant && firstVariant.images.length > 0) {
+      return firstVariant.images;
+    }
+
+    return product.images ?? [];
+  }, [activeVariant, product, selected, firstVariant]);
+
+  const attributePairs = useMemo(() => {
+    if (!product) return [];
+    return product.attributes.map((pair) => ({ name: pair.attribute, value: pair.value }));
+  }, [product]);
 
   const stock = activeVariant ? activeVariant.stock : product?.stock ?? 0;
-
-  // Cada variante tiene su propio descuento, independiente del producto base.
   const displayPrice = activeVariant ? activeVariant.price : product?.price ?? "0";
-
   const displayFinalPrice = activeVariant
     ? activeVariant.final_price
     : product?.final_price ?? "0";
-
   const discountEnabled = activeVariant
     ? activeVariant.discount_enabled
     : product?.discount_enabled ?? false;
-
   const discountPercentage = activeVariant
     ? activeVariant.discount_percentage
     : product?.discount_percentage ?? null;
 
-  // Colores seleccionables: base + variantes con color. Las agotadas se marcan outOfStock, no se ocultan.
-  const colorOptions = useMemo(() => {
-    if (!product) return [];
-
-    const options: {
-      key: string;
-      variant: PublicProductVariant | null;
-      hex: string;
-      name: string;
-      outOfStock: boolean;
-    }[] = [];
-
-    if (product.color) {
-      options.push({
-        key: "base",
-        variant: null,
-        hex: product.color.hex_color,
-        name: product.color.name,
-        outOfStock: product.stock <= 0,
-      });
-    }
-
-    for (const variant of product.variants) {
-      if (variant.color) {
-        options.push({
-          key: variant.id,
-          variant,
-          hex: variant.color.hex_color,
-          name: variant.color.name,
-          outOfStock: variant.stock <= 0,
-        });
-      }
-    }
-
-    return options;
-  }, [product]);
-
-  // Antes de elegir color, `stock` es el del producto base (puede ser 0 aunque
-  // haya variantes con stock); solo se usa para el mensaje de stock inicial.
-  const anyVariantInStock = colorOptions.some((option) => !option.outOfStock);
-
-  // Nombre del color activo para "Color: X"; solo tras una elección explícita (incluida la swatch base).
-  const selectedColorName = hasChosenColor
-    ? (activeVariant?.color?.name ?? product?.color?.name ?? null)
-    : null;
+  const anyVariantInStock = useMemo(
+    () => (product?.variants ?? []).some((variant) => variant.stock > 0),
+    [product],
+  );
 
   const selectedImage = useMemo(() => {
     if (manualImage && images.some((image) => image.url === manualImage)) {
       return manualImage;
     }
-
     const mainImage = images.find((image) => image.is_main) ?? images[0];
-
     return mainImage?.url ?? null;
   }, [manualImage, images]);
 
-  // Con variantes, elegir color = elegir variante.
-  const requiresVariant = (product?.variants.length ?? 0) > 0;
-  // hasChosenColor (no activeVariant !== null): la swatch base también habilita la compra.
-  const canAddToCart = !requiresVariant || hasChosenColor;
+  const canAddToCart = !requiresVariant || activeVariant !== null;
+
+  // Selector jerárquico por el orden de `axes`: al cambiar el eje del índice N se
+  // conservan los ejes anteriores (< N), se fija el nuevo valor en N y se limpian
+  // TODOS los posteriores (> N), aunque siguieran siendo combinables.
+  const handleAxisChange = (attributeName: string, value: string) => {
+    const axisIndex = axes.findIndex((axis) => axis.name === attributeName);
+    const priorAxisNames = axes
+      .slice(0, axisIndex < 0 ? 0 : axisIndex)
+      .map((axis) => axis.name);
+
+    setSelected((prev) => {
+      const next: Record<string, string> = {};
+      priorAxisNames.forEach((name) => {
+        if (prev[name]) next[name] = prev[name];
+      });
+      next[attributeName] = value;
+      return next;
+    });
+    setQuantity(1);
+    setManualImage(null);
+  };
 
   const handleAddToCart = async (redirectToCart: boolean) => {
     if (!product) return;
 
     if (role === null) {
-      // Conserva /products/:id como destino de retorno tras el login.
       redirectToLogin();
       return;
     }
 
-    if (!canAddToCart) return;
-
-    // Guardia defensiva: los botones ya se deshabilitan con stock <= 0.
-    if (stock <= 0) return;
+    if (!canAddToCart || stock <= 0) return;
 
     try {
       setAddingToCart(true);
-
       await addItem(product.id, quantity, activeVariant?.id);
-
-      if (redirectToCart) {
-        navigate("/cart");
-      }
+      if (redirectToCart) navigate("/cart");
     } catch (error) {
       console.error("Error agregando al carrito:", error);
 
       const detail = axios.isAxiosError(error) ? error.response?.data?.detail : undefined;
-
-      // INSUFFICIENT_STOCK: si la cantidad pedida iguala lo que ya hay en el carrito,
-      // el mensaje del backend puede confundir.
       const message =
         detail?.code === ErrorCode.INSUFFICIENT_STOCK
           ? (detail?.message ?? "Ya tienes la cantidad máxima disponible en tu carrito.")
@@ -223,13 +221,10 @@ export default function ProductDetail() {
       redirectToLogin();
       return;
     }
-
     setReportModalOpen(true);
   };
 
-  if (loading) {
-    return <ProductDetailSkeleton />;
-  }
+  if (loading) return <ProductDetailSkeleton />;
 
   if (notFound || !product) {
     return (
@@ -237,7 +232,6 @@ export default function ProductDetail() {
         <p className="text-lg font-medium text-gray-700">
           No encontramos este producto.
         </p>
-
         <Link
           to="/products"
           className="mt-4 inline-flex items-center gap-2 text-sm text-[#6D0F2D] hover:underline"
@@ -299,6 +293,11 @@ export default function ProductDetail() {
             />
 
             <div className="mt-4">
+              {requiresVariant && !activeVariant && (
+                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                  Desde
+                </p>
+              )}
               <ProductPrice
                 price={displayPrice}
                 discountEnabled={discountEnabled}
@@ -314,72 +313,49 @@ export default function ProductDetail() {
               isVerified={product.company_is_verified}
             />
 
-            <div className="mt-6 flex flex-wrap items-start justify-between gap-6">
-              {colorOptions.length > 0 && (
-                <div>
-                  <h3 className="mb-2 text-sm font-semibold text-gray-900">
-                    Color{selectedColorName ? `: ${selectedColorName}` : ""}
-                  </h3>
+            {axes.length > 0 && (
+              <div className="mt-6">
+                <VariantAttributePicker
+                  variants={product.variants}
+                  selected={selected}
+                  onChange={handleAxisChange}
+                />
+              </div>
+            )}
 
-                  <div className="flex flex-wrap gap-3">
-                    {colorOptions.map((option) => (
-                      <button
-                        key={option.key}
-                        type="button"
-                        title={option.outOfStock ? `${option.name} (Sin stock)` : option.name}
-                        disabled={option.outOfStock}
-                        onClick={() => {
-                          if (option.outOfStock) return;
+            <div className="mt-6">
+              <h3 className="mb-2 text-sm font-semibold text-gray-900">Cantidad</h3>
 
-                          setActiveVariant(option.variant);
-                          setHasChosenColor(true);
-                          setQuantity(1);
-                          setManualImage(null);
-                        }}
-                        className={`h-9 w-9 rounded-full border-2 transition ${
-                          option.outOfStock
-                            ? "cursor-not-allowed border-gray-200 opacity-40"
-                            : (activeVariant?.id ?? "base") === option.key
-                              ? "border-[#6D0F2D]"
-                              : "border-gray-300 hover:border-gray-400"
-                        }`}
-                        style={{ backgroundColor: option.hex }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+              <div className="flex w-fit items-center rounded-xl border border-gray-300">
+                <button
+                  type="button"
+                  className="px-3.5 py-2 text-gray-600 hover:bg-gray-50"
+                  onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                >
+                  −
+                </button>
 
-              <div>
-                <h3 className="mb-2 text-sm font-semibold text-gray-900">Cantidad</h3>
+                <span className="w-10 text-center text-sm font-medium">{quantity}</span>
 
-                <div className="flex w-fit items-center rounded-xl border border-gray-300">
-                  <button
-                    type="button"
-                    className="px-3.5 py-2 text-gray-600 hover:bg-gray-50"
-                    onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                  >
-                    −
-                  </button>
-
-                  <span className="w-10 text-center text-sm font-medium">{quantity}</span>
-
-                  <button
-                    type="button"
-                    className="px-3.5 py-2 text-gray-600 hover:bg-gray-50"
-                    onClick={() => setQuantity((prev) => Math.min(stock || 1, prev + 1))}
-                  >
-                    +
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className="px-3.5 py-2 text-gray-600 hover:bg-gray-50"
+                  onClick={() => setQuantity((prev) => Math.min(stock || 1, prev + 1))}
+                >
+                  +
+                </button>
               </div>
             </div>
 
             <p className="mt-4 text-sm">
-              {requiresVariant && !hasChosenColor ? (
+              {invalidCombination ? (
+                <span className="font-semibold text-red-600">
+                  Esa combinación no está disponible.
+                </span>
+              ) : requiresVariant && !allAxesChosen ? (
                 anyVariantInStock ? (
                   <span className="text-gray-500">
-                    Selecciona un color para ver el stock disponible.
+                    Selecciona una opción para ver el stock disponible.
                   </span>
                 ) : (
                   <span className="font-semibold text-red-600">Sin stock</span>
@@ -394,12 +370,19 @@ export default function ProductDetail() {
               )}
             </p>
 
+            {activeVariant?.sku && (
+              <p className="mt-1 text-sm text-gray-500">
+                SKU:{" "}
+                <span className="font-medium text-gray-700">{activeVariant.sku}</span>
+              </p>
+            )}
+
             <div className="mt-6 flex flex-col gap-3">
               {canPurchase ? (
                 <>
-                  {requiresVariant && !hasChosenColor && (
+                  {requiresVariant && !allAxesChosen && (
                     <p className="text-sm text-amber-600">
-                      Selecciona un color antes de continuar.
+                      Selecciona todas las opciones antes de continuar.
                     </p>
                   )}
 
@@ -433,7 +416,7 @@ export default function ProductDetail() {
       <div className="mt-12">
         <ProductTabs
           description={product.descripcion}
-          specifications={specifications}
+          attributes={attributePairs}
           reviewCount={product.review_count}
         />
       </div>

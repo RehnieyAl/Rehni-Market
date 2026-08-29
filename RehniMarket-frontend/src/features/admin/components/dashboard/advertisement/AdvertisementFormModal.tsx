@@ -27,9 +27,6 @@ const TARGET_TYPE_OPTIONS: { value: AdvertisementTargetType; label: string }[] =
 ];
 
 export interface AdvertisementFormValues {
-  title: string;
-  description: string;
-  buttonText: string;
   // Solo se usa cuando targetType es "" (manual clásico).
   buttonLink: string;
   order: number;
@@ -68,9 +65,6 @@ export default function AdvertisementFormModal({
   onClose,
   onSubmit,
 }: AdvertisementFormModalProps) {
-  const [title, setTitle] = useState(advertisement?.title ?? "");
-  const [description, setDescription] = useState(advertisement?.description ?? "");
-  const [buttonText, setButtonText] = useState(advertisement?.button_text ?? "");
   const [buttonLink, setButtonLink] = useState(advertisement?.button_link ?? "");
   const [order, setOrder] = useState(advertisement?.order ?? 0);
   const [isActive, setIsActive] = useState(advertisement?.is_active ?? true);
@@ -222,7 +216,7 @@ export default function AdvertisementFormModal({
     }
   })();
 
-  const isValid = title.trim().length >= 2 && (isEditing || image !== null) && isTargetValid;
+  const isValid = (isEditing || image !== null) && isTargetValid;
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -231,9 +225,6 @@ export default function AdvertisementFormModal({
 
     // Solo viaja la config del tipo elegido; los campos de los otros tipos quedan sin usar.
     onSubmit({
-      title: title.trim(),
-      description: description.trim(),
-      buttonText: buttonText.trim(),
       buttonLink: buttonLink.trim(),
       order,
       isActive,
@@ -361,39 +352,6 @@ export default function AdvertisementFormModal({
                 Si no se sube una imagen móvil, se usará la imagen
                 desktop/tablet en pantallas pequeñas.
               </p>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Título
-              </label>
-
-              <input
-                type="text"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                minLength={2}
-                maxLength={150}
-                required
-                autoFocus
-                placeholder="Ej: Nueva colección"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Descripción
-              </label>
-
-              <textarea
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                rows={3}
-                maxLength={2000}
-                placeholder="Descubre nuestros productos"
-                className="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20"
-              />
             </div>
 
             <div>
@@ -591,53 +549,30 @@ export default function AdvertisementFormModal({
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Texto del botón
-                </label>
-
-                <input
-                  type="text"
-                  value={buttonText}
-                  onChange={(event) => setButtonText(event.target.value)}
-                  maxLength={50}
-                  placeholder="Ver productos"
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20"
-                />
-              </div>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Destino
+              </label>
 
               {targetType === "" ? (
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">
-                    Destino
-                  </label>
-
-                  <input
-                    type="text"
-                    value={buttonLink}
-                    onChange={(event) => setButtonLink(event.target.value)}
-                    maxLength={255}
-                    placeholder="/products"
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20"
-                  />
-                </div>
+                <input
+                  type="text"
+                  value={buttonLink}
+                  onChange={(event) => setButtonLink(event.target.value)}
+                  maxLength={255}
+                  placeholder="/products"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20"
+                />
               ) : (
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">
-                    Destino
-                  </label>
-
-                  <div className="flex h-[46px] items-center rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 text-sm text-gray-500">
-                    Se calcula automáticamente
-                  </div>
+                <div className="flex h-[46px] items-center rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 text-sm text-gray-500">
+                  Se calcula automáticamente
                 </div>
               )}
             </div>
 
             <p className="-mt-2 text-xs text-gray-400">
               {targetType === ""
-                ? "Si dejas el texto o el destino vacíos, el anuncio no mostrará botón."
+                ? "Al hacer clic en el banner se abre este destino. Si lo dejas vacío, el banner no será clicable."
                 : "El destino se calcula solo según el tipo de anuncio - ya no se escribe a mano."}
             </p>
 

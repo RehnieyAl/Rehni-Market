@@ -6,6 +6,8 @@ import ScrollToTop from "@/shared/components/ScrollToTop";
 import Home from "../pages/public/Home";
 import Categories from "../pages/public/Categories";
 import Products from "../pages/public/Products";
+import Offers from "../pages/public/Offers";
+import NewProducts from "../pages/public/NewProducts";
 import ProductsDetail from "../pages/public/ProductsDetail";
 import CompanyProfilePage from "../pages/public/CompanyProfile";
 import CartPage from "../pages/public/Cart";
@@ -31,6 +33,8 @@ export default function AppRouter() {
         <Route path="/" element={<Home />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/products" element={<Products />} />
+        <Route path="/offers" element={<Offers />} />
+        <Route path="/new" element={<NewProducts />} />
         <Route path="/products/:id" element={<ProductsDetail />} />
         <Route path="/company/:companyId" element={<CompanyProfilePage />} />
         <Route path="/cart" element={<CartPage />} />

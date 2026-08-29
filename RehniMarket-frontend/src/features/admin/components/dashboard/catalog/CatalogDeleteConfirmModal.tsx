@@ -50,7 +50,7 @@ export default function CatalogDeleteConfirmModal({
                 <span className="font-semibold text-gray-900">
                   {catalogName}
                 </span>
-                . Si tiene especificaciones asociadas, también se eliminarán.
+                . Si tiene atributos asociados, también se eliminarán.
               </p>
 
               <p className="mt-3 text-sm font-medium text-red-600">

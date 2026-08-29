@@ -1,4 +1,4 @@
-from sqlalchemy import String,Numeric,Boolean,Text,ForeignKey,Integer,DateTime
+from sqlalchemy import String, Numeric, Boolean, ForeignKey, Integer, DateTime, Index
 from decimal import Decimal
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -6,9 +6,28 @@ import uuid
 from datetime import datetime
 from app.database.Connection import Base
 
+
 class ProductVariant(Base):
 
     __tablename__ = "product_variants"
+
+    __table_args__ = (
+        # Dos variantes vivas del mismo producto no pueden compartir combinación.
+        Index(
+            "uq_variant_product_combo_active",
+            "product_id",
+            "combo_key",
+            unique=True,
+            postgresql_where="deleted_at IS NULL AND combo_key IS NOT NULL",
+        ),
+        Index(
+            "uq_variant_product_sku_active",
+            "product_id",
+            "sku",
+            unique=True,
+            postgresql_where="deleted_at IS NULL AND sku IS NOT NULL",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -21,8 +40,13 @@ class ProductVariant(Base):
         nullable=False
     )
 
+    sku: Mapped[str | None] = mapped_column(
+        String(64),
+        nullable=True
+    )
+
     price: Mapped[Decimal] = mapped_column(
-        Numeric(10,2),
+        Numeric(10, 2),
         default=0
     )
 
@@ -31,7 +55,13 @@ class ProductVariant(Base):
         default=0
     )
 
-    # Descuento propio de la variante; discount_value es un porcentaje (0-100).
+    # Huella determinista de la combinación de opciones (ver services/variants/combo_key.py).
+    combo_key: Mapped[str | None] = mapped_column(
+        String(64),
+        nullable=True
+    )
+
+    # Descuento propio de la variante.
     discount_enable: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
@@ -39,9 +69,32 @@ class ProductVariant(Base):
     )
 
     discount_value: Mapped[Decimal] = mapped_column(
-        Numeric(10,2),
+        Numeric(10, 2),
         default=0,
         nullable=False
+    )
+
+    # "percent" | "fixed"; NULL se interpreta como "percent" por compatibilidad.
+    discount_type: Mapped[str | None] = mapped_column(
+        String(8),
+        nullable=True
+    )
+
+    discount_starts_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+
+    discount_ends_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True
+    )
+
+    # Soft-delete: una variante comprada nunca se borra físicamente (FK de OrderItem sin CASCADE).
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+        default=None
     )
 
     product_id: Mapped[uuid.UUID] = mapped_column(
@@ -50,15 +103,16 @@ class ProductVariant(Base):
         nullable=False
     )
 
-    color_id: Mapped[uuid.UUID] = mapped_column(
-    UUID(as_uuid=True),
-    ForeignKey("color_variants.id"),
-    nullable=True
+    # Legacy: se conserva mientras se verifica el backfill hacia variant_options.
+    color_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("color_variants.id"),
+        nullable=True
     )
 
     color = relationship(
-    "ColorVariant",
-    back_populates="variants"
+        "ColorVariant",
+        back_populates="variants"
     )
 
     product = relationship(
@@ -73,8 +127,19 @@ class ProductVariant(Base):
     )
 
     specifications = relationship(
-    "VariantSpecification",
-    back_populates="variant",
-    cascade="all, delete"
+        "VariantSpecification",
+        back_populates="variant",
+        cascade="all, delete"
     )
 
+    options = relationship(
+        "VariantOption",
+        back_populates="variant",
+        cascade="all, delete-orphan"
+    )
+
+    attribute_values = relationship(
+        "VariantAttributeValue",
+        back_populates="variant",
+        cascade="all, delete-orphan"
+    )

@@ -16,8 +16,8 @@ from app.schemas.SchemaCommerce.SchemaFavorite import (
     FavoriteProductResponse,
 )
 
-from app.services.NasService import build_media_url
-from app.services.publicService.Products import _compute_price_fields
+from app.services.pricing import resolve_product_card_price
+from app.services.variants.images import product_display_image_url
 
 
 def _require_buyer(role: str):
@@ -42,9 +42,7 @@ def list_favorites_service(user_id: UUID, role: str, database: Session) -> list[
         if not product:
             continue
 
-        final_price, _, discount_enabled = _compute_price_fields(product)
-
-        main_image = next((image for image in product.images if image.is_main), None)
+        card_price = resolve_product_card_price(product)
 
         result.append(
             FavoriteResponse(
@@ -53,11 +51,12 @@ def list_favorites_service(user_id: UUID, role: str, database: Session) -> list[
                 product=FavoriteProductResponse(
                     id=product.id,
                     name=product.name,
-                    image=build_media_url(main_image.url) if main_image else None,
+                    # Misma imagen inicial que el catálogo (primera variante viva).
+                    image=product_display_image_url(product),
                     companyName=product.company.nameCompany,
-                    price=product.price,
-                    finalPrice=final_price,
-                    discountEnabled=discount_enabled,
+                    price=card_price.base_price,
+                    finalPrice=card_price.final_price,
+                    discountEnabled=card_price.discount_enabled,
                     isActive=product.is_active,
                 ),
             )

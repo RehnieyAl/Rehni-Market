@@ -20,7 +20,8 @@ from app.schemas.SchemaCommerce.SchemaOrder import CheckoutRequest, CheckoutSumm
 from app.services.commerce.CartService import get_or_create_cart, _require_buyer
 from app.services.commerce.OrderService import _to_order_response
 from app.services.commerce.WalletService import charge_wallet, get_or_create_wallet
-from app.services.publicService.Products import _compute_price_fields
+from app.services.pricing import resolve_price
+from app.services.variants import attributes as attrs
 from app.services.email.OrderEmailService import send_order_created_email
 
 # IVA de Colombia; tasa fija sobre el subtotal, igual para todo el checkout.
@@ -84,6 +85,15 @@ def checkout_service(
 
             variant = cart_item.variant
 
+            if variant is not None and (
+                variant.deleted_at is not None or variant.product_id != product.id
+            ):
+                api_error(
+                    409,
+                    ErrorCodes.PRODUCT_NOT_FOUND,
+                    f"Una variante de '{product.name}' ya no está disponible.",
+                )
+
             available_stock = variant.stock if variant else product.stock
 
             if cart_item.quantity > available_stock:
@@ -93,17 +103,16 @@ def checkout_service(
                     f"'{product.name}' ya no tiene suficiente stock disponible.",
                 )
 
-            priced_entity = variant if variant else product
-            unit_price, _, discount_enabled = _compute_price_fields(priced_entity)
+            price = resolve_price(product, variant)
 
             items_by_company[product.company_id].append(
                 {
                     "cart_item": cart_item,
                     "product": product,
                     "variant": variant,
-                    "unit_price": unit_price,
+                    "unit_price": price.final_price,
                     # Precio antes del descuento, solo si había descuento activo en este instante.
-                    "original_unit_price": priced_entity.price if discount_enabled else None,
+                    "original_unit_price": price.base_price if price.discount_enabled else None,
                 }
             )
 
@@ -167,6 +176,11 @@ def checkout_service(
                         variant_id=variant.id if variant else None,
                         product_name=product.name,
                         variant_name=variant.name if variant else None,
+                        attributes_snapshot=(
+                            attrs.variant_snapshot(variant) or None
+                            if variant
+                            else None
+                        ),
                         unit_price=unit_price,
                         original_unit_price=entry["original_unit_price"],
                         quantity=cart_item.quantity,

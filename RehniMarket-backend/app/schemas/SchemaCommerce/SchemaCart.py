@@ -20,6 +20,11 @@ class CartItemColorResponse(BaseModel):
     hex_color: str
 
 
+class CartItemOptionResponse(BaseModel):
+    attribute: str
+    value: str
+
+
 class CartItemResponse(BaseModel):
     id: UUID
     productId: UUID
@@ -27,13 +32,17 @@ class CartItemResponse(BaseModel):
 
     name: str
     variantName: str | None
+    sku: str | None = None
     image: str | None
     color: CartItemColorResponse | None
+    options: list[CartItemOptionResponse] = []
 
     companyId: UUID
     companyName: str
 
+    basePrice: Decimal
     unitPrice: Decimal
+    discountPercentage: int | None = None
     quantity: int
     subtotal: Decimal
 

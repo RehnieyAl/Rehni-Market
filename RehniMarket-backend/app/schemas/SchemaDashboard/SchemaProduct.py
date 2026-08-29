@@ -21,9 +21,9 @@ class ProductImageResponse(BaseModel):
     }
 
 
-class ProductSpecificationResponse(BaseModel):
-    id: UUID
-    specification_template_id: UUID
+class ProductAttributePairResponse(BaseModel):
+    attribute_id: UUID
+    attribute_name: str
     value: str
 
     model_config = {
@@ -47,6 +47,9 @@ class ProductDetailResponse(BaseModel):
     price: Decimal
     discount_enable: bool
     discount_value: Decimal
+    discount_type: str | None = None
+    discount_starts_at: datetime | None = None
+    discount_ends_at: datetime | None = None
     stock: int
     has_variants: bool
     descripcion: str
@@ -63,7 +66,7 @@ class ProductDetailResponse(BaseModel):
     main_color: ProductColorResponse | None
 
     images: list[ProductImageResponse]
-    specifications: list[ProductSpecificationResponse]
+    attributes: list[ProductAttributePairResponse]
 
 
 class UpdateProductRequest(BaseModel):
@@ -81,7 +84,7 @@ class UpdateProductRequest(BaseModel):
     # clearMainColor como bandera aparte: un Form vacío no sirve para "limpiar".
     mainColorId: str | None = None
     clearMainColor: bool = False
-    # JSON: [{specificationTemplateId, value}, ...]
+    # JSON: [{attributeId, value}, ...] contra atributos role="product" del catálogo.
     technicalSpecProduct: str | None = None
     # Id de una imagen ya existente que pasa a ser la principal.
     mainImageId: str | None = None
