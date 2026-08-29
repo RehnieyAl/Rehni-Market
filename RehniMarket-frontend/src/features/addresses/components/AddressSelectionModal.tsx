@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { MapPin, Plus } from "lucide-react";
 
-import Modal from "@/shared/components/modal";
 import AddressForm from "./AddressForm";
 import { getAddresses } from "../api/addressService";
 import { useAlert } from "@/shared/components/alert/useAlert";
+import { Modal, Button, EmptyState, Spinner } from "@/shared/components/ui";
 
 import type { Address } from "../types/response";
 
@@ -76,10 +76,25 @@ export default function AddressSelectionModal({
     onClose();
   };
 
+  const canContinue = !loading && !showForm && addresses.length > 0;
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Dirección de entrega">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Dirección de entrega"
+      footer={
+        canContinue ? (
+          <Button fullWidth onClick={handleContinue}>
+            Continuar
+          </Button>
+        ) : undefined
+      }
+    >
       {loading ? (
-        <p className="py-8 text-center text-sm text-gray-500">Cargando direcciones...</p>
+        <div className="flex items-center justify-center gap-2 py-10 text-sm text-gray-500">
+          <Spinner /> Cargando direcciones...
+        </div>
       ) : showForm ? (
         <AddressForm
           onSaved={handleSaved}
@@ -89,13 +104,12 @@ export default function AddressSelectionModal({
       ) : (
         <div>
           {addresses.length === 0 ? (
-            <div className="flex flex-col items-center py-8 text-center">
-              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-                <MapPin className="h-8 w-8 text-red-700" />
-              </div>
-
-              <p className="text-gray-700">No tienes direcciones registradas.</p>
-            </div>
+            <EmptyState
+              variant="plain"
+              icon={<MapPin size={22} />}
+              title="No tienes direcciones registradas"
+              description="Agrega una para continuar con tu compra."
+            />
           ) : (
             <div className="space-y-2">
               {addresses.map((address) => (
@@ -135,20 +149,11 @@ export default function AddressSelectionModal({
 
           <button
             onClick={() => setShowForm(true)}
-            className="mt-4 flex items-center gap-2 text-sm font-medium text-red-700 hover:underline"
+            className="mt-4 flex items-center gap-2 text-sm font-medium text-primary hover:underline"
           >
             <Plus size={16} />
             Nueva dirección
           </button>
-
-          {addresses.length > 0 && (
-            <button
-              onClick={handleContinue}
-              className="mt-6 w-full rounded-xl bg-red-700 py-3 text-sm font-medium text-white hover:bg-red-800"
-            >
-              Continuar
-            </button>
-          )}
         </div>
       )}
     </Modal>

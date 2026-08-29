@@ -33,12 +33,17 @@ from app.middleware.RateLimitMiddleware import rate_limit_middleware
 from app.middleware.CorsMiddleware import setup_cors
 from app.core.ErrorCodes import ErrorCodes
 from app.database.Connection import SessionLocal
+from app.services.NasService import ensure_bucket
 from app.utils.seed import run_seed
 from app.Config import config
 
 
 @asynccontextmanager
 async def lifespan(app):
+    # El bucket de MinIO se prepara aquí (en el arranque), no al importar
+    # NasService: importar no debe hacer I/O de red.
+    ensure_bucket()
+
     db = SessionLocal()
 
     if config.RUN_SEED:

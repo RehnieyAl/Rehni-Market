@@ -42,7 +42,7 @@ export default function ProductTabs({
             }
             className={`shrink-0 border-b-2 py-4 text-sm font-medium transition ${
               tab === item.id
-                ? "border-[#6D0F2D] text-[#6D0F2D]"
+                ? "border-primary text-primary"
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >

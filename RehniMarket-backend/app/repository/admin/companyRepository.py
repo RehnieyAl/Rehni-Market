@@ -145,7 +145,7 @@ def get_company_by_id(
 
     banner = (
         build_media_url(
-            company.CompanyBanner
+            f"uploads/{company.CompanyBanner}"
         )
         if company.CompanyBanner
         else None

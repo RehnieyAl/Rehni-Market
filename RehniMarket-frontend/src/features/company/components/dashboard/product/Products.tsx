@@ -20,6 +20,8 @@ import {
 import { getProductsSummary } from "@/features/company/api/companyService";
 import ConfirmModal from "@/shared/components/ConfirmModal";
 import { useAlert } from "@/shared/components/alert/useAlert";
+import { Badge, Button, EmptyState, Input, Skeleton } from "@/shared/components/ui";
+import StatCard from "@/shared/components/dashboard/StatCard";
 
 import type {
   MyProductResponse,
@@ -188,110 +190,104 @@ export default function Products() {
 
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Productos
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Productos</h1>
 
-          <p className="mt-2 text-gray-500">
+          <p className="mt-1 text-sm text-gray-500">
             Administra todos los productos de tu empresa.
           </p>
         </div>
 
-        <button
-          onClick={() => setOpenProductModal(true)}
-          className="flex items-center gap-2 rounded-xl bg-red-700 px-5 py-3 text-white hover:bg-red-800"
-        >
-          <Plus size={18} />
+        <Button leadingIcon={<Plus size={18} />} onClick={() => setOpenProductModal(true)}>
           Nuevo producto
-        </button>
+        </Button>
       </div>
 
-      <section className="mt-8 grid grid-cols-2 gap-5 md:grid-cols-4">
-        <StatsCard
+      <section className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <StatCard
+          size="sm"
           title="Productos publicados"
-          value={summaryLoading ? "..." : String(summary?.total ?? 0)}
+          value={summaryLoading ? "…" : String(summary?.total ?? 0)}
         />
 
-        <StatsCard
+        <StatCard
+          size="sm"
           title="Activos"
-          value={summaryLoading ? "..." : String(summary?.active ?? 0)}
+          value={summaryLoading ? "…" : String(summary?.active ?? 0)}
         />
 
-        <StatsCard
+        <StatCard
+          size="sm"
           title="Agotados"
-          value={summaryLoading ? "..." : String(summary?.out_of_stock ?? 0)}
+          value={summaryLoading ? "…" : String(summary?.out_of_stock ?? 0)}
         />
 
-        <StatsCard
+        <StatCard
+          size="sm"
           title="Ocultos"
-          value={summaryLoading ? "..." : String(summary?.hidden ?? 0)}
+          value={summaryLoading ? "…" : String(summary?.hidden ?? 0)}
         />
       </section>
 
-      <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-        <h2 className="text-xl font-semibold">
-          Lista de productos
-        </h2>
+      <section className="mt-8 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
+        <h2 className="text-lg font-semibold text-gray-900">Lista de productos</h2>
 
-        <div className="mt-6 flex items-center gap-3 rounded-xl border border-gray-200 px-4 py-3">
-          <Search
-            size={20}
-            className="text-gray-400"
-          />
-
-          <input
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            placeholder="Buscar producto..."
-            className="w-full outline-none"
-          />
-        </div>
+        <Input
+          className="mt-6"
+          type="search"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          placeholder="Buscar producto…"
+          aria-label="Buscar producto"
+          leadingIcon={<Search size={16} />}
+        />
 
         <div className="mt-8 max-h-[600px] overflow-y-auto pr-2">
           <div className="grid gap-5">
             {loading ? (
-              <p className="py-5 text-center text-gray-500">
-                Cargando productos...
-              </p>
+              Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton key={index} className="h-28 rounded-card" />
+              ))
             ) : products.length === 0 ? (
-              <p className="py-5 text-center text-gray-500">
-                No se encontraron productos.
-              </p>
+              <EmptyState
+                variant="plain"
+                title="No se encontraron productos"
+                description="Ajusta la búsqueda o crea un producto nuevo."
+              />
             ) : (
               products.map((product) => (
                 <div
                   key={product.id}
-                  className="flex items-center justify-between rounded-2xl border border-gray-200 p-5 transition hover:shadow-md"
+                  className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 p-5 shadow-card transition hover:shadow-pop"
                 >
-                  <div className="flex items-center gap-5">
+                  <div className="flex min-w-0 items-center gap-5">
                     {/* Imagen inicial = primera variante viva (la resuelve el backend). */}
                     {product.image ? (
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="h-20 w-20 rounded-xl object-cover"
+                        className="h-20 w-20 shrink-0 rounded-control object-cover"
                       />
                     ) : (
-                      <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-dashed border-gray-300 text-gray-300">
+                      <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-control border border-dashed border-gray-300 text-gray-300">
                         <ImageOff size={22} />
                       </div>
                     )}
 
-                    <div>
+                    <div className="min-w-0">
                       <h3 className="font-semibold text-gray-900">
                         {product.name}
                       </h3>
 
-                      <p className="text-sm text-gray-500">
+                      <p className="line-clamp-1 text-sm text-gray-500">
                         {product.description}
                       </p>
 
-                      <div className="mt-3 flex gap-4 text-sm">
+                      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                         <span className="text-gray-600">
                           {product.category}
                         </span>
@@ -304,26 +300,26 @@ export default function Products() {
                           Stock: {product.stock}
                         </span>
 
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs ${
+                        <Badge
+                          tone={
                             product.deleted_at
-                              ? "bg-red-100 text-red-700"
+                              ? "danger"
                               : product.is_active
-                                ? "bg-green-100 text-green-700"
-                                : "bg-yellow-100 text-yellow-700"
-                          }`}
+                                ? "success"
+                                : "warning"
+                          }
                         >
                           {product.deleted_at
                             ? "Eliminado"
                             : product.is_active
                               ? "Activo"
                               : "Inactivo"}
-                        </span>
+                        </Badge>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     {!product.deleted_at && (
                       <button
                         onClick={() =>
@@ -332,11 +328,16 @@ export default function Products() {
                             !product.is_active,
                           )
                         }
-                        className="rounded-xl p-3 hover:bg-gray-100"
+                        className="flex h-9 w-9 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
                         title={
                           product.is_active
                             ? "Desactivar producto"
                             : "Activar producto"
+                        }
+                        aria-label={
+                          product.is_active
+                            ? `Desactivar ${product.name}`
+                            : `Activar ${product.name}`
                         }
                       >
                         <Eye size={18} />
@@ -348,8 +349,9 @@ export default function Products() {
                         setEditingProductId(product.id);
                         setOpenEditModal(true);
                       }}
-                      className="rounded-xl p-3 hover:bg-gray-100"
+                      className="flex h-9 w-9 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
                       title="Editar producto"
+                      aria-label={`Editar ${product.name}`}
                     >
                       <Pencil size={18} />
                     </button>
@@ -357,8 +359,9 @@ export default function Products() {
                     {!product.deleted_at && (
                       <button
                         onClick={() => setConfirmDeleteId(product.id)}
-                        className="rounded-xl p-3 text-red-700 hover:bg-red-50"
+                        className="flex h-9 w-9 items-center justify-center rounded-control text-danger transition hover:bg-danger-bg"
                         title="Eliminar producto"
+                        aria-label={`Eliminar ${product.name}`}
                       >
                         <Trash2 size={18} />
                       </button>
@@ -371,25 +374,27 @@ export default function Products() {
         </div>
 
         <div className="mt-8 flex items-center justify-center gap-5">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             disabled={page === 1}
             onClick={() => setPage(page - 1)}
-            className="rounded-xl border px-4 py-2 disabled:opacity-50"
           >
             Anterior
-          </button>
+          </Button>
 
           <span className="text-sm text-gray-600">
             Página {page} de {totalPages}
           </span>
 
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             disabled={page === totalPages}
             onClick={() => setPage(page + 1)}
-            className="rounded-xl border px-4 py-2 disabled:opacity-50"
           >
             Siguiente
-          </button>
+          </Button>
         </div>
       </section>
 
@@ -419,26 +424,6 @@ export default function Products() {
         onClose={() => setConfirmDeleteId(null)}
       />
     </>
-  );
-}
-
-function StatsCard({
-  title,
-  value,
-}: {
-  title: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-      <p className="text-sm text-gray-500">
-        {title}
-      </p>
-
-      <h3 className="mt-3 text-3xl font-bold">
-        {value}
-      </h3>
-    </div>
   );
 }
 

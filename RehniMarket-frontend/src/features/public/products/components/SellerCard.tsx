@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { BadgeCheck, ShieldCheck, Store } from "lucide-react";
 
+import { buttonClasses } from "@/shared/components/ui/buttonVariants";
+
 interface SellerCardProps {
   companyId: string;
   companyName: string;
@@ -16,7 +18,7 @@ export default function SellerCard({
   isVerified,
 }: SellerCardProps) {
   return (
-    <div className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-4">
+    <div className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 bg-white p-4">
       <div className="flex min-w-0 items-center gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gray-100">
           {companyLogo ? (
@@ -38,7 +40,7 @@ export default function SellerCard({
           </div>
 
           {isVerified && (
-            <p className="mt-0.5 flex items-center gap-1 text-xs text-green-600">
+            <p className="mt-0.5 flex items-center gap-1 text-xs text-success">
               <ShieldCheck size={12} />
               Empresa verificada
             </p>
@@ -48,7 +50,7 @@ export default function SellerCard({
 
       <Link
         to={`/company/${companyId}`}
-        className="shrink-0 rounded-xl border border-[#6D0F2D] px-4 py-2 text-sm font-medium text-[#6D0F2D] transition hover:bg-[#6D0F2D]/5"
+        className={buttonClasses({ variant: "outline", size: "sm", className: "shrink-0" })}
       >
         Ver tienda
       </Link>

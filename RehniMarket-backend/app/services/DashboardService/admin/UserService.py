@@ -39,6 +39,17 @@ from app.services.DashboardService.admin.DashboarService import (
 )
 
 from app.models.ModelAdminActivity import AdminActivityAction
+from app.services.NasService import build_media_url
+
+
+def _profile_image_url(user) -> str | None:
+    # profileImagen se guarda como object_name; el frontend necesita la URL de /media/proxy
+    # (mismo criterio que MeService._to_me_profile_response), no la ruta interna.
+    return (
+        build_media_url(f"uploads/{user.profileImagen}")
+        if user.profileImagen
+        else None
+    )
 
 
 def get_all_users_service(
@@ -71,7 +82,7 @@ def get_all_users_service(
             fullName=user.fullName,
             email=user.email,
             tell=user.tell,
-            profileImagen=user.profileImagen,
+            profileImagen=_profile_image_url(user),
             role=user.role.name,
             isActive=user.isActive,
             created_at=user.created_at,
@@ -110,7 +121,7 @@ def get_user_by_id_service(
         fullName=user.fullName,
         email=user.email,
         tell=user.tell,
-        profileImagen=user.profileImagen,
+        profileImagen=_profile_image_url(user),
         role=user.role.name,
         isActive=user.isActive,
         created_at=user.created_at,
@@ -240,7 +251,7 @@ def update_admin_user_service(
         fullName=user.fullName,
         email=user.email,
         tell=user.tell,
-        profileImagen=user.profileImagen,
+        profileImagen=_profile_image_url(user),
         role=user.role.name,
         isActive=user.isActive,
         created_at=user.created_at,
@@ -306,7 +317,7 @@ def toggle_admin_user_status_service(
         fullName=user.fullName,
         email=user.email,
         tell=user.tell,
-        profileImagen=user.profileImagen,
+        profileImagen=_profile_image_url(user),
         role=user.role.name,
         isActive=user.isActive,
         created_at=user.created_at,

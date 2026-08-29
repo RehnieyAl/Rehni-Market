@@ -23,12 +23,12 @@ export default function OrderTimeline({ status }: OrderTimelineProps) {
   // Un pedido cancelado muestra un estado propio, no la barra de progreso.
   if (status === "cancelled") {
     return (
-      <div className="flex items-center gap-3 rounded-2xl border border-red-100 bg-red-50 p-4">
+      <div className="flex items-center gap-3 rounded-card border border-red-100 bg-red-50 p-4">
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-600 text-white">
           <X size={16} />
         </span>
 
-        <p className="text-sm font-medium text-red-700">Este pedido fue cancelado.</p>
+        <p className="text-sm font-medium text-danger">Este pedido fue cancelado.</p>
       </div>
     );
   }
@@ -44,7 +44,7 @@ export default function OrderTimeline({ status }: OrderTimelineProps) {
             <div className="flex w-full items-center">
               <span
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-colors sm:h-9 sm:w-9 ${
-                  reached ? "bg-[#6D0F2D] text-white" : "bg-gray-100 text-gray-400"
+                  reached ? "bg-primary text-white" : "bg-gray-100 text-gray-400"
                 }`}
               >
                 {reached ? <Check size={15} /> : index + 1}
@@ -53,7 +53,7 @@ export default function OrderTimeline({ status }: OrderTimelineProps) {
               {!isLast && (
                 <span
                   className={`mx-1 h-0.5 flex-1 transition-colors sm:mx-2 ${
-                    STEPS[index + 1].isReached(status) ? "bg-[#6D0F2D]" : "bg-gray-100"
+                    STEPS[index + 1].isReached(status) ? "bg-primary" : "bg-gray-100"
                   }`}
                 />
               )}

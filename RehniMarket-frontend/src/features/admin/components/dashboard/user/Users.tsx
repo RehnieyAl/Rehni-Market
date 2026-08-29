@@ -9,9 +9,10 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { Badge, Button, EmptyState, ErrorState, Input, TableSkeleton } from "@/shared/components/ui";
 import UserDetailModal from "./UserDetailModal";
 import UserStatusConfirmModal from "./UserStatusConfirmModal";
-import UserDeleteConfirmModal from "./UserDeleteConfirmModal";
+import ConfirmModal from "@/shared/components/ConfirmModal";
 import RechargeWalletModal from "./RechargeWalletModal";
 
 import {
@@ -30,6 +31,7 @@ export default function Users() {
   const [users, setUsers] = useState<AdminUserResponse[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
 
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [previousCursor, setPreviousCursor] = useState<string | null>(null);
@@ -61,6 +63,7 @@ export default function Users() {
     const loadInitialUsers = async () => {
       try {
         setLoading(true);
+        setFailed(false);
 
         const response = await getAdminUsers(
           10,
@@ -79,6 +82,7 @@ export default function Users() {
       } catch (error) {
         if (!cancelled) {
           console.error("Error cargando usuarios:", error);
+          setFailed(true);
         }
       } finally {
         if (!cancelled) {
@@ -101,6 +105,7 @@ export default function Users() {
   ) => {
     try {
       setLoading(true);
+      setFailed(false);
 
       const response = await getAdminUsers(
         10,
@@ -116,6 +121,7 @@ export default function Users() {
       setHasPrevious(response.has_previous);
     } catch (error) {
       console.error("Error cargando usuarios:", error);
+      setFailed(true);
     } finally {
       setLoading(false);
     }
@@ -266,26 +272,18 @@ export default function Users() {
         </p>
       </div>
 
-      <section className="mt-6 shrink-0 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <div className="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-2.5">
-          <Search
-            size={18}
-            className="text-gray-400"
-          />
-
-          <input
-            type="text"
-            value={search}
-            onChange={(event) =>
-              handleSearch(event.target.value)
-            }
-            placeholder="Buscar usuario, correo o teléfono..."
-            className="w-full text-sm outline-none"
-          />
-        </div>
+      <section className="mt-6 shrink-0 rounded-card border border-gray-200 bg-white p-5 shadow-card">
+        <Input
+          type="search"
+          value={search}
+          onChange={(event) => handleSearch(event.target.value)}
+          placeholder="Buscar usuario, correo o teléfono…"
+          aria-label="Buscar usuarios"
+          leadingIcon={<Search size={16} />}
+        />
       </section>
 
-      <section className="mt-6 flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <section className="mt-6 flex flex-col overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
 
         <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-5 py-4">
           <div>
@@ -337,20 +335,24 @@ export default function Users() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="px-5 py-8 text-center text-sm text-gray-500"
-                  >
-                    Cargando usuarios...
+                  <td colSpan={7} className="p-0">
+                    <TableSkeleton rows={6} columns={["26%", "20%", "16%", "14%", "12%", "8%"]} />
+                  </td>
+                </tr>
+              ) : failed && users.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-0">
+                    <ErrorState
+                      variant="plain"
+                      title="No pudimos cargar los usuarios"
+                      onRetry={() => loadUsers()}
+                    />
                   </td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="px-5 py-8 text-center text-sm text-gray-500"
-                  >
-                    No se encontraron usuarios.
+                  <td colSpan={7} className="p-0">
+                    <EmptyState variant="plain" title="No se encontraron usuarios" />
                   </td>
                 </tr>
               ) : (
@@ -420,8 +422,9 @@ export default function Users() {
                               user.id,
                             )
                           }
-                          className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
+                          className="flex h-9 w-9 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
                           title="Ver usuario"
+                          aria-label={`Ver ${user.fullName}`}
                         >
                           <Eye size={18} />
                         </button>
@@ -434,15 +437,20 @@ export default function Users() {
                                 user,
                               )
                             }
-                            className={`rounded-lg p-2 transition ${
+                            className={`flex h-9 w-9 items-center justify-center rounded-control transition ${
                               user.isActive
-                                ? "text-red-600 hover:bg-red-50"
-                                : "text-green-600 hover:bg-green-50"
+                                ? "text-danger hover:bg-danger-bg"
+                                : "text-success hover:bg-success-bg"
                             }`}
                             title={
                               user.isActive
                                 ? "Bloquear usuario"
                                 : "Desbloquear usuario"
+                            }
+                            aria-label={
+                              user.isActive
+                                ? `Bloquear ${user.fullName}`
+                                : `Desbloquear ${user.fullName}`
                             }
                           >
                             {user.isActive ? (
@@ -462,8 +470,9 @@ export default function Users() {
                               setSelectedRechargeUser(user);
                               setRechargeModalOpen(true);
                             }}
-                            className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
+                            className="flex h-9 w-9 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
                             title="Recargar RehniCoin"
+                            aria-label={`Recargar RehniCoin de ${user.fullName}`}
                           >
                             <Coins size={18} />
                           </button>
@@ -478,8 +487,9 @@ export default function Users() {
                               )
                             }
                             disabled={deleteLoading}
-                            className="rounded-lg p-2 text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex h-9 w-9 items-center justify-center rounded-control text-danger transition hover:bg-danger-bg disabled:cursor-not-allowed disabled:opacity-50"
                             title="Eliminar usuario"
+                            aria-label={`Eliminar ${user.fullName}`}
                           >
                             <Trash2 size={18} />
                           </button>
@@ -499,27 +509,23 @@ export default function Users() {
           </span>
 
           <div className="flex items-center gap-2">
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handlePreviousPage}
-              disabled={
-                !hasPrevious || loading
-              }
-              className="rounded-lg border border-gray-200 px-4 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!hasPrevious || loading}
             >
               Anterior
-            </button>
+            </Button>
 
-            <button
-              type="button"
+            <Button
+              size="sm"
               onClick={handleNextPage}
-              disabled={!hasNext || loading}
-              className="rounded-lg bg-[#7A1833] px-4 py-2 text-xs font-medium text-white transition hover:bg-[#64132a] disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={!hasNext}
+              loading={loading}
             >
-              {loading
-                ? "Cargando..."
-                : "Siguiente"}
-            </button>
+              Siguiente
+            </Button>
           </div>
         </div>
       </section>
@@ -548,14 +554,26 @@ export default function Users() {
       )}
 
       {selectedDeleteUser && (
-        <UserDeleteConfirmModal
+        <ConfirmModal
           isOpen={deleteModalOpen}
-          userName={
-            selectedDeleteUser.fullName
-          }
+          title="Eliminar usuario"
+          tone="danger"
+          confirmLabel="Eliminar usuario"
           loading={deleteLoading}
           onConfirm={handleConfirmDelete}
           onClose={handleCloseDeleteModal}
+          message={
+            <>
+              Estás a punto de eliminar la cuenta de{" "}
+              <span className="font-semibold text-gray-900">
+                {selectedDeleteUser.fullName}
+              </span>
+              .{" "}
+              <span className="font-medium text-danger">
+                Esta acción no se puede deshacer.
+              </span>
+            </>
+          }
         />
       )}
 
@@ -580,15 +598,9 @@ function UserStatus({
   active: boolean;
 }) {
   return (
-    <span
-      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-        active
-          ? "bg-green-50 text-green-700"
-          : "bg-red-50 text-red-700"
-      }`}
-    >
+    <Badge tone={active ? "success" : "danger"}>
       {active ? "Activo" : "Bloqueado"}
-    </span>
+    </Badge>
   );
 }
 
@@ -610,9 +622,9 @@ function RoleStatus({
 
   return (
     <span
-      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
         role === "owner"
-          ? "bg-[#6D0F2D] text-white"
+          ? "bg-primary text-primary-fg"
           : role === "admin"
             ? "bg-gray-900 text-white"
             : role === "company"

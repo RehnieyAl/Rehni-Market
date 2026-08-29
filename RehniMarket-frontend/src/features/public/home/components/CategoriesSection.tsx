@@ -59,7 +59,7 @@ export default function CategoriesSection() {
 
         <Link
           to="/categories"
-          className="flex items-center gap-1 text-sm font-medium text-[#6D0F2D] transition hover:text-[#530A20]"
+          className="flex items-center gap-1 text-sm font-medium text-primary transition hover:text-primary-hover"
         >
           Ver todas
           <ArrowRight size={16} />
@@ -67,7 +67,7 @@ export default function CategoriesSection() {
       </div>
 
       {failed ? (
-        <div className="mt-5 rounded-2xl border border-gray-200 p-8 text-center text-sm text-gray-500">
+        <div className="mt-5 rounded-card border border-gray-200 p-8 text-center text-sm text-gray-500">
           No se pudieron cargar las categorías.
         </div>
       ) : (

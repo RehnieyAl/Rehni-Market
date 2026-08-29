@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, SlidersHorizontal, ImageOff, Power } from "lucide-react";
 
 import CatalogFormModal from "./CatalogFormModal";
-import CatalogDeleteConfirmModal from "./CatalogDeleteConfirmModal";
+import ConfirmModal from "@/shared/components/ConfirmModal";
+import { Badge, Button, EmptyState, TableSkeleton } from "@/shared/components/ui";
 import AttributesModal from "./AttributesModal";
 
 import {
@@ -164,19 +165,14 @@ export default function Catalogs() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenCreate}
-          className="flex items-center gap-2 rounded-xl bg-[#7A1833] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#64132a]"
-        >
-          <Plus size={18} />
+        <Button onClick={handleOpenCreate} leadingIcon={<Plus size={18} />}>
           Nueva categoría
-        </button>
+        </Button>
       </div>
 
-      <section className="mt-5 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="h-[420px] overflow-y-auto">
-          <table className="w-full">
+      <section className="mt-5 flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
+        <div className="h-[420px] overflow-y-auto overflow-x-auto">
+          <table className="w-full min-w-[640px]">
             <thead className="sticky top-0 z-10 bg-white">
               <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-400">
                 <th className="px-5 py-3 font-medium">Imagen</th>
@@ -191,14 +187,18 @@ export default function Catalogs() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-sm text-gray-500">
-                    Cargando categorías...
+                  <td colSpan={6} className="p-0">
+                    <TableSkeleton rows={5} columns={["30%", "40%", "14%", "12%"]} />
                   </td>
                 </tr>
               ) : catalogs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-sm text-gray-500">
-                    No hay categorías creadas todavía.
+                  <td colSpan={6} className="p-0">
+                    <EmptyState
+                      variant="plain"
+                      title="Aún no hay categorías"
+                      description="Crea la primera categoría para organizar el catálogo."
+                    />
                   </td>
                 </tr>
               ) : (
@@ -234,15 +234,9 @@ export default function Catalogs() {
                     </td>
 
                     <td className="px-5 py-3 text-center">
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                          catalog.is_active
-                            ? "bg-green-100 text-green-700"
-                            : "bg-gray-100 text-gray-500"
-                        }`}
-                      >
+                      <Badge tone={catalog.is_active ? "success" : "neutral"}>
                         {catalog.is_active ? "Activa" : "Inactiva"}
-                      </span>
+                      </Badge>
                     </td>
 
                     <td className="px-5 py-3">
@@ -250,8 +244,9 @@ export default function Catalogs() {
                         <button
                           type="button"
                           onClick={() => setAttributesCatalog(catalog)}
-                          className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
+                          className="flex h-9 w-9 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
                           title="Atributos y variantes"
+                          aria-label={`Atributos de ${catalog.name}`}
                         >
                           <SlidersHorizontal size={18} />
                         </button>
@@ -260,10 +255,15 @@ export default function Catalogs() {
                           type="button"
                           onClick={() => handleToggleStatus(catalog)}
                           disabled={statusChangingId === catalog.id}
-                          className={`rounded-lg p-2 transition hover:bg-gray-100 disabled:opacity-50 ${
-                            catalog.is_active ? "text-green-600" : "text-gray-400"
+                          className={`flex h-9 w-9 items-center justify-center rounded-control transition hover:bg-gray-100 disabled:opacity-50 ${
+                            catalog.is_active ? "text-success" : "text-gray-400"
                           }`}
                           title={catalog.is_active ? "Desactivar categoría" : "Activar categoría"}
+                          aria-label={
+                            catalog.is_active
+                              ? `Desactivar ${catalog.name}`
+                              : `Activar ${catalog.name}`
+                          }
                         >
                           <Power size={18} />
                         </button>
@@ -271,8 +271,9 @@ export default function Catalogs() {
                         <button
                           type="button"
                           onClick={() => handleOpenEdit(catalog)}
-                          className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
+                          className="flex h-9 w-9 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
                           title="Editar categoría"
+                          aria-label={`Editar ${catalog.name}`}
                         >
                           <Pencil size={18} />
                         </button>
@@ -280,8 +281,9 @@ export default function Catalogs() {
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(catalog)}
-                          className="rounded-lg p-2 text-red-600 transition hover:bg-red-50"
+                          className="flex h-9 w-9 items-center justify-center rounded-control text-danger transition hover:bg-danger-bg"
                           title="Eliminar categoría"
+                          aria-label={`Eliminar ${catalog.name}`}
                         >
                           <Trash2 size={18} />
                         </button>
@@ -304,12 +306,26 @@ export default function Catalogs() {
         onSubmit={handleSubmitForm}
       />
 
-      <CatalogDeleteConfirmModal
+      <ConfirmModal
         isOpen={deleteTarget !== null}
-        catalogName={deleteTarget?.name ?? ""}
+        title="Eliminar catálogo"
+        tone="danger"
+        confirmLabel="Eliminar catálogo"
         loading={deleting}
         onConfirm={handleConfirmDelete}
         onClose={handleCloseDelete}
+        message={
+          <>
+            Estás a punto de eliminar{" "}
+            <span className="font-semibold text-gray-900">
+              {deleteTarget?.name ?? ""}
+            </span>
+            . Si tiene atributos asociados, también se eliminarán.{" "}
+            <span className="font-medium text-danger">
+              Esta acción no se puede deshacer.
+            </span>
+          </>
+        }
       />
 
       <AttributesModal

@@ -5,12 +5,13 @@ import { useAuth } from "@/features/public/auth/context/useAuth";
 import { getMyWallet, getMyTransactions } from "@/features/wallet/api/walletService";
 import RechargeRequestModal from "@/features/wallet/components/RechargeRequestModal";
 import {
-  WALLET_TRANSACTION_TYPE_BADGE,
   WALLET_TRANSACTION_TYPE_LABEL,
+  WALLET_TRANSACTION_TYPE_TONE,
 } from "@/features/wallet/utils/transactionType";
 
 import StatCard from "@/shared/components/dashboard/StatCard";
 import Pagination from "@/shared/components/Pagination";
+import { Badge, Button, EmptyState, TableSkeleton } from "@/shared/components/ui";
 import { formatPrice } from "@/shared/utils/formatPrice";
 
 import type { WalletTransaction } from "@/features/wallet/types/response";
@@ -69,37 +70,36 @@ export default function Wallet() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">RehniCoins</h1>
+      <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">RehniCoins</h1>
 
-      <p className="mt-2 text-gray-500">
+      <p className="mt-1 text-sm text-gray-500">
         Consulta tu saldo y tus movimientos. 1 RehniCoin equivale a 1 COP.
       </p>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-start">
+      <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-center">
         <StatCard
           title="Saldo disponible"
-          value={balanceLoading || balance === null ? "..." : `${formatPrice(balance)} RC`}
+          value={balanceLoading || balance === null ? "…" : `${formatPrice(balance)} RC`}
           subtitle="RehniCoin"
           icon={<Coins size={24} />}
         />
 
-        <button
-          type="button"
-          onClick={() => setRechargeModalOpen(true)}
+        <Button
+          size="lg"
           disabled={!user}
-          className="flex h-fit items-center justify-center gap-2 rounded-xl bg-[#6D0F2D] px-6 py-3.5 text-sm font-medium text-white transition hover:bg-[#530A20] disabled:cursor-not-allowed disabled:opacity-50 sm:mt-6"
+          leadingIcon={<Plus size={18} />}
+          onClick={() => setRechargeModalOpen(true)}
         >
-          <Plus size={18} />
           Recargar RehniCoins
-        </button>
+        </Button>
       </div>
 
       <div className="mt-8">
         <h2 className="mb-4 font-semibold text-gray-900">Movimientos</h2>
 
-        <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <section className="overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[560px]">
               <thead>
                 <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-400">
                   <th className="px-5 py-3 font-medium">Fecha</th>
@@ -112,14 +112,17 @@ export default function Wallet() {
               <tbody>
                 {transactionsLoading ? (
                   <tr>
-                    <td colSpan={4} className="px-5 py-8 text-center text-sm text-gray-500">
-                      Cargando movimientos...
+                    <td colSpan={4} className="p-0">
+                      <TableSkeleton rows={4} columns={["24%", "16%", "36%", "16%"]} />
                     </td>
                   </tr>
                 ) : transactions.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-5 py-8 text-center text-sm text-gray-500">
-                      Todavía no tienes movimientos de RehniCoin.
+                    <td colSpan={4} className="p-0">
+                      <EmptyState
+                        variant="plain"
+                        title="Todavía no tienes movimientos de RehniCoin"
+                      />
                     </td>
                   </tr>
                 ) : (
@@ -136,11 +139,9 @@ export default function Wallet() {
                         </td>
 
                         <td className="px-5 py-3">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-medium ${WALLET_TRANSACTION_TYPE_BADGE[transaction.type]}`}
-                          >
+                          <Badge tone={WALLET_TRANSACTION_TYPE_TONE[transaction.type]}>
                             {WALLET_TRANSACTION_TYPE_LABEL[transaction.type]}
-                          </span>
+                          </Badge>
                         </td>
 
                         <td className="px-5 py-3 text-sm text-gray-600">
@@ -149,7 +150,7 @@ export default function Wallet() {
 
                         <td
                           className={`whitespace-nowrap px-5 py-3 text-sm font-semibold ${
-                            isNegative ? "text-gray-700" : "text-green-700"
+                            isNegative ? "text-gray-700" : "text-success"
                           }`}
                         >
                           {isNegative ? "" : "+"}

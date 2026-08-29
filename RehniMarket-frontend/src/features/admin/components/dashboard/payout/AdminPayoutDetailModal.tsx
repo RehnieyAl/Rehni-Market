@@ -8,6 +8,7 @@ import PayoutMarkPaidConfirmModal from "./PayoutMarkPaidConfirmModal";
 import { getAdminPayoutDetail, markPayoutPaid } from "@/features/admin/api/payoutService";
 import { formatPrice } from "@/shared/utils/formatPrice";
 import { useAlert } from "@/shared/components/alert/useAlert";
+import { Button } from "@/shared/components/ui";
 
 import type { CompanyPayout } from "@/features/payouts/types/response";
 
@@ -67,13 +68,13 @@ export default function AdminPayoutDetailModal({
         showCompanyName
         footer={(payout) =>
           payout.payoutStatus !== "paid" ? (
-            <button
+            <Button
+              className="bg-success text-white hover:brightness-95"
+              leadingIcon={<CheckCircle2 size={16} />}
               onClick={() => setConfirmTarget(payout)}
-              className="flex items-center gap-2 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-green-700"
             >
-              <CheckCircle2 size={16} />
               Marcar como pagada
-            </button>
+            </Button>
           ) : null
         }
       />

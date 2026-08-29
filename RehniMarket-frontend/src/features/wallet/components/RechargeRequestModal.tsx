@@ -86,7 +86,7 @@ export default function RechargeRequestModal({
       <div className="w-full max-w-md rounded-2xl bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <Coins size={20} className="text-[#6D0F2D]" />
+            <Coins size={20} className="text-primary" />
             Recargar RehniCoins
           </h2>
 
@@ -119,7 +119,7 @@ export default function RechargeRequestModal({
                   onClick={() => setAmount(String(preset))}
                   className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition ${
                     amount === String(preset)
-                      ? "border-[#6D0F2D] bg-[#6D0F2D]/10 text-[#6D0F2D]"
+                      ? "border-primary bg-primary/10 text-primary"
                       : "border-gray-300 text-gray-700 hover:bg-gray-50"
                   }`}
                 >
@@ -139,7 +139,7 @@ export default function RechargeRequestModal({
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="Ej. 30000"
-                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-[#6D0F2D]"
+                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-brand-600"
               />
 
               {amount.trim() !== "" && validationError && (
@@ -162,7 +162,7 @@ export default function RechargeRequestModal({
             type="button"
             onClick={handleConfirm}
             disabled={!isValid}
-            className="flex items-center gap-2 rounded-xl bg-[#7A1833] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#64132a] disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             <MessageCircle size={16} />
             Confirmar solicitud

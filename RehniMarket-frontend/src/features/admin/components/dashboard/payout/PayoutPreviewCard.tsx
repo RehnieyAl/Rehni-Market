@@ -13,8 +13,8 @@ import type { PayoutPreview } from "@/features/payouts/types/response";
 // es la proyección de lo que se generaría, antes de confirmar.
 export default function PayoutPreviewCard({ preview }: { preview: PayoutPreview }) {
   return (
-    <div className="space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-4">
-      <div className="flex items-center gap-2 text-xs font-medium text-green-700">
+    <div className="space-y-4 rounded-card border border-gray-200 bg-gray-50 p-4">
+      <div className="flex items-center gap-2 text-xs font-medium text-success">
         <BadgeCheck size={14} />
         Vista previa lista para generar
       </div>

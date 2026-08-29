@@ -1,13 +1,8 @@
-import {
-  Search,
-  Eye,
-  Lock,
-  Unlock,
-  ChevronDown,
-} from "lucide-react";
+import { Search, Eye, Lock, Unlock } from "lucide-react";
 
 import { useEffect, useState } from "react";
 
+import { Badge, Button, EmptyState, ErrorState, Input, Select, TableSkeleton } from "@/shared/components/ui";
 import CompanyDetailModal from "./CompanyDetailModal";
 import CompanyStatusConfirmModal from "./CompanyStatusConfirmModal";
 
@@ -38,6 +33,7 @@ export default function Companies() {
   const [search, setSearch] = useState("");
 
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
 
   const [nextCursor, setNextCursor] = useState<
     string | null
@@ -74,6 +70,7 @@ export default function Companies() {
   ) => {
     try {
       setLoading(true);
+      setFailed(false);
 
       const response = await getAdminCompanies(
         10,
@@ -90,6 +87,7 @@ export default function Companies() {
         "Error cargando empresas:",
         error,
       );
+      setFailed(true);
     } finally {
       setLoading(false);
     }
@@ -99,6 +97,7 @@ export default function Companies() {
     const loadInitialCompanies = async () => {
       try {
         setLoading(true);
+        setFailed(false);
 
         const response = await getAdminCompanies(
           10,
@@ -116,6 +115,7 @@ export default function Companies() {
           "Error cargando empresas:",
           error,
         );
+        setFailed(true);
       } finally {
         setLoading(false);
       }
@@ -338,65 +338,37 @@ export default function Companies() {
         </p>
       </div>
 
-      <section className="mt-6 shrink-0 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <section className="mt-6 shrink-0 rounded-card border border-gray-200 bg-white p-5 shadow-card">
         <div className="flex flex-col gap-3 md:flex-row">
+          <Input
+            className="flex-1"
+            type="search"
+            value={search}
+            onChange={(event) => handleSearch(event.target.value)}
+            placeholder="Buscar por correo, teléfono, NIT o empresa…"
+            aria-label="Buscar empresas"
+            leadingIcon={<Search size={16} />}
+          />
 
-          <div className="flex flex-1 items-center gap-3 rounded-lg border border-gray-200 px-4 py-3">
-            <Search
-              size={19}
-              className="shrink-0 text-gray-400"
-            />
-
-            <input
-              type="text"
-              value={search}
-              onChange={(event) =>
-                handleSearch(
-                  event.target.value,
-                )
-              }
-              placeholder="Buscar por correo, teléfono, NIT o empresa..."
-              className="w-full text-sm outline-none"
-            />
-          </div>
-
-          <div className="relative">
-            <select
-              value={certificateFilter}
-              onChange={(event) =>
-                handleCertificateFilter(
-                  event.target
-                    .value as CompanyCertificateFilter,
-                )
-              }
-              className="h-full min-w-[190px] appearance-none rounded-lg border border-gray-200 bg-white px-4 py-3 pr-10 text-sm font-medium text-gray-700 outline-none transition focus:border-[#7A1833]"
-            >
-              <option value="all">
-                Todas
-              </option>
-
-              <option value="pending">
-                Pendientes
-              </option>
-
-              <option value="rejected">
-                Rechazadas
-              </option>
-
-              <option value="approved">
-                Aprobadas
-              </option>
-            </select>
-
-            <ChevronDown
-              size={17}
-              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-          </div>
+          <Select
+            className="md:w-52"
+            aria-label="Filtrar por certificado"
+            value={certificateFilter}
+            onChange={(event) =>
+              handleCertificateFilter(
+                event.target.value as CompanyCertificateFilter,
+              )
+            }
+          >
+            <option value="all">Todas</option>
+            <option value="pending">Pendientes</option>
+            <option value="rejected">Rechazadas</option>
+            <option value="approved">Aprobadas</option>
+          </Select>
         </div>
       </section>
 
-      <section className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <section className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
 
         <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-5 py-4">
 
@@ -413,9 +385,7 @@ export default function Companies() {
             </p>
           </div>
 
-          <span className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600">
-            {getFilterLabel()}
-          </span>
+          <Badge>{getFilterLabel()}</Badge>
         </div>
 
         <div className="h-[360px] overflow-y-auto overflow-x-auto">
@@ -459,21 +429,27 @@ export default function Companies() {
 
               {loading ? (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="px-5 py-8 text-center text-sm text-gray-500"
-                  >
-                    Cargando empresas...
+                  <td colSpan={7} className="p-0">
+                    <TableSkeleton rows={6} columns={["24%", "18%", "16%", "14%", "12%", "10%"]} />
+                  </td>
+                </tr>
+              ) : failed && companies.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-0">
+                    <ErrorState
+                      variant="plain"
+                      title="No pudimos cargar las empresas"
+                      onRetry={() => loadCompanies()}
+                    />
                   </td>
                 </tr>
               ) : companies.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="px-5 py-8 text-center text-sm text-gray-500"
-                  >
-                    No se encontraron empresas
-                    con este filtro.
+                  <td colSpan={7} className="p-0">
+                    <EmptyState
+                      variant="plain"
+                      title="No se encontraron empresas con este filtro"
+                    />
                   </td>
                 </tr>
               ) : (
@@ -558,8 +534,9 @@ export default function Companies() {
                                 company.id,
                               )
                             }
-                            className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
+                            className="flex h-9 w-9 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
                             title="Ver empresa"
+                            aria-label={`Ver ${company.nameCompany}`}
                           >
                             <Eye size={18} />
                           </button>
@@ -574,15 +551,20 @@ export default function Companies() {
                             disabled={
                               updatingStatus
                             }
-                            className={`rounded-lg p-2 transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                            className={`flex h-9 w-9 items-center justify-center rounded-control transition disabled:cursor-not-allowed disabled:opacity-50 ${
                               company.CompanyStatus
-                                ? "text-red-600 hover:bg-red-50"
-                                : "text-green-600 hover:bg-green-50"
+                                ? "text-danger hover:bg-danger-bg"
+                                : "text-success hover:bg-success-bg"
                             }`}
                             title={
                               company.CompanyStatus
                                 ? "Bloquear empresa"
                                 : "Desbloquear empresa"
+                            }
+                            aria-label={
+                              company.CompanyStatus
+                                ? `Bloquear ${company.nameCompany}`
+                                : `Desbloquear ${company.nameCompany}`
                             }
                           >
                             {company.CompanyStatus ? (
@@ -618,34 +600,23 @@ export default function Companies() {
 
           <div className="flex items-center gap-3">
 
-            <button
-              type="button"
-              onClick={
-                handlePreviousPage
-              }
-              disabled={
-                cursorHistory.length ===
-                  0 || loading
-              }
-              className="rounded-xl border border-gray-200 px-5 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePreviousPage}
+              disabled={cursorHistory.length === 0 || loading}
             >
               Atrás
-            </button>
+            </Button>
 
-            <button
-              type="button"
-              onClick={
-                handleNextPage
-              }
-              disabled={
-                !hasNext || loading
-              }
-              className="rounded-xl bg-[#7A1833] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#64132a] disabled:cursor-not-allowed disabled:opacity-50"
+            <Button
+              size="sm"
+              onClick={handleNextPage}
+              disabled={!hasNext}
+              loading={loading}
             >
-              {loading
-                ? "Cargando..."
-                : "Siguiente"}
-            </button>
+              Siguiente
+            </Button>
 
           </div>
         </div>
@@ -700,34 +671,14 @@ function CertificateStatus({
   status: CompanyCertificateStatus;
 }) {
   const config = {
-    pending: {
-      text: "Pendiente",
-      className:
-        "bg-yellow-50 text-yellow-700",
-    },
-
-    approved: {
-      text: "Aprobado",
-      className:
-        "bg-green-50 text-green-700",
-    },
-
-    rejected: {
-      text: "Rechazado",
-      className:
-        "bg-red-50 text-red-700",
-    },
+    pending: { text: "Pendiente", tone: "warning" as const },
+    approved: { text: "Aprobado", tone: "success" as const },
+    rejected: { text: "Rechazado", tone: "danger" as const },
   };
 
   const current = config[status];
 
-  return (
-    <span
-      className={`rounded-full px-2.5 py-1 text-xs font-medium ${current.className}`}
-    >
-      {current.text}
-    </span>
-  );
+  return <Badge tone={current.tone}>{current.text}</Badge>;
 }
 
 function CompanyStatus({
@@ -736,16 +687,8 @@ function CompanyStatus({
   active: boolean;
 }) {
   return (
-    <span
-      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-        active
-          ? "bg-green-50 text-green-700"
-          : "bg-red-50 text-red-700"
-      }`}
-    >
-      {active
-        ? "Activa"
-        : "Bloqueada"}
-    </span>
+    <Badge tone={active ? "success" : "danger"}>
+      {active ? "Activa" : "Bloqueada"}
+    </Badge>
   );
 }

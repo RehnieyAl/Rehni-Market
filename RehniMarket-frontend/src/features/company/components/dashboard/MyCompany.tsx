@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { Upload, Download, Pencil, Save, X } from "lucide-react";
 
+import { Button, Input, Skeleton, Textarea } from "@/shared/components/ui";
+
 import {
   getMyCompanyProfile,
   updateMyCompanyProfile,
@@ -127,11 +129,11 @@ export default function Company() {
     <>
 
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
           Mi tienda
         </h1>
 
-        <p className="mt-2 text-gray-500">
+        <p className="mt-1 text-sm text-gray-500">
           Administra la información pública de tu empresa.
         </p>
 
@@ -141,7 +143,7 @@ export default function Company() {
         {company && <CompanyRatingBadge companyId={company.id} className="mt-3" />}
       </div>
 
-      <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+      <section className="mt-8 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
         <h2 className="text-xl font-semibold text-gray-900">
           Imagen de la empresa
         </h2>
@@ -157,7 +159,7 @@ export default function Company() {
               Logo empresa
             </h3>
 
-            <div className="h-40 w-40 overflow-hidden rounded-full border-4 border-white bg-white shadow-lg">
+            <div className="h-40 w-40 overflow-hidden rounded-full border-4 border-white bg-white shadow-pop">
               <img
                 src={previewLogo || company?.logo || defaultLogo}
                 alt="Logo empresa"
@@ -165,7 +167,7 @@ export default function Company() {
               />
             </div>
 
-            <label className="mt-6 flex h-12 w-72 cursor-pointer items-center justify-center gap-2 rounded-xl bg-red-700 text-white hover:bg-red-800">
+            <label className="mt-6 flex h-11 w-full max-w-72 cursor-pointer items-center justify-center gap-2 rounded-control bg-primary text-sm font-medium text-primary-fg transition hover:bg-primary-hover">
               <Upload size={18} />
 
               Cambiar logo
@@ -192,24 +194,19 @@ export default function Company() {
             </label>
 
             {media.photo_profile && (
-              <p className="mt-3 text-sm text-green-700">
+              <p className="mt-3 text-sm text-success">
                 Imagen seleccionada: {media.photo_profile.name}
               </p>
             )}
 
-            <button
-              onClick={() =>
-                handleDownloadTemplate(
-                  logoTemplate,
-                  "example-logo.webp",
-                )
-              }
-              className="mt-3 flex h-12 w-72 items-center justify-center gap-2 rounded-xl border border-red-700 text-red-700 hover:bg-red-50"
+            <Button
+              className="mt-3 w-full max-w-72"
+              variant="outline"
+              leadingIcon={<Download size={18} />}
+              onClick={() => handleDownloadTemplate(logoTemplate, "example-logo.webp")}
             >
-              <Download size={18} />
-
               Descargar plantilla
-            </button>
+            </Button>
           </div>
 
           <div>
@@ -217,7 +214,7 @@ export default function Company() {
               Banner empresa
             </h3>
 
-            <div className="overflow-hidden rounded-xl border border-gray-200 shadow-md">
+            <div className="overflow-hidden rounded-card border border-gray-200 shadow-card">
               <img
                 src={
                   previewBanner ||
@@ -229,7 +226,7 @@ export default function Company() {
               />
             </div>
 
-            <label className="mt-6 flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-red-700 text-white hover:bg-red-800">
+            <label className="mt-6 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-control bg-primary text-sm font-medium text-primary-fg transition hover:bg-primary-hover">
               <Upload size={18} />
 
               Cambiar banner
@@ -256,45 +253,35 @@ export default function Company() {
             </label>
 
             {media.banner_profile && (
-              <p className="mt-3 text-sm text-green-700">
+              <p className="mt-3 text-sm text-success">
                 Banner seleccionado:{" "}
                 {media.banner_profile.name}
               </p>
             )}
 
-            <button
-              onClick={() =>
-                handleDownloadTemplate(
-                  bannerTemplate,
-                  "example-banner.jpg",
-                )
-              }
-              className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-red-700 text-red-700 hover:bg-red-50"
+            <Button
+              className="mt-3 w-full"
+              variant="outline"
+              leadingIcon={<Download size={18} />}
+              onClick={() => handleDownloadTemplate(bannerTemplate, "example-banner.jpg")}
             >
-              <Download size={18} />
-
               Descargar plantilla
-            </button>
+            </Button>
           </div>
         </div>
 
         <div className="mt-8 flex justify-end">
-          <button
+          <Button
+            leadingIcon={<Save size={18} />}
+            disabled={!media.photo_profile && !media.banner_profile}
             onClick={handleUpdateMedia}
-            disabled={
-              !media.photo_profile &&
-              !media.banner_profile
-            }
-            className="flex items-center gap-2 rounded-xl bg-red-700 px-6 py-3 text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <Save size={18} />
-
             Actualizar imágenes
-          </button>
+          </Button>
         </div>
       </section>
 
-      <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+      <section className="mt-8 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
@@ -308,6 +295,7 @@ export default function Company() {
 
           {!editing && (
             <button
+              type="button"
               onClick={() => {
                 if (company) {
                   setForm({
@@ -320,17 +308,20 @@ export default function Company() {
 
                 setEditing(true);
               }}
-              className="rounded-xl p-3 hover:bg-gray-100"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
+              aria-label="Editar información de la tienda"
             >
-              <Pencil size={20} />
+              <Pencil size={18} />
             </button>
           )}
         </div>
 
         {loading ? (
-          <p className="text-gray-500">
-            Cargando información...
-          </p>
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Skeleton key={index} className="h-12" />
+            ))}
+          </div>
         ) : (
           <div className="mt-8 grid gap-6 md:grid-cols-2">
             <InputCompany
@@ -375,23 +366,17 @@ export default function Company() {
 
         {editing && (
           <div className="mt-8 flex justify-end gap-3">
-            <button
+            <Button
+              variant="outline"
+              leadingIcon={<X size={18} />}
               onClick={() => setEditing(false)}
-              className="flex items-center gap-2 rounded-xl border px-6 py-3"
             >
-              <X size={18} />
-
               Cancelar
-            </button>
+            </Button>
 
-            <button
-              onClick={handleSave}
-              className="flex items-center gap-2 rounded-xl bg-red-700 px-6 py-3 text-white"
-            >
-              <Save size={18} />
-
+            <Button leadingIcon={<Save size={18} />} onClick={handleSave}>
               Guardar
-            </button>
+            </Button>
           </div>
         )}
       </section>
@@ -411,18 +396,12 @@ function InputCompany({
   onChange: (value: string) => void;
 }) {
   return (
-    <div>
-      <label className="font-medium text-gray-700">
-        {label}
-      </label>
-
-      <input
-        value={value}
-        disabled={!edit}
-        onChange={(e) => onChange(e.target.value)}
-        className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 disabled:bg-gray-100"
-      />
-    </div>
+    <Input
+      label={label}
+      value={value}
+      disabled={!edit}
+      onChange={(e) => onChange(e.target.value)}
+    />
   );
 }
 
@@ -438,21 +417,15 @@ function TextareaCompany({
   onChange: (value: string) => void;
 }) {
   return (
-    <div>
-      <label className="font-medium text-gray-700">
-        {label}
-      </label>
-
-      <textarea
-        value={value}
-        disabled={!edit}
-        onChange={(e) => onChange(e.target.value)}
-        rows={4}
-        maxLength={1000}
-        placeholder="Cuéntale a tus clientes a qué se dedica tu empresa..."
-        className="mt-2 w-full resize-none rounded-xl border border-gray-300 px-4 py-3 disabled:bg-gray-100"
-      />
-    </div>
+    <Textarea
+      label={label}
+      value={value}
+      disabled={!edit}
+      onChange={(e) => onChange(e.target.value)}
+      rows={4}
+      maxLength={1000}
+      placeholder="Cuéntale a tus clientes a qué se dedica tu empresa…"
+    />
   );
 }
 

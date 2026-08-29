@@ -25,7 +25,7 @@ export default function ProductReviewsSummary({
   distribution,
 }: ProductReviewsSummaryProps) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5">
+    <div className="rounded-card border border-gray-200 bg-white p-5">
       <h3 className="font-semibold text-gray-900">Opiniones de compradores</h3>
 
       {reviewCount === 0 ? (
@@ -60,7 +60,7 @@ export default function ProductReviewsSummary({
 
                   <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
                     <div
-                      className="h-full rounded-full bg-[#6D0F2D]"
+                      className="h-full rounded-full bg-primary"
                       style={{ width: `${percentage}%` }}
                     />
                   </div>

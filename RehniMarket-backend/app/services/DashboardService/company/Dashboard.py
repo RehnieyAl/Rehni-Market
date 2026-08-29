@@ -140,11 +140,14 @@ def company_dasboard_upgrade_my_photo_and_banner_profile(
 
     database.commit()
     database.refresh(company)
-    
+
+    # Mismas URLs que devuelven el resto de endpoints (GET /company/me, perfil público…):
+    # la ruta de /media/proxy, NO una URL presigned con el host interno `minio:9000`
+    # que el navegador no puede resolver.
     return {
         "success": True,
-        "logo": nas.get_presigned_url(company.CompanyLogo) if company.CompanyLogo else None,
-        "banner": nas.get_presigned_url(company.CompanyBanner) if company.CompanyBanner else None
+        "logo": build_media_url(f"uploads/{company.CompanyLogo}") if company.CompanyLogo else None,
+        "banner": build_media_url(f"uploads/{company.CompanyBanner}") if company.CompanyBanner else None
     }
 
 def company_dashboard_get_my_products(user_id,search,page,limit,database: Session):

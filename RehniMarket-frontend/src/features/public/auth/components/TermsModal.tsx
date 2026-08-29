@@ -1,5 +1,6 @@
-import Modal from "@/shared/components/modal";
 import type { ReactNode } from "react";
+
+import { Modal } from "@/shared/components/ui";
 
 interface TermsModalProps {
   isOpen: boolean;
@@ -7,18 +8,9 @@ interface TermsModalProps {
   children: ReactNode;
 }
 
-export default function TermsModal({
-  isOpen,
-  onClose,
-  children,
-}: TermsModalProps) {
-
+export default function TermsModal({ isOpen, onClose, children }: TermsModalProps) {
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Términos y Condiciones"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title="Términos y condiciones" size="lg">
       {children}
     </Modal>
   );

@@ -1,60 +1,50 @@
+import { X, CheckCircle2, AlertCircle, AlertTriangle, Info } from "lucide-react";
+import type { ReactNode } from "react";
 
-import {
-  X,
-  CheckCircle,
-  AlertCircle,
-} from "lucide-react";
+import { cn } from "@/shared/utils/cn";
+import type { AlertType } from "./AlertContext";
 
 interface AlertMessageProps {
-  type: "error" | "success";
+  type: AlertType;
   message: string;
   onClose?: () => void;
 }
 
-export default function AlertMessage({
-  type,
-  message,
-  onClose,
-}: AlertMessageProps) {
+const STYLES: Record<AlertType, { wrap: string; icon: ReactNode }> = {
+  error: {
+    wrap: "border-danger/30 bg-danger-bg text-danger",
+    icon: <AlertCircle size={20} className="shrink-0" />,
+  },
+  success: {
+    wrap: "border-success/30 bg-success-bg text-success",
+    icon: <CheckCircle2 size={20} className="shrink-0" />,
+  },
+  warning: {
+    wrap: "border-warning/30 bg-warning-bg text-warning",
+    icon: <AlertTriangle size={20} className="shrink-0" />,
+  },
+  info: {
+    wrap: "border-info/30 bg-info-bg text-info",
+    icon: <Info size={20} className="shrink-0" />,
+  },
+};
+
+// Toast global. Único patrón de alertas del sistema (ver AlertProvider).
+export default function AlertMessage({ type, message, onClose }: AlertMessageProps) {
+  const style = STYLES[type];
+
   return (
     <div
-      className={`
-        fixed
-        left-1/2
-        top-6
-        z-[9999]
-        flex
-        w-[90%]
-        max-w-md
-        -translate-x-1/2
-        items-center
-        justify-between
-        gap-4
-        rounded-2xl
-        border
-        px-5
-        py-4
-        shadow-lg
-        ${
-          type === "error"
-            ? "border-red-200 bg-[#F9EEF2] text-[#6D0F2D]"
-            : "border-green-200 bg-green-50 text-green-700"
-        }
-      `}
-    >
-      {type === "error" ? (
-        <AlertCircle
-          size={21}
-          className="shrink-0"
-        />
-      ) : (
-        <CheckCircle
-          size={21}
-          className="shrink-0"
-        />
+      role={type === "error" ? "alert" : "status"}
+      aria-live={type === "error" ? "assertive" : "polite"}
+      className={cn(
+        "animate-pop-in fixed left-1/2 top-6 z-[200] flex w-[92%] max-w-md -translate-x-1/2 items-start gap-3 rounded-card border px-4 py-3.5 shadow-pop",
+        style.wrap,
       )}
+    >
+      {style.icon}
 
-      <p className="flex-1 font-medium">
+      <p className="flex-1 whitespace-pre-line text-sm font-medium leading-5">
         {message}
       </p>
 
@@ -62,12 +52,12 @@ export default function AlertMessage({
         <button
           type="button"
           onClick={onClose}
-          className="shrink-0 hover:opacity-70"
+          aria-label="Cerrar aviso"
+          className="-mr-1 shrink-0 rounded p-0.5 transition hover:opacity-70"
         >
-          <X size={18} />
+          <X size={16} />
         </button>
       )}
     </div>
   );
 }
-

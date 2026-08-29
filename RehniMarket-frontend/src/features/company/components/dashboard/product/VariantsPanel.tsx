@@ -7,6 +7,7 @@ import type { VariantResponse } from "@/features/company/types/response";
 
 import ConfirmModal from "@/shared/components/ConfirmModal";
 import { useAlert } from "@/shared/components/alert/useAlert";
+import { Badge, Button, EmptyState, Spinner } from "@/shared/components/ui";
 import { formatPrice } from "@/shared/utils/formatPrice";
 import VariantModal from "./VariantModal";
 import GenerateVariantsModal from "./GenerateVariantsModal";
@@ -62,10 +63,10 @@ export default function VariantsPanel({ productId, catalogId }: VariantsPanelPro
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 p-6">
+    <div className="rounded-card border border-gray-200 p-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold">Variantes</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Variantes</h3>
           <p className="mt-1 text-xs text-gray-500">
             Cada variante es la unidad que se vende: define su precio, stock, SKU,
             descuento e imágenes.
@@ -73,24 +74,25 @@ export default function VariantsPanel({ productId, catalogId }: VariantsPanelPro
         </div>
 
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
+            leadingIcon={<Wand2 size={16} />}
             onClick={() => setGenerateOpen(true)}
-            className="flex items-center gap-2 rounded-lg border border-red-700 px-3 py-2 text-sm text-red-700 hover:bg-red-50"
           >
-            <Wand2 size={16} />
             Generar
-          </button>
+          </Button>
 
-          <button
+          <Button
+            size="sm"
+            leadingIcon={<Plus size={16} />}
             onClick={() => {
               setEditingVariantId(null);
               setOpenModal(true);
             }}
-            className="flex items-center gap-2 rounded-lg bg-red-700 px-3 py-2 text-sm text-white hover:bg-red-800"
           >
-            <Plus size={16} />
             Agregar
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -99,19 +101,21 @@ export default function VariantsPanel({ productId, catalogId }: VariantsPanelPro
           type="checkbox"
           checked={includeDeleted}
           onChange={(e) => setIncludeDeleted(e.target.checked)}
+          className="h-4 w-4 rounded border-gray-300 accent-brand-600"
         />
         Mostrar variantes eliminadas
       </label>
 
       {loading ? (
         <div className="flex items-center justify-center gap-2 py-8 text-sm text-gray-500">
-          <Loader2 size={18} className="animate-spin" />
-          Cargando variantes...
+          <Spinner /> Cargando variantes…
         </div>
       ) : variants.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 p-5 text-center text-sm text-gray-400">
-          Este producto todavía no tiene variantes.
-        </div>
+        <EmptyState
+          variant="plain"
+          title="Este producto todavía no tiene variantes"
+          description="Agrega al menos una variante para poder publicarlo."
+        />
       ) : (
         <div className="space-y-3">
           {variants.map((variant) => {
@@ -120,19 +124,19 @@ export default function VariantsPanel({ productId, catalogId }: VariantsPanelPro
             return (
               <div
                 key={variant.id}
-                className={`flex items-center justify-between gap-3 rounded-xl border p-3 ${
+                className={`flex items-center justify-between gap-3 rounded-card border p-3 ${
                   deleted ? "border-gray-200 bg-gray-50 opacity-60" : "border-gray-200"
                 }`}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex min-w-0 items-center gap-3">
                   {variant.main_image_url ? (
                     <img
                       src={variant.main_image_url}
                       alt={variant.name}
-                      className="h-14 w-14 rounded-lg object-cover"
+                      className="h-14 w-14 shrink-0 rounded-control object-cover"
                     />
                   ) : (
-                    <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-dashed border-gray-300 text-[10px] text-gray-400">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-control border border-dashed border-gray-300 text-[10px] text-gray-400">
                       Sin imagen
                     </div>
                   )}
@@ -140,11 +144,7 @@ export default function VariantsPanel({ productId, catalogId }: VariantsPanelPro
                   <div>
                     <p className="flex items-center gap-2 text-sm font-medium text-gray-900">
                       {variant.name}
-                      {deleted && (
-                        <span className="rounded-full bg-gray-200 px-2 py-0.5 text-[10px] font-semibold text-gray-600">
-                          Eliminada
-                        </span>
-                      )}
+                      {deleted && <Badge>Eliminada</Badge>}
                     </p>
 
                     <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-gray-500">
@@ -170,7 +170,7 @@ export default function VariantsPanel({ productId, catalogId }: VariantsPanelPro
                         {formatPrice(variant.effective_price)}
                       </span>
                       {variant.discount_percentage != null && (
-                        <span className="rounded-full bg-green-100 px-1.5 py-0.5 text-[10px] font-semibold text-green-700">
+                        <span className="rounded-full bg-success-bg px-1.5 py-0.5 text-[10px] font-semibold text-success">
                           -{variant.discount_percentage}%
                           {variant.discount_source === "product" ? " (producto)" : ""}
                         </span>
@@ -187,8 +187,9 @@ export default function VariantsPanel({ productId, catalogId }: VariantsPanelPro
                         setEditingVariantId(variant.id);
                         setOpenModal(true);
                       }}
-                      className="rounded-lg p-2 hover:bg-gray-100"
+                      className="flex h-9 w-9 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
                       title="Editar variante"
+                      aria-label={`Editar variante ${variant.name}`}
                     >
                       <Pencil size={16} />
                     </button>
@@ -196,8 +197,9 @@ export default function VariantsPanel({ productId, catalogId }: VariantsPanelPro
                     <button
                       onClick={() => setConfirmDeleteId(variant.id)}
                       disabled={deletingId === variant.id}
-                      className="rounded-lg p-2 text-red-700 hover:bg-red-50 disabled:opacity-50"
+                      className="flex h-9 w-9 items-center justify-center rounded-control text-danger transition hover:bg-danger-bg disabled:opacity-50"
                       title="Eliminar variante"
+                      aria-label={`Eliminar variante ${variant.name}`}
                     >
                       {deletingId === variant.id ? (
                         <Loader2 size={16} className="animate-spin" />

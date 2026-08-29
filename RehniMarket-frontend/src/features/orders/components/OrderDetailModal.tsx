@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Mail, MapPin, Phone, X } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 import axios from "axios";
 
 import OrderTimeline from "./OrderTimeline";
 import ConfirmModal from "@/shared/components/ConfirmModal";
+import { Badge, Modal, Button, Spinner } from "@/shared/components/ui";
 import { getMyOrderDetail, cancelMyOrder } from "@/features/orders/api/orderService";
-import { ORDER_STATUS_LABEL, ORDER_STATUS_BADGE } from "@/features/orders/utils/orderStatus";
+import { ORDER_STATUS_LABEL, ORDER_STATUS_TONE } from "@/features/orders/utils/orderStatus";
 import { formatPrice } from "@/shared/utils/formatPrice";
 import { formatAttributePairs } from "@/shared/utils/formatAttributes";
 import { useAlert } from "@/shared/components/alert/useAlert";
@@ -68,8 +69,6 @@ export default function OrderDetailModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, orderId]);
 
-  if (!isOpen) return null;
-
   const handleCancel = async () => {
     if (!order) return;
 
@@ -105,31 +104,34 @@ export default function OrderDetailModal({
     : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
-          <h2 className="text-lg font-semibold text-gray-900">Pedido {order?.reference ?? ""}</h2>
-
-          <button
-            onClick={onClose}
-            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100"
-          >
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
-          {loading || !order ? (
-            <p className="py-8 text-center text-sm text-gray-500">Cargando pedido...</p>
-          ) : (
-            <div className="space-y-6">
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        size="lg"
+        title={`Pedido ${order?.reference ?? ""}`}
+        footer={
+          order && CANCELLABLE_STATUSES.has(order.status) ? (
+            <Button
+              variant="outline"
+              className="border-red-200 text-danger hover:bg-danger-bg"
+              loading={cancelling}
+              onClick={() => setConfirmCancelOpen(true)}
+            >
+              Cancelar pedido
+            </Button>
+          ) : undefined
+        }
+      >
+        {loading || !order ? (
+          <div className="flex items-center justify-center gap-2 py-10 text-sm text-gray-500">
+            <Spinner /> Cargando pedido...
+          </div>
+        ) : (
+          <div className="space-y-6">
 
               <div className="flex items-center justify-between">
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${ORDER_STATUS_BADGE[order.status]}`}
-                >
-                  {ORDER_STATUS_LABEL[order.status]}
-                </span>
+                <Badge tone={ORDER_STATUS_TONE[order.status]}>{ORDER_STATUS_LABEL[order.status]}</Badge>
 
                 <span className="text-sm text-gray-500">
                   {new Date(order.createdAt).toLocaleString("es-CO")}
@@ -138,9 +140,9 @@ export default function OrderDetailModal({
 
               <OrderTimeline status={order.status} />
 
-              <section className="rounded-2xl border bg-gray-50 p-4">
+              <section className="rounded-card border bg-gray-50 p-4">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#6D0F2D] text-lg font-bold text-white">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-lg font-bold text-white">
                     {order.buyerPhoto ? (
                       <img
                         src={order.buyerPhoto}
@@ -188,7 +190,7 @@ export default function OrderDetailModal({
               <section>
                 <h3 className="mb-3 font-semibold text-gray-900">Productos</h3>
 
-                <div className="divide-y divide-gray-100 rounded-2xl border">
+                <div className="divide-y divide-gray-100 rounded-card border">
                   {order.items.map((item) => {
                     const combo = formatAttributePairs(item.attributes) || item.variantName;
 
@@ -230,7 +232,7 @@ export default function OrderDetailModal({
                 </div>
 
                 {totalDiscount > 0 && (
-                  <div className="flex justify-between text-green-700">
+                  <div className="flex justify-between text-success">
                     <span>Descuentos</span>
                     <span>-{formatPrice(totalDiscount)}</span>
                   </div>
@@ -246,22 +248,9 @@ export default function OrderDetailModal({
                   <span>{formatPrice(order.total)}</span>
                 </div>
               </section>
-            </div>
-          )}
-        </div>
-
-        {order && CANCELLABLE_STATUSES.has(order.status) && (
-          <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
-            <button
-              onClick={() => setConfirmCancelOpen(true)}
-              disabled={cancelling}
-              className="rounded-xl border border-red-200 px-5 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {cancelling ? "Cancelando..." : "Cancelar pedido"}
-            </button>
           </div>
         )}
-      </div>
+      </Modal>
 
       <ConfirmModal
         isOpen={confirmCancelOpen}
@@ -272,6 +261,6 @@ export default function OrderDetailModal({
         onConfirm={handleCancel}
         onClose={() => setConfirmCancelOpen(false)}
       />
-    </div>
+    </>
   );
 }

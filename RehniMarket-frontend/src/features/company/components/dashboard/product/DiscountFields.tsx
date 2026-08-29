@@ -32,7 +32,7 @@ export default function DiscountFields({ state, onChange, label }: DiscountField
                 onChange={(e) =>
                   set({ type: e.target.value === "fixed" ? "fixed" : "percent" })
                 }
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-red-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-600"
               >
                 <option value="percent">Porcentaje (%)</option>
                 <option value="fixed">Monto fijo ($)</option>
@@ -48,7 +48,7 @@ export default function DiscountFields({ state, onChange, label }: DiscountField
                 inputMode="numeric"
                 value={state.value}
                 onChange={(e) => set({ value: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-red-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-600"
               />
             </div>
           </div>
@@ -62,7 +62,7 @@ export default function DiscountFields({ state, onChange, label }: DiscountField
                 type="datetime-local"
                 value={state.startsAt}
                 onChange={(e) => set({ startsAt: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-red-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-600"
               />
             </div>
 
@@ -72,7 +72,7 @@ export default function DiscountFields({ state, onChange, label }: DiscountField
                 type="datetime-local"
                 value={state.endsAt}
                 onChange={(e) => set({ endsAt: e.target.value })}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-red-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-600"
               />
             </div>
           </div>

@@ -42,6 +42,8 @@ export default function PublicProductCollection({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const [reloadKey, setReloadKey] = useState(0);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -70,7 +72,7 @@ export default function PublicProductCollection({
     return () => {
       cancelled = true;
     };
-  }, [fetchPage, page]);
+  }, [fetchPage, page, reloadKey]);
 
   return (
     <ProductGrid
@@ -82,6 +84,7 @@ export default function PublicProductCollection({
       totalPages={totalPages}
       pageSize={PAGE_SIZE}
       onPageChange={handlePageChange}
+      onRetry={() => setReloadKey((k) => k + 1)}
       emptyMessage={emptyMessage}
     />
   );

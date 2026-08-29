@@ -1,11 +1,56 @@
 @import "tailwindcss";
 
+/* ============================================================
+   Sistema de diseño RehniMarket — tokens
+   Una sola marca (vino #6D0F2D), un solo lenguaje de radios,
+   sombras y semánticos. Las utilidades bg-brand-600, text-primary,
+   rounded-control, shadow-card, etc. se generan desde aquí.
+   ============================================================ */
 @theme {
   --font-sans:
     "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji";
+
+  /* Marca — escala vino/burdeos alrededor de #6D0F2D */
+  --color-brand-50: #fbf1f4;
+  --color-brand-100: #f6e0e7;
+  --color-brand-200: #ebbecd;
+  --color-brand-300: #db92a9;
+  --color-brand-400: #c25f7e;
+  --color-brand-500: #9a3355;
+  --color-brand-600: #6d0f2d;
+  --color-brand-700: #58091f;
+  --color-brand-800: #440717;
+  --color-brand-900: #320510;
+
+  /* Roles semánticos */
+  --color-primary: var(--color-brand-600);
+  --color-primary-hover: var(--color-brand-700);
+  --color-primary-fg: #ffffff;
+
+  --color-success: #15803d;
+  --color-success-bg: #f0fdf4;
+  --color-warning: #b45309;
+  --color-warning-bg: #fffbeb;
+  --color-danger: #dc2626;
+  --color-danger-bg: #fef2f2;
+  --color-info: #1d4ed8;
+  --color-info-bg: #eff6ff;
+
+  /* Radios y sombras */
+  --radius-control: 0.7rem;
+  --radius-card: 1rem;
+
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 3px 0 rgb(0 0 0 / 0.06);
+  --shadow-pop: 0 10px 30px -12px rgb(0 0 0 / 0.22);
+
+  /* Movimiento */
+  --ease-out-quart: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* ============================================================
+   Animaciones globales
+   ============================================================ */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -22,7 +67,6 @@
   animation: fade-in 700ms ease-out;
 }
 
-
 @keyframes hero-premium {
   from {
     opacity: 0;
@@ -36,5 +80,50 @@
 }
 
 .animate-hero-premium {
-  animation: hero-premium 800ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: hero-premium 800ms var(--ease-out-quart);
+}
+
+/* Entrada estándar de popovers/modales/toasts */
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-pop-in {
+  animation: pop-in 180ms var(--ease-out-quart);
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-overlay-in {
+  animation: overlay-in 150ms ease-out;
+}
+
+/* ============================================================
+   Accesibilidad — respetar reducción de movimiento del sistema
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { FolderSearch } from "lucide-react";
 
 import CategoriesHero from "./CategoriesHero";
 import CategoriesFilterBar from "./CategoriesFilterBar";
 import CategoryCard from "./CategoryCard";
 import CategoryCardSkeleton from "./CategoryCardSkeleton";
 import Pagination from "@/shared/components/Pagination";
+import { EmptyState, ErrorState } from "@/shared/components/ui";
 
 import { getCatalogs } from "@/features/public/products/api/productsService";
 
@@ -24,6 +26,7 @@ export default function CategoriesGrid() {
   const [selectedName, setSelectedName] = useState("");
   const [sort, setSort] = useState<CategorySort>("popular");
   const [page, setPage] = useState(1);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,7 +59,7 @@ export default function CategoriesGrid() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadKey]);
 
   // Nombres para el dropdown de categoría, sobre la lista completa.
   const categoryNames = useMemo(
@@ -135,13 +138,20 @@ export default function CategoriesGrid() {
               ))}
             </div>
           ) : failed ? (
-            <div className="rounded-2xl border p-12 text-center text-gray-500">
-              No se pudieron cargar las categorías.
-            </div>
+            <ErrorState
+              title="No se pudieron cargar las categorías"
+              description="Intenta de nuevo en unos momentos."
+              onRetry={() => setReloadKey((k) => k + 1)}
+            />
           ) : visibleCategories.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-gray-300 p-12 text-center text-gray-500">
-              No hay categorías disponibles.
-            </div>
+            <EmptyState
+              icon={<FolderSearch size={22} />}
+              title={
+                search || selectedName
+                  ? "No hay categorías que coincidan con tu búsqueda."
+                  : "Aún no hay categorías disponibles."
+              }
+            />
           ) : (
             <>
               <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">

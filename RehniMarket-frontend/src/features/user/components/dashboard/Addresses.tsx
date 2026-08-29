@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { MapPin, Plus, Star, Trash2, X } from "lucide-react";
 
 import AddressForm from "@/features/addresses/components/AddressForm";
-import AddressDeleteConfirmModal from "@/features/addresses/components/AddressDeleteConfirmModal";
+import ConfirmModal from "@/shared/components/ConfirmModal";
 import { getAddresses, deleteAddress, setDefaultAddress } from "@/features/addresses/api/addressService";
 import { useAlert } from "@/shared/components/alert/useAlert";
+import { Button, EmptyState, ErrorState, Skeleton } from "@/shared/components/ui";
 
 import type { Address } from "@/features/addresses/types/response";
 
@@ -13,6 +14,7 @@ export default function Addresses() {
 
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
 
   const [showForm, setShowForm] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
@@ -23,10 +25,12 @@ export default function Addresses() {
   const loadAddresses = useCallback(async () => {
     try {
       setLoading(true);
+      setFailed(false);
       const data = await getAddresses();
       setAddresses(data);
     } catch (error) {
       console.error("Error cargando direcciones:", error);
+      setFailed(true);
     } finally {
       setLoading(false);
     }
@@ -75,26 +79,26 @@ export default function Addresses() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold">Direcciones</h1>
+          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Direcciones</h1>
 
-          <p className="mt-2 text-gray-500">
+          <p className="mt-1 text-sm text-gray-500">
             Administra tus direcciones de envío.
           </p>
         </div>
 
-        <button
+        <Button
+          variant={showForm ? "outline" : "primary"}
+          leadingIcon={showForm ? <X size={16} /> : <Plus size={16} />}
           onClick={() => setShowForm((v) => !v)}
-          className="flex items-center gap-2 rounded-xl bg-red-700 px-5 py-3 text-sm font-medium text-white hover:bg-red-800"
         >
-          {showForm ? <X size={16} /> : <Plus size={16} />}
           {showForm ? "Cancelar" : "Agregar dirección"}
-        </button>
+        </Button>
       </div>
 
       {showForm && (
-        <div className="mt-6 rounded-2xl border bg-white p-6">
+        <div className="mt-6 rounded-card border border-gray-200 bg-white p-6 shadow-card">
           <AddressForm
             onSaved={handleSaved}
             onCancel={() => setShowForm(false)}
@@ -104,39 +108,43 @@ export default function Addresses() {
       )}
 
       {loading ? (
-        <p className="mt-8 text-gray-500">Cargando direcciones...</p>
-      ) : addresses.length === 0 && !showForm ? (
-        <div className="mt-8 rounded-2xl border border-dashed border-gray-300 bg-white p-12 text-center">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
-            <MapPin className="h-10 w-10 text-red-700" />
-          </div>
-
-          <h2 className="text-2xl font-semibold text-gray-900">
-            Aún no has registrado direcciones.
-          </h2>
-
-          <button
-            onClick={() => setShowForm(true)}
-            className="mt-6 flex items-center gap-2 rounded-xl bg-red-700 px-6 py-3 text-sm font-medium text-white transition hover:bg-red-800 mx-auto"
-          >
-            <Plus size={16} />
-            Agregar dirección
-          </button>
+        <div className="mt-8 space-y-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton key={index} className="h-24 rounded-card" />
+          ))}
         </div>
+      ) : failed ? (
+        <ErrorState
+          className="mt-8"
+          title="No pudimos cargar tus direcciones"
+          onRetry={loadAddresses}
+        />
+      ) : addresses.length === 0 && !showForm ? (
+        <EmptyState
+          className="mt-8"
+          icon={<MapPin size={22} />}
+          title="Aún no has registrado direcciones"
+          description="Agrega una dirección para agilizar tus próximas compras."
+          action={
+            <Button size="sm" leadingIcon={<Plus size={16} />} onClick={() => setShowForm(true)}>
+              Agregar dirección
+            </Button>
+          }
+        />
       ) : (
         <div className="mt-8 space-y-3">
           {addresses.map((address) => (
             <div
               key={address.id}
-              className="flex items-start justify-between gap-4 rounded-2xl border bg-white p-5"
+              className="flex items-start justify-between gap-4 rounded-card border border-gray-200 bg-white p-5 shadow-card"
             >
               <div>
                 <div className="flex items-center gap-2">
                   <p className="font-semibold text-gray-900">{address.label ?? "Dirección"}</p>
 
                   {address.isDefault && (
-                    <span className="flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">
-                      <Star size={11} className="fill-red-700" />
+                    <span className="flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-primary">
+                      <Star size={11} className="fill-primary" />
                       Predeterminada
                     </span>
                   )}
@@ -162,8 +170,9 @@ export default function Addresses() {
                   <button
                     onClick={() => handleSetDefault(address.id)}
                     disabled={actionId === address.id}
-                    className="rounded-lg p-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                    className="flex h-9 w-9 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100 disabled:opacity-50"
                     title="Marcar como predeterminada"
+                    aria-label={`Marcar ${address.label ?? "dirección"} como predeterminada`}
                   >
                     <Star size={16} />
                   </button>
@@ -172,8 +181,9 @@ export default function Addresses() {
                 <button
                   onClick={() => setDeleteTarget(address)}
                   disabled={actionId === address.id}
-                  className="rounded-lg p-2 text-red-700 hover:bg-red-50 disabled:opacity-50"
+                  className="flex h-9 w-9 items-center justify-center rounded-control text-danger transition hover:bg-danger-bg disabled:opacity-50"
                   title="Eliminar"
+                  aria-label={`Eliminar ${address.label ?? "dirección"}`}
                 >
                   <Trash2 size={16} />
                 </button>
@@ -183,12 +193,26 @@ export default function Addresses() {
         </div>
       )}
 
-      <AddressDeleteConfirmModal
+      <ConfirmModal
         isOpen={!!deleteTarget}
-        addressLabel={deleteTarget?.label ?? "esta dirección"}
+        title="Eliminar dirección"
+        tone="danger"
+        confirmLabel="Eliminar dirección"
         loading={deleting}
         onConfirm={handleConfirmDelete}
         onClose={() => setDeleteTarget(null)}
+        message={
+          <>
+            Estás a punto de eliminar{" "}
+            <span className="font-semibold text-gray-900">
+              {deleteTarget?.label ?? "esta dirección"}
+            </span>
+            .{" "}
+            <span className="font-medium text-danger">
+              Esta acción no se puede deshacer.
+            </span>
+          </>
+        }
       />
     </div>
   );

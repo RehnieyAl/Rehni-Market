@@ -5,6 +5,7 @@ import axios from "axios";
 import { rechargeWalletByEmail, getRechargeHistory } from "@/features/admin/api/walletService";
 import { formatPrice } from "@/shared/utils/formatPrice";
 import { useAlert } from "@/shared/components/alert/useAlert";
+import { Button, EmptyState, Input, TableSkeleton } from "@/shared/components/ui";
 
 import type { WalletRechargeHistoryItem } from "@/features/wallet/types/response";
 
@@ -92,71 +93,55 @@ export default function RehniCoin() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">RehniCoin</h1>
+      <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">RehniCoin</h1>
 
-      <p className="mt-2 text-gray-500">
+      <p className="mt-2 text-sm text-gray-500">
         Recarga saldo de RehniCoin a un usuario registrado. 1 RehniCoin = 1
-        COP - es una billetera interna simulada, no una criptomoneda real.
+        COP — es una billetera interna simulada, no una criptomoneda real.
       </p>
 
-      <div className="mt-6 rounded-2xl border bg-white p-6">
+      <div className="mt-6 rounded-card border border-gray-200 bg-white p-6 shadow-card">
         <h2 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-          <Coins size={18} className="text-[#6D0F2D]" />
+          <Coins size={18} className="text-primary" />
           Recargar saldo
         </h2>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="sm:col-span-2">
-            <label className="mb-1.5 block text-sm text-gray-700">
-              Correo del usuario
-            </label>
+          <Input
+            className="sm:col-span-2"
+            label="Correo del usuario"
+            type="email"
+            value={form.email}
+            onChange={(e) => handleChange("email", e.target.value)}
+            placeholder="usuario@email.com"
+          />
 
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => handleChange("email", e.target.value)}
-              placeholder="usuario@email.com"
-              className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-[#6D0F2D]"
-            />
-          </div>
+          <Input
+            label="Cantidad (RC)"
+            type="text"
+            inputMode="numeric"
+            value={form.amount}
+            onChange={(e) => handleChange("amount", e.target.value)}
+            placeholder="0"
+          />
 
-          <div>
-            <label className="mb-1.5 block text-sm text-gray-700">
-              Cantidad (RC)
-            </label>
-
-            <input
-              type="text"
-              inputMode="numeric"
-              value={form.amount}
-              onChange={(e) => handleChange("amount", e.target.value)}
-              placeholder="0"
-              className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-[#6D0F2D]"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm text-gray-700">
-              Descripción (opcional)
-            </label>
-
-            <input
-              type="text"
-              value={form.description}
-              onChange={(e) => handleChange("description", e.target.value)}
-              placeholder="Ej. Recarga administrativa"
-              className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-[#6D0F2D]"
-            />
-          </div>
+          <Input
+            label="Descripción (opcional)"
+            type="text"
+            value={form.description}
+            onChange={(e) => handleChange("description", e.target.value)}
+            placeholder="Ej. Recarga administrativa"
+          />
         </div>
 
-        <button
+        <Button
+          className="mt-6"
           onClick={handleSubmit}
-          disabled={saving || !isValid}
-          className="mt-6 rounded-xl bg-[#7A1833] px-6 py-3 text-sm font-medium text-white transition hover:bg-[#64132a] disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={!isValid}
+          loading={saving}
         >
-          {saving ? "Recargando..." : "Recargar saldo"}
-        </button>
+          Recargar saldo
+        </Button>
       </div>
 
       <div className="mt-8">
@@ -164,9 +149,9 @@ export default function RehniCoin() {
           Últimas recargas
         </h2>
 
-        <section className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <section className="overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[720px]">
               <thead className="bg-white">
                 <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-400">
                   <th className="px-5 py-3 font-medium">Fecha</th>
@@ -180,14 +165,17 @@ export default function RehniCoin() {
               <tbody>
                 {historyLoading ? (
                   <tr>
-                    <td colSpan={5} className="px-5 py-8 text-center text-sm text-gray-500">
-                      Cargando historial...
+                    <td colSpan={5} className="p-0">
+                      <TableSkeleton rows={4} columns={["22%", "16%", "30%", "16%", "16%"]} />
                     </td>
                   </tr>
                 ) : history.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-5 py-8 text-center text-sm text-gray-500">
-                      Todavía no se han registrado recargas.
+                    <td colSpan={5} className="p-0">
+                      <EmptyState
+                        variant="plain"
+                        title="Todavía no se han registrado recargas"
+                      />
                     </td>
                   </tr>
                 ) : (
@@ -208,7 +196,7 @@ export default function RehniCoin() {
                         {item.userEmail}
                       </td>
 
-                      <td className="px-5 py-3 text-sm font-semibold text-[#6D0F2D]">
+                      <td className="px-5 py-3 text-sm font-semibold text-primary">
                         {formatPrice(item.amount)} RC
                       </td>
 
@@ -226,25 +214,27 @@ export default function RehniCoin() {
 
         {totalPages > 1 && (
           <div className="mt-6 flex items-center justify-center gap-5">
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               disabled={page === 1}
               onClick={() => setPage((p) => p - 1)}
-              className="rounded-xl border px-4 py-2 disabled:opacity-50"
             >
               Anterior
-            </button>
+            </Button>
 
             <span className="text-sm text-gray-600">
               Página {page} de {totalPages}
             </span>
 
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               disabled={page === totalPages}
               onClick={() => setPage((p) => p + 1)}
-              className="rounded-xl border px-4 py-2 disabled:opacity-50"
             >
               Siguiente
-            </button>
+            </Button>
           </div>
         )}
       </div>

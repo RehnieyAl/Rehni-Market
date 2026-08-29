@@ -3,9 +3,9 @@ import { Building2, Pencil, Plus, Star, Trash2 } from "lucide-react";
 import axios from "axios";
 
 import BankAccountForm from "./BankAccountForm";
-import BankAccountDeleteConfirmModal from "./BankAccountDeleteConfirmModal";
+import ConfirmModal from "@/shared/components/ConfirmModal";
 import BankAccountCardSkeleton from "./BankAccountCardSkeleton";
-import ComingSoon from "@/shared/components/dashboard/ComingSoon";
+import { EmptyState } from "@/shared/components/ui";
 
 import { deleteBankAccount, getBankAccounts } from "@/features/company/api/bankAccountService";
 import { BANK_ACCOUNT_TYPE_LABEL } from "@/features/payouts/utils/payoutStatus";
@@ -91,7 +91,7 @@ export default function BankAccountsList() {
 
         <button
           onClick={handleOpenCreate}
-          className="flex shrink-0 items-center gap-2 rounded-xl bg-[#6D0F2D] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#5b0d26]"
+          className="flex shrink-0 items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-white transition hover:bg-primary-hover"
         >
           <Plus size={16} />
           Nueva cuenta
@@ -105,20 +105,21 @@ export default function BankAccountsList() {
           ))}
         </div>
       ) : accounts.length === 0 ? (
-        <ComingSoon
-          icon={<Building2 className="h-10 w-10 text-red-700" />}
+        <EmptyState
+          className="mt-6"
+          icon={<Building2 size={22} />}
           title="Aún no tienes cuentas bancarias"
-          description="Registra al menos una cuenta para poder recibir el giro de tus liquidaciones mensuales."
+          description="Registra al menos una cuenta para recibir el giro de tus liquidaciones mensuales."
         />
       ) : (
         <div className="mt-6 space-y-3">
           {accounts.map((account) => (
             <div
               key={account.id}
-              className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-5 transition hover:shadow-md"
+              className="flex flex-wrap items-start justify-between gap-4 rounded-card border border-gray-200 bg-white p-5 shadow-card transition hover:shadow-pop"
             >
               <div className="flex min-w-0 items-start gap-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#6D0F2D]/10 text-[#6D0F2D]">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <Building2 size={20} />
                 </div>
 
@@ -127,7 +128,7 @@ export default function BankAccountsList() {
                     <p className="font-semibold text-gray-900">{account.bankName}</p>
 
                     {account.isDefault && (
-                      <span className="flex items-center gap-1 rounded-full bg-[#6D0F2D]/10 px-2.5 py-0.5 text-xs font-medium text-[#6D0F2D]">
+                      <span className="flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
                         <Star size={11} className="fill-current" />
                         Predeterminada
                       </span>
@@ -155,7 +156,7 @@ export default function BankAccountsList() {
 
                 <button
                   onClick={() => setDeleteTarget(account)}
-                  className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+                  className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-danger hover:bg-danger-bg"
                 >
                   <Trash2 size={14} />
                   Eliminar
@@ -174,12 +175,26 @@ export default function BankAccountsList() {
         onClose={() => setFormOpen(false)}
       />
 
-      <BankAccountDeleteConfirmModal
+      <ConfirmModal
         isOpen={deleteTarget !== null}
-        bankName={deleteTarget?.bankName ?? ""}
+        title="Eliminar cuenta bancaria"
+        tone="danger"
+        confirmLabel="Eliminar cuenta"
         loading={deleting}
         onConfirm={handleConfirmDelete}
         onClose={() => setDeleteTarget(null)}
+        message={
+          <>
+            Estás a punto de eliminar{" "}
+            <span className="font-semibold text-gray-900">
+              {deleteTarget?.bankName ?? ""}
+            </span>
+            .{" "}
+            <span className="font-medium text-danger">
+              Esta acción no se puede deshacer.
+            </span>
+          </>
+        }
       />
     </div>
   );

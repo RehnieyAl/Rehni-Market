@@ -1,8 +1,6 @@
 import { useSearchParams } from "react-router-dom";
 
 import DashboardLayout from "@/shared/components/dashboard/DashboardLayout";
-import Sidebar from "@/shared/components/dashboard/Sidebar";
-import Topbar from "@/shared/components/dashboard/Topbar";
 
 import { dashboardNavigation } from "@/shared/config/dashboardNavigation";
 import { useRole } from "@/hooks/useRole";
@@ -58,26 +56,12 @@ export default function Admin() {
 
   return (
     <DashboardLayout
-      sidebar={
-        <Sidebar
-          items={
-            isOwner
-              ? dashboardNavigation.owner
-              : dashboardNavigation.admin
-          }
-          activeItem={view}
-          onItemClick={handleViewChange}
-        />
-      }
-      topbar={
-        <Topbar
-          title={
-            isOwner ? "Panel Propietario" : "Panel Administrador"
-          }
-          description="Administra la plataforma"
-          roleName={isOwner ? "Propietario" : "Administrador"}
-        />
-      }
+      navItems={isOwner ? dashboardNavigation.owner : dashboardNavigation.admin}
+      activeItem={view}
+      onNavigate={handleViewChange}
+      title={isOwner ? "Panel Propietario" : "Panel Administrador"}
+      description="Administra la plataforma"
+      roleName={isOwner ? "Propietario" : "Administrador"}
     >
       {views[view as keyof typeof views]}
     </DashboardLayout>

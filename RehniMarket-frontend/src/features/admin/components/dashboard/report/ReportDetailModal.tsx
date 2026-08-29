@@ -1,4 +1,4 @@
-import { X, User, Building2, Package, CalendarDays, ExternalLink } from "lucide-react";
+import { User, Building2, Package, CalendarDays, ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import {
@@ -6,6 +6,7 @@ import {
   updateReportStatus,
 } from "@/features/reports/api/reportService";
 import { useAlert } from "@/shared/components/alert/useAlert";
+import { Modal, Button, Textarea, Spinner, EmptyState } from "@/shared/components/ui";
 
 import { ReportStatusBadge } from "./Reports";
 
@@ -60,8 +61,6 @@ export default function ReportDetailModal({
     loadReport();
   }, [isOpen, reportId]);
 
-  if (!isOpen) return null;
-
   const handleConfirmAction = async (status: ReportStatus) => {
     if (!report) return;
 
@@ -97,35 +96,25 @@ export default function ReportDetailModal({
   const isProduct = report?.targetType === "product";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-        <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-5">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">
-              Detalle del reporte
-            </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              {isProduct ? "Reporte de producto" : "Reporte de empresa"}
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl p-2 text-gray-500 transition hover:bg-gray-100"
-          >
-            <X size={22} />
-          </button>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="lg"
+      title="Detalle del reporte"
+      description={isProduct ? "Reporte de producto" : "Reporte de empresa"}
+      footer={
+        <Button variant="outline" onClick={onClose}>
+          Cerrar
+        </Button>
+      }
+    >
+      {loading && (
+        <div className="flex items-center justify-center gap-2 p-10 text-sm text-gray-500">
+          <Spinner /> Cargando reporte...
         </div>
+      )}
 
-        <div className="overflow-y-auto p-6">
-          {loading && (
-            <div className="flex items-center justify-center p-12">
-              <p className="text-gray-500">Cargando reporte...</p>
-            </div>
-          )}
-
-          {!loading && report && (
+      {!loading && report && (
             <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <ReportStatusBadge status={report.status} />
@@ -175,7 +164,7 @@ export default function ReportDetailModal({
                   href={`/products/${report.productId}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-[#7A1833] hover:underline"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
                 >
                   Ver producto
                   <ExternalLink size={14} />
@@ -187,7 +176,7 @@ export default function ReportDetailModal({
                   href={`/company/${report.companyId}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-[#7A1833] hover:underline"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
                 >
                   Ver empresa
                   <ExternalLink size={14} />
@@ -269,7 +258,7 @@ export default function ReportDetailModal({
                   que rechaza la modificación aunque se llame al endpoint
                   directamente. */}
               {report.status === "resolved" ? (
-                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 text-sm text-gray-500">
+                <div className="rounded-card border border-gray-200 bg-gray-50 p-5 text-sm text-gray-500">
                   Este reporte está resuelto y ya no puede modificarse.
                 </div>
               ) : (
@@ -277,7 +266,7 @@ export default function ReportDetailModal({
                   suspenden empresa ni desactivan producto por sí solas;
                   eso lo decide el admin aparte con los servicios ya
                   existentes (ver ALCANCE > punto 10). */
-              <div className="rounded-2xl border border-gray-200 p-5">
+              <div className="rounded-card border border-gray-200 p-5">
                 <h3 className="font-semibold text-gray-900">
                   Gestionar reporte
                 </h3>
@@ -285,110 +274,82 @@ export default function ReportDetailModal({
                 {pendingAction === null ? (
                   <div className="mt-4 flex flex-wrap gap-3">
                     {report.status !== "reviewing" && (
-                      <button
-                        type="button"
+                      <Button
+                        variant="outline"
+                        size="sm"
                         disabled={submitting}
                         onClick={() => handleConfirmAction("reviewing")}
-                        className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         Marcar en revisión
-                      </button>
+                      </Button>
                     )}
 
-                    <button
-                      type="button"
+                    <Button
+                      size="sm"
                       disabled={submitting}
                       onClick={() => setPendingAction("resolved")}
-                      className="rounded-xl bg-green-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Resolver
-                    </button>
+                    </Button>
 
-                    <button
-                      type="button"
+                    <Button
+                      variant="danger"
+                      size="sm"
                       disabled={submitting}
                       onClick={() => setPendingAction("rejected")}
-                      className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Rechazar
-                    </button>
+                    </Button>
                   </div>
                 ) : (
                   <div className="mt-4">
-                    <label
-                      htmlFor="report-admin-response"
-                      className="block text-sm font-medium text-gray-700"
-                    >
-                      Respuesta administrativa (opcional)
-                    </label>
-
-                    <textarea
-                      id="report-admin-response"
+                    <Textarea
+                      label="Respuesta administrativa (opcional)"
                       value={adminResponse}
-                      onChange={(event) =>
-                        setAdminResponse(event.target.value)
-                      }
+                      onChange={(event) => setAdminResponse(event.target.value)}
                       disabled={submitting}
                       rows={3}
                       placeholder="Explica brevemente la decisión tomada."
-                      className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20 disabled:cursor-not-allowed disabled:bg-gray-100"
                     />
 
                     <div className="mt-4 flex gap-3">
-                      <button
-                        type="button"
+                      <Button
+                        variant="outline"
+                        size="sm"
                         disabled={submitting}
                         onClick={() => {
                           setPendingAction(null);
                           setAdminResponse("");
                         }}
-                        className="rounded-xl border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         Cancelar
-                      </button>
+                      </Button>
 
-                      <button
-                        type="button"
-                        disabled={submitting}
+                      <Button
+                        variant={pendingAction === "resolved" ? "primary" : "danger"}
+                        size="sm"
+                        loading={submitting}
                         onClick={() => handleConfirmAction(pendingAction)}
-                        className={`rounded-xl px-4 py-2 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                          pendingAction === "resolved"
-                            ? "bg-green-600 hover:bg-green-700"
-                            : "bg-red-600 hover:bg-red-700"
-                        }`}
                       >
-                        {submitting
-                          ? "Guardando..."
-                          : pendingAction === "resolved"
-                            ? "Confirmar resolución"
-                            : "Confirmar rechazo"}
-                      </button>
+                        {pendingAction === "resolved"
+                          ? "Confirmar resolución"
+                          : "Confirmar rechazo"}
+                      </Button>
                     </div>
                   </div>
                 )}
               </div>
               )}
             </div>
-          )}
+      )}
 
-          {!loading && !report && (
-            <div className="p-12 text-center text-gray-500">
-              No se pudo cargar la información del reporte.
-            </div>
-          )}
-        </div>
-
-        <div className="flex shrink-0 justify-end border-t border-gray-200 px-6 py-5">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-xl border border-gray-300 px-5 py-2 transition hover:bg-gray-100"
-          >
-            Cerrar
-          </button>
-        </div>
-      </div>
-    </div>
+      {!loading && !report && (
+        <EmptyState
+          variant="plain"
+          title="No se pudo cargar la información del reporte"
+        />
+      )}
+    </Modal>
   );
 }
 

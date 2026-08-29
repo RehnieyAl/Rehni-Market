@@ -8,9 +8,13 @@ import CategoriesGrid from "@/features/public/categories/components/CategoriesGr
 // features/public/categories/*.
 export default function Categories() {
   return (
-    <div>
+    <div className="flex min-h-screen flex-col bg-white">
       <NavBar />
-      <CategoriesGrid />
+
+      <main className="flex-1">
+        <CategoriesGrid />
+      </main>
+
       <Footer />
     </div>
   );

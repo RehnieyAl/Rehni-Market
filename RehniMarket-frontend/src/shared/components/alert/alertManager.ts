@@ -1,15 +1,12 @@
-export type AlertType = "error" | "success";
+import type { AlertType } from "./AlertContext";
 
-export type AlertListener = (
-  type: AlertType,
-  message: string,
-) => void;
+export type { AlertType };
+
+export type AlertListener = (type: AlertType, message: string) => void;
 
 let listener: AlertListener | null = null;
 
-export function registerAlertListener(
-  callback: AlertListener,
-) {
+export function registerAlertListener(callback: AlertListener) {
   listener = callback;
 
   return () => {
@@ -17,15 +14,9 @@ export function registerAlertListener(
   };
 }
 
-export function showGlobalAlert(
-  type: AlertType,
-  message: string,
-) {
+export function showGlobalAlert(type: AlertType, message: string) {
   if (!listener) {
-    console.warn(
-      "NO EXISTE ALERT LISTENER",
-    );
-
+    console.warn("No hay un AlertProvider montado.");
     return;
   }
 

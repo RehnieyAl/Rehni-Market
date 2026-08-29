@@ -6,6 +6,7 @@ import ConfirmModal from "@/shared/components/ConfirmModal";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { useAuth } from "@/features/public/auth/context/useAuth";
 import { forgotPassword, updateMe, updateMePhoto } from "@/features/public/auth/api/authService";
+import { Button, Input } from "@/shared/components/ui";
 
 // Configuración de cuenta, común a cualquier rol: nombre, correo, foto y contraseña son de la cuenta.
 // Cada dashboard monta este mismo componente.
@@ -129,23 +130,21 @@ export default function AccountSettings() {
   const initial = user?.name?.charAt(0)?.toUpperCase() ?? "?";
 
   return (
-    <>
+    <div className="mx-auto w-full max-w-3xl">
       {/* Encabezado */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Configuración de cuenta
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900">Configuración de cuenta</h1>
 
-        <p className="mt-2 text-gray-500">
+        <p className="mt-1 text-sm text-gray-500">
           Administra tu información personal y la seguridad de tu cuenta.
         </p>
       </div>
 
       {/* PERFIL: foto de perfil + nombre */}
-      <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-        <div className="flex items-center justify-between">
+      <section className="mt-6 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Perfil</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Perfil</h2>
 
             <p className="mt-1 text-sm text-gray-500">
               Tu foto y tu nombre, visibles en toda la plataforma.
@@ -154,16 +153,18 @@ export default function AccountSettings() {
 
           {!editingName && (
             <button
+              type="button"
               onClick={handleStartEditName}
-              className="rounded-xl p-3 hover:bg-gray-100"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
+              aria-label="Editar nombre"
             >
-              <Pencil size={20} />
+              <Pencil size={18} />
             </button>
           )}
         </div>
 
-        <div className="mt-6 flex items-center gap-5">
-          <div className="h-20 w-20 shrink-0 overflow-hidden rounded-full border-4 border-white bg-gray-100 shadow-md">
+        <div className="mt-6 flex flex-wrap items-center gap-5">
+          <div className="h-20 w-20 shrink-0 overflow-hidden rounded-full border-4 border-white bg-gray-100 shadow-card">
             {previewPhoto || user?.profileImagen ? (
               <img
                 src={previewPhoto ?? user?.profileImagen ?? undefined}
@@ -178,139 +179,125 @@ export default function AccountSettings() {
           </div>
 
           <div>
-            <label className="flex w-fit cursor-pointer items-center gap-2 rounded-xl border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <label className="flex w-fit cursor-pointer items-center gap-2 rounded-control border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
               <Upload size={16} />
               Cambiar foto
-
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={handleSelectPhoto}
-              />
+              <input type="file" hidden accept="image/*" onChange={handleSelectPhoto} />
             </label>
 
             {selectedPhoto && (
-              <button
+              <Button
+                className="mt-2"
+                size="sm"
+                loading={uploadingPhoto}
+                leadingIcon={<Save size={16} />}
                 onClick={handleUploadPhoto}
-                disabled={uploadingPhoto}
-                className="mt-2 flex items-center gap-2 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <Save size={16} />
-                {uploadingPhoto ? "Guardando..." : "Guardar foto"}
-              </button>
+                {uploadingPhoto ? "Guardando…" : "Guardar foto"}
+              </Button>
             )}
           </div>
         </div>
 
-        <div className="mt-6">
-          <label className="font-medium text-gray-700">Nombre</label>
-
-          <input
-            value={editingName ? nameForm : (user?.name ?? "")}
-            disabled={!editingName}
-            onChange={(e) => setNameForm(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 disabled:bg-gray-100"
-          />
-        </div>
+        <Input
+          className="mt-6"
+          label="Nombre"
+          value={editingName ? nameForm : (user?.name ?? "")}
+          disabled={!editingName}
+          onChange={(e) => setNameForm(e.target.value)}
+        />
 
         {editingName && (
           <div className="mt-6 flex justify-end gap-3">
-            <button
+            <Button
+              variant="outline"
+              disabled={savingName}
+              leadingIcon={<X size={18} />}
               onClick={() => setEditingName(false)}
-              disabled={savingName}
-              className="flex items-center gap-2 rounded-xl border px-6 py-3 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <X size={18} />
               Cancelar
-            </button>
+            </Button>
 
-            <button
+            <Button
+              loading={savingName}
+              leadingIcon={<Save size={18} />}
               onClick={handleSaveName}
-              disabled={savingName}
-              className="flex items-center gap-2 rounded-xl bg-red-700 px-6 py-3 text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <Save size={18} />
-              {savingName ? "Guardando..." : "Guardar"}
-            </button>
+              {savingName ? "Guardando…" : "Guardar"}
+            </Button>
           </div>
         )}
       </section>
 
       {/* CUENTA: correo electrónico */}
-      <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-        <div className="flex items-center justify-between">
+      <section className="mt-6 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Cuenta</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Cuenta</h2>
 
-            <p className="mt-1 text-sm text-gray-500">
-              El correo con el que inicias sesión.
-            </p>
+            <p className="mt-1 text-sm text-gray-500">El correo con el que inicias sesión.</p>
           </div>
 
           {!editingEmail && (
             <button
+              type="button"
               onClick={handleStartEditEmail}
-              className="rounded-xl p-3 hover:bg-gray-100"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
+              aria-label="Editar correo"
             >
-              <Pencil size={20} />
+              <Pencil size={18} />
             </button>
           )}
         </div>
 
-        <div className="mt-6">
-          <label className="font-medium text-gray-700">
-            Correo electrónico
-          </label>
-
-          <input
-            type="email"
-            value={editingEmail ? emailForm : (user?.email ?? "")}
-            disabled={!editingEmail}
-            onChange={(e) => setEmailForm(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 disabled:bg-gray-100"
-          />
-        </div>
+        <Input
+          className="mt-6"
+          label="Correo electrónico"
+          type="email"
+          value={editingEmail ? emailForm : (user?.email ?? "")}
+          disabled={!editingEmail}
+          onChange={(e) => setEmailForm(e.target.value)}
+        />
 
         {editingEmail && (
           <div className="mt-6 flex justify-end gap-3">
-            <button
+            <Button
+              variant="outline"
+              disabled={savingEmail}
+              leadingIcon={<X size={18} />}
               onClick={() => setEditingEmail(false)}
-              disabled={savingEmail}
-              className="flex items-center gap-2 rounded-xl border px-6 py-3 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <X size={18} />
               Cancelar
-            </button>
+            </Button>
 
-            <button
+            <Button
+              loading={savingEmail}
+              leadingIcon={<Save size={18} />}
               onClick={handleSaveEmail}
-              disabled={savingEmail}
-              className="flex items-center gap-2 rounded-xl bg-red-700 px-6 py-3 text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <Save size={18} />
-              {savingEmail ? "Guardando..." : "Guardar"}
-            </button>
+              {savingEmail ? "Guardando…" : "Guardar"}
+            </Button>
           </div>
         )}
       </section>
 
       {/* SEGURIDAD: cambiar contraseña */}
-      <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-        <h2 className="text-xl font-semibold text-gray-900">Seguridad</h2>
+      <section className="mt-6 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
+        <h2 className="text-lg font-semibold text-gray-900">Seguridad</h2>
 
         <p className="mt-1 text-sm text-gray-500">
           Cambia tu contraseña verificando tu correo electrónico.
         </p>
 
-        <button
-          onClick={() => setConfirmPasswordOpen(true)}
+        <Button
+          className="mt-6"
+          variant="outline"
           disabled={sendingCode}
-          className="mt-6 flex items-center gap-2 rounded-xl border border-gray-300 px-6 py-3 text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+          leadingIcon={<ShieldCheck size={18} />}
+          onClick={() => setConfirmPasswordOpen(true)}
         >
-          <ShieldCheck size={18} />
-          {sendingCode ? "Enviando código..." : "Cambiar contraseña"}
-        </button>
+          {sendingCode ? "Enviando código…" : "Cambiar contraseña"}
+        </Button>
       </section>
 
       <ConfirmModal
@@ -322,6 +309,6 @@ export default function AccountSettings() {
         onConfirm={handleChangePassword}
         onClose={() => setConfirmPasswordOpen(false)}
       />
-    </>
+    </div>
   );
 }

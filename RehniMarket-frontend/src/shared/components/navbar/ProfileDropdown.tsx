@@ -10,6 +10,7 @@ import { ChevronDown, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "@/features/public/auth/context/useAuth";
+import { Skeleton } from "@/shared/components/ui";
 import { dashboardNavigation } from "@/shared/config/dashboardNavigation";
 import type { SidebarItem } from "@/shared/components/dashboard/Sidebar";
 import type { Role } from "@/features/public/auth/types/auth";
@@ -120,7 +121,7 @@ export default function ProfileDropdown() {
         className="flex items-center gap-3 rounded-xl px-2 py-1.5 transition hover:bg-gray-100"
       >
 
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#6D0F2D] text-sm font-bold text-white">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-bold text-primary-fg">
           {user?.profileImagen ? (
             <img
               src={user.profileImagen}
@@ -133,13 +134,15 @@ export default function ProfileDropdown() {
         </div>
 
         <div className="min-w-0 text-left">
-          <p className="max-w-[150px] truncate text-sm font-semibold text-gray-900">
-            {user?.name ?? "Cargando..."}
-          </p>
+          {user?.name ? (
+            <p className="max-w-[150px] truncate text-sm font-semibold text-gray-900">
+              {user.name}
+            </p>
+          ) : (
+            <Skeleton className="h-3.5 w-20" />
+          )}
 
-          <p className="text-xs text-gray-500">
-            {roleName[role]}
-          </p>
+          <p className="text-xs text-gray-500">{roleName[role]}</p>
         </div>
 
         <ChevronDown
@@ -156,7 +159,7 @@ export default function ProfileDropdown() {
           <div className="bg-gray-50 p-4">
             <div className="flex items-center gap-3">
 
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#6D0F2D] text-lg font-bold text-white">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-lg font-bold text-primary-fg">
                 {user?.profileImagen ? (
                   <img
                     src={user.profileImagen}
@@ -169,15 +172,17 @@ export default function ProfileDropdown() {
               </div>
 
               <div className="min-w-0">
-                <p className="truncate font-semibold text-gray-900">
-                  {user?.name ?? "Cargando..."}
-                </p>
+                {user?.name ? (
+                  <p className="truncate font-semibold text-gray-900">{user.name}</p>
+                ) : (
+                  <Skeleton className="h-4 w-32" />
+                )}
 
                 <p className="truncate text-sm text-gray-500">
                   {user?.email ?? ""}
                 </p>
 
-                <p className="mt-1 text-xs font-medium text-[#6D0F2D]">
+                <p className="mt-1 text-xs font-medium text-primary">
                   {roleName[role]}
                 </p>
               </div>
@@ -244,7 +249,7 @@ export default function ProfileDropdown() {
             <button
               type="button"
               onClick={handleLogout}
-              className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-red-600 transition hover:bg-red-50"
+              className="flex w-full items-center gap-3 rounded-control px-3 py-3 text-sm font-medium text-danger transition hover:bg-danger-bg"
             >
               <LogOut size={18} />
 

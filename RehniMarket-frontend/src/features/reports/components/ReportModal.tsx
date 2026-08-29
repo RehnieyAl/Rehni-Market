@@ -219,7 +219,7 @@ export default function ReportModal({
             className={`mt-2 w-full rounded-xl border px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:ring-2 disabled:cursor-not-allowed disabled:bg-gray-100 ${
               reasonMissing
                 ? "border-red-300 focus:border-red-500 focus:ring-red-200"
-                : "border-gray-300 focus:border-[#7A1833] focus:ring-[#7A1833]/20"
+                : "border-gray-300 focus:border-brand-600 focus:ring-brand-600/20"
             }`}
           />
         </div>
@@ -243,7 +243,7 @@ export default function ReportModal({
             disabled={submitting}
             rows={3}
             placeholder="Cuéntanos más detalles sobre el problema."
-            className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20 disabled:cursor-not-allowed disabled:bg-gray-100"
+            className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 disabled:cursor-not-allowed disabled:bg-gray-100"
           />
         </div>
 
@@ -270,7 +270,7 @@ export default function ReportModal({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={submitting || evidences.length >= MAX_EVIDENCE_IMAGES}
-            className="mt-2 flex items-center gap-2 rounded-xl border border-dashed border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 transition hover:border-[#7A1833] hover:text-[#7A1833] disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-2 flex items-center gap-2 rounded-xl border border-dashed border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 transition hover:border-brand-600 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ImagePlus size={16} />
             Añadir imágenes

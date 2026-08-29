@@ -20,6 +20,7 @@ import {
 } from "./discountForm";
 import ConfirmModal from "@/shared/components/ConfirmModal";
 import { useAlert } from "@/shared/components/alert/useAlert";
+import { ErrorState, Spinner } from "@/shared/components/ui";
 import { parseNumericField } from "@/shared/utils/parseNumericField";
 
 import type { VariantDetailResponse } from "@/features/company/types/response";
@@ -345,16 +346,15 @@ export default function VariantModal({
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center gap-3 p-16 text-gray-500">
-            <Loader2 className="animate-spin" size={20} />
-            Cargando variante...
+          <div className="flex items-center justify-center gap-3 p-16 text-sm text-gray-500">
+            <Spinner /> Cargando variante...
           </div>
         ) : loadError ? (
-          <div className="p-16 text-center text-red-600">{loadError}</div>
+          <ErrorState variant="plain" title={loadError} />
         ) : (
           <div className="space-y-6 p-6">
             {isDeleted && (
-              <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
+              <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-warning">
                 Esta variante fue eliminada. El backend no permite editarla; vuelve a crear la
                 combinación si la necesitas.
               </p>
@@ -365,7 +365,7 @@ export default function VariantModal({
                 {axes.map((axis) => (
                   <div key={axis.id}>
                     <label className="mb-2 block text-sm text-gray-700">
-                      {axis.name} <span className="text-red-500">*</span>
+                      {axis.name} <span className="text-danger">*</span>
                     </label>
 
                     <div className="flex flex-wrap gap-2">
@@ -386,7 +386,7 @@ export default function VariantModal({
                             }
                             className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition disabled:opacity-50 ${
                               active
-                                ? "border-red-600 bg-red-600 text-white"
+                                ? "border-primary bg-primary text-primary-fg"
                                 : "border-gray-300 text-gray-700 hover:border-gray-400"
                             }`}
                           >
@@ -417,7 +417,7 @@ export default function VariantModal({
                 onChange={(e) => setName(e.target.value)}
                 disabled={isDeleted}
                 placeholder={suggestedName || "Nombre de la variante"}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500 disabled:opacity-50"
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-brand-600 disabled:opacity-50"
               />
               {!name.trim() && suggestedName && (
                 <p className="mt-1 text-xs text-gray-400">Se usará: {suggestedName}</p>
@@ -432,7 +432,7 @@ export default function VariantModal({
                   onChange={(e) => setSku(e.target.value)}
                   disabled={isDeleted}
                   placeholder="Opcional"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500 disabled:opacity-50"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-brand-600 disabled:opacity-50"
                 />
               </div>
 
@@ -444,9 +444,9 @@ export default function VariantModal({
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   disabled={isDeleted}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500 disabled:opacity-50"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-brand-600 disabled:opacity-50"
                 />
-                {errors.price && <p className="mt-1 text-xs text-red-600">{errors.price}</p>}
+                {errors.price && <p className="mt-1 text-xs text-danger">{errors.price}</p>}
               </div>
 
               <div>
@@ -457,9 +457,9 @@ export default function VariantModal({
                   value={stock}
                   onChange={(e) => setStock(e.target.value)}
                   disabled={isDeleted}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500 disabled:opacity-50"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-brand-600 disabled:opacity-50"
                 />
-                {errors.stock && <p className="mt-1 text-xs text-red-600">{errors.stock}</p>}
+                {errors.stock && <p className="mt-1 text-xs text-danger">{errors.stock}</p>}
               </div>
             </div>
 
@@ -483,7 +483,7 @@ export default function VariantModal({
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploadingImages || isDeleted}
-                  className="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:border-red-500 hover:text-red-600 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:border-danger hover:text-danger disabled:opacity-50"
                 >
                   {uploadingImages ? (
                     <Loader2 size={16} className="animate-spin" />
@@ -510,14 +510,14 @@ export default function VariantModal({
                     onClick={() => handleSetMainExistingImage(image.id)}
                     className={`relative cursor-pointer overflow-hidden rounded-xl border-2 transition ${
                       image.is_main
-                        ? "border-red-600"
-                        : "border-gray-200 hover:border-red-400"
+                        ? "border-primary"
+                        : "border-gray-200 hover:border-brand-300"
                     }`}
                   >
                     <img src={image.url} alt="" className="h-24 w-24 object-cover" />
 
                     {image.is_main && (
-                      <span className="absolute bottom-1 left-1 flex items-center gap-1 rounded bg-red-600 px-2 py-1 text-xs text-white">
+                      <span className="absolute bottom-1 left-1 flex items-center gap-1 rounded bg-primary px-2 py-1 text-xs text-primary-fg">
                         <Star size={10} /> Principal
                       </span>
                     )}
@@ -533,7 +533,7 @@ export default function VariantModal({
                           e.stopPropagation();
                           setConfirmDeleteImageId(image.id);
                         }}
-                        className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white shadow hover:bg-red-700"
+                        className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-danger text-white shadow transition hover:brightness-95"
                       >
                         <Trash2 size={13} />
                       </button>
@@ -545,13 +545,13 @@ export default function VariantModal({
                   <div
                     key={index}
                     className={`relative overflow-hidden rounded-xl border-2 ${
-                      index === 0 ? "border-red-600" : "border-gray-200"
+                      index === 0 ? "border-primary" : "border-gray-200"
                     }`}
                   >
                     <img src={image.preview} alt="" className="h-24 w-24 object-cover" />
 
                     {index === 0 && (
-                      <span className="absolute bottom-1 left-1 flex items-center gap-1 rounded bg-red-600 px-2 py-1 text-xs text-white">
+                      <span className="absolute bottom-1 left-1 flex items-center gap-1 rounded bg-primary px-2 py-1 text-xs text-primary-fg">
                         <Star size={10} /> Principal
                       </span>
                     )}
@@ -559,7 +559,7 @@ export default function VariantModal({
                     <button
                       type="button"
                       onClick={() => handleRemoveNewImage(index)}
-                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-600 text-white shadow hover:bg-red-700"
+                      className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-danger text-white shadow transition hover:brightness-95"
                     >
                       <Trash2 size={13} />
                     </button>
@@ -574,7 +574,7 @@ export default function VariantModal({
               </div>
             </div>
 
-            {formError && <p className="text-sm text-red-600">{formError}</p>}
+            {formError && <p className="text-sm text-danger">{formError}</p>}
           </div>
         )}
 
@@ -589,9 +589,9 @@ export default function VariantModal({
           <button
             onClick={handleSubmit}
             disabled={saving || loading || isDeleted || price === "" || stock === ""}
-            className="rounded-lg bg-red-700 px-6 py-2 text-white hover:bg-red-800 disabled:opacity-50"
+            className="rounded-lg bg-primary px-6 py-2 text-white hover:bg-primary-hover disabled:opacity-50"
           >
-            {saving ? "Guardando..." : isEditMode ? "Guardar cambios" : "Crear variante"}
+            {saving ? "Guardando…" : isEditMode ? "Guardar cambios" : "Crear variante"}
           </button>
         </div>
       </div>

@@ -4,7 +4,7 @@ import { Eye, Receipt } from "lucide-react";
 import PayoutDetailModal from "@/features/payouts/components/PayoutDetailModal";
 import PayoutRowSkeleton from "@/features/payouts/components/PayoutRowSkeleton";
 import PayoutStatusBadge from "@/features/payouts/components/PayoutStatusBadge";
-import ComingSoon from "@/shared/components/dashboard/ComingSoon";
+import { Button, EmptyState } from "@/shared/components/ui";
 
 import { getCompanyPayoutDetail, getCompanyPayouts } from "@/features/company/api/payoutService";
 import { formatPrice } from "@/shared/utils/formatPrice";
@@ -60,8 +60,8 @@ export default function PayoutsList() {
           ))}
         </div>
       ) : payouts.length === 0 ? (
-        <ComingSoon
-          icon={<Receipt className="h-10 w-10 text-red-700" />}
+        <EmptyState
+          icon={<Receipt size={22} />}
           title="Aún no tienes liquidaciones"
           description="Cuando Rehni Market genere tu primera liquidación mensual, aparecerá aquí."
         />
@@ -71,7 +71,7 @@ export default function PayoutsList() {
             {payouts.map((payout) => (
               <div
                 key={payout.id}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-5 transition hover:shadow-md"
+                className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 bg-white p-5 shadow-card transition hover:shadow-pop"
               >
                 <div className="min-w-0">
                   <p className="font-semibold text-gray-900">
@@ -84,20 +84,21 @@ export default function PayoutsList() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-6">
+                <div className="flex flex-wrap items-center gap-4 sm:gap-6">
                   <span className="text-sm font-semibold text-gray-900">
                     {formatPrice(payout.netAmount)}
                   </span>
 
                   <PayoutStatusBadge status={payout.payoutStatus} />
 
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leadingIcon={<Eye size={16} />}
                     onClick={() => handleOpenDetail(payout.id)}
-                    className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                   >
-                    <Eye size={16} />
                     Ver detalle
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
@@ -105,25 +106,27 @@ export default function PayoutsList() {
 
           {totalPages > 1 && (
             <div className="mt-8 flex items-center justify-center gap-5">
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 disabled={page === 1}
                 onClick={() => setPage((prev) => prev - 1)}
-                className="rounded-xl border px-4 py-2 disabled:opacity-50"
               >
                 Anterior
-              </button>
+              </Button>
 
               <span className="text-sm text-gray-600">
                 Página {page} de {totalPages}
               </span>
 
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 disabled={page === totalPages}
                 onClick={() => setPage((prev) => prev + 1)}
-                className="rounded-xl border px-4 py-2 disabled:opacity-50"
               >
                 Siguiente
-              </button>
+              </Button>
             </div>
           )}
         </>

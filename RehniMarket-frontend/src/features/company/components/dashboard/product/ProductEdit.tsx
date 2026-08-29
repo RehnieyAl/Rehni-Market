@@ -1,4 +1,6 @@
-import { X, Loader2 } from "lucide-react";
+import { X } from "lucide-react";
+
+import { ErrorState, Spinner } from "@/shared/components/ui";
 import { useEffect, useState } from "react";
 
 import { getProductDetail, updateProduct } from "@/features/company/api/productService";
@@ -187,12 +189,11 @@ export default function EditProductModal({
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center gap-3 p-16 text-gray-500">
-            <Loader2 className="animate-spin" size={20} />
-            Cargando producto...
+          <div className="flex items-center justify-center gap-3 p-16 text-sm text-gray-500">
+            <Spinner /> Cargando producto...
           </div>
         ) : loadError ? (
-          <div className="p-16 text-center text-red-600">{loadError}</div>
+          <ErrorState variant="plain" title={loadError} />
         ) : product ? (
           <>
             <div className="grid grid-cols-1 gap-6 p-4 sm:p-6 lg:grid-cols-3 lg:gap-8 lg:p-8">
@@ -211,7 +212,7 @@ export default function EditProductModal({
                       <input
                         value={nameProduct}
                         onChange={(e) => setNameProduct(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500"
+                        className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-brand-600"
                       />
                     </div>
 
@@ -220,7 +221,7 @@ export default function EditProductModal({
                       <select
                         value={catalogId}
                         onChange={(e) => setCatalogId(e.target.value)}
-                        className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500"
+                        className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-brand-600"
                       >
                         {catalogs.map((catalog) => (
                           <option key={catalog.id} value={catalog.id}>
@@ -236,7 +237,7 @@ export default function EditProductModal({
                         rows={6}
                         value={descripcionProduct}
                         onChange={(e) => setDescripcionProduct(e.target.value)}
-                        className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-red-500"
+                        className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-brand-600"
                       />
                     </div>
                   </div>
@@ -262,7 +263,7 @@ export default function EditProductModal({
 
             <div className="flex flex-col gap-2 border-t border-gray-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
               {saveError && (
-                <p className="text-sm text-red-600 sm:mr-auto">{saveError}</p>
+                <p className="text-sm text-danger sm:mr-auto">{saveError}</p>
               )}
 
               <button onClick={resetAndClose} className="rounded-lg border px-5 py-2">
@@ -272,9 +273,9 @@ export default function EditProductModal({
               <button
                 onClick={handleSubmit}
                 disabled={saving}
-                className="rounded-lg bg-red-700 px-6 py-2 text-white hover:bg-red-800 disabled:opacity-50"
+                className="rounded-lg bg-primary px-6 py-2 text-white hover:bg-primary-hover disabled:opacity-50"
               >
-                {saving ? "Guardando..." : "Guardar cambios"}
+                {saving ? "Guardando…" : "Guardar cambios"}
               </button>
             </div>
           </>

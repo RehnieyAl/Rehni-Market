@@ -9,6 +9,7 @@ import { getAddresses } from "@/features/addresses/api/addressService";
 import AddressSelectionModal from "@/features/addresses/components/AddressSelectionModal";
 import { getMyWallet } from "@/features/wallet/api/walletService";
 import { formatPrice } from "@/shared/utils/formatPrice";
+import { Skeleton } from "@/shared/components/ui";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 
@@ -123,7 +124,15 @@ export default function CheckoutView() {
   }
 
   if (loading || !addressesLoaded) {
-    return <p className="mx-auto max-w-5xl px-4 py-16 text-gray-500">Cargando...</p>;
+    return (
+      <div className="mx-auto grid max-w-5xl gap-8 px-4 py-8 lg:grid-cols-[1fr_360px]">
+        <div className="space-y-4">
+          <Skeleton className="h-32 rounded-card" />
+          <Skeleton className="h-48 rounded-card" />
+        </div>
+        <Skeleton className="h-72 rounded-card" />
+      </div>
+    );
   }
 
   if (items.length === 0) {

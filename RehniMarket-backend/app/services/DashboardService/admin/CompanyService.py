@@ -20,8 +20,15 @@ from app.core.ErrorCodes import ErrorCodes
 from app.core.Exceptions import api_error
 
 from app.schemas.SchemaDashboard.admin.company import (
+    AdminCompanyDetailResponse,
     UpdateCompanyStatusResponse,
 )
+
+from app.services.NasService import build_media_url
+
+
+def _media_url(object_name: str | None) -> str | None:
+    return build_media_url(f"uploads/{object_name}") if object_name else None
 
 from app.services.email.template.EmailStatusCertificate import (
     EmailCertificateApproved,
@@ -171,8 +178,29 @@ def get_all_companies_service(
             .decode()
         )
 
+    # Serializar aquí (no dejar que FastAPI lea el ORM crudo): los campos de imagen
+    # deben salir como URL de /media/proxy, no como object_name interno.
+    items = [
+        AdminCompanyDetailResponse(
+            id=company.id,
+            nameCompany=company.nameCompany,
+            CompanyNIT=company.CompanyNIT,
+            CompanyNITDV=company.CompanyNITDV,
+            CompanyLogo=_media_url(company.CompanyLogo),
+            CompanyBanner=_media_url(company.CompanyBanner),
+            CompanyCertificate=_media_url(company.CompanyCertificate),
+            CompanyCertificateStatus=company.CompanyCertificateStatus,
+            CompanyStatus=company.CompanyStatus,
+            suspensionReason=company.suspension_reason,
+            addressCompany=company.addressCompany,
+            user_id=company.user_id,
+            created_at=company.created_at,
+        )
+        for company in companies
+    ]
+
     return {
-        "items": companies,
+        "items": items,
         "next_cursor": next_cursor,
         "has_next": has_next,
     }
@@ -405,9 +433,9 @@ def update_company_status_service(
             nameCompany=company.nameCompany,
             CompanyNIT=company.CompanyNIT,
             CompanyNITDV=company.CompanyNITDV,
-            CompanyLogo=company.CompanyLogo,
-            CompanyBanner=company.CompanyBanner,
-            CompanyCertificate=company.CompanyCertificate,
+            CompanyLogo=_media_url(company.CompanyLogo),
+            CompanyBanner=_media_url(company.CompanyBanner),
+            CompanyCertificate=_media_url(company.CompanyCertificate),
             CompanyCertificateStatus=company.CompanyCertificateStatus,
             CompanyStatus=company.CompanyStatus,
             suspensionReason=company.suspension_reason,

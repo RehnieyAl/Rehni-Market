@@ -3,6 +3,7 @@ import { Calendar, Coins, TrendingUp, Wallet } from "lucide-react";
 
 import StatCard from "@/shared/components/dashboard/StatCard";
 import StatCardSkeleton from "@/features/payouts/components/StatCardSkeleton";
+import { ErrorState } from "@/shared/components/ui";
 
 import { getCompanyBalance } from "@/features/company/api/payoutService";
 import { formatPrice } from "@/shared/utils/formatPrice";
@@ -49,9 +50,10 @@ export default function FinanceSummary() {
 
   if (!balance) {
     return (
-      <p className="rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
-        No se pudo cargar el resumen financiero.
-      </p>
+      <ErrorState
+        title="No se pudo cargar el resumen financiero"
+        description="Intenta de nuevo en unos momentos."
+      />
     );
   }
 

@@ -12,7 +12,7 @@ export default function CategoryCard({ category }: CategoryCardProps) {
   return (
     <Link
       to={`/products?catalog=${category.id}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg"
+      className="group flex flex-col overflow-hidden rounded-card border border-gray-200 bg-white shadow-card transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-pop"
     >
       <div className="aspect-video w-full overflow-hidden bg-gray-100">
         {category.image_url ? (
@@ -42,7 +42,7 @@ export default function CategoryCard({ category }: CategoryCardProps) {
 
         <ArrowRight
           size={18}
-          className="shrink-0 text-[#6D0F2D] transition-transform duration-300 ease-out group-hover:translate-x-1"
+          className="shrink-0 text-primary transition-transform duration-300 ease-out group-hover:translate-x-1"
         />
       </div>
     </Link>

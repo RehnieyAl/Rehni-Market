@@ -1,12 +1,14 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Eye, EyeOff, Lock, ShieldCheck } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import { resetPassword } from "@/features/public/auth/api/authService";
-
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
+import AuthLayout from "@/features/public/auth/components/AuthLayout";
+import OtpInput from "@/features/public/auth/components/OtpInput";
+import { Button, Input } from "@/shared/components/ui";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -16,40 +18,11 @@ export default function ResetPassword() {
   const email = location.state?.email ?? "";
 
   const [loading, setLoading] = useState(false);
-
   const [showPassword, setShowPassword] = useState(false);
-
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const [password, setPassword] = useState("");
-
   const [confirmPassword, setConfirmPassword] = useState("");
-
   const [code, setCode] = useState(["", "", "", "", "", ""]);
-
-  const inputs = useRef<(HTMLInputElement | null)[]>([]);
-
-  const handleCodeChange = (value: string, index: number) => {
-    if (!/^\d?$/.test(value)) return;
-
-    const newCode = [...code];
-    newCode[index] = value;
-
-    setCode(newCode);
-
-    if (value && index < 5) {
-      inputs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement>,
-    index: number,
-  ) => {
-    if (e.key === "Backspace" && !code[index] && index > 0) {
-      inputs.current[index - 1]?.focus();
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,11 +47,7 @@ export default function ResetPassword() {
       });
 
       showAlert("success", "Contraseña actualizada correctamente.");
-      navigate("/login", {
-        state: {
-          email,
-        },
-      });
+      navigate("/login", { state: { email } });
     } catch (err) {
       console.error(err);
 
@@ -87,17 +56,8 @@ export default function ResetPassword() {
 
         switch (error?.code) {
           case ErrorCode.CODE_EXPIRED:
-            showAlert("error", error.message);
-            break;
-
           case ErrorCode.INVALID_CODE:
-            showAlert("error", error.message);
-            break;
-
           case ErrorCode.CODE_ALREADY_USED:
-            showAlert("error", error.message);
-            break;
-
           case ErrorCode.USER_NOT_FOUND:
             showAlert("error", error.message);
             break;
@@ -114,135 +74,79 @@ export default function ResetPassword() {
     }
   };
 
+  const eyeButton = (shown: boolean, toggle: () => void) => (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-label={shown ? "Ocultar contraseña" : "Mostrar contraseña"}
+      className="rounded p-0.5 text-gray-400 transition hover:text-primary"
+    >
+      {shown ? <EyeOff size={18} /> : <Eye size={18} />}
+    </button>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-6">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
-          <div className="flex justify-center mb-6">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#6D0F2D]/10">
-              <ShieldCheck size={30} className="text-[#6D0F2D]" />
-            </div>
-          </div>
-
-          <h1 className="text-3xl font-bold text-center">Nueva contraseña</h1>
-
-          <p className="text-center text-gray-500 mt-3">
-            Ingresa el código recibido y crea una nueva contraseña.
-          </p>
-
-          <p className="text-center font-semibold text-[#6D0F2D] mt-2 break-all">
-            {email}
-          </p>
-
-          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-            <div className="flex justify-between gap-2">
-              {code.map((digit, index) => (
-                <input
-                  key={index}
-                  ref={(el: HTMLInputElement | null) => {
-                    inputs.current[index] = el;
-                  }}
-                  value={digit}
-                  maxLength={1}
-                  inputMode="numeric"
-                  onChange={(e) => handleCodeChange(e.target.value, index)}
-                  onKeyDown={(e) => handleKeyDown(e, index)}
-                  className="w-12 h-14 rounded-2xl border border-gray-300 text-center text-xl font-bold outline-none focus:border-[#6D0F2D] focus:ring-4 focus:ring-[#6D0F2D]/10"
-                />
-              ))}
-            </div>
-            <div>
-              <label className="block text-sm font-semibold mb-2">
-                Nueva contraseña
-              </label>
-
-              <div className="relative">
-                <Lock
-                  size={20}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                />
-
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  className="w-full h-14 rounded-2xl border border-gray-300 pl-12 pr-12 outline-none transition focus:border-[#6D0F2D] focus:ring-4 focus:ring-[#6D0F2D]/10"
-                />
-
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#6D0F2D]"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-2">
-                Confirmar contraseña
-              </label>
-
-              <div className="relative">
-                <Lock
-                  size={20}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                />
-
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  className="w-full h-14 rounded-2xl border border-gray-300 pl-12 pr-12 outline-none transition focus:border-[#6D0F2D] focus:ring-4 focus:ring-[#6D0F2D]/10"
-                />
-
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#6D0F2D]"
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff size={20} />
-                  ) : (
-                    <Eye size={20} />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-14 rounded-2xl bg-[#6D0F2D] text-white font-semibold text-lg hover:bg-[#530A20] transition duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {loading ? "Actualizando..." : "Guardar nueva contraseña"}
-            </button>
-          </form>
-
-          <div className="mt-8 text-center">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="flex-1 h-px bg-gray-200"></div>
-
-              <span className="text-sm text-gray-400">o</span>
-
-              <div className="flex-1 h-px bg-gray-200"></div>
-            </div>
-
-            <Link
-              to="/login"
-              state={{ email }}
-              className="font-semibold text-[#6D0F2D] hover:underline"
-            >
-              Volver al inicio de sesión
-            </Link>
-          </div>
+    <AuthLayout
+      icon={<ShieldCheck size={24} />}
+      title="Nueva contraseña"
+      subtitle={
+        <>
+          Ingresa el código enviado a{" "}
+          <span className="font-medium text-gray-700">{email}</span> y crea una
+          contraseña nueva.
+        </>
+      }
+      belowCard={
+        <Link
+          to="/login"
+          state={{ email }}
+          className="font-semibold text-primary hover:underline"
+        >
+          Volver al inicio de sesión
+        </Link>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div>
+          <p className="mb-2 text-sm font-medium text-gray-700">Código de 6 dígitos</p>
+          <OtpInput value={code} onChange={setCode} ariaLabel="Código de recuperación" />
         </div>
-      </div>
-    </div>
+
+        <Input
+          label="Nueva contraseña"
+          type={showPassword ? "text" : "password"}
+          required
+          autoComplete="new-password"
+          leadingIcon={<Lock size={18} />}
+          placeholder="••••••••"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          trailingSlot={eyeButton(showPassword, () => setShowPassword((v) => !v))}
+        />
+
+        <Input
+          label="Confirmar contraseña"
+          type={showConfirmPassword ? "text" : "password"}
+          required
+          autoComplete="new-password"
+          leadingIcon={<Lock size={18} />}
+          placeholder="••••••••"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          error={
+            confirmPassword && password !== confirmPassword
+              ? "Las contraseñas no coinciden."
+              : undefined
+          }
+          trailingSlot={eyeButton(showConfirmPassword, () =>
+            setShowConfirmPassword((v) => !v),
+          )}
+        />
+
+        <Button type="submit" fullWidth size="lg" loading={loading}>
+          Guardar nueva contraseña
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }

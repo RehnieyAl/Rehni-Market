@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
+import { Spinner } from "@/shared/components/ui";
+
 import {
   getAdminUserById,
   updateAdminUser,
@@ -169,7 +171,7 @@ export default function UserDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+      <div className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-card bg-white shadow-xl">
 
         <div className="shrink-0 border-b border-gray-200 px-6 py-5">
           <div>
@@ -189,17 +191,15 @@ export default function UserDetailModal({
 
         <div className="min-h-0 flex-1 overflow-y-auto">
           {loading && (
-            <div className="flex items-center justify-center p-12">
-              <p className="text-gray-500">
-                Cargando usuario...
-              </p>
+            <div className="flex items-center justify-center gap-2 p-12 text-sm text-gray-500">
+              <Spinner /> Cargando usuario...
             </div>
           )}
 
           {!loading && user && (
             <div className="p-6">
 
-              <div className="flex items-center gap-5 rounded-2xl border border-gray-200 p-5">
+              <div className="flex items-center gap-5 rounded-card border border-gray-200 p-5">
                 {user.profileImagen ? (
                   <img
                     src={user.profileImagen}
@@ -380,7 +380,7 @@ export default function UserDetailModal({
                   </div>
                 )}
 
-              <div className="mt-6 rounded-2xl border border-gray-200 p-5">
+              <div className="mt-6 rounded-card border border-gray-200 p-5">
                 <h3 className="font-semibold text-gray-900">
                   Acciones
                 </h3>
@@ -405,7 +405,7 @@ export default function UserDetailModal({
                         <Save size={18} />
 
                         {saving
-                          ? "Guardando..."
+                          ? "Guardando…"
                           : "Guardar cambios"}
                       </button>
 
@@ -474,7 +474,7 @@ function InfoCard({
   value: string;
 }) {
   return (
-    <div className="rounded-2xl border border-gray-200 p-5">
+    <div className="rounded-card border border-gray-200 p-5">
       <div className="flex items-center gap-2 text-gray-500">
         {icon}
         <span className="text-sm font-medium">
@@ -505,7 +505,7 @@ function EditField({
   disabled?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-gray-200 p-5">
+    <div className="rounded-card border border-gray-200 p-5">
       <div className="flex items-center gap-2 text-gray-500">
         {icon}
         <span className="text-sm font-medium">
@@ -545,7 +545,7 @@ function EditSelect({
   disabled?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-gray-200 p-5">
+    <div className="rounded-card border border-gray-200 p-5">
       <div className="flex items-center gap-2 text-gray-500">
         {icon}
         <span className="text-sm font-medium">
@@ -579,7 +579,7 @@ function UserStatus({ active }: { active: boolean }) {
     <span
       className={`rounded-full px-3 py-1 text-xs font-medium ${
         active
-          ? "bg-green-100 text-green-700"
+          ? "bg-success-bg text-success"
           : "bg-gray-100 text-gray-600"
       }`}
     >

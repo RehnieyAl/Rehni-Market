@@ -1,21 +1,16 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Filter, RotateCcw, Search, X } from "lucide-react";
+import { Filter, RotateCcw } from "lucide-react";
 
 import { getCatalogs, getPublicProducts } from "../api/productsService";
 import ProductGrid from "./ProductGrid";
+import CatalogFilters from "./CatalogFilters";
+import { Button, Modal } from "@/shared/components/ui";
 
 import type { PublicProductCard } from "@/features/public/home/types/response";
 import type { PublicCatalog } from "../types/response";
 
-const PAGE_SIZE = 10;
-
-const SORT_OPTIONS = [
-  { value: "", label: "Relevancia" },
-  { value: "price_asc", label: "Menor precio" },
-  { value: "price_desc", label: "Mayor precio" },
-  { value: "discount", label: "Mayor descuento" },
-] as const;
+const PAGE_SIZE = 12;
 
 // Catálogo público con filtros resueltos por GET /public/products.
 // El estado de los filtros vive en la URL (searchParams): links como
@@ -49,6 +44,7 @@ export default function ProductsList() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Actualiza filtros en la URL; cualquier cambio de filtro vuelve a la página 1.
 
@@ -86,16 +82,18 @@ export default function ProductsList() {
     setSearchParams(search && !catalog ? { search } : {});
   };
 
+  // Filtros que el usuario controla desde el panel (para el contador del botón móvil).
+  const activeFilterCount = [
+    !!catalog,
+    !!minPriceParam,
+    !!maxPriceParam,
+    discountOnly,
+    inStockOnly,
+    !!sort,
+  ].filter(Boolean).length;
+
   const hasActiveFilters =
-    !!catalog ||
-    !!minPriceParam ||
-    !!maxPriceParam ||
-    discountOnly ||
-    inStockOnly ||
-    !!minDiscountParam ||
-    !!maxStockParam ||
-    !!daysParam ||
-    !!sort;
+    activeFilterCount > 0 || !!minDiscountParam || !!maxStockParam || !!daysParam;
 
   // Catálogos reales para el filtro de categoría.
 
@@ -222,33 +220,45 @@ export default function ProductsList() {
 
   const selectedCatalog = catalog ? catalogs.find((c) => c.id === catalog) : undefined;
 
+
+  const filterProps = {
+    catalogs,
+    catalog,
+    onCatalogChange: handleCatalogChange,
+    selectedCatalog,
+    categorySearch: categorySearchInput,
+    onCategorySearchChange: setCategorySearchInput,
+    minPrice: minPriceInput,
+    maxPrice: maxPriceInput,
+    onMinPriceChange: setMinPriceInput,
+    onMaxPriceChange: setMaxPriceInput,
+    discountOnly,
+    inStockOnly,
+    onToggle: (key: "discount" | "inStock", checked: boolean) =>
+      updateParams({ [key]: checked ? "1" : null }),
+    sort,
+    onSortChange: (value: string) => updateParams({ sort: value || null }),
+  };
+
+  const heading =
+    selectedCatalog && !search
+      ? selectedCatalog.name
+      : search
+        ? `Resultados para "${search}"`
+        : "Productos";
+
   return (
-    <section className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-2 py-6 sm:px-4 sm:py-8 lg:px-8">
-      {selectedCatalog && !search ? (
-        <div className="mb-5">
-          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-            {selectedCatalog.name}
-          </h1>
+    <section className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-3 py-6 sm:px-4 sm:py-8 lg:px-8">
+      <div className="mb-5">
+        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">{heading}</h1>
+        <p className="mt-1 text-sm text-gray-500">
+          {loading ? "Buscando productos…" : `${total} productos encontrados`}
+        </p>
+      </div>
 
-          <p className="mt-1 text-gray-500">
-            {loading ? "Cargando productos..." : `${total} productos encontrados`}
-          </p>
-        </div>
-      ) : (
-        <div className="mb-5">
-          <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-            {search ? `Resultados para "${search}"` : "Productos"}
-          </h1>
-
-          <p className="mt-1 text-gray-500">
-            {loading ? "Cargando productos..." : `${total} productos encontrados`}
-          </p>
-        </div>
-      )}
-
-      <div className="grid gap-6 lg:grid-cols-[280px_1fr] lg:gap-8">
-
-        <aside className="h-fit rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="grid gap-6 lg:grid-cols-[264px_1fr] lg:gap-8">
+        {/* Panel de filtros — escritorio */}
+        <aside className="hidden h-fit rounded-card border border-gray-200 bg-white p-5 shadow-card lg:block">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Filter size={18} className="text-gray-700" />
@@ -258,139 +268,35 @@ export default function ProductsList() {
             {hasActiveFilters && (
               <button
                 onClick={handleClearFilters}
-                className="flex items-center gap-1.5 text-sm font-medium text-[#6D0F2D] hover:underline"
+                className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
               >
                 <RotateCcw size={13} />
-                Limpiar todo
+                Limpiar
               </button>
             )}
           </div>
 
-          <div className="divide-y divide-gray-100">
-
-            <div className="pb-4">
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
-                Categoría
-              </label>
-
-              <select
-                value={catalog}
-                onChange={(e) => handleCatalogChange(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 p-2.5 text-sm text-gray-700 outline-none transition focus:border-[#6D0F2D]"
-              >
-                <option value="">Todas las categorías</option>
-                {catalogs.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.name} ({option.product_count})
-                  </option>
-                ))}
-              </select>
-
-              {selectedCatalog && (
-                <div className="mt-3">
-                  <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
-                    Buscar dentro de {selectedCatalog.name}
-                  </label>
-
-                  <div className="flex h-10 items-center rounded-xl border border-gray-200 bg-white px-3 transition focus-within:border-[#6D0F2D] focus-within:ring-2 focus-within:ring-[#6D0F2D]/10">
-                    <Search size={15} className="shrink-0 text-gray-400" aria-hidden="true" />
-
-                    <input
-                      type="text"
-                      value={categorySearchInput}
-                      onChange={(e) => setCategorySearchInput(e.target.value)}
-                      placeholder={`Ej. ${selectedCatalog.name}...`}
-                      className="ml-2 min-w-0 flex-1 bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400"
-                    />
-
-                    {categorySearchInput && (
-                      <button
-                        type="button"
-                        onClick={() => setCategorySearchInput("")}
-                        aria-label="Limpiar búsqueda"
-                        className="ml-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
-                      >
-                        <X size={13} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="py-4">
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
-                Precio mínimo y máximo
-              </label>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min={0}
-                  inputMode="numeric"
-                  value={minPriceInput}
-                  onChange={(e) => setMinPriceInput(e.target.value)}
-                  placeholder="Mínimo"
-                  className="w-full min-w-0 rounded-xl border border-gray-200 p-2.5 text-sm outline-none transition focus:border-[#6D0F2D]"
-                />
-
-                <span className="shrink-0 text-gray-400">–</span>
-
-                <input
-                  type="number"
-                  min={0}
-                  inputMode="numeric"
-                  value={maxPriceInput}
-                  onChange={(e) => setMaxPriceInput(e.target.value)}
-                  placeholder="Máximo"
-                  className="w-full min-w-0 rounded-xl border border-gray-200 p-2.5 text-sm outline-none transition focus:border-[#6D0F2D]"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-3 py-4">
-              <label className="flex cursor-pointer items-center gap-2.5 text-sm font-medium text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={discountOnly}
-                  onChange={(e) => updateParams({ discount: e.target.checked ? "1" : null })}
-                  className="h-4 w-4 rounded border-gray-300 accent-[#6D0F2D]"
-                />
-                Solo con descuento
-              </label>
-
-              <label className="flex cursor-pointer items-center gap-2.5 text-sm font-medium text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={inStockOnly}
-                  onChange={(e) => updateParams({ inStock: e.target.checked ? "1" : null })}
-                  className="h-4 w-4 rounded border-gray-300 accent-[#6D0F2D]"
-                />
-                Solo disponibles
-              </label>
-            </div>
-
-            <div className="pt-4">
-              <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
-                Ordenar por
-              </label>
-
-              <select
-                value={sort}
-                onChange={(e) => updateParams({ sort: e.target.value || null })}
-                className="w-full rounded-xl border border-gray-200 p-2.5 text-sm text-gray-700 outline-none transition focus:border-[#6D0F2D]"
-              >
-                {SORT_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <CatalogFilters {...filterProps} />
         </aside>
 
         <div>
+          {/* Barra de filtros — móvil / tablet */}
+          <div className="mb-4 lg:hidden">
+            <Button
+              variant="outline"
+              fullWidth
+              leadingIcon={<Filter size={16} />}
+              onClick={() => setFiltersOpen(true)}
+            >
+              Filtros
+              {activeFilterCount > 0 && (
+                <span className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-bold text-primary-fg">
+                  {activeFilterCount}
+                </span>
+              )}
+            </Button>
+          </div>
+
           <ProductGrid
             products={products}
             loading={loading}
@@ -404,6 +310,32 @@ export default function ProductsList() {
           />
         </div>
       </div>
+
+      {/* Filtros — drawer móvil (reutiliza Modal: Esc, scroll-lock, foco) */}
+      <Modal
+        isOpen={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        title="Filtros"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => {
+                handleClearFilters();
+                setFiltersOpen(false);
+              }}
+              disabled={!hasActiveFilters}
+            >
+              Limpiar
+            </Button>
+            <Button onClick={() => setFiltersOpen(false)}>
+              Ver {total} productos
+            </Button>
+          </>
+        }
+      >
+        <CatalogFilters {...filterProps} />
+      </Modal>
     </section>
   );
 }

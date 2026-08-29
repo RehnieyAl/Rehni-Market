@@ -41,9 +41,9 @@ export default function Pagination({ page, totalPages, onPageChange }: Paginatio
             aria-label={`Página ${item}`}
             aria-current={item === page ? "page" : undefined}
             onClick={() => onPageChange(item)}
-            className={`flex h-9 min-w-9 items-center justify-center rounded-xl px-2 text-sm font-medium transition ${
+            className={`flex h-9 min-w-9 items-center justify-center rounded-control px-2 text-sm font-medium transition ${
               item === page
-                ? "bg-[#6D0F2D] text-white"
+                ? "bg-primary text-primary-fg"
                 : "border border-gray-200 text-gray-600 hover:bg-gray-50"
             }`}
           >

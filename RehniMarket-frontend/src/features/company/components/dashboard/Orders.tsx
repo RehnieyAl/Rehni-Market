@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { Eye, Search, ShoppingBag } from "lucide-react";
 
-import ComingSoon from "@/shared/components/dashboard/ComingSoon";
+import { Badge, Button, EmptyState, Input, Skeleton } from "@/shared/components/ui";
 import OrderDetailModal from "./order/OrderDetailModal";
 
 import {
   getCompanyOrders,
   getCompanyOrderStatusCounts,
 } from "@/features/company/api/orderService";
-import { ORDER_STATUS_LABEL, ORDER_STATUS_BADGE } from "@/features/orders/utils/orderStatus";
+import { ORDER_STATUS_LABEL, ORDER_STATUS_TONE } from "@/features/orders/utils/orderStatus";
 import { formatPrice } from "@/shared/utils/formatPrice";
 
 import type { Order, OrderStatus, OrderStatusCounts } from "@/features/orders/types/response";
@@ -108,13 +108,13 @@ export default function Orders() {
   };
 
   const countFor = (tab: TabId) =>
-    countsLoading ? "..." : String(counts[tab === "all" ? "all" : tab]);
+    countsLoading ? "…" : String(counts[tab === "all" ? "all" : tab]);
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">Pedidos</h1>
+      <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Pedidos</h1>
 
-      <p className="mt-2 text-gray-500">
+      <p className="mt-1 text-sm text-gray-500">
         Gestiona los pedidos recibidos: filtra por estado, busca por referencia o comprador y
         actualiza su estado desde el detalle.
       </p>
@@ -124,9 +124,10 @@ export default function Orders() {
           <button
             key={tab.id}
             onClick={() => handleTabChange(tab.id)}
+            aria-pressed={activeTab === tab.id}
             className={`rounded-full px-4 py-2 text-sm font-medium transition ${
               activeTab === tab.id
-                ? "bg-[#7A1833] text-white"
+                ? "bg-primary text-primary-fg"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
@@ -135,23 +136,27 @@ export default function Orders() {
         ))}
       </div>
 
-      <div className="mt-6 flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3">
-        <Search size={20} className="text-gray-400" />
-
-        <input
-          value={search}
-          onChange={(event) => handleSearch(event.target.value)}
-          placeholder="Buscar por referencia, correo o nombre del comprador..."
-          className="w-full text-sm outline-none"
-        />
-      </div>
+      <Input
+        className="mt-6"
+        type="search"
+        value={search}
+        onChange={(event) => handleSearch(event.target.value)}
+        placeholder="Buscar por referencia, correo o nombre del comprador…"
+        aria-label="Buscar pedidos"
+        leadingIcon={<Search size={16} />}
+      />
 
       {loading ? (
-        <p className="mt-8 text-gray-500">Cargando pedidos...</p>
+        <div className="mt-8 space-y-3">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="h-32 rounded-card" />
+          ))}
+        </div>
       ) : orders.length === 0 ? (
-        <ComingSoon
-          icon={<ShoppingBag className="h-10 w-10 text-red-700" />}
-          title={search || activeTab !== "all" ? "Sin resultados" : "Aún no has recibido pedidos."}
+        <EmptyState
+          className="mt-8"
+          icon={<ShoppingBag size={22} />}
+          title={search || activeTab !== "all" ? "Sin resultados" : "Aún no has recibido pedidos"}
           description={
             search || activeTab !== "all"
               ? "Ningún pedido coincide con este filtro y esta búsqueda."
@@ -164,10 +169,10 @@ export default function Orders() {
             {orders.map((order) => (
               <div
                 key={order.id}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-5 transition hover:shadow-md"
+                className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 bg-white p-5 shadow-card transition hover:shadow-pop"
               >
                 <div className="flex min-w-0 items-center gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#6D0F2D] text-sm font-bold text-white">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-bold text-white">
                     {order.buyerPhoto ? (
                       <img
                         src={order.buyerPhoto}
@@ -190,49 +195,48 @@ export default function Orders() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6">
+                <div className="flex flex-wrap items-center gap-4 sm:gap-6">
                   <span className="text-sm font-semibold text-gray-900">
                     {formatPrice(order.total)}
                   </span>
 
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${ORDER_STATUS_BADGE[order.status]}`}
-                  >
-                    {ORDER_STATUS_LABEL[order.status]}
-                  </span>
+                  <Badge tone={ORDER_STATUS_TONE[order.status]}>{ORDER_STATUS_LABEL[order.status]}</Badge>
 
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leadingIcon={<Eye size={16} />}
                     onClick={() => handleOpenDetail(order.id)}
-                    className="flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                   >
-                    <Eye size={16} />
                     Ver detalle
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
 
           <div className="mt-8 flex items-center justify-center gap-5">
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               disabled={page === 1}
               onClick={() => setPage((prev) => prev - 1)}
-              className="rounded-xl border px-4 py-2 disabled:opacity-50"
             >
               Anterior
-            </button>
+            </Button>
 
             <span className="text-sm text-gray-600">
               Página {page} de {totalPages}
             </span>
 
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               disabled={page === totalPages}
               onClick={() => setPage((prev) => prev + 1)}
-              className="rounded-xl border px-4 py-2 disabled:opacity-50"
             >
               Siguiente
-            </button>
+            </Button>
           </div>
         </>
       )}

@@ -5,6 +5,8 @@ import axios from "axios";
 import { useCart } from "../context/useCart";
 import { formatPrice } from "@/shared/utils/formatPrice";
 import { useAlert } from "@/shared/components/alert/useAlert";
+import { EmptyState, Skeleton } from "@/shared/components/ui";
+import { buttonClasses } from "@/shared/components/ui/buttonVariants";
 
 export default function CartView() {
   const navigate = useNavigate();
@@ -27,24 +29,26 @@ export default function CartView() {
       <h1 className="text-3xl font-bold">Mi carrito</h1>
 
       {loading ? (
-        <p className="mt-8 text-gray-500">Cargando carrito...</p>
-      ) : items.length === 0 ? (
-        <div className="mt-8 rounded-2xl border border-dashed border-gray-300 bg-white p-12 text-center">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
-            <ShoppingCart className="h-10 w-10 text-[#6D0F2D]" />
+        <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={index} className="h-28 rounded-card" />
+            ))}
           </div>
-
-          <h2 className="text-xl font-semibold text-gray-900">
-            Tu carrito está vacío.
-          </h2>
-
-          <Link
-            to="/products"
-            className="mt-6 inline-block rounded-xl bg-[#6D0F2D] px-6 py-3 text-sm font-medium text-white transition hover:bg-[#530A20]"
-          >
-            Explorar productos
-          </Link>
+          <Skeleton className="h-64 rounded-card" />
         </div>
+      ) : items.length === 0 ? (
+        <EmptyState
+          className="mt-8"
+          icon={<ShoppingCart size={22} />}
+          title="Tu carrito está vacío"
+          description="Agrega productos y vuelve aquí para finalizar tu compra."
+          action={
+            <Link to="/products" className={buttonClasses({ size: "sm" })}>
+              Explorar productos
+            </Link>
+          }
+        />
       ) : (
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
 

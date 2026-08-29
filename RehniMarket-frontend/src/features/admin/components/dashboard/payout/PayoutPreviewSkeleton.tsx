@@ -3,7 +3,7 @@
 // features/payouts/components/PayoutRowSkeleton.tsx).
 export default function PayoutPreviewSkeleton() {
   return (
-    <div className="animate-pulse space-y-3 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+    <div className="animate-pulse space-y-3 rounded-card border border-gray-200 bg-gray-50 p-4">
       <div className="flex justify-between">
         <div className="h-3 w-28 rounded bg-gray-200" />
         <div className="h-3 w-20 rounded bg-gray-200" />

@@ -12,6 +12,7 @@ import {
   getPayoutPreview,
 } from "@/features/admin/api/payoutService";
 import { useAlert } from "@/shared/components/alert/useAlert";
+import { Spinner } from "@/shared/components/ui";
 
 import type { AdminCompanyResponse } from "@/features/admin/types/response";
 import type { PayoutAvailablePeriod, PayoutPreview } from "@/features/payouts/types/response";
@@ -221,7 +222,7 @@ export default function GeneratePayoutModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+      <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-card bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
           <h2 className="text-lg font-semibold text-gray-900">Generar liquidación</h2>
 
@@ -240,16 +241,16 @@ export default function GeneratePayoutModal({
             <label className="mb-1.5 block text-sm text-gray-700">Empresa</label>
 
             {selectedCompany ? (
-              <div className="flex items-center justify-between rounded-xl border border-[#6D0F2D]/30 bg-[#6D0F2D]/5 px-4 py-2.5">
+              <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary/5 px-4 py-2.5">
                 <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                  <Building2 size={16} className="text-[#6D0F2D]" />
+                  <Building2 size={16} className="text-primary" />
                   {selectedCompany.nameCompany}
                 </div>
 
                 <button
                   type="button"
                   onClick={() => setSelectedCompany(null)}
-                  className="text-xs font-medium text-[#6D0F2D] hover:underline"
+                  className="text-xs font-medium text-primary hover:underline"
                 >
                   Cambiar
                 </button>
@@ -300,11 +301,11 @@ export default function GeneratePayoutModal({
               <label className="mb-1.5 block text-sm text-gray-700">Mes a liquidar</label>
 
               {periodsLoading ? (
-                <div className="flex h-[42px] items-center rounded-xl border border-gray-200 bg-gray-50 px-4 text-sm text-gray-400">
-                  Cargando periodos disponibles...
+                <div className="flex h-[42px] items-center gap-2 rounded-control border border-gray-200 bg-gray-50 px-4 text-sm text-gray-400">
+                  <Spinner size={15} /> Cargando periodos...
                 </div>
               ) : periods.length === 0 ? (
-                <div className="flex items-start gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                <div className="flex items-start gap-3 rounded-card border border-gray-200 bg-gray-50 p-4">
                   <AlertTriangle size={18} className="mt-0.5 shrink-0 text-gray-400" />
 
                   <p className="text-sm text-gray-500">
@@ -320,7 +321,7 @@ export default function GeneratePayoutModal({
                       periods.find((period) => period.periodStart === e.target.value) ?? null,
                     )
                   }
-                  className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-[#6D0F2D]"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-brand-600"
                 >
                   <option value="" disabled>
                     Selecciona un mes...
@@ -347,10 +348,10 @@ export default function GeneratePayoutModal({
               {previewLoading ? (
                 <PayoutPreviewSkeleton />
               ) : previewError ? (
-                <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                  <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-600" />
+                <div className="flex items-start gap-3 rounded-card border border-warning-bg bg-warning-bg p-4">
+                  <AlertTriangle size={18} className="mt-0.5 shrink-0 text-warning" />
 
-                  <p className="text-sm text-amber-800">{previewError}</p>
+                  <p className="text-sm text-warning">{previewError}</p>
                 </div>
               ) : preview ? (
                 <PayoutPreviewCard preview={preview} />
@@ -373,7 +374,7 @@ export default function GeneratePayoutModal({
             type="button"
             onClick={handleSubmit}
             disabled={generating || previewLoading || !selectedCompany || !selectedPeriod || !preview}
-            className="rounded-xl bg-[#6D0F2D] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#5b0d26] disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             {generating ? "Generando..." : "Generar liquidación"}
           </button>

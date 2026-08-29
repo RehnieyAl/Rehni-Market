@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Eye, ShoppingBag } from "lucide-react";
 
-import ComingSoon from "@/shared/components/dashboard/ComingSoon";
 import ConfirmModal from "@/shared/components/ConfirmModal";
 import OrderDetailModal from "@/features/orders/components/OrderDetailModal";
 import { getMyOrders, cancelMyOrder } from "@/features/orders/api/orderService";
-import { ORDER_STATUS_LABEL, ORDER_STATUS_BADGE } from "@/features/orders/utils/orderStatus";
+import { ORDER_STATUS_LABEL, ORDER_STATUS_TONE } from "@/features/orders/utils/orderStatus";
 import { formatPrice } from "@/shared/utils/formatPrice";
 import { formatAttributePairs } from "@/shared/utils/formatAttributes";
 import { useAlert } from "@/shared/components/alert/useAlert";
+import { Badge, EmptyState, ErrorState, Skeleton } from "@/shared/components/ui";
+import { buttonClasses } from "@/shared/components/ui/buttonVariants";
 
 import type { Order } from "@/features/orders/types/response";
 
@@ -19,6 +21,7 @@ export default function Orders() {
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [confirmCancelId, setConfirmCancelId] = useState<string | null>(null);
 
@@ -28,10 +31,12 @@ export default function Orders() {
   const loadOrders = useCallback(async () => {
     try {
       setLoading(true);
+      setFailed(false);
       const response = await getMyOrders(1, 20);
       setOrders(response.items);
     } catch (error) {
       console.error("Error cargando pedidos:", error);
+      setFailed(true);
     } finally {
       setLoading(false);
     }
@@ -61,25 +66,40 @@ export default function Orders() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">Mis pedidos</h1>
+      <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Mis pedidos</h1>
 
-      <p className="mt-2 text-gray-500">
+      <p className="mt-1 text-sm text-gray-500">
         Consulta el estado y el historial de tus pedidos.
       </p>
 
       {loading ? (
-        <p className="mt-8 text-gray-500">Cargando pedidos...</p>
+        <div className="mt-8 space-y-4">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton key={index} className="h-40 rounded-card" />
+          ))}
+        </div>
+      ) : failed ? (
+        <ErrorState
+          className="mt-8"
+          title="No pudimos cargar tus pedidos"
+          onRetry={loadOrders}
+        />
       ) : orders.length === 0 ? (
-        <ComingSoon
-          icon={<ShoppingBag className="h-10 w-10 text-red-700" />}
-          title="Mis pedidos"
-          description="Aquí podrás consultar todos tus pedidos cuando el sistema de compras esté disponible."
-          action={{ label: "Explorar productos", to: "/products" }}
+        <EmptyState
+          className="mt-8"
+          icon={<ShoppingBag size={22} />}
+          title="Todavía no tienes pedidos"
+          description="Cuando hagas tu primera compra, podrás seguir su estado desde aquí."
+          action={
+            <Link to="/products" className={buttonClasses({ size: "sm" })}>
+              Explorar productos
+            </Link>
+          }
         />
       ) : (
         <div className="mt-8 space-y-4">
           {orders.map((order) => (
-            <div key={order.id} className="rounded-2xl border bg-white p-5">
+            <div key={order.id} className="rounded-card border bg-white p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-gray-900">
@@ -93,11 +113,9 @@ export default function Orders() {
                   </p>
                 </div>
 
-                <span
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${ORDER_STATUS_BADGE[order.status]}`}
-                >
+                <Badge tone={ORDER_STATUS_TONE[order.status]}>
                   {ORDER_STATUS_LABEL[order.status]}
-                </span>
+                </Badge>
               </div>
 
               <div className="mt-3 divide-y divide-gray-100 border-t border-gray-100 pt-3">
@@ -127,7 +145,7 @@ export default function Orders() {
                       setSelectedOrderId(order.id);
                       setDetailOpen(true);
                     }}
-                    className="flex items-center gap-1.5 text-sm font-medium text-[#6D0F2D] hover:underline"
+                    className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
                   >
                     <Eye size={15} />
                     Ver detalle
@@ -137,9 +155,9 @@ export default function Orders() {
                     <button
                       onClick={() => setConfirmCancelId(order.id)}
                       disabled={cancellingId === order.id}
-                      className="text-sm font-medium text-red-600 hover:underline disabled:opacity-50"
+                      className="text-sm font-medium text-danger hover:underline disabled:opacity-50"
                     >
-                      {cancellingId === order.id ? "Cancelando..." : "Cancelar pedido"}
+                      {cancellingId === order.id ? "Cancelando…" : "Cancelar pedido"}
                     </button>
                   )}
                 </div>

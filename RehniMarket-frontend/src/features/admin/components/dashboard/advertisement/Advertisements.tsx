@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Eye, Loader2, Power } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, Loader2, Power, Megaphone } from "lucide-react";
+
+import { Badge, Button, EmptyState, Skeleton } from "@/shared/components/ui";
 
 import AdvertisementFormModal from "./AdvertisementFormModal";
 import type { AdvertisementFormValues } from "./AdvertisementFormModal";
-import AdvertisementDeleteConfirmModal from "./AdvertisementDeleteConfirmModal";
+import ConfirmModal from "@/shared/components/ConfirmModal";
 import AdvertisementPreviewModal from "./AdvertisementPreviewModal";
 
 import {
@@ -208,51 +210,46 @@ export default function Advertisements() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenCreate}
-          className="flex items-center gap-2 rounded-xl bg-[#7A1833] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#64132a]"
-        >
-          <Plus size={18} />
+        <Button onClick={handleOpenCreate} leadingIcon={<Plus size={18} />}>
           Nuevo anuncio
-        </button>
+        </Button>
       </div>
 
       <section className="mt-5 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
         {loading ? (
-          <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500">
-            Cargando anuncios...
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={index} className="h-24 rounded-card" />
+            ))}
           </div>
         ) : advertisements.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
-            No hay anuncios creados todavía.
-          </div>
+          <EmptyState
+            icon={<Megaphone size={22} />}
+            title="Aún no hay anuncios"
+            description="Crea el primer anuncio para el Hero del Home."
+          />
         ) : (
           advertisements.map((advertisement) => (
             <div
               key={advertisement.id}
-              className="flex flex-col gap-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-4 rounded-card border border-gray-200 bg-white p-4 shadow-card sm:flex-row sm:items-center sm:justify-between"
             >
-              <div className="flex items-center gap-4">
+              <div className="flex min-w-0 items-center gap-4">
                 <img
                   src={advertisement.image_url}
                   alt=""
-                  className="h-14 w-24 shrink-0 rounded-lg object-cover"
+                  className="h-14 w-24 shrink-0 rounded-control object-cover"
                 />
 
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium text-gray-900">
                     {TARGET_TYPE_LABELS[advertisement.target_type ?? ""] ?? "Banner manual"}
                   </p>
 
                   <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
-                    <span
-                      className={
-                        advertisement.is_active ? "text-green-600" : "text-gray-400"
-                      }
-                    >
+                    <Badge tone={advertisement.is_active ? "success" : "neutral"}>
                       {advertisement.is_active ? "Activo" : "Inactivo"}
-                    </span>
+                    </Badge>
 
                     <span>Orden: {advertisement.order}</span>
 
@@ -267,8 +264,9 @@ export default function Advertisements() {
                 <button
                   type="button"
                   onClick={() => setPreviewTarget(advertisement)}
-                  className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
+                  className="flex h-9 w-9 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
                   title="Ver anuncio"
+                  aria-label="Ver anuncio"
                 >
                   <Eye size={18} />
                 </button>
@@ -276,8 +274,9 @@ export default function Advertisements() {
                 <button
                   type="button"
                   onClick={() => handleOpenEdit(advertisement)}
-                  className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
+                  className="flex h-9 w-9 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
                   title="Editar anuncio"
+                  aria-label="Editar anuncio"
                 >
                   <Pencil size={18} />
                 </button>
@@ -286,10 +285,11 @@ export default function Advertisements() {
                   type="button"
                   onClick={() => handleToggleStatus(advertisement)}
                   disabled={statusChangingId === advertisement.id}
-                  className={`rounded-lg p-2 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 ${
-                    advertisement.is_active ? "text-green-600" : "text-gray-400"
+                  className={`flex h-9 w-9 items-center justify-center rounded-control transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 ${
+                    advertisement.is_active ? "text-success" : "text-gray-400"
                   }`}
                   title={advertisement.is_active ? "Desactivar" : "Activar"}
+                  aria-label={advertisement.is_active ? "Desactivar anuncio" : "Activar anuncio"}
                 >
                   {statusChangingId === advertisement.id ? (
                     <Loader2 size={18} className="animate-spin" />
@@ -301,8 +301,9 @@ export default function Advertisements() {
                 <button
                   type="button"
                   onClick={() => setDeleteTarget(advertisement)}
-                  className="rounded-lg p-2 text-red-600 transition hover:bg-red-50"
+                  className="flex h-9 w-9 items-center justify-center rounded-control text-danger transition hover:bg-danger-bg"
                   title="Eliminar anuncio"
+                  aria-label="Eliminar anuncio"
                 >
                   <Trash2 size={18} />
                 </button>
@@ -327,11 +328,23 @@ export default function Advertisements() {
         onClose={() => setPreviewTarget(null)}
       />
 
-      <AdvertisementDeleteConfirmModal
+      <ConfirmModal
         isOpen={deleteTarget !== null}
+        title="Eliminar anuncio"
+        tone="danger"
+        confirmLabel="Eliminar anuncio"
         loading={deleting}
         onConfirm={handleConfirmDelete}
         onClose={handleCloseDelete}
+        message={
+          <>
+            Estás a punto de eliminar este anuncio. Dejará de mostrarse en el
+            Home inmediatamente.{" "}
+            <span className="font-medium text-danger">
+              Esta acción no se puede deshacer.
+            </span>
+          </>
+        }
       />
     </div>
   );

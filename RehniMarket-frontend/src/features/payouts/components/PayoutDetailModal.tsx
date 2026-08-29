@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
 import axios from "axios";
 
 import PayoutStatusBadge from "./PayoutStatusBadge";
@@ -7,6 +6,7 @@ import AccountNumberDisplay from "./AccountNumberDisplay";
 
 import { formatPrice } from "@/shared/utils/formatPrice";
 import { useAlert } from "@/shared/components/alert/useAlert";
+import { Modal, Spinner } from "@/shared/components/ui";
 import { BANK_ACCOUNT_TYPE_LABEL } from "../utils/payoutStatus";
 
 import type { ReactNode } from "react";
@@ -75,32 +75,27 @@ export default function PayoutDetailModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, payoutId]);
 
-  if (!isOpen) return null;
-
   const periodLabel = (p: CompanyPayout) =>
     `${new Date(p.periodStart).toLocaleDateString("es-CO")} — ${new Date(p.periodEnd).toLocaleDateString("es-CO")}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
-          <h2 className="text-lg font-semibold text-gray-900">
-            {payout && showCompanyName ? payout.companyName ?? "Liquidación" : "Detalle de liquidación"}
-          </h2>
-
-          <button
-            onClick={onClose}
-            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100"
-          >
-            <X size={18} />
-          </button>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="lg"
+      title={
+        payout && showCompanyName
+          ? payout.companyName ?? "Liquidación"
+          : "Detalle de liquidación"
+      }
+      footer={payout && footer ? footer(payout) : undefined}
+    >
+      {loading || !payout ? (
+        <div className="flex items-center justify-center gap-2 py-10 text-sm text-gray-500">
+          <Spinner /> Cargando liquidación...
         </div>
-
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
-          {loading || !payout ? (
-            <p className="py-8 text-center text-sm text-gray-500">Cargando liquidación...</p>
-          ) : (
-            <div className="space-y-6">
+      ) : (
+        <div className="space-y-6">
 
               <div className="flex items-center justify-between">
                 <PayoutStatusBadge status={payout.payoutStatus} />
@@ -108,7 +103,7 @@ export default function PayoutDetailModal({
                 <span className="text-sm text-gray-500">{periodLabel(payout)}</span>
               </div>
 
-              <section className="rounded-2xl border bg-gray-50 p-4">
+              <section className="rounded-card border bg-gray-50 p-4">
                 <dl className="space-y-2 text-sm">
                   <div className="flex justify-between text-gray-600">
                     <dt>Ventas brutas</dt>
@@ -135,7 +130,7 @@ export default function PayoutDetailModal({
               <section>
                 <h3 className="mb-3 font-semibold text-gray-900">Cuenta de destino</h3>
 
-                <div className="rounded-2xl border p-4 text-sm text-gray-600">
+                <div className="rounded-card border p-4 text-sm text-gray-600">
                   <p className="font-medium text-gray-900">{payout.bankAccount.bankName}</p>
                   <p className="mt-1">{BANK_ACCOUNT_TYPE_LABEL[payout.bankAccount.accountType]}</p>
 
@@ -149,7 +144,7 @@ export default function PayoutDetailModal({
                 <section>
                   <h3 className="mb-3 font-semibold text-gray-900">Conversión RehniCoin</h3>
 
-                  <div className="rounded-2xl border p-4 text-sm text-gray-600">
+                  <div className="rounded-card border p-4 text-sm text-gray-600">
                     <div className="flex justify-between">
                       <span>Equivalente en RehniCoin</span>
                       <span className="font-medium text-gray-900">
@@ -178,16 +173,8 @@ export default function PayoutDetailModal({
                   </span>
                 </div>
               </section>
-            </div>
-          )}
         </div>
-
-        {payout && footer && (
-          <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
-            {footer(payout)}
-          </div>
-        )}
-      </div>
-    </div>
+      )}
+    </Modal>
   );
 }

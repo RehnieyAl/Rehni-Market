@@ -69,7 +69,7 @@ export default function VariantAttributePicker({
                         !available
                           ? "cursor-not-allowed border-gray-200 opacity-40"
                           : isSelected
-                            ? "border-[#6D0F2D]"
+                            ? "border-primary ring-2 ring-brand-600/25"
                             : "border-gray-300 hover:border-gray-400"
                       }`}
                       style={{ backgroundColor: hex ?? "#e5e7eb" }}
@@ -86,11 +86,11 @@ export default function VariantAttributePicker({
                     }
                     disabled={!available}
                     onClick={() => onChange(axis.name, value)}
-                    className={`rounded-lg border px-3.5 py-2 text-sm font-medium transition ${
+                    className={`rounded-control border px-3.5 py-2 text-sm font-medium transition ${
                       !available
                         ? "cursor-not-allowed border-gray-200 text-gray-300 line-through"
                         : isSelected
-                          ? "border-[#6D0F2D] bg-[#6D0F2D] text-white"
+                          ? "border-primary bg-primary text-primary-fg"
                           : "border-gray-300 text-gray-700 hover:border-gray-400"
                     }`}
                   >

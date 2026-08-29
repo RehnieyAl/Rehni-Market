@@ -1,10 +1,7 @@
 import { useSearchParams } from "react-router-dom";
 
 import DashboardLayout from "@/shared/components/dashboard/DashboardLayout";
-import Sidebar from "@/shared/components/dashboard/Sidebar";
 import { dashboardNavigation } from "@/shared/config/dashboardNavigation";
-
-import Topbar from "@/shared/components/dashboard/Topbar";
 
 import Home from "@/features/company/components/dashboard/Home";
 import Products from "@/features/company/components/dashboard/product/Products";
@@ -40,20 +37,12 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout
-      sidebar={
-        <Sidebar
-          items={dashboardNavigation.company}
-          activeItem={view}
-          onItemClick={handleViewChange}
-        />
-      }
-      topbar={
-        <Topbar
-          title="Panel Empresa"
-          description="Administra tu negicio"
-          roleName="Empresa"
-        />
-      }
+      navItems={dashboardNavigation.company}
+      activeItem={view}
+      onNavigate={handleViewChange}
+      title="Panel Empresa"
+      description="Administra tu negocio"
+      roleName="Empresa"
     >
       {views[view as keyof typeof views]}
     </DashboardLayout>

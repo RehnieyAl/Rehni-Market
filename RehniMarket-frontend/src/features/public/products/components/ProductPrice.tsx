@@ -29,7 +29,7 @@ export default function ProductPrice({
       <span className="text-3xl font-bold text-gray-900">{formatPrice(finalPrice)}</span>
 
       {discountPercentage !== null && (
-        <span className="rounded-md bg-[#6D0F2D]/10 px-2 py-0.5 text-sm font-semibold text-[#6D0F2D]">
+        <span className="rounded-md bg-brand-50 px-2 py-0.5 text-sm font-semibold text-primary">
           {discountPercentage}% descuento
         </span>
       )}

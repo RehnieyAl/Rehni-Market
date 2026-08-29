@@ -43,7 +43,7 @@ export default function AttributeValueFields({
                 <select
                   value={current}
                   onChange={(e) => onChange(attribute.id, e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-red-500"
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-600"
                 >
                   <option value="">Sin especificar</option>
                   {attribute.options.map((option) => (
@@ -66,7 +66,7 @@ export default function AttributeValueFields({
                 value={current}
                 onChange={(e) => onChange(attribute.id, e.target.value)}
                 placeholder="Sin especificar"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-red-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-600"
               />
             )}
           </div>

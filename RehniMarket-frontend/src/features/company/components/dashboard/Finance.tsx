@@ -18,9 +18,9 @@ export default function Finance() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">Finanzas</h1>
+      <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Finanzas</h1>
 
-      <p className="mt-2 text-gray-500">
+      <p className="mt-1 text-sm text-gray-500">
         Consulta tus ventas, comisiones y liquidaciones mensuales, y administra las cuentas
         bancarias donde recibes tus pagos.
       </p>
@@ -30,9 +30,10 @@ export default function Finance() {
           <button
             key={item.id}
             onClick={() => setTab(item.id)}
+            aria-pressed={tab === item.id}
             className={`rounded-full px-4 py-2 text-sm font-medium transition ${
               tab === item.id
-                ? "bg-[#7A1833] text-white"
+                ? "bg-primary text-primary-fg"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >

@@ -105,7 +105,7 @@ export default function BankAccountForm({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+      <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-card bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
           <h2 className="text-lg font-semibold text-gray-900">
             {account ? "Editar cuenta bancaria" : "Nueva cuenta bancaria"}
@@ -130,7 +130,7 @@ export default function BankAccountForm({
                 value={form.accountHolder}
                 onChange={(e) => handleChange("accountHolder", e.target.value)}
                 placeholder="Nombre completo o razón social"
-                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-[#6D0F2D]"
+                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-brand-600"
               />
             </div>
 
@@ -141,7 +141,7 @@ export default function BankAccountForm({
                 value={form.documentNumber}
                 onChange={(e) => handleChange("documentNumber", e.target.value)}
                 placeholder="NIT o cédula"
-                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-[#6D0F2D]"
+                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-brand-600"
               />
             </div>
 
@@ -152,7 +152,7 @@ export default function BankAccountForm({
                 value={form.bankName}
                 onChange={(e) => handleChange("bankName", e.target.value)}
                 placeholder="Ej. Bancolombia"
-                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-[#6D0F2D]"
+                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-brand-600"
               />
             </div>
 
@@ -162,7 +162,7 @@ export default function BankAccountForm({
               <select
                 value={form.accountType}
                 onChange={(e) => handleChange("accountType", e.target.value as BankAccountType)}
-                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-[#6D0F2D]"
+                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-brand-600"
               >
                 {BANK_ACCOUNT_TYPE_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -179,7 +179,7 @@ export default function BankAccountForm({
                 value={form.accountNumber}
                 onChange={(e) => handleChange("accountNumber", e.target.value)}
                 placeholder="Número completo"
-                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-[#6D0F2D]"
+                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-brand-600"
               />
             </div>
           </div>
@@ -190,7 +190,7 @@ export default function BankAccountForm({
                 type="checkbox"
                 checked={form.isDefault}
                 onChange={(e) => handleChange("isDefault", e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 accent-[#6D0F2D]"
+                className="h-4 w-4 rounded border-gray-300 accent-brand-600"
               />
               Cuenta predeterminada (a esta se giran las liquidaciones)
             </label>
@@ -211,9 +211,9 @@ export default function BankAccountForm({
             type="button"
             onClick={handleSubmit}
             disabled={saving}
-            className="rounded-xl bg-[#6D0F2D] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#5b0d26] disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {saving ? "Guardando..." : "Guardar cuenta"}
+            {saving ? "Guardando…" : "Guardar cuenta"}
           </button>
         </div>
       </div>

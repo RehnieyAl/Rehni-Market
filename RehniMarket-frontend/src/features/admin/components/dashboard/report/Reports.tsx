@@ -1,4 +1,4 @@
-import { Search, Eye, ChevronDown } from "lucide-react";
+import { Search, Eye } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import {
@@ -7,6 +7,8 @@ import {
   type ReportTypeFilter,
 } from "@/features/reports/api/reportService";
 
+import { Badge, Button, EmptyState, ErrorState, Input, Select, TableSkeleton } from "@/shared/components/ui";
+import type { BadgeTone } from "@/shared/components/ui";
 import ReportDetailModal from "./ReportDetailModal";
 
 import type { ReportListItem } from "@/features/reports/types/response";
@@ -15,6 +17,7 @@ import type { ReportListItem } from "@/features/reports/types/response";
 export default function Reports() {
   const [reports, setReports] = useState<ReportListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<ReportTypeFilter>("all");
@@ -36,6 +39,7 @@ export default function Reports() {
   ) => {
     try {
       setLoading(true);
+      setFailed(false);
 
       const response = await getAdminReports(
         pageValue,
@@ -50,6 +54,7 @@ export default function Reports() {
       setTotal(response.total);
     } catch (error) {
       console.error("Error cargando reportes:", error);
+      setFailed(true);
     } finally {
       setLoading(false);
     }
@@ -61,6 +66,7 @@ export default function Reports() {
     const loadInitialReports = async () => {
       try {
         setLoading(true);
+        setFailed(false);
 
         const response = await getAdminReports(1, 10, "all", "all", "");
 
@@ -69,6 +75,7 @@ export default function Reports() {
         setTotal(response.total);
       } catch (error) {
         console.error("Error cargando reportes:", error);
+        setFailed(true);
       } finally {
         setLoading(false);
       }
@@ -117,63 +124,45 @@ export default function Reports() {
         </p>
       </div>
 
-      <section className="mt-6 shrink-0 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <section className="mt-6 shrink-0 rounded-card border border-gray-200 bg-white p-5 shadow-card">
         <div className="flex flex-col gap-3 md:flex-row">
-          <div className="flex flex-1 items-center gap-3 rounded-lg border border-gray-200 px-4 py-3">
-            <Search size={19} className="shrink-0 text-gray-400" />
+          <Input
+            className="flex-1"
+            type="search"
+            value={search}
+            onChange={(event) => handleSearch(event.target.value)}
+            placeholder="Buscar por producto, empresa, motivo o usuario…"
+            aria-label="Buscar reportes"
+            leadingIcon={<Search size={16} />}
+          />
 
-            <input
-              type="text"
-              value={search}
-              onChange={(event) => handleSearch(event.target.value)}
-              placeholder="Buscar por producto, empresa, motivo o usuario..."
-              className="w-full text-sm outline-none"
-            />
-          </div>
+          <Select
+            className="md:w-44"
+            aria-label="Filtrar por tipo"
+            value={typeFilter}
+            onChange={(event) => handleTypeFilter(event.target.value as ReportTypeFilter)}
+          >
+            <option value="all">Todos</option>
+            <option value="product">Productos</option>
+            <option value="company">Empresas</option>
+          </Select>
 
-          <div className="relative">
-            <select
-              value={typeFilter}
-              onChange={(event) =>
-                handleTypeFilter(event.target.value as ReportTypeFilter)
-              }
-              className="h-full min-w-[160px] appearance-none rounded-lg border border-gray-200 bg-white px-4 py-3 pr-10 text-sm font-medium text-gray-700 outline-none transition focus:border-[#7A1833]"
-            >
-              <option value="all">Todos</option>
-              <option value="product">Productos</option>
-              <option value="company">Empresas</option>
-            </select>
-
-            <ChevronDown
-              size={17}
-              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-          </div>
-
-          <div className="relative">
-            <select
-              value={statusFilter}
-              onChange={(event) =>
-                handleStatusFilter(event.target.value as ReportStatusFilter)
-              }
-              className="h-full min-w-[160px] appearance-none rounded-lg border border-gray-200 bg-white px-4 py-3 pr-10 text-sm font-medium text-gray-700 outline-none transition focus:border-[#7A1833]"
-            >
-              <option value="all">Todos</option>
-              <option value="pending">Pendientes</option>
-              <option value="reviewing">En revisión</option>
-              <option value="resolved">Resueltos</option>
-              <option value="rejected">Rechazados</option>
-            </select>
-
-            <ChevronDown
-              size={17}
-              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-          </div>
+          <Select
+            className="md:w-44"
+            aria-label="Filtrar por estado"
+            value={statusFilter}
+            onChange={(event) => handleStatusFilter(event.target.value as ReportStatusFilter)}
+          >
+            <option value="all">Todos</option>
+            <option value="pending">Pendientes</option>
+            <option value="reviewing">En revisión</option>
+            <option value="resolved">Resueltos</option>
+            <option value="rejected">Rechazados</option>
+          </Select>
         </div>
       </section>
 
-      <section className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <section className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
         <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-5 py-4">
           <div>
             <h2 className="font-semibold text-gray-900">
@@ -203,20 +192,27 @@ export default function Reports() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td
-                    colSpan={8}
-                    className="px-5 py-8 text-center text-sm text-gray-500"
-                  >
-                    Cargando reportes...
+                  <td colSpan={8} className="p-0">
+                    <TableSkeleton rows={6} columns={["22%", "18%", "16%", "14%", "12%", "10%", "8%"]} />
+                  </td>
+                </tr>
+              ) : failed && reports.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="p-0">
+                    <ErrorState
+                      variant="plain"
+                      title="No pudimos cargar los reportes"
+                      onRetry={() => loadReports(page, search, typeFilter, statusFilter)}
+                    />
                   </td>
                 </tr>
               ) : reports.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={8}
-                    className="px-5 py-8 text-center text-sm text-gray-500"
-                  >
-                    No se encontraron reportes con este filtro.
+                  <td colSpan={8} className="p-0">
+                    <EmptyState
+                      variant="plain"
+                      title="No se encontraron reportes con este filtro"
+                    />
                   </td>
                 </tr>
               ) : (
@@ -264,8 +260,9 @@ export default function Reports() {
                             event.stopPropagation();
                             setSelectedReportId(report.id);
                           }}
-                          className="rounded-lg p-2 text-gray-600 transition hover:bg-gray-100"
+                          className="flex h-9 w-9 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
                           title="Ver reporte"
+                          aria-label={`Ver reporte de ${report.targetLabel}`}
                         >
                           <Eye size={18} />
                         </button>
@@ -284,23 +281,23 @@ export default function Reports() {
           </span>
 
           <div className="flex items-center gap-3">
-            <button
-              type="button"
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => handlePageChange(page - 1)}
               disabled={page <= 1 || loading}
-              className="rounded-xl border border-gray-200 px-5 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Atrás
-            </button>
+            </Button>
 
-            <button
-              type="button"
+            <Button
+              size="sm"
               onClick={() => handlePageChange(page + 1)}
-              disabled={page >= totalPages || loading}
-              className="rounded-xl bg-[#7A1833] px-5 py-2 text-sm font-medium text-white transition hover:bg-[#64132a] disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={page >= totalPages}
+              loading={loading}
             >
-              {loading ? "Cargando..." : "Siguiente"}
-            </button>
+              Siguiente
+            </Button>
           </div>
         </div>
       </section>
@@ -317,26 +314,20 @@ export default function Reports() {
 
 function ReportTypeBadge({ type }: { type: ReportListItem["targetType"] }) {
   return (
-    <span
-      className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-        type === "product"
-          ? "bg-blue-50 text-blue-700"
-          : "bg-purple-50 text-purple-700"
-      }`}
-    >
+    <Badge tone={type === "product" ? "info" : "brand"}>
       {type === "product" ? "Producto" : "Empresa"}
-    </span>
+    </Badge>
   );
 }
 
 const STATUS_CONFIG: Record<
   ReportListItem["status"],
-  { text: string; className: string }
+  { text: string; tone: BadgeTone }
 > = {
-  pending: { text: "Pendiente", className: "bg-yellow-50 text-yellow-700" },
-  reviewing: { text: "En revisión", className: "bg-blue-50 text-blue-700" },
-  resolved: { text: "Resuelto", className: "bg-green-50 text-green-700" },
-  rejected: { text: "Rechazado", className: "bg-red-50 text-red-700" },
+  pending: { text: "Pendiente", tone: "warning" },
+  reviewing: { text: "En revisión", tone: "info" },
+  resolved: { text: "Resuelto", tone: "success" },
+  rejected: { text: "Rechazado", tone: "danger" },
 };
 
 export function ReportStatusBadge({
@@ -346,11 +337,5 @@ export function ReportStatusBadge({
 }) {
   const config = STATUS_CONFIG[status];
 
-  return (
-    <span
-      className={`rounded-full px-2.5 py-1 text-xs font-medium ${config.className}`}
-    >
-      {config.text}
-    </span>
-  );
+  return <Badge tone={config.tone}>{config.text}</Badge>;
 }

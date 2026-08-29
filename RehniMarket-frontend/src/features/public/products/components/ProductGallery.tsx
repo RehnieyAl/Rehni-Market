@@ -33,9 +33,9 @@ export default function ProductGallery({
                 onClick={() => onSelect(image.url)}
                 aria-label={`Ver imagen ${productName}`}
                 aria-current={isActive}
-                className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl border-2 bg-white transition ${
+                className={`h-20 w-20 shrink-0 overflow-hidden rounded-card border-2 bg-white transition ${
                   isActive
-                    ? "border-[#6D0F2D] ring-2 ring-[#6D0F2D]/20"
+                    ? "border-primary ring-2 ring-brand-600/20"
                     : "border-gray-200 hover:border-gray-300"
                 }`}
               >

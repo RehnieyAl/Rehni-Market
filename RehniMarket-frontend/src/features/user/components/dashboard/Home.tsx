@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Coins, Heart, Package, ShoppingBag } from "lucide-react";
 
 import { useAuth } from "@/features/public/auth/context/useAuth";
 
 import StatCard from "@/shared/components/dashboard/StatCard";
-import ComingSoon from "@/shared/components/dashboard/ComingSoon";
+import { Badge, EmptyState, Skeleton } from "@/shared/components/ui";
+import { buttonClasses } from "@/shared/components/ui/buttonVariants";
 
 import { getDailyProducts } from "@/features/public/home/api/homeService";
 import ProductCard from "@/features/public/home/components/ProductCard";
@@ -13,7 +15,7 @@ import ProductCardSkeleton from "@/features/public/home/components/ProductCardSk
 import { getMyOrders } from "@/features/orders/api/orderService";
 import { useFavorites } from "@/features/favorites/context/useFavorites";
 import { getMyWallet } from "@/features/wallet/api/walletService";
-import { ORDER_STATUS_LABEL } from "@/features/orders/utils/orderStatus";
+import { ORDER_STATUS_LABEL, ORDER_STATUS_TONE } from "@/features/orders/utils/orderStatus";
 import { formatPrice } from "@/shared/utils/formatPrice";
 
 import type { PublicProductCard } from "@/features/public/home/types/response";
@@ -82,8 +84,9 @@ export default function Home() {
     <>
       {/* Bienvenida */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
-          Hola, {user?.name ?? "Cargando..."}
+        <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
+          Hola,{" "}
+          {user?.name ?? <Skeleton className="inline-block h-6 w-32 align-middle" />}
         </h1>
 
         <p className="mt-2 text-gray-500">
@@ -95,21 +98,21 @@ export default function Home() {
       <section className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-3">
         <StatCard
           title="Pedidos pendientes"
-          value={summaryLoading ? "..." : String(pendingOrders)}
+          value={summaryLoading ? "…" : String(pendingOrders)}
           subtitle="En curso"
           icon={<Package size={24} />}
         />
 
         <StatCard
           title="Favoritos"
-          value={favoritesLoading ? "..." : String(favoriteIds.size)}
+          value={favoritesLoading ? "…" : String(favoriteIds.size)}
           subtitle="Productos guardados"
           icon={<Heart size={24} />}
         />
 
         <StatCard
           title="Saldo RehniCoin"
-          value={summaryLoading ? "..." : `${formatPrice(walletBalance)} RC`}
+          value={summaryLoading ? "…" : `${formatPrice(walletBalance)} RC`}
           subtitle="Disponible"
           icon={<Coins size={24} />}
         />
@@ -122,9 +125,9 @@ export default function Home() {
         </h2>
 
         {summaryLoading ? (
-          <p className="mt-4 text-sm text-gray-500">Cargando...</p>
+          <Skeleton className="mt-4 h-24 rounded-card" />
         ) : lastOrder ? (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl border bg-white p-6">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 bg-white p-6 shadow-card">
             <div>
               <p className="font-semibold text-gray-900">
                 {lastOrder.firstItemName}
@@ -139,15 +142,21 @@ export default function Home() {
               </p>
             </div>
 
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
+            <Badge tone={ORDER_STATUS_TONE[lastOrder.status]}>
               {ORDER_STATUS_LABEL[lastOrder.status]}
-            </span>
+            </Badge>
           </div>
         ) : (
-          <ComingSoon
-            icon={<ShoppingBag className="h-10 w-10 text-red-700" />}
-            title="Aún no tienes pedidos."
-            action={{ label: "Explorar productos", to: "/products" }}
+          <EmptyState
+            className="mt-4"
+            icon={<ShoppingBag size={22} />}
+            title="Todavía no tienes pedidos"
+            description="Tu compra más reciente aparecerá aquí."
+            action={
+              <Link to="/products" className={buttonClasses({ size: "sm" })}>
+                Explorar productos
+              </Link>
+            }
           />
         )}
       </section>
@@ -165,9 +174,11 @@ export default function Home() {
             ))}
           </div>
         ) : products.length === 0 ? (
-          <div className="mt-4 rounded-2xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-500">
-            Todavía no hay productos disponibles para recomendarte.
-          </div>
+          <EmptyState
+            className="mt-4"
+            icon={<ShoppingBag size={22} />}
+            title="Todavía no hay productos para recomendarte"
+          />
         ) : (
           <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-4">
             {products.map((product) => (

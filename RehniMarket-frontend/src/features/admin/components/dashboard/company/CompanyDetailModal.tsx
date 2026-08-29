@@ -1,5 +1,7 @@
 import { X, MapPin, FileText, CalendarDays, Eye, Check, Ban } from "lucide-react";
 import { useEffect, useState } from "react";
+
+import { ErrorState, Spinner } from "@/shared/components/ui";
 import { getAdminCompany, updateCertificateStatus } from "@/features/admin/api/companyService";
 import type { AdminCompanyResponse } from "@/features/admin/types/response";
 import CertificateModal from "./CertificateModal";
@@ -56,7 +58,7 @@ export default function CompanyDetailModal({ companyId, isOpen, onClose, onCompa
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-        <div className="flex max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+        <div className="flex max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-card bg-white shadow-2xl">
           <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-5">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Detalle de empresa</h2>
@@ -68,13 +70,13 @@ export default function CompanyDetailModal({ companyId, isOpen, onClose, onCompa
           </div>
           <div className="overflow-y-auto">
             {loading && (
-              <div className="flex items-center justify-center p-12">
-                <p className="text-gray-500">Cargando empresa...</p>
+              <div className="flex items-center justify-center gap-2 p-12 text-sm text-gray-500">
+                <Spinner /> Cargando empresa...
               </div>
             )}
             {!loading && company && (
               <div className="p-6">
-                <div className="overflow-hidden rounded-2xl border border-gray-200">
+                <div className="overflow-hidden rounded-card border border-gray-200">
                   <div className="relative h-52 w-full bg-gray-100">
                     {company.CompanyBanner ? (
                       <img src={company.CompanyBanner} alt={`Banner de ${company.nameCompany}`} className="h-full w-full object-cover" />
@@ -83,9 +85,9 @@ export default function CompanyDetailModal({ companyId, isOpen, onClose, onCompa
                     )}
                     <div className="absolute bottom-0 left-6 translate-y-1/2">
                       {company.CompanyLogo ? (
-                        <img src={company.CompanyLogo} alt={company.nameCompany} className="h-28 w-28 rounded-2xl border-4 border-white bg-white object-cover shadow-lg" />
+                        <img src={company.CompanyLogo} alt={company.nameCompany} className="h-28 w-28 rounded-card border-4 border-white bg-white object-cover shadow-lg" />
                       ) : (
-                        <div className="flex h-28 w-28 items-center justify-center rounded-2xl border-4 border-white bg-gray-100 text-4xl font-bold text-gray-500 shadow-lg">
+                        <div className="flex h-28 w-28 items-center justify-center rounded-card border-4 border-white bg-gray-100 text-4xl font-bold text-gray-500 shadow-lg">
                           {company.nameCompany.charAt(0).toUpperCase()}
                         </div>
                       )}
@@ -113,7 +115,7 @@ export default function CompanyDetailModal({ companyId, isOpen, onClose, onCompa
                     <InfoCard icon={<FileText size={20} />} title="Motivo de suspensión" value={company.suspensionReason} />
                   )}
                 </div>
-                <div className="mt-6 rounded-2xl border border-gray-200 p-5">
+                <div className="mt-6 rounded-card border border-gray-200 p-5">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <h3 className="font-semibold text-gray-900">Certificado empresarial</h3>
@@ -122,7 +124,7 @@ export default function CompanyDetailModal({ companyId, isOpen, onClose, onCompa
                       </p>
                     </div>
                     {company.CompanyCertificate && (
-                      <button type="button" onClick={() => setCertificateOpen(true)} className="flex shrink-0 items-center gap-2 rounded-xl bg-[#7A1833] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#64132a]">
+                      <button type="button" onClick={() => setCertificateOpen(true)} className="flex shrink-0 items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-hover">
                         <Eye size={18} />
                         Ver certificado
                       </button>
@@ -136,13 +138,13 @@ export default function CompanyDetailModal({ companyId, isOpen, onClose, onCompa
                       <h4 className="font-semibold text-gray-900">Revisión del certificado</h4>
                       <p className="mt-1 text-sm text-gray-500">Revisa el documento antes de tomar una decisión.</p>
                       <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                        <button type="button" disabled={updatingCertificate} onClick={() => handleCertificateStatus("approved")} className="flex items-center justify-center gap-2 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50">
+                        <button type="button" disabled={updatingCertificate} onClick={() => handleCertificateStatus("approved")} className="flex items-center justify-center gap-2 rounded-xl bg-success px-5 py-2.5 text-sm font-medium text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">
                           <Check size={18} />
-                          {updatingCertificate ? "Actualizando..." : "Aprobar certificado"}
+                          {updatingCertificate ? "Actualizando…" : "Aprobar certificado"}
                         </button>
-                        <button type="button" disabled={updatingCertificate} onClick={() => handleCertificateStatus("rejected")} className="flex items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50">
+                        <button type="button" disabled={updatingCertificate} onClick={() => handleCertificateStatus("rejected")} className="flex items-center justify-center gap-2 rounded-xl bg-danger px-5 py-2.5 text-sm font-medium text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">
                           <Ban size={18} />
-                          {updatingCertificate ? "Actualizando..." : "No aprobar"}
+                          {updatingCertificate ? "Actualizando…" : "No aprobar"}
                         </button>
                       </div>
                     </div>
@@ -151,7 +153,7 @@ export default function CompanyDetailModal({ companyId, isOpen, onClose, onCompa
               </div>
             )}
             {!loading && !company && (
-              <div className="p-12 text-center text-gray-500">No se pudo cargar la información de la empresa.</div>
+              <ErrorState variant="plain" title="No pudimos cargar la información de la empresa" />
             )}
           </div>
           <div className="flex shrink-0 justify-end border-t border-gray-200 px-6 py-5">
@@ -175,7 +177,7 @@ export default function CompanyDetailModal({ companyId, isOpen, onClose, onCompa
 
 function InfoCard({ icon, title, value }: { icon: React.ReactNode; title: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-gray-200 p-5">
+    <div className="rounded-card border border-gray-200 p-5">
       <div className="flex items-center gap-2 text-gray-500">
         {icon}
         <span className="text-sm">{title}</span>
@@ -187,7 +189,7 @@ function InfoCard({ icon, title, value }: { icon: React.ReactNode; title: string
 
 function CompanyStatus({ active }: { active: boolean }) {
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-medium ${active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
+    <span className={`rounded-full px-3 py-1 text-xs font-medium ${active ? "bg-success-bg text-success" : "bg-gray-100 text-gray-600"}`}>
       {active ? "Activa" : "Inactiva"}
     </span>
   );
@@ -195,7 +197,7 @@ function CompanyStatus({ active }: { active: boolean }) {
 
 function CertificateStatus({ status }: { status: AdminCompanyResponse["CompanyCertificateStatus"] }) {
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-medium ${status === "approved" ? "bg-green-100 text-green-700" : status === "rejected" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>
+    <span className={`rounded-full px-3 py-1 text-xs font-medium ${status === "approved" ? "bg-success-bg text-success" : status === "rejected" ? "bg-danger-bg text-danger" : "bg-warning-bg text-warning"}`}>
       {getCertificateStatus(status)}
     </span>
   );

@@ -1,23 +1,10 @@
-
-import {
-  useState,
-  type ReactNode,
-} from "react";
-
-import {
-  LogOut,
-  ArrowLeft,
-  Menu,
-} from "lucide-react";
-
-import {
-  Link,
-  useNavigate,
-} from "react-router-dom";
+import type { ReactNode } from "react";
+import { LogOut, ArrowLeft, PanelLeftClose, PanelLeft, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 import logo from "@/assets/logo.png";
-
 import { useAuth } from "@/features/public/auth/context/useAuth";
+import { cn } from "@/shared/utils/cn";
 
 export interface SidebarItem {
   id: string;
@@ -25,176 +12,143 @@ export interface SidebarItem {
   icon: ReactNode;
 }
 
-interface SidebarProps {
+interface SidebarNavProps {
   items: SidebarItem[];
   activeItem: string;
   onItemClick: (id: string) => void;
+  // Modo rail (solo escritorio).
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
+  // Presente = modo drawer móvil: muestra un botón de cerrar, nunca colapsa.
+  onClose?: () => void;
 }
 
-export default function Sidebar({
+// Contenido de navegación del panel. El contenedor (aside fijo / drawer) lo
+// aporta DashboardLayout: este componente solo pinta logo + enlaces + acciones.
+export default function SidebarNav({
   items,
   activeItem,
   onItemClick,
-}: SidebarProps) {
-  const [collapsed, setCollapsed] =
-    useState(false);
-
+  collapsed = false,
+  onToggleCollapse,
+  onClose,
+}: SidebarNavProps) {
   const navigate = useNavigate();
-
   const { logout } = useAuth();
+
+  const rail = collapsed && !onClose;
 
   const handleLogout = () => {
     logout();
-
     navigate("/login");
   };
 
   return (
-    <aside
-      className={`flex min-h-screen flex-col border-r border-gray-200 bg-white transition-all duration-300 ${
-        collapsed
-          ? "w-20"
-          : "w-64"
-      }`}
-    >
-
+    <div className="flex h-full min-h-0 flex-col bg-white">
       <div
-        className={`flex h-20 items-center border-b border-gray-100 px-3 ${
-          collapsed
-            ? "justify-center"
-            : ""
-        }`}
+        className={cn(
+          "flex h-16 items-center gap-2 border-b border-gray-100 px-3",
+          rail && "justify-center",
+        )}
       >
-
-        {!collapsed && (
-          <img
-            src={logo}
-            alt="RehniMarket"
-            className="w-35 h-auto object-contain"
-          />
+        {!rail && (
+          <img src={logo} alt="RehniMarket" className="h-8 w-auto object-contain" />
         )}
 
-        <button
-          type="button"
-          onClick={() =>
-            setCollapsed(!collapsed)
-          }
-          className={`flex items-center justify-center rounded-xl text-gray-600 transition hover:bg-gray-100 ${
-            collapsed
-              ? "p-3"
-              : "ml-auto p-3"
-          }`}
-          aria-label={
-            collapsed
-              ? "Expandir menú"
-              : "Contraer menú"
-          }
-        >
-          <Menu size={24} />
-        </button>
-
+        {onClose ? (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar menú"
+            className="ml-auto rounded-control p-2 text-gray-500 transition hover:bg-gray-100"
+          >
+            <X size={22} />
+          </button>
+        ) : (
+          onToggleCollapse && (
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
+              aria-pressed={collapsed}
+              className={cn(
+                "rounded-control p-2 text-gray-500 transition hover:bg-gray-100",
+                !rail && "ml-auto",
+              )}
+            >
+              {collapsed ? <PanelLeft size={20} /> : <PanelLeftClose size={20} />}
+            </button>
+          )
+        )}
       </div>
 
-      <nav className="flex-1 px-3 py-6">
+      <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {items.map((item) => (
-          <SidebarItem
+          <NavButton
             key={item.id}
             icon={item.icon}
             text={item.text}
-            active={
-              activeItem === item.id
-            }
-            collapsed={collapsed}
-            onClick={() =>
-              onItemClick(item.id)
-            }
+            active={activeItem === item.id}
+            rail={rail}
+            onClick={() => onItemClick(item.id)}
           />
         ))}
       </nav>
 
-      <div className="border-t border-gray-200 p-3">
-
+      <div className="space-y-1 border-t border-gray-200 p-3">
         <Link
           to="/"
-          title={
-            collapsed
-              ? "Regresar"
-              : undefined
-          }
-          className={`mb-2 flex w-full items-center rounded-2xl py-4 text-gray-700 transition-all duration-200 hover:bg-gray-100 ${
-            collapsed
-              ? "justify-center"
-              : "gap-4 px-4"
-          }`}
-        >
-          <ArrowLeft size={22} />
-
-          {!collapsed && (
-            <span>
-              Regresar
-            </span>
+          onClick={onClose}
+          title={rail ? "Volver a la tienda" : undefined}
+          className={cn(
+            "flex min-h-11 w-full items-center rounded-control text-sm font-medium text-gray-700 transition hover:bg-gray-100",
+            rail ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5",
           )}
+        >
+          <ArrowLeft size={20} className="shrink-0" />
+          {!rail && <span>Volver a la tienda</span>}
         </Link>
 
-        <SidebarItem
-          icon={
-            <LogOut size={22} />
-          }
+        <NavButton
+          icon={<LogOut size={20} />}
           text="Cerrar sesión"
           danger
-          collapsed={collapsed}
+          rail={rail}
           onClick={handleLogout}
         />
-
       </div>
-    </aside>
+    </div>
   );
 }
 
-interface SidebarItemProps {
+interface NavButtonProps {
   icon: ReactNode;
   text: string;
   active?: boolean;
   danger?: boolean;
-  collapsed?: boolean;
+  rail?: boolean;
   onClick?: () => void;
 }
 
-function SidebarItem({
-  icon,
-  text,
-  active = false,
-  danger = false,
-  collapsed = false,
-  onClick,
-}: SidebarItemProps) {
+function NavButton({ icon, text, active, danger, rail, onClick }: NavButtonProps) {
   return (
     <button
       type="button"
       onClick={onClick}
-      title={
-        collapsed
-          ? text
-          : undefined
-      }
-      className={`mb-2 flex w-full items-center rounded-2xl py-4 text-left transition-all duration-200 ${
-        collapsed
-          ? "justify-center"
-          : "gap-4 px-4"
-      } ${
+      title={rail ? text : undefined}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "flex min-h-11 w-full items-center rounded-control text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600/40",
+        rail ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5",
         active
-          ? "bg-red-50 font-semibold text-[#7A1833]"
+          ? "bg-brand-50 font-semibold text-primary"
           : danger
-            ? "text-red-600 hover:bg-red-50"
-            : "text-gray-700 hover:bg-gray-100"
-      }`}
-    >
-      {icon}
-
-      {!collapsed && (
-        <span>{text}</span>
+            ? "text-danger hover:bg-danger-bg"
+            : "text-gray-700 hover:bg-gray-100",
       )}
+    >
+      <span className="shrink-0">{icon}</span>
+      {!rail && <span className="truncate">{text}</span>}
     </button>
   );
 }
-

@@ -83,7 +83,7 @@ export default function CatalogFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-xl">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-card bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
           <h2 className="text-lg font-semibold text-gray-900">
             {isEditing ? "Editar categoría" : "Nueva categoría"}
@@ -131,7 +131,7 @@ export default function CatalogFormModal({
                   <button
                     type="button"
                     onClick={handleRemoveImage}
-                    className="absolute right-2 top-2 rounded-lg bg-white/90 px-2 py-1 text-xs font-medium text-red-600 shadow transition hover:bg-white"
+                    className="absolute right-2 top-2 rounded-lg bg-white/90 px-2 py-1 text-xs font-medium text-danger shadow transition hover:bg-white"
                   >
                     Quitar
                   </button>
@@ -140,7 +140,7 @@ export default function CatalogFormModal({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex h-40 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 transition hover:border-[#7A1833] hover:text-[#7A1833]"
+                  className="flex h-40 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 transition hover:border-primary hover:text-primary"
                 >
                   <Upload size={24} />
                   <span className="text-sm">Subir imagen</span>
@@ -162,7 +162,7 @@ export default function CatalogFormModal({
                 required
                 autoFocus
                 placeholder="Ej: Computadoras"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
               />
             </div>
 
@@ -177,7 +177,7 @@ export default function CatalogFormModal({
                 rows={3}
                 maxLength={500}
                 placeholder="Describe brevemente esta categoría"
-                className="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20"
+                className="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
               />
             </div>
 
@@ -195,7 +195,7 @@ export default function CatalogFormModal({
                     setDisplayOrder(Number.isFinite(parsed) ? parsed : 0);
                   }}
                   min={0}
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
                 />
 
                 <p className="mt-1.5 text-xs text-gray-400">Menor número aparece primero.</p>
@@ -211,7 +211,7 @@ export default function CatalogFormModal({
                   onClick={() => setIsActive((current) => !current)}
                   className={`flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition ${
                     isActive
-                      ? "border-green-200 bg-green-50 text-green-700"
+                      ? "border-green-200 bg-success-bg text-success"
                       : "border-gray-200 bg-gray-50 text-gray-500"
                   }`}
                 >
@@ -234,10 +234,10 @@ export default function CatalogFormModal({
             <button
               type="submit"
               disabled={loading || !isValid}
-              className="flex items-center gap-2 rounded-xl bg-[#7A1833] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#64132a] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Save size={16} />
-              {loading ? "Guardando..." : "Guardar"}
+              {loading ? "Guardando…" : "Guardar"}
             </button>
           </div>
         </form>

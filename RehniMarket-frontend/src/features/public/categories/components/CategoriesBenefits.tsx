@@ -17,7 +17,7 @@ export default function CategoriesBenefits() {
       <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-10 sm:px-6 lg:grid-cols-4 lg:px-8">
         {BENEFITS.map(({ icon: Icon, label }) => (
           <div key={label} className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#6D0F2D] shadow-sm">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-primary shadow-card">
               <Icon size={18} />
             </span>
 

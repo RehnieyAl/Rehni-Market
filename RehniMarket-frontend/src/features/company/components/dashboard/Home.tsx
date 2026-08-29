@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import StatCard from "@/shared/components/dashboard/StatCard";
+import { Badge, EmptyState, Skeleton } from "@/shared/components/ui";
 import CompanyRatingBadge from "@/features/public/company/components/CompanyRatingBadge";
 
 import { useAuth } from "@/features/public/auth/context/useAuth";
@@ -40,29 +41,26 @@ interface HomeProps {
 // company_dashboard_me_service).
 function getVerificationBadge(company: DashboardHomeResponse | null) {
   if (!company) {
-    return {
-      label: "Cargando...",
-      className: "bg-gray-100 text-gray-500",
-    };
+    return { label: "", className: "bg-gray-100 text-gray-500" };
   }
 
   if (company.certificate_status === "approved") {
     return {
       label: "Empresa verificada",
-      className: "bg-green-100 text-green-700",
+      className: "bg-success-bg text-success",
     };
   }
 
   if (company.certificate_status === "rejected") {
     return {
       label: "Certificado rechazado",
-      className: "bg-red-100 text-red-700",
+      className: "bg-danger-bg text-danger",
     };
   }
 
   return {
     label: "Empresa pendiente de verificación",
-    className: "bg-yellow-100 text-yellow-700",
+    className: "bg-warning-bg text-warning",
   };
 }
 
@@ -133,7 +131,7 @@ export default function Home({ onNavigate }: HomeProps) {
   return (
     <>
       {/* Hero */}
-      <section className="mt-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <section className="mt-8 overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
         {/* Banner */}
         <div className="h-48 overflow-hidden md:h-52 lg:h-56">
           <img
@@ -150,7 +148,7 @@ export default function Home({ onNavigate }: HomeProps) {
         <div className="relative px-8 pb-10">
           <div className="flex items-start gap-6">
             {/* Logo */}
-            <div className="-mt-6 flex h-36 w-36 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-white shadow-md">
+            <div className="-mt-6 flex h-36 w-36 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-white shadow-pop">
               <img
                 src={company?.logo ?? defaultLogo}
                 alt={company?.nameCompany ?? "Logo por defecto"}
@@ -163,16 +161,24 @@ export default function Home({ onNavigate }: HomeProps) {
 
             {/* Datos */}
             <div className="pt-2">
-              <h2 className="text-2xl font-bold text-gray-900">
-                {company?.nameCompany ?? "Cargando..."}
-              </h2>
+              {company ? (
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {company.nameCompany}
+                </h2>
+              ) : (
+                <Skeleton className="h-7 w-56" />
+              )}
 
               <div className="mt-2 flex flex-wrap items-center gap-3">
-                <span
-                  className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${badge.className}`}
-                >
-                  {badge.label}
-                </span>
+                {company ? (
+                  <span
+                    className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${badge.className}`}
+                  >
+                    {badge.label}
+                  </span>
+                ) : (
+                  <Skeleton className="h-6 w-24 rounded-full" />
+                )}
 
                 {/* Reputación real, calculada sobre las reseñas activas
                     de todos los productos de la empresa - ver ALCANCE >
@@ -192,9 +198,11 @@ export default function Home({ onNavigate }: HomeProps) {
                   <CalendarDays className="h-4 w-4" />
 
                   <span>
-                    {company
-                      ? `Desde ${new Date(company.memberAT).getFullYear()}`
-                      : "Cargando..."}
+                    {company ? (
+                      `Desde ${new Date(company.memberAT).getFullYear()}`
+                    ) : (
+                      <Skeleton className="inline-block h-3.5 w-16 align-middle" />
+                    )}
                   </span>
                 </div>
 
@@ -209,7 +217,13 @@ export default function Home({ onNavigate }: HomeProps) {
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
 
-                  <span>{company?.addressCompany ?? "Cargando..."}</span>
+                  <span>
+                    {company ? (
+                      company.addressCompany
+                    ) : (
+                      <Skeleton className="inline-block h-3.5 w-40 align-middle" />
+                    )}
+                  </span>
                 </div>
               </div>
             </div>
@@ -223,35 +237,35 @@ export default function Home({ onNavigate }: HomeProps) {
       <section className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Productos publicados"
-          value={summaryLoading ? "..." : String(summary?.total ?? 0)}
+          value={summaryLoading ? "…" : String(summary?.total ?? 0)}
           subtitle="Total en tu catálogo"
           icon={<Package size={24} />}
         />
 
         <StatCard
           title="Activos"
-          value={summaryLoading ? "..." : String(summary?.active ?? 0)}
+          value={summaryLoading ? "…" : String(summary?.active ?? 0)}
           subtitle="Visibles para compradores"
           icon={<CheckCircle2 size={24} />}
         />
 
         <StatCard
           title="Agotados"
-          value={summaryLoading ? "..." : String(summary?.out_of_stock ?? 0)}
+          value={summaryLoading ? "…" : String(summary?.out_of_stock ?? 0)}
           subtitle="Sin stock disponible"
           icon={<PackageX size={24} />}
         />
 
         <StatCard
           title="Ocultos"
-          value={summaryLoading ? "..." : String(summary?.hidden ?? 0)}
+          value={summaryLoading ? "…" : String(summary?.hidden ?? 0)}
           subtitle="Desactivados"
           icon={<EyeOff size={24} />}
         />
       </section>
 
       {/* Productos recientes */}
-      <section className="mt-8 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <section className="mt-8 overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">
@@ -266,20 +280,24 @@ export default function Home({ onNavigate }: HomeProps) {
           <button
             type="button"
             onClick={() => onNavigate("products")}
-            className="shrink-0 text-sm font-medium text-red-700 transition hover:text-red-800"
+            className="shrink-0 text-sm font-medium text-primary transition hover:text-primary-hover"
           >
             Ver todos →
           </button>
         </div>
 
         {recentLoading ? (
-          <div className="px-6 py-10 text-center text-sm text-gray-500">
-            Cargando productos...
+          <div className="space-y-3 p-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Skeleton key={index} className="h-12" />
+            ))}
           </div>
         ) : recentProducts.length === 0 ? (
-          <div className="px-6 py-10 text-center text-sm text-gray-500">
-            Aún no tienes productos publicados.
-          </div>
+          <EmptyState
+            variant="plain"
+            title="Aún no tienes productos publicados"
+            description="Crea tu primer producto para empezar a vender."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px]">
@@ -304,10 +322,10 @@ export default function Home({ onNavigate }: HomeProps) {
                           <img
                             src={product.image}
                             alt={product.name}
-                            className="h-11 w-11 shrink-0 rounded-lg object-cover"
+                            className="h-11 w-11 shrink-0 rounded-control object-cover"
                           />
                         ) : (
-                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-300">
+                          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-gray-100 text-gray-300">
                             <ImageOff size={18} />
                           </div>
                         )}
@@ -327,15 +345,9 @@ export default function Home({ onNavigate }: HomeProps) {
                     </td>
 
                     <td className="px-6 py-3">
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                          product.is_active
-                            ? "bg-green-100 text-green-700"
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}
-                      >
+                      <Badge tone={product.is_active ? "success" : "warning"}>
                         {product.is_active ? "Activo" : "Inactivo"}
-                      </span>
+                      </Badge>
                     </td>
                   </tr>
                 ))}

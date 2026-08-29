@@ -245,7 +245,7 @@ export default function AdvertisementFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-xl">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-card bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
           <h2 className="text-lg font-semibold text-gray-900">
             {isEditing ? "Editar anuncio" : "Nuevo anuncio"}
@@ -265,7 +265,7 @@ export default function AdvertisementFormModal({
           <div className="space-y-5 px-6 py-6">
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-700">
-                Imagen desktop/tablet {!isEditing && <span className="text-red-500">*</span>}
+                Imagen desktop/tablet {!isEditing && <span className="text-danger">*</span>}
               </label>
 
               <input
@@ -292,7 +292,7 @@ export default function AdvertisementFormModal({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex h-40 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 transition hover:border-[#7A1833] hover:text-[#7A1833]"
+                  className="flex h-40 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 transition hover:border-primary hover:text-primary"
                 >
                   <Upload size={24} />
                   <span className="text-sm">Subir imagen</span>
@@ -331,7 +331,7 @@ export default function AdvertisementFormModal({
                     <button
                       type="button"
                       onClick={handleRemoveMobileImage}
-                      className="absolute right-2 top-2 rounded-lg bg-white/90 px-2 py-1 text-xs font-medium text-red-600 shadow transition hover:bg-white"
+                      className="absolute right-2 top-2 rounded-lg bg-white/90 px-2 py-1 text-xs font-medium text-danger shadow transition hover:bg-white"
                     >
                       Quitar
                     </button>
@@ -341,7 +341,7 @@ export default function AdvertisementFormModal({
                 <button
                   type="button"
                   onClick={() => mobileFileInputRef.current?.click()}
-                  className="flex h-40 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 transition hover:border-[#7A1833] hover:text-[#7A1833]"
+                  className="flex h-40 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 transition hover:border-primary hover:text-primary"
                 >
                   <Upload size={24} />
                   <span className="text-sm">Subir imagen móvil</span>
@@ -375,7 +375,7 @@ export default function AdvertisementFormModal({
                   setCompanyQuery("");
                   setSelectedCompanyLabel("");
                 }}
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
               >
                 <option value="">Manual (escribir destino a mano)</option>
                 {TARGET_TYPE_OPTIONS.map((option) => (
@@ -424,7 +424,7 @@ export default function AdvertisementFormModal({
                 <select
                   value={targetCatalogId}
                   onChange={(event) => setTargetCatalogId(event.target.value)}
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
                 >
                   <option value="">Selecciona una categoría</option>
                   {catalogs.map((catalog) => (
@@ -480,7 +480,7 @@ export default function AdvertisementFormModal({
                   placeholder={
                     targetType === "BLACK_FRIDAY" ? "30" : targetType === "CYBER_DAYS" ? "15" : "20"
                   }
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
                 />
 
                 <p className="mt-2 text-xs text-gray-400">
@@ -503,7 +503,7 @@ export default function AdvertisementFormModal({
                     value={minimumDiscount}
                     onChange={(event) => setMinimumDiscount(event.target.value)}
                     placeholder="40"
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
                   />
                 </div>
 
@@ -518,7 +518,7 @@ export default function AdvertisementFormModal({
                     value={maximumStock}
                     onChange={(event) => setMaximumStock(event.target.value)}
                     placeholder="5"
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
                   />
                 </div>
 
@@ -540,7 +540,7 @@ export default function AdvertisementFormModal({
                   value={maxAgeDays}
                   onChange={(event) => setMaxAgeDays(event.target.value)}
                   placeholder="30"
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
                 />
 
                 <p className="mt-2 text-xs text-gray-400">
@@ -561,7 +561,7 @@ export default function AdvertisementFormModal({
                   onChange={(event) => setButtonLink(event.target.value)}
                   maxLength={255}
                   placeholder="/products"
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
                 />
               ) : (
                 <div className="flex h-[46px] items-center rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 text-sm text-gray-500">
@@ -591,7 +591,7 @@ export default function AdvertisementFormModal({
                     setOrder(Number.isFinite(parsed) ? parsed : 0);
                   }}
                   min={0}
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-[#7A1833] focus:ring-2 focus:ring-[#7A1833]/20"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
                 />
               </div>
 
@@ -605,7 +605,7 @@ export default function AdvertisementFormModal({
                   onClick={() => setIsActive((current) => !current)}
                   className={`flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition ${
                     isActive
-                      ? "border-green-200 bg-green-50 text-green-700"
+                      ? "border-green-200 bg-success-bg text-success"
                       : "border-gray-200 bg-gray-50 text-gray-500"
                   }`}
                 >
@@ -628,10 +628,10 @@ export default function AdvertisementFormModal({
             <button
               type="submit"
               disabled={loading || !isValid}
-              className="flex items-center gap-2 rounded-xl bg-[#7A1833] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-[#64132a] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Save size={16} />
-              {loading ? "Guardando..." : "Guardar"}
+              {loading ? "Guardando…" : "Guardar"}
             </button>
           </div>
         </form>

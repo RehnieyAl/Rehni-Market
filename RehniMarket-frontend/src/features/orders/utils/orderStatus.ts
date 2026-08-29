@@ -1,6 +1,8 @@
+import type { BadgeTone } from "@/shared/components/ui";
+
 import type { OrderStatus } from "../types/response";
 
-// Única fuente de verdad de la etiqueta/color de cada estado, compartida por comprador y empresa.
+// Única fuente de verdad de la etiqueta/tono de cada estado, compartida por comprador y empresa.
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   pending: "Pendiente",
   paid: "Pagado",
@@ -10,13 +12,13 @@ export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   cancelled: "Cancelado",
 };
 
-export const ORDER_STATUS_BADGE: Record<OrderStatus, string> = {
-  pending: "bg-yellow-100 text-yellow-700",
-  paid: "bg-blue-100 text-blue-700",
-  processing: "bg-blue-100 text-blue-700",
-  shipped: "bg-purple-100 text-purple-700",
-  delivered: "bg-green-100 text-green-700",
-  cancelled: "bg-red-100 text-red-700",
+export const ORDER_STATUS_TONE: Record<OrderStatus, BadgeTone> = {
+  pending: "warning",
+  paid: "info",
+  processing: "info",
+  shipped: "brand",
+  delivered: "success",
+  cancelled: "danger",
 };
 
 // Mismo grafo de transiciones que el backend; acá solo decide qué botón mostrar. DELIVERED/CANCELLED son de solo lectura.

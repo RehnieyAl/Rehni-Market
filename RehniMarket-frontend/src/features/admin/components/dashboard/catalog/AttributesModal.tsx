@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { X, Plus, Trash2, Loader2, Power } from "lucide-react";
 
+import { EmptyState, Skeleton } from "@/shared/components/ui";
+
 import {
   getCatalogAttributes,
   createCatalogAttribute,
@@ -122,7 +124,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
-      <div className="flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div className="flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-card bg-white shadow-2xl">
         <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-5">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Atributos y variantes</h2>
@@ -151,7 +153,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder="Ej: Color, Talla, Marca"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#7A1833]"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-600"
               />
             </div>
 
@@ -160,7 +162,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
               <select
                 value={role}
                 onChange={(event) => setRole(event.target.value as CatalogAttributeRole)}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#7A1833]"
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-600"
               >
                 <option value="variant">Eje de variante</option>
                 <option value="product">Atributo de producto</option>
@@ -174,7 +176,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
                 onChange={(event) =>
                   setInputType(event.target.value as CatalogAttributeInputType)
                 }
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#7A1833]"
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-600"
               >
                 <option value="select">Lista de opciones</option>
                 <option value="color">Color</option>
@@ -191,7 +193,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
                   value={unit}
                   onChange={(event) => setUnit(event.target.value)}
                   placeholder="Ej: GB, cm"
-                  className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-[#7A1833]"
+                  className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-600"
                 />
               </div>
             )}
@@ -199,7 +201,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
             <button
               type="submit"
               disabled={busy || name.trim().length < 1}
-              className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#7A1833] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#64132a] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Plus size={16} />
               Agregar
@@ -207,15 +209,20 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
           </form>
 
           {error && (
-            <p className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+            <p className="mb-4 rounded-lg bg-danger-bg px-3 py-2 text-sm text-danger">{error}</p>
           )}
 
           {loading ? (
-            <p className="py-8 text-center text-sm text-gray-500">Cargando atributos...</p>
+            <div className="space-y-2 py-2">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Skeleton key={index} className="h-14 rounded-control" />
+              ))}
+            </div>
           ) : attributes.length === 0 ? (
-            <p className="py-8 text-center text-sm text-gray-500">
-              Esta categoría todavía no tiene atributos.
-            </p>
+            <EmptyState
+              variant="plain"
+              title="Esta categoría todavía no tiene atributos"
+            />
           ) : (
             <ul className="space-y-3">
               {attributes.map((attribute) => {
@@ -260,7 +267,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
                           }
                           disabled={busy}
                           className={`rounded-lg p-2 transition hover:bg-gray-100 disabled:opacity-50 ${
-                            attribute.is_active ? "text-green-600" : "text-gray-400"
+                            attribute.is_active ? "text-success" : "text-gray-400"
                           }`}
                           title={attribute.is_active ? "Desactivar" : "Activar"}
                         >
@@ -276,7 +283,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
                             )
                           }
                           disabled={busy}
-                          className="rounded-lg p-2 text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                          className="rounded-lg p-2 text-danger transition hover:bg-red-50 disabled:opacity-50"
                           title="Eliminar atributo"
                         >
                           <Trash2 size={16} />
@@ -308,7 +315,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
                                   )
                                 }
                                 disabled={busy}
-                                className="text-gray-400 hover:text-red-600 disabled:opacity-50"
+                                className="text-gray-400 hover:text-danger disabled:opacity-50"
                               >
                                 <X size={12} />
                               </button>
@@ -327,7 +334,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
                               }))
                             }
                             placeholder="Nuevo valor"
-                            className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-[#7A1833]"
+                            className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-brand-600"
                           />
                           {isColor && (
                             <input
@@ -346,7 +353,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
                             type="button"
                             onClick={() => handleAddOption(attribute.id, isColor)}
                             disabled={busy}
-                            className="rounded-lg bg-[#7A1833] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#64132a] disabled:opacity-50"
+                            className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white transition hover:bg-primary-hover disabled:opacity-50"
                           >
                             {busy ? <Loader2 size={14} className="animate-spin" /> : "Agregar"}
                           </button>

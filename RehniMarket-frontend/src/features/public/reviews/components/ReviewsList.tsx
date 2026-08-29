@@ -1,4 +1,5 @@
 import StarRating from "./StarRating";
+import { Button, EmptyState, Skeleton } from "@/shared/components/ui";
 
 import type { Review } from "../types/response";
 
@@ -18,14 +19,28 @@ export default function ReviewsList({
   onPageChange,
 }: ReviewsListProps) {
   if (loading) {
-    return <p className="text-sm text-gray-500">Cargando reseñas...</p>;
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div key={index} className="flex gap-3 rounded-card border border-gray-200 p-4">
+            <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-3 w-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   }
 
   if (reviews.length === 0) {
     return (
-      <p className="rounded-2xl border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500">
-        Este producto todavía no tiene reseñas.
-      </p>
+      <EmptyState
+        title="Este producto todavía no tiene reseñas"
+        description="Sé el primero en compartir tu opinión después de comprarlo."
+      />
     );
   }
 
@@ -33,9 +48,9 @@ export default function ReviewsList({
     <div>
       <div className="space-y-4">
         {reviews.map((review) => (
-          <div key={review.id} className="rounded-2xl border border-gray-200 p-4">
+          <div key={review.id} className="rounded-card border border-gray-200 p-4">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#6D0F2D] text-sm font-bold text-white">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-bold text-primary-fg">
                 {review.buyerPhoto ? (
                   <img
                     src={review.buyerPhoto}
@@ -69,25 +84,27 @@ export default function ReviewsList({
 
       {totalPages > 1 && (
         <div className="mt-6 flex items-center justify-center gap-4">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             disabled={page === 1}
             onClick={() => onPageChange(page - 1)}
-            className="rounded-xl border px-4 py-2 text-sm disabled:opacity-50"
           >
             Anterior
-          </button>
+          </Button>
 
           <span className="text-sm text-gray-600">
             Página {page} de {totalPages}
           </span>
 
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             disabled={page === totalPages}
             onClick={() => onPageChange(page + 1)}
-            className="rounded-xl border px-4 py-2 text-sm disabled:opacity-50"
           >
             Siguiente
-          </button>
+          </Button>
         </div>
       )}
     </div>

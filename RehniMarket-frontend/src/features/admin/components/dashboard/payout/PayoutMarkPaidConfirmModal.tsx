@@ -1,5 +1,4 @@
-import { CheckCircle2, X } from "lucide-react";
-
+import ConfirmModal from "@/shared/components/ConfirmModal";
 import AccountNumberDisplay from "@/features/payouts/components/AccountNumberDisplay";
 import { BANK_ACCOUNT_TYPE_LABEL } from "@/features/payouts/utils/payoutStatus";
 
@@ -15,7 +14,8 @@ interface PayoutMarkPaidConfirmModalProps {
   onClose: () => void;
 }
 
-// Confirmación antes de PATCH /admin/payouts/{id}/pay. Dispara un correo a la empresa y no se puede deshacer.
+// Confirmación antes de PATCH /admin/payouts/{id}/pay. Dispara un correo a la
+// empresa y no se puede deshacer. ConfirmModal con los datos bancarios embebidos.
 export default function PayoutMarkPaidConfirmModal({
   isOpen,
   companyName,
@@ -25,81 +25,45 @@ export default function PayoutMarkPaidConfirmModal({
   onConfirm,
   onClose,
 }: PayoutMarkPaidConfirmModalProps) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
-          <h2 className="text-lg font-semibold text-gray-900">Marcar liquidación como pagada</h2>
+    <ConfirmModal
+      isOpen={isOpen}
+      tone="success"
+      title="Marcar liquidación como pagada"
+      confirmLabel="Confirmar pago"
+      loading={loading}
+      onConfirm={onConfirm}
+      onClose={onClose}
+      message={
+        <div className="space-y-3">
+          <p>
+            Vas a marcar como pagada la liquidación de{" "}
+            <span className="font-semibold text-gray-900">{companyName}</span> por{" "}
+            <span className="font-semibold text-gray-900">{netAmountLabel}</span>.
+          </p>
 
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={loading}
-            className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="px-6 py-6">
-          <div className="flex items-start gap-4">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
-              <CheckCircle2 size={22} />
-            </div>
-
-            <div>
-              <h3 className="font-semibold text-gray-900">¿Confirmar el pago?</h3>
-
-              <p className="mt-2 text-sm leading-6 text-gray-500">
-                Vas a marcar como pagada la liquidación de{" "}
-                <span className="font-semibold text-gray-900">{companyName}</span> por{" "}
-                <span className="font-semibold text-gray-900">{netAmountLabel}</span>.
+          {bankAccount && (
+            <div className="rounded-control border border-gray-200 bg-gray-50 p-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                Transfiere a
               </p>
-
-              {bankAccount && (
-                <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-3">
-                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                    Transfiere a
-                  </p>
-
-                  <p className="mt-1 text-sm font-medium text-gray-900">{bankAccount.bankName}</p>
-                  <p className="text-sm text-gray-500">{BANK_ACCOUNT_TYPE_LABEL[bankAccount.accountType]}</p>
-
-                  <div className="mt-2">
-                    <AccountNumberDisplay value={bankAccount.accountNumber} />
-                  </div>
-                </div>
-              )}
-
-              <p className="mt-3 text-sm font-medium text-gray-700">
-                Se enviará un correo automático a la empresa confirmando el pago.
+              <p className="mt-1 text-sm font-medium text-gray-900">
+                {bankAccount.bankName}
               </p>
+              <p className="text-sm text-gray-500">
+                {BANK_ACCOUNT_TYPE_LABEL[bankAccount.accountType]}
+              </p>
+              <div className="mt-2">
+                <AccountNumberDisplay value={bankAccount.accountNumber} />
+              </div>
             </div>
-          </div>
-        </div>
+          )}
 
-        <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={loading}
-            className="rounded-xl border border-gray-200 px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Cancelar
-          </button>
-
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={loading}
-            className="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {loading ? "Confirmando..." : "Confirmar pago"}
-          </button>
+          <p className="font-medium text-gray-700">
+            Se enviará un correo automático a la empresa confirmando el pago.
+          </p>
         </div>
-      </div>
-    </div>
+      }
+    />
   );
 }

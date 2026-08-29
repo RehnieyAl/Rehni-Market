@@ -16,6 +16,8 @@ import {
   getRecentAdminUsers,
 } from "@/features/admin/api/dashboardService";
 import { useAlert } from "@/shared/components/alert/useAlert";
+import { Badge, EmptyState, Skeleton, Spinner, TableSkeleton } from "@/shared/components/ui";
+import StatCard from "@/shared/components/dashboard/StatCard";
 
 import type {
   AdminDashboardStatisticsResponse,
@@ -142,7 +144,7 @@ export default function Home({ onNavigate }: HomeProps) {
     value: number | undefined,
   ) => {
     if (loading) {
-      return "...";
+      return "…";
     }
 
     if (statsFailed) {
@@ -169,7 +171,7 @@ export default function Home({ onNavigate }: HomeProps) {
           <div className="mb-3 flex items-center gap-2">
             <UserRound
               size={18}
-              className="text-[#7A1833]"
+              className="text-primary"
             />
 
             <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
@@ -179,6 +181,7 @@ export default function Home({ onNavigate }: HomeProps) {
 
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <StatCard
+              size="sm"
               title="Registrados"
               value={getValue(
                 statistics?.users,
@@ -186,6 +189,7 @@ export default function Home({ onNavigate }: HomeProps) {
             />
 
             <StatCard
+              size="sm"
               title="Activos"
               value={getValue(
                 statistics?.active_users,
@@ -193,6 +197,7 @@ export default function Home({ onNavigate }: HomeProps) {
             />
 
             <StatCard
+              size="sm"
               title="Bloqueados"
               value={getValue(
                 statistics?.blocked_users,
@@ -200,6 +205,7 @@ export default function Home({ onNavigate }: HomeProps) {
             />
 
             <StatCard
+              size="sm"
               title="Administradores"
               value={getValue(
                 statistics?.administrators,
@@ -212,7 +218,7 @@ export default function Home({ onNavigate }: HomeProps) {
           <div className="mb-3 flex items-center gap-2">
             <Building2
               size={18}
-              className="text-[#7A1833]"
+              className="text-primary"
             />
 
             <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
@@ -222,6 +228,7 @@ export default function Home({ onNavigate }: HomeProps) {
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <StatCard
+              size="sm"
               title="Registradas"
               value={getValue(
                 statistics?.companies,
@@ -229,6 +236,7 @@ export default function Home({ onNavigate }: HomeProps) {
             />
 
             <StatCard
+              size="sm"
               title="Activas"
               value={getValue(
                 statistics?.active_companies,
@@ -236,6 +244,7 @@ export default function Home({ onNavigate }: HomeProps) {
             />
 
             <StatCard
+              size="sm"
               title="Bloqueadas"
               value={getValue(
                 statistics?.blocked_companies,
@@ -245,7 +254,7 @@ export default function Home({ onNavigate }: HomeProps) {
         </section>
 
         <section className="mt-5 grid min-h-0 grid-cols-1 gap-4 xl:grid-cols-2">
-          <div className="min-h-0 overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <div className="min-h-0 overflow-hidden rounded-card border border-gray-200 bg-white">
             <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
               <div>
                 <h2 className="font-semibold text-gray-900">
@@ -260,14 +269,14 @@ export default function Home({ onNavigate }: HomeProps) {
               <button
                 type="button"
                 onClick={() => onNavigate("users")}
-                className="text-sm font-medium text-[#7A1833] transition hover:text-[#64132a]"
+                className="text-sm font-medium text-primary transition hover:text-primary-hover"
               >
                 Ver todos →
               </button>
             </div>
 
-            <div className="overflow-hidden">
-              <table className="w-full">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[420px]">
                 <thead>
                   <tr className="border-b border-gray-100 text-left text-xs uppercase tracking-wide text-gray-400">
                     <th className="px-5 py-3 font-medium">
@@ -287,20 +296,14 @@ export default function Home({ onNavigate }: HomeProps) {
                 <tbody>
                   {recentUsersLoading ? (
                     <tr>
-                      <td
-                        colSpan={3}
-                        className="px-5 py-8 text-center text-sm text-gray-500"
-                      >
-                        Cargando usuarios...
+                      <td colSpan={3} className="p-0">
+                        <TableSkeleton rows={5} columns={["36%", "40%", "18%"]} />
                       </td>
                     </tr>
                   ) : recentUsers.length === 0 ? (
                     <tr>
-                      <td
-                        colSpan={3}
-                        className="px-5 py-8 text-center text-sm text-gray-500"
-                      >
-                        No hay usuarios registrados.
+                      <td colSpan={3} className="p-0">
+                        <EmptyState variant="plain" title="No hay usuarios registrados" />
                       </td>
                     </tr>
                   ) : (
@@ -325,7 +328,7 @@ export default function Home({ onNavigate }: HomeProps) {
             </div>
           </div>
 
-          <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <div className="flex min-h-0 flex-col overflow-hidden rounded-card border border-gray-200 bg-white">
             <div className="flex shrink-0 items-center gap-3 border-b border-gray-200 px-5 py-4">
               <div className="rounded-lg bg-gray-100 p-2 text-gray-600">
                 <Activity size={18} />
@@ -344,22 +347,16 @@ export default function Home({ onNavigate }: HomeProps) {
 
             <div className="min-h-0 flex-1 overflow-y-auto">
               {activitiesLoading ? (
-                <div className="flex items-center justify-center px-5 py-10">
-                  <p className="text-sm text-gray-500">
-                    Cargando actividades...
-                  </p>
+                <div className="space-y-3 p-5">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Skeleton key={index} className="h-10" />
+                  ))}
                 </div>
               ) : activities.length === 0 ? (
-                <div className="flex items-center justify-center px-5 py-10">
-                  <p className="text-sm text-gray-500">
-                    No hay actividades recientes.
-                  </p>
-                </div>
+                <EmptyState variant="plain" title="No hay actividad reciente" />
               ) : currentTime === null ? (
-                <div className="flex items-center justify-center px-5 py-10">
-                  <p className="text-sm text-gray-500">
-                    Calculando tiempos...
-                  </p>
+                <div className="flex items-center justify-center gap-2 px-5 py-10 text-sm text-gray-500">
+                  <Spinner size={15} /> Un momento…
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100">
@@ -383,26 +380,6 @@ export default function Home({ onNavigate }: HomeProps) {
           </div>
         </section>
       </div>
-    </div>
-  );
-}
-
-function StatCard({
-  title,
-  value,
-}: {
-  title: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white px-4 py-4">
-      <p className="text-xs font-medium text-gray-500">
-        {title}
-      </p>
-
-      <p className="mt-1 text-2xl font-bold text-gray-900">
-        {value}
-      </p>
     </div>
   );
 }
@@ -439,15 +416,7 @@ function UserRow({
       </td>
 
       <td className="px-5 py-3">
-        <span
-          className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-            status === "Activo"
-              ? "bg-green-50 text-green-700"
-              : "bg-red-50 text-red-700"
-          }`}
-        >
-          {status}
-        </span>
+        <Badge tone={status === "Activo" ? "success" : "danger"}>{status}</Badge>
       </td>
     </tr>
   );
@@ -485,9 +454,9 @@ function ActivityItem({
     | "company";
 }) {
   const iconStyles = {
-    success: "bg-green-50 text-green-600",
-    info: "bg-blue-50 text-blue-600",
-    danger: "bg-red-50 text-red-600",
+    success: "bg-success-bg text-success",
+    info: "bg-info-bg text-info",
+    danger: "bg-danger-bg text-danger",
     company: "bg-gray-100 text-gray-600",
   };
 

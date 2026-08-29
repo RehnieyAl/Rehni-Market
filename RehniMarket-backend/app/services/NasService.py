@@ -4,10 +4,15 @@ from app.Config import config
 
 from datetime import timedelta
 from fastapi.responses import StreamingResponse
+import logging
 import uuid
 
+logger = logging.getLogger(__name__)
+
+MINIO_ENDPOINT = config.MINIO_URL or "minio:9000"
+
 client = Minio(
-    "minio:9000",
+    MINIO_ENDPOINT,
     access_key=config.MINIO_ROOT_USER,
     secret_key=config.MINIO_ROOT_PASSWORD,
     secure=False
@@ -15,8 +20,27 @@ client = Minio(
 
 bucket = "uploads"
 
-if not client.bucket_exists(bucket):
-    client.make_bucket(bucket)
+_bucket_ready = False
+
+
+def ensure_bucket() -> None:
+    """Crea el bucket 'uploads' si no existe.
+
+    Se invoca en el arranque de la app (lifespan) y de forma perezosa antes de
+    subir un archivo. NUNCA al importar el módulo: importar no debe hacer I/O de
+    red, porque eso rompe `pytest` y cualquier import fuera de la red de Docker
+    (el host no resuelve `minio`)."""
+    global _bucket_ready
+
+    if _bucket_ready:
+        return
+
+    try:
+        if not client.bucket_exists(bucket):
+            client.make_bucket(bucket)
+        _bucket_ready = True
+    except Exception as exc:  # MinIO no disponible no debe tumbar el proceso
+        logger.warning("No se pudo verificar/crear el bucket '%s': %s", bucket, exc)
 
 
 class NasService:
@@ -29,6 +53,8 @@ class NasService:
         try:
             if not file:
                 return None
+
+            ensure_bucket()
 
             ext = file.filename.split(".")[-1]
 
@@ -105,5 +131,8 @@ nas_service = NasService(client, bucket)
 def get_nas_service():
     return nas_service
 
-def build_media_url(path: str):
-    return f"http://192.168.40.25:8001/media/proxy?path={path}"
+MEDIA_BASE_URL = (config.URL_BACKEND or "http://192.168.40.25:8001").rstrip("/")
+
+
+def build_media_url(path: str) -> str:
+    return f"{MEDIA_BASE_URL}/media/proxy?path={path}"

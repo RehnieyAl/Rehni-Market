@@ -1,4 +1,4 @@
-import { ChevronLeft, Flag, ShoppingCart } from "lucide-react";
+import { ChevronLeft, Flag, PackageX, ShoppingCart } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
@@ -20,6 +20,8 @@ import { useCart } from "@/features/cart/context/useCart";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 import { useRedirectToLogin } from "@/features/public/auth/hooks/useRedirectToLogin";
+import { Button, EmptyState } from "@/shared/components/ui";
+import { buttonClasses } from "@/shared/components/ui/buttonVariants";
 
 import type { PublicProductDetail } from "../types/response";
 
@@ -228,17 +230,18 @@ export default function ProductDetail() {
 
   if (notFound || !product) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-16 text-center">
-        <p className="text-lg font-medium text-gray-700">
-          No encontramos este producto.
-        </p>
-        <Link
-          to="/products"
-          className="mt-4 inline-flex items-center gap-2 text-sm text-[#6D0F2D] hover:underline"
-        >
-          <ChevronLeft size={16} />
-          Volver a productos
-        </Link>
+      <div className="mx-auto w-full max-w-2xl px-4 py-16">
+        <EmptyState
+          icon={<PackageX size={22} />}
+          title="No encontramos este producto"
+          description="Puede que ya no esté disponible o que el enlace sea incorrecto."
+          action={
+            <Link to="/products" className={buttonClasses({ variant: "outline" })}>
+              <ChevronLeft size={16} />
+              Volver a productos
+            </Link>
+          }
+        />
       </div>
     );
   }
@@ -253,7 +256,7 @@ export default function ProductDetail() {
         Volver a productos
       </Link>
 
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
         <div className="grid items-stretch lg:grid-cols-2">
           <div className="border-b border-gray-100 p-4 sm:p-6 lg:border-b-0 lg:border-r">
             <ProductGallery
@@ -265,7 +268,7 @@ export default function ProductDetail() {
           </div>
 
           <div className="p-4 sm:p-6 lg:p-8">
-            <p className="text-sm font-medium uppercase tracking-wide text-[#6D0F2D]">
+            <p className="text-sm font-medium uppercase tracking-wide text-primary">
               {product.catalog_name}
             </p>
 
@@ -278,7 +281,7 @@ export default function ProductDetail() {
                 <button
                   type="button"
                   onClick={handleReportClick}
-                  className="mt-1 flex shrink-0 items-center gap-1.5 text-xs font-medium text-gray-400 transition hover:text-red-600"
+                  className="mt-1 flex shrink-0 items-center gap-1.5 text-xs font-medium text-gray-400 transition hover:text-danger"
                   title="Reportar producto"
                 >
                   <Flag size={14} />
@@ -326,21 +329,25 @@ export default function ProductDetail() {
             <div className="mt-6">
               <h3 className="mb-2 text-sm font-semibold text-gray-900">Cantidad</h3>
 
-              <div className="flex w-fit items-center rounded-xl border border-gray-300">
+              <div className="flex w-fit items-center overflow-hidden rounded-control border border-gray-300">
                 <button
                   type="button"
-                  className="px-3.5 py-2 text-gray-600 hover:bg-gray-50"
+                  aria-label="Disminuir cantidad"
+                  className="flex h-11 w-11 items-center justify-center text-lg text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
                   onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                  disabled={quantity <= 1}
                 >
                   −
                 </button>
 
-                <span className="w-10 text-center text-sm font-medium">{quantity}</span>
+                <span className="w-12 text-center text-sm font-medium tabular-nums">{quantity}</span>
 
                 <button
                   type="button"
-                  className="px-3.5 py-2 text-gray-600 hover:bg-gray-50"
+                  aria-label="Aumentar cantidad"
+                  className="flex h-11 w-11 items-center justify-center text-lg text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
                   onClick={() => setQuantity((prev) => Math.min(stock || 1, prev + 1))}
+                  disabled={stock > 0 && quantity >= stock}
                 >
                   +
                 </button>
@@ -349,7 +356,7 @@ export default function ProductDetail() {
 
             <p className="mt-4 text-sm">
               {invalidCombination ? (
-                <span className="font-semibold text-red-600">
+                <span className="font-semibold text-danger">
                   Esa combinación no está disponible.
                 </span>
               ) : requiresVariant && !allAxesChosen ? (
@@ -358,15 +365,15 @@ export default function ProductDetail() {
                     Selecciona una opción para ver el stock disponible.
                   </span>
                 ) : (
-                  <span className="font-semibold text-red-600">Sin stock</span>
+                  <span className="font-semibold text-danger">Sin stock</span>
                 )
               ) : stock > 0 ? (
                 <>
                   <span className="text-gray-500">Stock disponible: </span>
-                  <span className="font-semibold text-green-600">{stock} unidades</span>
+                  <span className="font-semibold text-success">{stock} unidades</span>
                 </>
               ) : (
-                <span className="font-semibold text-red-600">Sin stock</span>
+                <span className="font-semibold text-danger">Sin stock</span>
               )}
             </p>
 
@@ -381,30 +388,34 @@ export default function ProductDetail() {
               {canPurchase ? (
                 <>
                   {requiresVariant && !allAxesChosen && (
-                    <p className="text-sm text-amber-600">
+                    <p className="text-sm text-warning">
                       Selecciona todas las opciones antes de continuar.
                     </p>
                   )}
 
-                  <button
+                  <Button
+                    size="lg"
+                    fullWidth
+                    loading={addingToCart}
                     onClick={() => handleAddToCart(false)}
-                    disabled={addingToCart || !canAddToCart || stock <= 0}
-                    className="flex items-center justify-center gap-2 rounded-xl bg-[#6D0F2D] py-3.5 font-medium text-white transition hover:bg-[#530A20] disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={!canAddToCart || stock <= 0}
+                    leadingIcon={<ShoppingCart size={18} />}
                   >
-                    <ShoppingCart size={18} />
-                    {addingToCart ? "Agregando..." : "Agregar al carrito"}
-                  </button>
+                    {addingToCart ? "Agregando…" : "Agregar al carrito"}
+                  </Button>
 
-                  <button
+                  <Button
+                    size="lg"
+                    fullWidth
+                    variant="outline"
                     onClick={() => handleAddToCart(true)}
                     disabled={addingToCart || !canAddToCart || stock <= 0}
-                    className="rounded-xl border border-gray-300 py-3.5 font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Comprar ahora
-                  </button>
+                  </Button>
                 </>
               ) : (
-                <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 py-4 text-center text-sm text-gray-500">
+                <p className="rounded-control border border-dashed border-gray-300 bg-gray-50 py-4 text-center text-sm text-gray-500">
                   Las cuentas de empresa o administración no pueden realizar compras.
                 </p>
               )}
