@@ -14,11 +14,7 @@ import { ErrorCode } from "@/shared/types/ErrorCode";
 
 import type { Address } from "@/features/addresses/types/response";
 
-// Checkout con dirección OBLIGATORIA (ver ALCANCE > compra obligatoria
-// con dirección) - toda la gestión de dirección se hace desde
-// AddressSelectionModal.tsx, nunca redirigiendo a otra pantalla del
-// dashboard (antes había un <Link to="/user/dashboard?tab=addresses">
-// cuando no había direcciones, ver informe técnico).
+// Checkout con dirección obligatoria; se gestiona desde AddressSelectionModal, sin redirigir a otra pantalla.
 export default function CheckoutView() {
   const { cart, loading, refreshCart } = useCart();
   const { showAlert } = useAlert();
@@ -42,10 +38,7 @@ export default function CheckoutView() {
         const defaultAddress = addressList.find((a) => a.isDefault) ?? addressList[0] ?? null;
         setSelectedAddress(defaultAddress);
 
-        // Sin ninguna dirección registrada: abre el modal de una vez, en
-        // vez de mostrar un checkout vacío que el usuario no puede
-        // completar (ver ALCANCE > "Debe abrirse cuando... no tiene
-        // dirección seleccionada").
+        // Sin dirección registrada: abre el modal de una vez, no un checkout que no se puede completar.
         if (!defaultAddress) {
           setAddressModalOpen(true);
         }
@@ -62,10 +55,7 @@ export default function CheckoutView() {
   const items = cart?.items ?? [];
 
   const handleConfirm = async () => {
-    // "Usuario intenta comprar" sin dirección seleccionada (ver ALCANCE)
-    // - abre el modal en vez de dejar que el backend responda
-    // ADDRESS_REQUIRED (esa respuesta igual se maneja abajo como
-    // resguardo, ver catch).
+    // Comprar sin dirección seleccionada abre el modal (el backend ADDRESS_REQUIRED se maneja abajo como resguardo).
     if (!selectedAddress) {
       setAddressModalOpen(true);
       return;
@@ -150,7 +140,7 @@ export default function CheckoutView() {
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
         <div className="space-y-6">
-          {/* DIRECCIÓN */}
+
           <div className="rounded-2xl border bg-white p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="flex items-center gap-2 font-semibold text-gray-900">
@@ -192,7 +182,6 @@ export default function CheckoutView() {
             )}
           </div>
 
-          {/* PRODUCTOS */}
           <div className="rounded-2xl border bg-white p-6">
             <h2 className="mb-4 font-semibold text-gray-900">Productos</h2>
 
@@ -210,7 +199,6 @@ export default function CheckoutView() {
           </div>
         </div>
 
-        {/* RESUMEN */}
         <div className="h-fit rounded-2xl border bg-white p-6">
           <h2 className="mb-4 font-semibold text-gray-900">Resumen</h2>
 

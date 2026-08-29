@@ -20,9 +20,7 @@ import type { SidebarItem } from "../components/dashboard/Sidebar";
 
 export type UserRole = "admin" | "company" | "user" | "owner";
 
-// Navegación base del panel de administración. OWNER la reutiliza por
-// completo (hereda todas las capacidades de ADMIN) y solo se le agregan
-// las opciones exclusivas de OWNER a continuación.
+// Navegación base del panel de administración. OWNER la reutiliza completa y suma sus opciones exclusivas.
 const adminNavigation: SidebarItem[] = [
   {
     id: "home",
@@ -71,11 +69,7 @@ const adminNavigation: SidebarItem[] = [
   },
 ];
 
-// Opciones exclusivas de OWNER. Por ahora la unica capacidad exclusiva
-// habilitada es la gestión de administradores, que vive dentro de la
-// propia vista "Usuarios" (con permisos adicionales en esa pantalla), por
-// lo que no hay todavía una entrada de menú nueva que agregar aquí. Este
-// arreglo queda listo para sumar futuras secciones exclusivas de OWNER.
+// Opciones exclusivas de OWNER. Hoy vacío: la gestión de administradores vive dentro de la vista "Usuarios".
 const ownerExclusiveNavigation: SidebarItem[] = [];
 
 export const dashboardNavigation: Record<UserRole, SidebarItem[]> = {

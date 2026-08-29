@@ -16,11 +16,7 @@ from app.services.DashboardService.admin.ReportService import (
     update_report_status_service,
 )
 
-# Centro único de gestión de reportes (ver ALCANCE > Reportes - reutiliza
-# la entrada de menú "Reportes" que ya existía en
-# shared/config/dashboardNavigation.tsx, id "reports"). Solo ADMIN/OWNER
-# llegan acá (bypass total vía FULL_ACCESS_ROLES, ver
-# middleware/RolePermissions.py - mismo patrón que AdminPayoutRouter.py).
+# Gestión de reportes; solo ADMIN/OWNER.
 router = APIRouter(prefix="/admin/reports", tags=["admin", "reports"])
 
 

@@ -68,14 +68,7 @@ class AdminActivity(Base):
         nullable=True,
     )
 
-    # Motivo en texto libre, provisto por el admin/owner (ver ALCANCE >
-    # Suspensión de empresa - "trazabilidad del motivo"). Nulo para
-    # acciones que no lo requieren (todas las anteriores a este campo).
-    # Por ahora solo lo llena COMPANY_BLOCKED (ver
-    # CompanyService.update_company_status_service); se deja como campo
-    # general del log, no exclusivo de empresas, para no tener que crear
-    # una tabla de historial aparte si mañana otra accion tambien lo
-    # necesita.
+    # Motivo en texto libre (admin/owner). Campo general del log; hoy solo lo llena COMPANY_BLOCKED.
     reason: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,

@@ -11,11 +11,7 @@ import ReportDetailModal from "./ReportDetailModal";
 
 import type { ReportListItem } from "@/features/reports/types/response";
 
-// Centro único de gestión de reportes (ver ALCANCE > Reportes - la
-// entrada de menú "Reportes" ya existía en dashboardNavigation.tsx, id
-// "reports"; este es el componente que finalmente la implementa, no una
-// sección nueva). Mismo patrón de listado que Companies.tsx: búsqueda +
-// filtros + tabla + paginación, un modal de detalle aparte.
+// Gestión de reportes. Mismo patrón de listado que Companies.tsx: búsqueda + filtros + tabla + paginación + modal de detalle.
 export default function Reports() {
   const [reports, setReports] = useState<ReportListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,13 +55,8 @@ export default function Reports() {
     }
   };
 
-  // Carga inicial únicamente (ver mount, []) - los cambios de filtro/
-  // búsqueda disparan la recarga desde su propio handler (abajo), nunca
-  // desde un efecto reaccionando al cambio de estado (mismo patrón que
-  // Companies.tsx > loadInitialCompanies/handleCertificateFilter). La
-  // función se define DENTRO del efecto (no reutiliza `loadReports`) por
-  // el mismo motivo que allá: react-hooks/set-state-in-effect solo
-  // permite un setState directo dentro del propio cuerpo del efecto.
+  // Solo carga inicial; los cambios de filtro/búsqueda recargan desde su propio handler.
+  // Función definida dentro del efecto para no disparar react-hooks/set-state-in-effect.
   useEffect(() => {
     const loadInitialReports = async () => {
       try {
@@ -112,15 +103,13 @@ export default function Reports() {
   };
 
   const handleReportResolved = () => {
-    // Tras resolver/rechazar desde el modal de detalle, se recarga la
-    // página actual - el reporte pudo dejar de pertenecer al filtro de
-    // estado activo (ver ReportDetailModal.tsx > onResolved).
+    // Tras resolver/rechazar, se recarga la página: el reporte pudo salir del filtro de estado.
     loadReports(page, search, typeFilter, statusFilter);
   };
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {/* ENCABEZADO */}
+
       <div className="shrink-0">
         <h1 className="text-2xl font-bold text-gray-900">Reportes</h1>
         <p className="mt-1 text-sm text-gray-500">
@@ -128,7 +117,6 @@ export default function Reports() {
         </p>
       </div>
 
-      {/* BUSCADOR + FILTROS */}
       <section className="mt-6 shrink-0 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row">
           <div className="flex flex-1 items-center gap-3 rounded-lg border border-gray-200 px-4 py-3">
@@ -185,7 +173,6 @@ export default function Reports() {
         </div>
       </section>
 
-      {/* TABLA */}
       <section className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-5 py-4">
           <div>
@@ -291,7 +278,6 @@ export default function Reports() {
           </table>
         </div>
 
-        {/* PAGINACIÓN */}
         <div className="flex shrink-0 items-center justify-between border-t border-gray-200 px-5 py-3">
           <span className="text-sm text-gray-500">
             Página {page} de {totalPages}

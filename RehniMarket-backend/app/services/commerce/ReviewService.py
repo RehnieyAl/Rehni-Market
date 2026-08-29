@@ -24,12 +24,7 @@ from app.services.NasService import build_media_url
 
 
 def _require_buyer(role: str):
-    """
-    Solo USER puede escribir/editar/eliminar reseñas - mismo criterio que
-    CartService._require_buyer (ADMIN/OWNER tienen bypass de auth via
-    FULL_ACCESS_ROLES, pero eso no los habilita a comprar ni a reseñar,
-    se revalida aca igual que en compras).
-    """
+    """Solo USER puede escribir/editar/eliminar reseñas; se revalida acá igual que en compras."""
 
     if role != "user":
         api_error(403, ErrorCodes.PURCHASE_NOT_ALLOWED, "Esta cuenta no puede escribir reseñas.")
@@ -172,9 +167,7 @@ def delete_my_review_service(user_id: UUID, role: str, review_id: UUID, database
         if review.user_id != user_id:
             api_error(403, ErrorCodes.FORBIDDEN, "No puedes eliminar la reseña de otro usuario.")
 
-        # Soft-delete (ver ModelReview.py > Review.is_active): no se borra
-        # la fila, se desactiva - el promedio de la empresa y el listado
-        # publico solo cuentan reseñas activas (ver ALCANCE > regla 4).
+        # Soft-delete: se desactiva, no se borra. Promedios y listados solo cuentan activas.
         review.is_active = False
 
         database.commit()

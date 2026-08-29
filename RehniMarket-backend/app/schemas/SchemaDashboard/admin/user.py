@@ -26,8 +26,7 @@ class AdminUsersPaginatedResponse(BaseModel):
 
 class UpdateAdminUserRequest(BaseModel):
     email: EmailStr | None = None
-    # "owner" solo puede asignarse si quien hace la peticion ya es owner;
-    # esa regla se valida en el servicio (update_admin_user_service), no aqui.
+    # "owner" solo puede asignarlo otro owner; validado en el servicio.
     role: Literal["user", "admin", "owner"] | None = None
 
 

@@ -171,10 +171,6 @@ export default function UserDetailModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
 
-        {/* =========================
-            ENCABEZADO
-        ========================= */}
-
         <div className="shrink-0 border-b border-gray-200 px-6 py-5">
           <div>
             <h2 className="text-xl font-bold text-gray-900">
@@ -191,10 +187,6 @@ export default function UserDetailModal({
           </div>
         </div>
 
-        {/* =========================
-            CONTENIDO
-        ========================= */}
-
         <div className="min-h-0 flex-1 overflow-y-auto">
           {loading && (
             <div className="flex items-center justify-center p-12">
@@ -206,8 +198,6 @@ export default function UserDetailModal({
 
           {!loading && user && (
             <div className="p-6">
-
-              {/* INFORMACIÓN PRINCIPAL */}
 
               <div className="flex items-center gap-5 rounded-2xl border border-gray-200 p-5">
                 {user.profileImagen ? (
@@ -236,8 +226,6 @@ export default function UserDetailModal({
                   </div>
                 </div>
               </div>
-
-              {/* INFORMACIÓN */}
 
               <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
 
@@ -316,8 +304,6 @@ export default function UserDetailModal({
                 />
               </div>
 
-              {/* ROL EMPRESA PROTEGIDO */}
-
               {isEditing && user.role === "company" && (
                 <div className="mt-5 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
                   <div className="flex items-start gap-3">
@@ -394,8 +380,6 @@ export default function UserDetailModal({
                   </div>
                 )}
 
-              {/* ACCIONES */}
-
               <div className="mt-6 rounded-2xl border border-gray-200 p-5">
                 <h3 className="font-semibold text-gray-900">
                   Acciones
@@ -458,10 +442,6 @@ export default function UserDetailModal({
             </div>
           )}
         </div>
-
-        {/* =========================
-            PIE DEL MODAL
-        ========================= */}
 
         <div className="flex shrink-0 justify-end border-t border-gray-200 px-6 py-5">
           <button

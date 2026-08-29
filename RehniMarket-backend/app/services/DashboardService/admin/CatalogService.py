@@ -19,20 +19,9 @@ from app.services.publicService.Products import _has_visible_stock
 CATALOG_NAS_PATH = "catalogs/"
 
 
-# ==============================
-# CONTEO DE PRODUCTOS (ver ALCANCE > "Corregir el N+1 en
-# get_catalogs_service mediante consulta agregada eficiente")
-# ==============================
-
 def _count_products_by_catalog(database: Session) -> dict[UUID, int]:
-    """
-    Un solo query agregado (GROUP BY) para TODOS los catálogos a la vez -
-    reemplaza el loop anterior que hacía 2 queries por catálogo (ver
-    ALCANCE > Rendimiento). Mismo criterio de "productos activos,
-    visibles, con stock válido" que ya usa el catálogo público
-    (_has_visible_stock, ver publicService/Products.py) - una sola
-    fuente de verdad de esa regla, no se duplica acá.
-    """
+    """Un solo query agregado para todos los catálogos, con el mismo criterio de
+    visibilidad que _has_visible_stock."""
 
     rows = (
         database.query(Product.catalog_id, func.count(Product.id))
@@ -57,12 +46,7 @@ def _to_response(catalog: Catalog, product_count: int = 0) -> CatalogResponse:
 
 
 def get_catalogs_service(database: Session) -> list[CatalogResponse]:
-    """
-    Listado ADMIN (todas las categorías, activas e inactivas - el
-    catálogo público tiene su propio get_catalogs_service en
-    publicService/Products.py, que sí filtra por is_active y ordena por
-    display_order, ver ALCANCE).
-    """
+    """Listado admin: todas las categorías, activas e inactivas."""
 
     catalogs = database.query(Catalog).order_by(Catalog.display_order.asc(), Catalog.name.asc()).all()
 
@@ -212,13 +196,7 @@ def change_catalog_status_service(
     catalog_id: UUID,
     is_active: bool,
 ) -> CatalogResponse:
-    """
-    Activar/desactivar (ver ALCANCE) - distinto de eliminar: una
-    categoría inactiva sigue existiendo (sus productos conservan la
-    referencia), solo deja de aparecer en el catálogo público (ver
-    publicService/Products.py > get_catalogs_service, filtra
-    is_active=True).
-    """
+    """Activar/desactivar: una categoría inactiva sigue existiendo, solo desaparece del catálogo público."""
 
     catalog = database.get(Catalog, catalog_id)
 

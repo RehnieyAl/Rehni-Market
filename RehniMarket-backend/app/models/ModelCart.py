@@ -7,11 +7,7 @@ from app.database.Connection import Base
 
 
 class Cart(Base):
-    """
-    Un carrito por usuario (rol USER - ver ALCANCE > Restricciones de
-    compra). Se crea perezosamente la primera vez que el usuario agrega
-    un producto (ver CartService.get_or_create_cart), no en el registro.
-    """
+    """Un carrito por usuario; se crea al agregar el primer producto, no en el registro."""
 
     __tablename__ = "carts"
 
@@ -38,9 +34,7 @@ class CartItem(Base):
     __tablename__ = "cart_items"
 
     __table_args__ = (
-        # Un mismo producto+variante no puede repetirse como fila aparte
-        # dentro del mismo carrito - agregarlo de nuevo suma cantidad
-        # sobre la fila existente (ver CartService.add_to_cart_service).
+        # Mismo producto+variante no se repite: agregarlo de nuevo suma cantidad.
         UniqueConstraint(
             "cart_id", "product_id", "variant_id", name="uq_cart_item_product_variant"
         ),

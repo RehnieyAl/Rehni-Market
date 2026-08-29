@@ -8,11 +8,7 @@ interface BankAccountDeleteConfirmModalProps {
   onClose: () => void;
 }
 
-// Mismo patrón que AddressDeleteConfirmModal.tsx (ver ALCANCE > UX: "No
-// usar confirm()") - el backend puede rechazar el borrado con
-// BANK_ACCOUNT_IN_USE si la cuenta ya tiene liquidaciones asociadas; ese
-// mensaje real de la API se muestra vía useAlert desde
-// BankAccountsList.tsx, no acá.
+// El backend puede rechazar el borrado (BANK_ACCOUNT_IN_USE); ese mensaje lo muestra BankAccountsList vía useAlert.
 export default function BankAccountDeleteConfirmModal({
   isOpen,
   bankName,

@@ -7,27 +7,8 @@ from app.database.Connection import Base
 
 
 class ShippingCarrier(Base):
-    """
-    Transportadora del catálogo global (ver ALCANCE > Transportadoras) -
-    administrada exclusivamente por Admin/Owner (ver AdminCompanyRouters.py),
-    la Empresa solo puede leer las activas (ver publicService/
-    ShippingCarriers.py > GET /public/shipping-carriers) y asignarlas a
-    sus propios pedidos (ver Order.shipping_carrier_id).
-
-    Mismo patrón que Catalog (ver ModelCatalog.py): `is_active` con
-    desactivación en vez de borrado físico - una transportadora inactiva
-    deja de ofrecerse para NUEVAS asignaciones, pero los pedidos que ya
-    la referencian (Order.shipping_carrier_id) conservan la relación
-    intacta para siempre (nunca se borra físicamente una transportadora,
-    ver ALCANCE > "no romper referencias históricas").
-
-    `tracking_url` es la única fuente de verdad del enlace de seguimiento
-    (ver ALCANCE > "la URL de seguimiento pertenece a la transportadora,
-    NO debe duplicarse en cada Order") - como el registro nunca se borra,
-    no hace falta guardar una copia histórica en el pedido: el FK
-    `Order.shipping_carrier_id` sigue siendo válido y resoluble para
-    siempre.
-    """
+    """Catálogo global de transportadoras, solo Admin/Owner. `is_active` desactiva sin
+    borrar: los pedidos que ya la referencian conservan la relación."""
 
     __tablename__ = "shipping_carriers"
 

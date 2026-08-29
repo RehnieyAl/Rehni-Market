@@ -21,7 +21,7 @@ export interface ReviewsPaginated {
 
 // Le dice al frontend si mostrar el formulario de "Escribir reseña" sin
 // reimplementar las reglas de negocio (compra entregada, reseña ya
-// existente) del lado del cliente - ver backend >
+// existente) del lado del cliente
 // ReviewService.check_review_eligibility_service.
 export interface ReviewEligibility {
   can_review: boolean;

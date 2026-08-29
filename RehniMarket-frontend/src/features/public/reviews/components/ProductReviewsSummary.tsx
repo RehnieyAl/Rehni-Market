@@ -18,11 +18,7 @@ const STARS: { key: keyof PublicRatingDistribution; label: number }[] = [
   { key: "one", label: 1 },
 ];
 
-// Panel izquierdo de "Opiniones de compradores" (ver ALCANCE > rediseño
-// detalle de producto, requisito 5): promedio + distribución por estrella
-// + total, con datos reales de product.average_rating/review_count/
-// rating_distribution (ya calculados una sola vez en
-// publicService/Products.py) - no se vuelven a pedir ni a recalcular acá.
+// Panel izquierdo de "Opiniones": promedio + distribución + total, con los datos ya calculados por el backend.
 export default function ProductReviewsSummary({
   averageRating,
   reviewCount,

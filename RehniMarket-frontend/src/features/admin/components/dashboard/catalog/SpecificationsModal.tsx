@@ -188,7 +188,7 @@ export default function SpecificationsModal({
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-          {/* NUEVA ESPECIFICACIÓN */}
+
           <form
             onSubmit={handleCreate}
             className="mb-5 flex flex-col gap-3 rounded-xl border border-dashed border-gray-300 p-4 sm:flex-row sm:items-end"
@@ -248,7 +248,6 @@ export default function SpecificationsModal({
             </button>
           </form>
 
-          {/* LISTADO */}
           {loading ? (
             <p className="py-8 text-center text-sm text-gray-500">
               Cargando especificaciones...

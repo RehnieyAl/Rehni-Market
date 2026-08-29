@@ -11,9 +11,7 @@ class AddCartItemRequest(BaseModel):
 
 
 class UpdateCartItemRequest(BaseModel):
-    # No se permite 0 aqui a proposito: para quitar un producto se usa el
-    # DELETE dedicado (ver ALCANCE > Carrito), asi el significado de cada
-    # endpoint queda inequivoco.
+    # No se permite 0: para quitar un producto se usa el DELETE dedicado.
     quantity: int = Field(ge=1)
 
 
@@ -39,9 +37,7 @@ class CartItemResponse(BaseModel):
     quantity: int
     subtotal: Decimal
 
-    # Stock disponible en este momento (del producto o de la variante
-    # seleccionada) - el frontend lo usa para no dejar subir la cantidad
-    # por encima de lo que realmente hay.
+    # Stock actual del producto o la variante seleccionada.
     availableStock: int
 
     model_config = {"from_attributes": True}

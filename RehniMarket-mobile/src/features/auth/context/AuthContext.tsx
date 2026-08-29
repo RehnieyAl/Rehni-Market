@@ -4,6 +4,7 @@ import type {
   AuthUser,
   LoginRequest,
   RegisterUserRequest,
+  RegisterUserResponse,
 } from "@/types/auth";
 
 export interface AuthContextType {
@@ -42,8 +43,9 @@ export interface AuthContextType {
   // No inicia sesión - el backend exige verificar el correo antes de
   // poder hacer login (ver ErrorCode.EMAIL_NOT_VERIFIED), igual que la
   // web. La pantalla es quien navega a verify-email después de llamar
-  // esto.
-  register(data: RegisterUserRequest): Promise<void>;
+  // esto. Devuelve el mensaje + los contadores (expires_in /
+  // resend_available_in) para arrancar la pantalla de verificación.
+  register(data: RegisterUserRequest): Promise<RegisterUserResponse>;
 
   logout(): Promise<void>;
 

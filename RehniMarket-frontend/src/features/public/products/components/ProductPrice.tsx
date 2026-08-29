@@ -8,9 +8,9 @@ interface ProductPriceProps {
 }
 
 // Precio + descuento. El backend ya entrega el precio final y el
-// porcentaje calculados (ver publicService/Products.py > _compute_price_fields)
+// porcentaje calculados
 // - nunca se recalcula aquí. Sin descuento: solo el precio, sin tachado ni
-// "0% descuento" (ver ALCANCE > 3 y 22).
+// "0% descuento".
 export default function ProductPrice({
   price,
   discountEnabled,

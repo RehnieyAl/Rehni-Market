@@ -267,7 +267,7 @@ def seed_owner(db: Session):
 
 def run_seed(db: Session):
     seed_roles(db)
-    seed_catalog(db)
-    seed_specifications(db)
+    #seed_catalog(db)
+    #seed_specifications(db)
     seed_admin(db)
     seed_owner(db)

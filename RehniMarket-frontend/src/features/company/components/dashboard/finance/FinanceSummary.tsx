@@ -9,13 +9,8 @@ import { formatPrice } from "@/shared/utils/formatPrice";
 
 import type { CompanyBalance } from "@/features/payouts/types/response";
 
-// GET /company/balance (ver ALCANCE > Módulo de liquidaciones, Fase 6):
-// - grossSalesAccumulated/commissionAccumulated: histórico de TODAS las
-//   liquidaciones ya generadas (lifetime).
-// - netBalance: lo que la empresa tiene pendiente de recibir (net_amount
-//   de liquidaciones que aún no están en PAID).
-// - nextPayoutDate: proyección informativa (fin del mes en curso), no un
-//   corte automático real (ver PayoutService.get_company_balance_service).
+// GET /company/balance: acumulados históricos, netBalance (liquidaciones aún no PAID)
+// y nextPayoutDate (proyección informativa, sin corte automático).
 export default function FinanceSummary() {
   const [balance, setBalance] = useState<CompanyBalance | null>(null);
   const [loading, setLoading] = useState(true);

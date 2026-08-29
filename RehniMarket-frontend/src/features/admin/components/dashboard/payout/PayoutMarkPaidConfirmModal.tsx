@@ -15,13 +15,7 @@ interface PayoutMarkPaidConfirmModalProps {
   onClose: () => void;
 }
 
-// Confirmación antes de PATCH /admin/payouts/{id}/pay (ver ALCANCE >
-// Módulo de liquidaciones, Fase 7) - mismo patrón "no usar confirm()" que
-// AddressDeleteConfirmModal.tsx/BankAccountDeleteConfirmModal.tsx, pero
-// con acento verde (acción positiva, no destructiva). Marcar como pagada
-// dispara un correo automático real a la empresa (ver
-// PayoutService.mark_payout_paid_service) y no se puede deshacer desde
-// acá (no existe un endpoint para revertir a pending).
+// Confirmación antes de PATCH /admin/payouts/{id}/pay. Dispara un correo a la empresa y no se puede deshacer.
 export default function PayoutMarkPaidConfirmModal({
   isOpen,
   companyName,

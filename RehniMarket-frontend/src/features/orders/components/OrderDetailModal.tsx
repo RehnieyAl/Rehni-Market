@@ -17,17 +17,11 @@ interface OrderDetailModalProps {
   orderId: string | null;
   isOpen: boolean;
   onClose: () => void;
-  // Se llama tras cancelar desde el modal, para que la lista detrás se
-  // refresque (mismo motivo que onStatusChanged en el modal de empresa,
-  // ver features/company/components/dashboard/order/OrderDetailModal.tsx).
+  // Se llama tras cancelar para refrescar la lista de atrás.
   onCancelled?: () => void;
 }
 
-// Detalle completo del pedido para el COMPRADOR (ver ALCANCE > Detalle de
-// pedido). Mismo patrón que el modal equivalente de empresa (mismo
-// endpoint /orders/{id}, mismo layout de secciones) - acá no hay cambio
-// de estado manual (eso es exclusivo de la empresa), solo lectura +
-// cancelar, y agrega el timeline visual que el lado empresa no necesita.
+// Detalle del pedido para el comprador: solo lectura + cancelar + timeline (sin cambio de estado manual).
 export default function OrderDetailModal({
   orderId,
   isOpen,
@@ -98,10 +92,7 @@ export default function OrderDetailModal({
     }
   };
 
-  // Descuento total del pedido: se calcula acá, no llega como un campo
-  // aparte del backend (mismo criterio que el resto de totales
-  // derivados) - solo cuenta ítems con originalUnitPrice real (ver
-  // ALCANCE > Detalle de pedido, campo faltante identificado).
+  // Descuento total del pedido, calculado acá; solo cuenta ítems con originalUnitPrice.
   const totalDiscount = order
     ? order.items.reduce((sum, item) => {
         if (!item.originalUnitPrice) return sum;
@@ -131,7 +122,7 @@ export default function OrderDetailModal({
             <p className="py-8 text-center text-sm text-gray-500">Cargando pedido...</p>
           ) : (
             <div className="space-y-6">
-              {/* ESTADO + FECHA */}
+
               <div className="flex items-center justify-between">
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-medium ${ORDER_STATUS_BADGE[order.status]}`}
@@ -144,10 +135,8 @@ export default function OrderDetailModal({
                 </span>
               </div>
 
-              {/* TIMELINE */}
               <OrderTimeline status={order.status} />
 
-              {/* COMPRADOR + DIRECCIÓN */}
               <section className="rounded-2xl border bg-gray-50 p-4">
                 <div className="flex items-start gap-4">
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#6D0F2D] text-lg font-bold text-white">
@@ -195,7 +184,6 @@ export default function OrderDetailModal({
                 )}
               </section>
 
-              {/* PRODUCTOS */}
               <section>
                 <h3 className="mb-3 font-semibold text-gray-900">Productos</h3>
 
@@ -227,7 +215,6 @@ export default function OrderDetailModal({
                 </div>
               </section>
 
-              {/* TOTALES */}
               <section className="space-y-1.5 border-t border-gray-100 pt-4 text-sm">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>

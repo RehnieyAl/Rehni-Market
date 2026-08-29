@@ -1,8 +1,6 @@
 import type { OrderStatus } from "../types/response";
 
-// Única fuente de verdad de la etiqueta/color de cada estado - reutilizada
-// tanto por el dashboard de comprador (Mis pedidos) como por el de
-// empresa (Pedidos / Procesar pedidos), para no duplicar este mapeo.
+// Única fuente de verdad de la etiqueta/color de cada estado, compartida por comprador y empresa.
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   pending: "Pendiente",
   paid: "Pagado",
@@ -21,11 +19,7 @@ export const ORDER_STATUS_BADGE: Record<OrderStatus, string> = {
   cancelled: "bg-red-100 text-red-700",
 };
 
-// Mismo grafo de transiciones que el backend (ver
-// app/services/commerce/OrderService.py > ALLOWED_TRANSITIONS) - se usa
-// solo para decidir qué botón de acción mostrar en el dashboard de
-// empresa; el backend es quien realmente lo hace cumplir. DELIVERED y
-// CANCELLED no tienen entrada aquí: son de solo lectura.
+// Mismo grafo de transiciones que el backend; acá solo decide qué botón mostrar. DELIVERED/CANCELLED son de solo lectura.
 export const NEXT_STATUS: Partial<Record<OrderStatus, { value: OrderStatus; label: string }>> = {
   pending: { value: "processing", label: "Iniciar procesamiento" },
   paid: { value: "processing", label: "Iniciar procesamiento" },

@@ -7,7 +7,7 @@ const BENEFITS = [
   { icon: Truck, label: "Envíos rápidos" },
 ];
 
-// Sección inferior minimalista (ver ALCANCE > rediseño Categorías): son
+// Sección inferior minimalista: son
 // beneficios propios de la plataforma (no datos de negocio calculados),
 // mismo criterio que el resto del storefront público para no mezclar
 // contenido estático con datos reales del backend.

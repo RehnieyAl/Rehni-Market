@@ -21,9 +21,7 @@ from app.schemas.SchemaCommerce.SchemaCart import (
 )
 
 from app.services.NasService import build_media_url
-# Reutiliza el mismo calculo de precio final que ya usa el catalogo
-# publico (ver ALCANCE > no duplicar logica) - un producto en oferta debe
-# cobrarse igual en el carrito que en la vitrina.
+# Mismo cálculo de precio final que el catálogo público.
 from app.services.publicService.Products import _compute_price_fields
 
 
@@ -107,9 +105,7 @@ def add_to_cart_service(
     try:
         product = repo.get_product_by_id(database, data.productId)
 
-        # Producto de una empresa suspendida (ver ALCANCE > BUG 2, "no se
-        # puede comprar producto"): se trata igual que "no encontrado",
-        # mismo código que ya usa el catálogo público para este caso.
+        # Producto de empresa suspendida: se trata igual que "no encontrado".
         if not product or not product.is_active or not product.company or not product.company.CompanyStatus:
             api_error(404, ErrorCodes.PRODUCT_NOT_FOUND, "Producto no encontrado.")
 
@@ -122,18 +118,8 @@ def add_to_cart_service(
                 api_error(404, ErrorCodes.VARIANT_NOT_FOUND, "Variante no encontrada.")
 
         elif product.has_variants and product.main_color_id is None:
-            # `variantId is None` es ambiguo: significa tanto "no elegi
-            # nada" como "elegi explicitamente el producto base" (ver
-            # frontend > colorOptions/hasChosenColor en ProductDetail.tsx,
-            # tanto web como mobile). El backend solo puede distinguir los
-            # dos casos igual que lo hace el frontend: el producto base es
-            # una eleccion valida cuando tiene su propio color
-            # (product.main_color_id), asi que solo se exige variante
-            # cuando el producto tiene variantes Y no tiene color propio -
-            # si no, un producto con variantes Y color base quedaba
-            # imposible de comprar en su version base (bug real: rechazaba
-            # el "producto principal" aunque el frontend nunca pedia
-            # seleccionar una variante para el).
+            # Solo se exige variante si el producto tiene variantes y no tiene color base propio;
+            # con color base, el producto base es una elección válida.
             api_error(
                 400,
                 ErrorCodes.VALIDATION_ERROR,

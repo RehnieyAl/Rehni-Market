@@ -15,11 +15,7 @@ import type { Order, OrderStatus, OrderStatusCounts } from "@/features/orders/ty
 
 type TabId = "all" | "pending" | "inProgress" | "completed" | "cancelled";
 
-// Pantalla única de gestión de pedidos para empresa (ver ALCANCE >
-// Refactor Pedidos Empresa): reemplaza a las antiguas "Pedidos" (solo
-// lectura) + "Procesar pedidos" (cambio de estado), que duplicaban la
-// misma lista en dos vistas. Cambiar el estado ahora vive únicamente
-// dentro de OrderDetailModal, accesible desde cualquier pestaña de acá.
+// Pantalla única de gestión de pedidos para empresa. El cambio de estado vive en OrderDetailModal.
 const STATUS_TABS: { id: TabId; label: string; statuses?: OrderStatus[] }[] = [
   { id: "all", label: "Todos" },
   { id: "pending", label: "Pendientes", statuses: ["pending"] },
@@ -79,8 +75,7 @@ export default function Orders() {
     }
   }, []);
 
-  // Debounce del buscador (mismo patrón que Products.tsx): evita
-  // disparar un request por cada tecla.
+  // Debounce del buscador para no disparar un request por cada tecla.
   useEffect(() => {
     const timeout = setTimeout(loadOrders, 300);
     return () => clearTimeout(timeout);
@@ -106,8 +101,7 @@ export default function Orders() {
     setDetailOpen(true);
   };
 
-  // Un cambio de estado afecta tanto la fila que se ve ahora mismo
-  // (puede salir del filtro activo) como los contadores de las pestañas.
+  // Un cambio de estado afecta la fila visible y los contadores de las pestañas.
   const handleStatusChanged = () => {
     loadOrders();
     loadCounts();
@@ -125,7 +119,6 @@ export default function Orders() {
         actualiza su estado desde el detalle.
       </p>
 
-      {/* TABS */}
       <div className="mt-6 flex flex-wrap gap-2">
         {STATUS_TABS.map((tab) => (
           <button
@@ -142,7 +135,6 @@ export default function Orders() {
         ))}
       </div>
 
-      {/* BUSCADOR */}
       <div className="mt-6 flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3">
         <Search size={20} className="text-gray-400" />
 
@@ -154,7 +146,6 @@ export default function Orders() {
         />
       </div>
 
-      {/* LISTADO */}
       {loading ? (
         <p className="mt-8 text-gray-500">Cargando pedidos...</p>
       ) : orders.length === 0 ? (

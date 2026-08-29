@@ -8,13 +8,8 @@ interface VariantAttributePickerProps {
   onChange: (attributeId: string, optionId: string) => void;
 }
 
-// Selector dinámico de variante: un control por cada eje de la categoría
-// (Color, Talla, Almacenamiento, Plataforma...). No asume "color".
-//
-// Selección inteligente (ver Fase 16): una opción se deshabilita cuando
-// NO existe ninguna variante con stock compatible con lo ya elegido en
-// los OTROS ejes - el comprador no descubre el error recién al pulsar
-// "Comprar".
+// Selector dinámico de variante: un control por eje de la categoría. Una opción se deshabilita si no
+// hay variante con stock compatible con lo elegido en los otros ejes.
 export default function VariantAttributePicker({
   attributes,
   variants,

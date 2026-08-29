@@ -21,10 +21,7 @@ from app.schemas.SchemaCommerce.SchemaReport import (
     ReportResponse,
 )
 
-# Evidencias (ver ALCANCE > Reportes - EVIDENCIAS/IMÁGENES): opcionales,
-# máximo 5, solo imágenes reales - no se confía únicamente en la
-# validación del frontend (ver ALCANCE > sección 5/6, "el backend
-# también debe validar").
+# Evidencias: opcionales, máximo 5, solo imágenes; validado también en el backend.
 MAX_EVIDENCE_IMAGES = 5
 MAX_EVIDENCE_FILE_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB por imagen
 ALLOWED_EVIDENCE_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
@@ -56,9 +53,7 @@ def _validate_evidence_files(evidences: list[UploadFile]) -> None:
                 "Solo se permiten imágenes en formato JPEG, PNG o WEBP.",
             )
 
-        # UploadFile.file es un SpooledTemporaryFile - se puede medir con
-        # seek/tell sin leerlo completo a memoria, y se deja la posición
-        # en 0 de nuevo para que nas.upload_file lo lea desde el inicio.
+        # Medir con seek/tell y volver a 0 para que nas.upload_file lo lea desde el inicio.
         file.file.seek(0, 2)
         size = file.file.tell()
         file.file.seek(0)
@@ -78,26 +73,10 @@ def create_report_service(
     nas=None,
     evidences: list[UploadFile] | None = None,
 ) -> ReportResponse:
-    """
-    Crea un reporte de PRODUCTO o de EMPRESA (ver ALCANCE > Reportes,
-    secciones 3 y 4) - un solo flujo para ambos, diferenciado por
-    data.targetType, sobre el mismo modelo Report (ver ModelReport.py).
-
-    `reporter_id` viene SIEMPRE de request.state.user_id (ver
-    ReportRouter.py), nunca del body - un usuario no puede reportar en
-    nombre de otro (ver ALCANCE > "no aceptar reporter_id como dato
-    confiable desde frontend").
-
-    Reportar NUNCA dispara ninguna acción automática (ver ALCANCE > punto
-    10): el reporte simplemente se guarda en PENDING, a la espera de que
-    un admin lo revise desde Admin > Reportes.
-
-    `evidences` (ver ALCANCE > Reportes - EVIDENCIAS/IMÁGENES) es
-    completamente opcional - un reporte sin ninguna imagen es igual de
-    válido. Se validan (cantidad/tipo/tamaño, ver
-    _validate_evidence_files) ANTES de tocar la base de datos, así un
-    archivo inválido nunca deja un Report a medio crear.
-    """
+    """Crea un reporte de producto o de empresa (un solo flujo, diferenciado por targetType).
+    `reporter_id` viene siempre de la sesión, nunca del body. El reporte queda en PENDING,
+    sin disparar ninguna acción automática. Las evidencias son opcionales y se validan antes
+    de tocar la BD."""
 
     evidence_files = [f for f in (evidences or []) if f and f.filename]
 
@@ -118,10 +97,7 @@ def create_report_service(
             if not product:
                 api_error(404, ErrorCodes.PRODUCT_NOT_FOUND, "Producto no encontrado.")
 
-            # Reporte de producto: company_id se deja en NULL - la
-            # empresa propietaria se obtiene siempre vía Product.company
-            # (relación ya existente), nunca se duplica acá (ver ALCANCE
-            # > sección 3 y 5).
+            # Reporte de producto: company_id queda NULL; la empresa se obtiene vía Product.company.
             product_id = product.id
 
             target_type = ReportTargetType.PRODUCT
@@ -151,10 +127,7 @@ def create_report_service(
 
         repo.create_report(database, report)
 
-        # Subir evidencias DESPUÉS de crear el reporte (necesita
-        # report.id para el path en MinIO) pero ANTES del commit - si la
-        # subida de alguna imagen falla, todo se revierte (except de
-        # abajo) en vez de dejar un reporte sin sus evidencias.
+        # Subir evidencias tras crear el reporte (necesita report.id) pero antes del commit.
         if evidence_files and nas:
             for file in evidence_files:
                 result = nas.upload_file(file, f"reports/{report.id}/evidences/")
@@ -187,14 +160,8 @@ def create_report_service(
 
 
 def _to_report_response(report: Report) -> ReportResponse:
-    """
-    Compartido con ReportService (admin) - ver
-    DashboardService/admin/ReportService.py._to_report_response, que es
-    idéntica. Se duplica (una función corta, sin lógica) en vez de
-    importar entre módulos de capas distintas (commerce <- admin no tiene
-    sentido) para no crear una dependencia cruzada rara; ambas leen
-    exactamente los mismos campos del mismo modelo Report.
-    """
+    """Idéntica a DashboardService/admin/ReportService._to_report_response; se duplica
+    a propósito para no cruzar dependencias entre capas."""
 
     is_product = report.target_type.value == "product"
 

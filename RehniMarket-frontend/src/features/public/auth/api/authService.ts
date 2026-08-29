@@ -8,12 +8,14 @@ import type {
   ForgotPasswordRequest,
   ResetPasswordRequest,
   ChangeEmailRequest,
+  ResendVerificationCodeRequest,
   UpdateMeRequest
 } from "../types/request";
 
 import type {
   MeResponse,
-  TokenResponse
+  TokenResponse,
+  VerificationCodeState
 } from "../types/response";
 
 
@@ -57,6 +59,16 @@ export const verifyEmail = async (data: VerifyEmailRequest) => {
 
 export const changeEmail = async (data: ChangeEmailRequest) => {
   const res = await api.post("/auth/change-email",data);
+  return res.data;
+};
+
+// Botón "Reenviar código" de la pantalla de verificación. El backend
+// aplica el cooldown de 60 s (responde 429 RESEND_COOLDOWN_ACTIVE con
+// `retry_after` si aún no pasa) e invalida el código anterior.
+export const resendVerificationCode = async (
+  data: ResendVerificationCodeRequest,
+): Promise<VerificationCodeState & { message: string }> => {
+  const res = await api.post("/auth/resend-verification-code", data);
   return res.data;
 };
 

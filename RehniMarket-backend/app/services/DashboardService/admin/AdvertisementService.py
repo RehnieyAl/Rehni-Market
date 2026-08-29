@@ -26,10 +26,6 @@ from app.services.DashboardService.admin.AdvertisementTargeting import (
 ADVERTISEMENT_NAS_PATH = "advertisements/"
 
 
-# =================================================
-# ANUNCIOS DINÁMICOS POR REGLAS (ver ALCANCE)
-# =================================================
-
 def _validate_target_reference(
     database: Session,
     target_type,
@@ -37,11 +33,7 @@ def _validate_target_reference(
     target_catalog_id: UUID | None,
     target_company_id: UUID | None,
 ) -> None:
-    """
-    Antes de guardar, confirma que el producto/categoría/empresa
-    elegidos en el panel admin realmente existan - un anuncio no debe
-    poder apuntar a un id inventado o ya eliminado.
-    """
+    """Confirma que el producto/categoría/empresa del target realmente existan."""
 
     if target_type == AdvertisementTargetType.PRODUCT:
         if not target_product_id:
@@ -69,22 +61,17 @@ def _validate_target_reference(
         AdvertisementTargetType.BLACK_FRIDAY,
         AdvertisementTargetType.CYBER_DAYS,
     ):
-        pass  # se valida minimum_discount al resolver el destino (ver abajo)
+        pass  # minimum_discount se valida al resolver el destino
 
     elif target_type == AdvertisementTargetType.LIQUIDATION:
-        pass  # se valida minimum_discount/maximum_stock al resolver el destino
+        pass  # minimum_discount/maximum_stock se validan al resolver el destino
 
     elif target_type == AdvertisementTargetType.NEW_RELEASE:
-        pass  # se valida max_age_days al resolver el destino
+        pass  # max_age_days se valida al resolver el destino
 
 
 def _resolve_and_require_destination(data) -> str | None:
-    """
-    Calcula el destino real y, si `target_type` no es None, exige que
-    haya quedado una URL válida (ej. PROMOTION sin minimum_discount no
-    genera nada útil) - evita guardar un anuncio "dinámico" que en
-    realidad no lleva a ningún lado.
-    """
+    """Calcula el destino real y, si target_type no es None, exige que haya quedado una URL válida."""
 
     destination = resolve_advertisement_destination(
         target_type=data.target_type,
@@ -253,10 +240,7 @@ def create_advertisement_service(
 
             mobile_path = mobile_result["path"]
 
-        # Anuncios dinámicos por reglas (ver ALCANCE): valida que el
-        # target elegido exista y calcula el destino real - con
-        # target_type=None (anuncio manual clásico) esto no hace nada y
-        # se usa button_link tal cual lo escribió el admin.
+        # Con target_type != None valida el target y calcula el destino; con None no hace nada.
         _validate_target_reference(
             database,
             data.target_type,
@@ -362,14 +346,8 @@ def update_advertisement_service(
                 or None
             )
 
-        # Anuncios dinámicos por reglas (ver ALCANCE): `clear_target`
-        # vuelve el anuncio a manual clásico (mismo motivo que
-        # remove_mobile_image de abajo - un PATCH con target_type=None
-        # es ambiguo entre "no lo toques" y "bórralo", se necesita una
-        # bandera explícita). Si se envía un target_type nuevo, se
-        # reemplaza toda la configuración de target junta (no se puede
-        # cambiar solo un campo de un target sin reenviar el tipo, mismo
-        # criterio que ya usa el formulario para el resto de campos).
+        # `clear_target` vuelve el anuncio a manual clásico (un PATCH con target_type=None
+        # es ambiguo). Un target_type nuevo reemplaza toda la configuración de target junta.
         if data.clear_target:
             advertisement.target_type = None
             advertisement.target_product_id = None
@@ -397,11 +375,7 @@ def update_advertisement_service(
             advertisement.max_age_days = data.max_age_days
 
         if advertisement.target_type is not None:
-            # El destino siempre se recalcula (no solo cuando cambió el
-            # target en este mismo request) - cubre el caso de un
-            # anuncio dinámico ya existente al que solo se le edita el
-            # título/imagen, donde el destino calculado debe seguir
-            # siendo el mismo.
+            # El destino siempre se recalcula, aunque el target no haya cambiado en este request.
             resolved_link = resolve_advertisement_destination(
                 target_type=advertisement.target_type,
                 target_product_id=advertisement.target_product_id,
@@ -422,9 +396,7 @@ def update_advertisement_service(
             advertisement.button_link = resolved_link
 
         elif data.button_link is not None:
-            # Manual clásico (target_type None) - único caso donde
-            # button_link lo escribe el admin (ver ALCANCE >
-            # compatibilidad con anuncios antiguos).
+            # Manual clásico (target_type None): único caso donde button_link lo escribe el admin.
             advertisement.button_link = (
                 data.button_link.strip()
                 or None
@@ -505,8 +477,7 @@ def update_advertisement_service(
 
         elif data.remove_mobile_image:
 
-            # Eliminar la imagen móvil actual sin reemplazarla (solo si
-            # no se subió una imagen móvil nueva en este mismo request).
+            # Elimina la imagen móvil actual sin reemplazarla (si no llegó una nueva).
             previous_mobile_image = (
                 advertisement.mobile_image_url
             )

@@ -13,7 +13,7 @@ interface RechargeWalletModalProps {
 }
 
 // RehniCoin: recarga de saldo exclusiva de ADMIN/OWNER (el backend lo
-// vuelve a validar - ver WalletRouter.py). 1 RehniCoin = 1 COP, simulado.
+// vuelve a validar
 export default function RechargeWalletModal({
   isOpen,
   userId,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -21,12 +21,37 @@ import { FormError } from "@/components/FormError";
 import { ErrorCode } from "@/types/ErrorCode";
 import { colors, fontSize, fontWeight, radii, spacing } from "@/theme";
 
+// mm:ss a partir de segundos (>= 0).
+function formatCountdown(totalSeconds: number): string {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  return `${String(Math.floor(safe / 60)).padStart(2, "0")}:${String(safe % 60).padStart(2, "0")}`;
+}
+
+// param string ("300") -> timestamp absoluto (ms) o null.
+function toDeadline(seconds: string | number | undefined | null): number | null {
+  const n = typeof seconds === "string" ? Number(seconds) : seconds;
+  return typeof n === "number" && Number.isFinite(n) && n >= 0
+    ? Date.now() + n * 1000
+    : null;
+}
+
 // Portado de RehniMarket-frontend/src/features/public/auth/pages/
-// VerifyEmail.tsx: mismos dos endpoints (POST /auth/verify-email-user y
-// POST /auth/change-email), mismo flujo de "¿el correo es incorrecto?".
+// VerifyEmail.tsx: mismos endpoints (POST /auth/verify-email-user,
+// /auth/change-email y /auth/resend-verification-code), dos contadores
+// independientes (expiracion del codigo 5 min / cooldown de reenvio 60 s)
+// y el mismo flujo de "el correo es incorrecto". La expiracion real la
+// valida el backend - el contador de aca es solo informativo.
 export default function VerifyEmailScreen() {
   const router = useRouter();
-  const { email: paramEmail } = useLocalSearchParams<{ email?: string }>();
+  const {
+    email: paramEmail,
+    expiresIn,
+    resendAvailableIn,
+  } = useLocalSearchParams<{
+    email?: string;
+    expiresIn?: string;
+    resendAvailableIn?: string;
+  }>();
 
   const [currentEmail, setCurrentEmail] = useState(paramEmail ?? "");
   const [newEmail, setNewEmail] = useState("");
@@ -36,10 +61,48 @@ export default function VerifyEmailScreen() {
 
   const [loading, setLoading] = useState(false);
   const [changingEmail, setChangingEmail] = useState(false);
+  const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
+  // CONTADOR 1: expiracion del codigo (null = estado desconocido).
+  const [codeDeadline, setCodeDeadline] = useState<number | null>(() =>
+    toDeadline(expiresIn),
+  );
+  // CONTADOR 2: cooldown de reenvio (siempre hay uno).
+  const [resendDeadline, setResendDeadline] = useState<number>(
+    () => toDeadline(resendAvailableIn) ?? Date.now(),
+  );
+  const [nowTs, setNowTs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNowTs(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const codeSecondsLeft =
+    codeDeadline === null
+      ? null
+      : Math.max(0, Math.ceil((codeDeadline - nowTs) / 1000));
+  const resendSecondsLeft = Math.max(0, Math.ceil((resendDeadline - nowTs) / 1000));
+
+  const codeExpired = codeSecondsLeft === 0;
+  const canResend = resendSecondsLeft === 0 && !resending && !changingEmail;
+
+  const applyCodeState = (state: {
+    expires_in?: number;
+    resend_available_in?: number;
+  }) => {
+    setCodeDeadline(toDeadline(state.expires_in));
+    setResendDeadline(toDeadline(state.resend_available_in) ?? Date.now());
+  };
+
   const handleSubmit = async () => {
+    if (codeExpired) {
+      setError("El código expiró. Solicita uno nuevo para continuar.");
+      return;
+    }
+
     const verificationCode = code.join("");
 
     if (verificationCode.length !== 6) {
@@ -57,6 +120,10 @@ export default function VerifyEmailScreen() {
     } catch (err) {
       const detail = getApiErrorDetail(err);
 
+      if (detail?.code === ErrorCode.CODE_EXPIRED) {
+        setCodeDeadline(Date.now());
+      }
+
       if (detail?.code === ErrorCode.USER_NOT_FOUND) {
         setError(detail.message ?? "Usuario no encontrado.");
       } else {
@@ -64,6 +131,35 @@ export default function VerifyEmailScreen() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!canResend) return;
+
+    setError(null);
+    setNotice(null);
+    setResending(true);
+
+    try {
+      const res = await authService.resendVerificationCode({ email: currentEmail });
+
+      applyCodeState(res);
+      setCode(["", "", "", "", "", ""]);
+      setNotice(res.message ?? "Se ha enviado un nuevo código a tu correo.");
+    } catch (err) {
+      const detail = getApiErrorDetail(err);
+
+      if (
+        detail?.code === ErrorCode.RESEND_COOLDOWN_ACTIVE &&
+        typeof detail.retry_after === "number"
+      ) {
+        setResendDeadline(Date.now() + detail.retry_after * 1000);
+      }
+
+      setError(detail?.message ?? "No fue posible reenviar el código.");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -77,11 +173,16 @@ export default function VerifyEmailScreen() {
     setChangingEmail(true);
 
     try {
-      await authService.changeEmail({ old_email: currentEmail, new_email: newEmail });
+      const res = await authService.changeEmail({
+        old_email: currentEmail,
+        new_email: newEmail,
+      });
 
       setCurrentEmail(newEmail);
       setNewEmail("");
       setEditingEmail(false);
+      setCode(["", "", "", "", "", ""]);
+      applyCodeState(res ?? {});
       setNotice("Correo actualizado. Se envió un nuevo código de verificación.");
     } catch (err) {
       setError(getApiErrorMessage(err, "No fue posible cambiar el correo."));
@@ -152,12 +253,54 @@ export default function VerifyEmailScreen() {
               <FormError message={error} />
               {notice && <Text style={styles.notice}>{notice}</Text>}
 
-              <CodeInput value={code} onChange={setCode} />
+              <CodeInput value={code} onChange={setCode} disabled={codeExpired} />
+
+              {/* CONTADOR 1 - expiracion del codigo */}
+              {codeSecondsLeft !== null && !codeExpired && (
+                <Text style={styles.countdown}>
+                  Código válido durante{" "}
+                  <Text style={styles.countdownValue}>
+                    {formatCountdown(codeSecondsLeft)}
+                  </Text>
+                </Text>
+              )}
+
+              {codeExpired && (
+                <View style={styles.expiredBox}>
+                  <Text style={styles.expiredTitle}>Código expirado.</Text>
+                  <Text style={styles.expiredText}>
+                    Solicita un nuevo código para continuar.
+                  </Text>
+                </View>
+              )}
 
               <Button
                 label={loading ? "Verificando..." : "Verificar correo"}
                 onPress={handleSubmit}
                 loading={loading}
+                disabled={codeExpired}
+              />
+            </View>
+
+            {/* CONTADOR 2 - cooldown de reenvio (separado del contador 1) */}
+            <View style={styles.resendSection}>
+              <Text style={styles.footerText}>¿No recibiste el código?</Text>
+
+              {!canResend && resendSecondsLeft > 0 && (
+                <Text style={styles.countdown}>
+                  Puedes reenviar en{" "}
+                  <Text style={styles.countdownValue}>
+                    {formatCountdown(resendSecondsLeft)}
+                  </Text>
+                </Text>
+              )}
+
+              <Button
+                label={resending ? "Enviando..." : "Reenviar código"}
+                variant="outline"
+                onPress={handleResend}
+                loading={resending}
+                disabled={!canResend}
               />
             </View>
 
@@ -264,6 +407,42 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.success,
   },
+  countdown: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    textAlign: "center",
+  },
+  countdownValue: {
+    fontWeight: fontWeight.bold,
+    color: colors.textPrimary,
+  },
+  expiredBox: {
+    borderWidth: 1,
+    borderColor: colors.dangerMuted,
+    backgroundColor: colors.dangerMuted,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    alignItems: "center",
+  },
+  expiredTitle: {
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold,
+    color: colors.danger,
+  },
+  expiredText: {
+    marginTop: spacing.xs,
+    fontSize: fontSize.sm,
+    color: colors.danger,
+    textAlign: "center",
+  },
+  resendSection: {
+    marginTop: spacing.xl,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing.lg,
+    gap: spacing.sm,
+    alignItems: "stretch",
+  },
   footer: {
     marginTop: spacing.xl,
     alignItems: "center",
@@ -272,6 +451,7 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: fontSize.sm,
     color: colors.textSecondary,
+    textAlign: "center",
   },
   footerLink: {
     fontSize: fontSize.sm,

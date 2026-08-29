@@ -30,11 +30,7 @@ from app.services.commerce.WalletService import refund_wallet
 from app.services.email.OrderEmailService import send_order_status_email
 
 
-# Grafo de transiciones permitidas (ver ALCANCE > Fase 5 - Dashboard
-# Empresa > Pedidos): PENDING/PAID equivalen a "pagado, pendiente de
-# procesar" (ver ModelOrder.py) - ambos pueden avanzar a PROCESSING. No
-# se permite ningun salto que no este listado aqui (ej. PENDING directo a
-# SHIPPED).
+# Transiciones de estado permitidas; ningún salto fuera de este grafo.
 ALLOWED_TRANSITIONS: dict[OrderStatusEnum, set[OrderStatusEnum]] = {
     OrderStatusEnum.PENDING: {OrderStatusEnum.PROCESSING, OrderStatusEnum.CANCELLED},
     OrderStatusEnum.PAID: {OrderStatusEnum.PROCESSING, OrderStatusEnum.CANCELLED},
@@ -46,15 +42,8 @@ ALLOWED_TRANSITIONS: dict[OrderStatusEnum, set[OrderStatusEnum]] = {
 
 CANCELLABLE_STATUSES = {OrderStatusEnum.PENDING, OrderStatusEnum.PAID}
 
-# Estados que SÍ se cancelan y reembolsan automáticamente cuando se
-# suspende la empresa (ver ALCANCE > Suspensión de empresa - REGLA DE
-# REEMBOLSO). SHIPPED/DELIVERED/CANCELLED quedan fuera a propósito:
-# - SHIPPED: ya salió de la empresa, no hay nada que la empresa
-#   suspendida pueda seguir haciendo con él, y una devolución de un
-#   pedido en camino es un proceso propio (post-venta) que este sistema
-#   no tiene implementado - no se inventa uno acá.
-# - DELIVERED: pedido finalizado, parte del historial.
-# - CANCELLED: ya está cancelado, se ignora (evita reprocesarlo).
+# Estados que se cancelan y reembolsan al suspender la empresa.
+# SHIPPED/DELIVERED/CANCELLED quedan fuera a propósito.
 REFUNDABLE_ON_SUSPENSION_STATUSES = {
     OrderStatusEnum.PENDING,
     OrderStatusEnum.PAID,
@@ -80,19 +69,12 @@ def _to_order_response(order: Order) -> OrderResponse:
 
     buyer = order.user
 
-    # profileImagen se guarda como object_name (sin el bucket "uploads/"
-    # incluido) - mismo patron que MeService.py > get_my_info_service.
+    # profileImagen se guarda como object_name.
     buyer_photo = (
         build_media_url(f"uploads/{buyer.profileImagen}") if buyer.profileImagen else None
     )
 
-    # Snapshot del pedido (ver ModelOrder.py > Order.delivery_*), NUNCA
-    # la direccion en vivo (order.address) - si el usuario la edita o
-    # elimina despues, este pedido no debe cambiar (ver ALCANCE > "el
-    # pedido debe conservar estos datos"). Pedidos de antes de esta
-    # migracion no tienen snapshot (delivery_address es None): se
-    # muestran sin direccion en vez de leer una que ya no representa lo
-    # que realmente se envio.
+    # Snapshot del pedido, nunca la dirección en vivo. Pedidos previos sin snapshot van sin dirección.
     delivery_address = (
         OrderAddressResponse(
             label=order.delivery_label,
@@ -106,9 +88,7 @@ def _to_order_response(order: Order) -> OrderResponse:
         else None
     )
 
-    # Telefono de contacto para la entrega: el de la direccion (mas
-    # relevante para el envio) si existe, si no el del usuario (ver
-    # ALCANCE > Refactor Pedidos Empresa, punto 7 - "Telefono").
+    # Teléfono de la dirección si existe, si no el del usuario.
     buyer_phone = order.delivery_phone or buyer.tell
 
     return OrderResponse(
@@ -131,10 +111,6 @@ def _to_order_response(order: Order) -> OrderResponse:
         deliveryAddress=delivery_address,
     )
 
-
-# ==============================
-# COMPRADOR
-# ==============================
 
 def list_my_orders_service(
     user_id: UUID, role: str, database: Session, page: int = 1, limit: int = 10
@@ -191,10 +167,7 @@ def cancel_my_order_service(
         database.commit()
         database.refresh(order)
 
-        # Correo "Pedido cancelado" (ver ALCANCE > Correos de pedidos).
-        # No hay reembolso de RehniCoin implementado todavía en este
-        # flujo (ver ALCANCE) - se envía sin `refunded_amount`, esa
-        # sección simplemente no aparece en el correo.
+        # Correo "Pedido cancelado". Sin reembolso de RehniCoin en este flujo.
         send_order_status_email(order)
 
         return _to_order_response(order)
@@ -208,10 +181,6 @@ def cancel_my_order_service(
         traceback.print_exc()
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
-
-# ==============================
-# EMPRESA
-# ==============================
 
 def _resolve_company(database: Session, user_id: UUID):
     user = database.query(Users).filter(Users.id == user_id).first()
@@ -230,18 +199,12 @@ def list_company_orders_service(
     statuses: list[str] | None = None,
     search: str | None = None,
 ) -> OrdersPaginatedResponse:
-    """
-    Pedidos de la empresa - soporta filtro por varios estados a la vez
-    (para las pestañas Pendientes/En proceso/Completados del dashboard,
-    ver Orders.tsx) y busqueda por referencia/correo/nombre del comprador
-    (ver ALCANCE > Refactor Pedidos Empresa, punto 6).
-    """
+    """Pedidos de la empresa; filtra por varios estados a la vez y busca por
+    referencia/correo/nombre del comprador."""
 
     company = _resolve_company(database, user_id)
 
-    # Mismo patron que update_company_order_status_service: se convierten
-    # los strings crudos a OrderStatusEnum aca, no en el repositorio -
-    # valores invalidos se ignoran en vez de romper el listado.
+    # Strings crudos -> OrderStatusEnum aquí; los valores inválidos se ignoran.
     valid_statuses: list[OrderStatusEnum] | None = None
 
     if statuses:
@@ -281,19 +244,8 @@ def get_company_order_detail_service(
 def get_company_order_status_counts_service(
     user_id: UUID, database: Session
 ) -> OrderStatusCountsResponse:
-    """
-    Contadores para las pestañas de "Pedidos" (ver ALCANCE > Refactor
-    Pedidos Empresa - pantalla única con filtros: [TODOS] [PENDIENTES]
-    [EN PROCESO] [COMPLETADOS] [CANCELADOS]). Se agrupan aquí, no en el
-    repositorio, para mantener el mapeo pestaña -> OrderStatusEnum en un
-    solo lugar junto al resto de las reglas de pedidos:
-      - PENDIENTES  = PENDING (no incluye PAID: ese estado nunca se
-        asigna en este sistema, ver ModelOrder.py > Order, el pago
-        siempre ocurre en el checkout).
-      - EN PROCESO  = PROCESSING + SHIPPED.
-      - COMPLETADOS = DELIVERED.
-      - CANCELADOS  = CANCELLED.
-    """
+    """Contadores por pestaña: PENDIENTES = PENDING, EN PROCESO = PROCESSING + SHIPPED,
+    COMPLETADOS = DELIVERED, CANCELADOS = CANCELLED."""
 
     company = _resolve_company(database, user_id)
 
@@ -341,11 +293,7 @@ def update_company_order_status_service(
         database.commit()
         database.refresh(order)
 
-        # Correo de cambio de estado (ver ALCANCE > Correos de pedidos) -
-        # cubre PROCESSING/SHIPPED/DELIVERED/CANCELLED (esta misma ruta
-        # es la que usa la empresa para cancelar, ver ALLOWED_TRANSITIONS
-        # más arriba). send_order_status_email no hace nada para
-        # cualquier otro target.
+        # Correo de cambio de estado; no hace nada para targets fuera de PROCESSING/SHIPPED/DELIVERED/CANCELLED.
         send_order_status_email(order)
 
         return _to_order_response(order)
@@ -360,53 +308,13 @@ def update_company_order_status_service(
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
-# ==============================
-# SUSPENSIÓN DE EMPRESA (ADMIN)
-# ==============================
-
 def cancel_and_refund_company_orders_for_suspension(
     database: Session, company: Company, reason: str
 ) -> list[Order]:
-    """
-    Cancela y reembolsa (RehniCoin) los pedidos de `company` que todavía
-    están en PENDING/PAID/PROCESSING (ver REFUNDABLE_ON_SUSPENSION_
-    STATUSES) - se llama desde CompanyService.update_company_status_
-    service SOLO cuando CompanyStatus pasa de true a false (ver ALCANCE >
-    Suspensión de empresa, punto 6: nunca al desbloquear ni al repetir
-    una suspensión ya vigente).
-
-    Relación usada para encontrar los pedidos: Order.company_id
-    (columna directa del pedido, ver ModelOrder.py) - NO se pasa por
-    Product.company_id/OrderItem, un pedido ya sabe a qué empresa
-    pertenece desde el checkout.
-
-    El monto reembolsado es SIEMPRE order.total, el snapshot histórico de
-    lo que el comprador realmente pagó en el checkout (ver
-    CheckoutService.checkout_service) - nunca se recalcula con precios
-    actuales de producto/variante.
-
-    Además del reembolso, se devuelve el stock de cada OrderItem (ver
-    ALCANCE > BUG 1 - suspensión de empresa): checkout_service descontó
-    `variant.stock`/`product.stock` según hubiera o no variante
-    seleccionada (ver CheckoutService.checkout_service) - acá se hace
-    exactamente lo inverso, sobre la MISMA relación que se usó para
-    descontar (OrderItem.variant_id si existe, si no OrderItem.
-    product_id), para no sumarle stock al producto equivocado. Reutiliza
-    el mismo guard de idempotencia de arriba (has_order_been_refunded):
-    como la devolución de stock vive en la misma rama que nunca se
-    reejecuta para un pedido ya reembolsado, no hace falta un segundo
-    mecanismo para evitar sumar stock dos veces.
-
-    NO hace commit ni envía los correos de cancelación - eso lo controla
-    el llamador (ver ALCANCE > punto 5: bloqueo de empresa + cancelación
-    + reembolso deben ser una sola transacción atómica; los correos,
-    igual que en checkout_service/update_company_order_status_service, se
-    envían después, una vez que ya se confirmó que todo se guardó bien).
-
-    Devuelve los pedidos efectivamente cancelados/reembolsados en esta
-    ejecución (para el mensaje de feedback al admin y para poder enviar
-    el correo de cada uno después del commit).
-    """
+    """Cancela y reembolsa (RehniCoin) los pedidos de `company` en PENDING/PAID/PROCESSING.
+    El monto es siempre order.total (snapshot del checkout) y se devuelve el stock de cada
+    ítem por la misma relación con que se descontó. No hace commit ni envía correos: los
+    controla el llamador (todo debe ser una sola transacción). Devuelve los pedidos afectados."""
 
     orders = repo.list_company_orders_by_statuses(
         database, company.id, REFUNDABLE_ON_SUSPENSION_STATUSES
@@ -415,15 +323,8 @@ def cancel_and_refund_company_orders_for_suspension(
     refunded_orders: list[Order] = []
 
     for order in orders:
-        # Doble reembolso (ver ALCANCE > punto 4, CRÍTICO): nunca se
-        # confía solo en order.status == CANCELLED para decidir si ya se
-        # reembolsó - un pedido pudo cancelarse por otro motivo sin
-        # pasar por acá. Se verifica el ledger de RehniCoin (ver
-        # WalletRepository.has_order_been_refunded), que es lo único que
-        # de verdad certifica que YA se acreditó el saldo para este
-        # pedido puntual. Si la suspensión se vuelve a ejecutar (empresa
-        # ya estaba en false, o una re-ejecución cualquiera), este
-        # `continue` es lo que hace que el proceso sea idempotente.
+        # Idempotencia: se verifica el ledger de RehniCoin (has_order_been_refunded),
+        # no order.status, para no reembolsar dos veces.
         if wallet_repo.has_order_been_refunded(database, order.id):
             continue
 
@@ -440,9 +341,7 @@ def cancel_and_refund_company_orders_for_suspension(
 
         order.status = OrderStatusEnum.CANCELLED
 
-        # Devolver stock (ver ALCANCE > BUG 1): misma relación que
-        # descontó checkout_service - variante si el ítem tenía una
-        # seleccionada, si no el producto base.
+        # Devolver stock por la misma relación que descontó el checkout: variante o producto base.
         for item in order.items:
             if item.variant_id:
                 variant = (

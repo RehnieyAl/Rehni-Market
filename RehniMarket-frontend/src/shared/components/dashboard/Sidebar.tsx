@@ -43,12 +43,6 @@ export default function Sidebar({
 
   const { logout } = useAuth();
 
-  /*
-   * ==========================
-   * CERRAR SESIÓN
-   * ==========================
-   */
-
   const handleLogout = () => {
     logout();
 
@@ -63,10 +57,6 @@ export default function Sidebar({
           : "w-64"
       }`}
     >
-
-      {/* ========================= */}
-      {/* HEADER */}
-      {/* ========================= */}
 
       <div
         className={`flex h-20 items-center border-b border-gray-100 px-3 ${
@@ -105,10 +95,6 @@ export default function Sidebar({
 
       </div>
 
-      {/* ========================= */}
-      {/* NAVEGACIÓN */}
-      {/* ========================= */}
-
       <nav className="flex-1 px-3 py-6">
         {items.map((item) => (
           <SidebarItem
@@ -126,13 +112,8 @@ export default function Sidebar({
         ))}
       </nav>
 
-      {/* ========================= */}
-      {/* ACCIONES INFERIORES */}
-      {/* ========================= */}
-
       <div className="border-t border-gray-200 p-3">
 
-        {/* REGRESAR */}
         <Link
           to="/"
           title={
@@ -155,7 +136,6 @@ export default function Sidebar({
           )}
         </Link>
 
-        {/* CERRAR SESIÓN */}
         <SidebarItem
           icon={
             <LogOut size={22} />
@@ -170,10 +150,6 @@ export default function Sidebar({
     </aside>
   );
 }
-
-/* ========================= */
-/* SIDEBAR ITEM */
-/* ========================= */
 
 interface SidebarItemProps {
   icon: ReactNode;

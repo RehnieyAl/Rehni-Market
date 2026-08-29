@@ -12,11 +12,7 @@ interface RechargeRequestModalProps {
   onClose: () => void;
 }
 
-// Montos de referencia (ver ALCANCE > FASE 4): no existe ningún valor
-// mínimo/máximo/preset definido hoy en el backend
-// (RechargeWalletRequest.amount solo exige > 0, ver SchemaWallet.py) ni
-// en ningún otro punto del frontend, así que se usan tal cual los de
-// referencia del enunciado - no hay una regla real distinta que seguir.
+// Montos de referencia; el backend solo exige amount > 0.
 const PRESET_AMOUNTS = [10000, 20000, 50000, 100000];
 
 function validateAmount(rawValue: string): string | null {
@@ -24,9 +20,7 @@ function validateAmount(rawValue: string): string | null {
 
   if (!value) return "Ingresa la cantidad de RehniCoins que quieres solicitar.";
 
-  // Entero positivo únicamente: rechaza no numéricos, negativos (el "-"
-  // no matchea) y decimales de una sola vez - mismo criterio "sin
-  // decimales" que ya usa formatPrice en el resto de RehniMarket.
+  // Solo entero positivo: rechaza no numéricos, negativos y decimales.
   if (!/^\d+$/.test(value)) return "Ingresa solo números, sin letras ni símbolos.";
 
   if (Number(value) <= 0) return "La cantidad debe ser mayor a cero.";
@@ -34,12 +28,8 @@ function validateAmount(rawValue: string): string | null {
   return null;
 }
 
-// Solicitud de recarga vía WhatsApp (ver ALCANCE > módulo RehniCoin,
-// comprador): a diferencia de RechargeWalletModal.tsx (panel admin, que
-// SÍ acredita saldo llamando a POST /wallet/recharge), este modal no
-// llama a ningún endpoint - solo arma un mensaje y abre WhatsApp. El
-// saldo lo sigue acreditando manualmente un admin/owner desde ese mismo
-// flujo ya existente, después de verificar el pago fuera de la app.
+// Solicitud de recarga vía WhatsApp: no llama a ningún endpoint, solo arma un mensaje y abre WhatsApp.
+// El saldo lo acredita luego un admin/owner tras verificar el pago.
 export default function RechargeRequestModal({
   isOpen,
   userName,
@@ -74,9 +64,7 @@ export default function RechargeRequestModal({
       userEmail,
     });
 
-    // VITE_REHNIMARKET_WHATSAPP sin configurar: no se abre ninguna URL
-    // rota, se avisa por el sistema global de alertas (ver ALCANCE >
-    // FASE 16).
+    // VITE_REHNIMARKET_WHATSAPP sin configurar: se avisa por alerta en vez de abrir una URL rota.
     if (!url) {
       showAlert(
         "error",
@@ -87,8 +75,7 @@ export default function RechargeRequestModal({
 
     window.open(url, "_blank", "noopener,noreferrer");
 
-    // Nunca "Recarga exitosa": acá solo se abrió WhatsApp, el saldo no
-    // cambió (ver ALCANCE > FASE 9).
+    // Nunca "Recarga exitosa": aquí solo se abrió WhatsApp, el saldo no cambió.
     showAlert("success", "Solicitud de recarga preparada. Continúa la conversación en WhatsApp.");
 
     handleClose();

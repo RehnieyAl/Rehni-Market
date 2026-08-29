@@ -9,8 +9,7 @@ export interface CatalogFormValues {
   displayOrder: number;
   isActive: boolean;
   image: File | null;
-  // Solo aplica en edición: elimina la imagen actual sin reemplazarla.
-  // Se ignora si image también viene seteado.
+  // Solo en edición: elimina la imagen actual; se ignora si llega una nueva.
   removeImage: boolean;
 }
 
@@ -22,11 +21,7 @@ interface CatalogFormModalProps {
   onSubmit: (values: CatalogFormValues) => void;
 }
 
-// El padre monta este componente con una `key` distinta cada vez que se
-// abre (ver Catalogs.tsx), así que el valor inicial de useState ya llega
-// "fresco" en cada apertura sin necesitar un efecto para resetearlo
-// (mismo patrón que AdvertisementFormModal.tsx, de donde se reutiliza la
-// UI de subida de imagen).
+// El padre lo monta con una `key` distinta en cada apertura, así useState arranca fresco sin efecto de reset.
 export default function CatalogFormModal({
   isOpen,
   catalog,

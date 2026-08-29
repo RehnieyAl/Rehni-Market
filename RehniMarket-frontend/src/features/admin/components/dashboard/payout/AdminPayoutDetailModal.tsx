@@ -16,15 +16,11 @@ interface AdminPayoutDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   // Se llama tras marcar como pagada, para que la lista/tabs detrás se
-  // refresquen (mismo criterio que onStatusChanged en OrderDetailModal.tsx).
+  // refresquen.
   onPaid: () => void;
 }
 
-// Detalle de liquidación del lado admin (ver ALCANCE > Módulo de
-// liquidaciones, Fase 7) - reutiliza el shell de
-// features/payouts/components/PayoutDetailModal.tsx y le agrega la única
-// acción exclusiva de admin: marcar como pagada (PATCH
-// /admin/payouts/{id}/pay, dispara el correo automático en el backend).
+// Detalle de liquidación (admin): reutiliza PayoutDetailModal y agrega la acción "marcar como pagada".
 export default function AdminPayoutDetailModal({
   payoutId,
   isOpen,

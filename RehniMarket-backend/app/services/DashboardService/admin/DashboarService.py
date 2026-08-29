@@ -84,10 +84,6 @@ def get_recent_activities_service(
         title = ""
         description = ""
 
-        # ==========================================
-        # USUARIOS
-        # ==========================================
-
         if action == "user_created":
             title = "Nuevo usuario registrado"
 
@@ -166,10 +162,6 @@ def get_recent_activities_service(
                     "Un usuario fue eliminado."
                 )
 
-        # ==========================================
-        # EMPRESAS
-        # ==========================================
-
         elif action == "company_created":
             title = "Nueva empresa registrada"
 
@@ -240,10 +232,6 @@ def get_recent_activities_service(
             description = (
                 "Se realizó una acción administrativa."
             )
-
-        # ==========================================
-        # ADMINISTRADOR QUE REALIZÓ LA ACCIÓN
-        # ==========================================
 
         if activity.admin:
             description = (

@@ -1,4 +1,4 @@
-// Skeleton de la vista previa financiera (ver GeneratePayoutModal.tsx) -
+// Skeleton de la vista previa financiera -
 // mismo radio/spacing que el resto de skeletons del módulo (ver
 // features/payouts/components/PayoutRowSkeleton.tsx).
 export default function PayoutPreviewSkeleton() {

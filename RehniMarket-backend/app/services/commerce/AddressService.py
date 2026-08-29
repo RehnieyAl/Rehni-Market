@@ -28,11 +28,7 @@ def _require_buyer(role: str):
 
 
 def _to_address_response(address: Address) -> AddressResponse:
-    # No se usa AddressResponse.model_validate(address): from_attributes
-    # solo lee atributos con el MISMO nombre, y el modelo es snake_case
-    # (postal_code/is_default/created_at) mientras el schema es camelCase
-    # (postalCode/isDefault/createdAt) - hay que mapearlos a mano, mismo
-    # patron ya usado en AdminUserResponse (UserService.py).
+    # Mapeo a mano: modelo snake_case, schema camelCase.
     return AddressResponse(
         id=address.id,
         label=address.label,
@@ -65,8 +61,7 @@ def create_address_service(
     try:
         existing = repo.list_addresses(database, user_id)
 
-        # La primera direccion que registra un usuario queda predeterminada
-        # automaticamente, sin importar lo que haya enviado el formulario.
+        # La primera dirección queda predeterminada automáticamente.
         is_default = data.isDefault or len(existing) == 0
 
         if is_default:
@@ -176,10 +171,7 @@ def delete_address_service(
         repo.delete_address(database, address)
         database.flush()
 
-        # Si se elimino la predeterminada y quedan otras, se promueve la
-        # mas reciente - un usuario con direcciones nunca debe quedarse
-        # sin ninguna predeterminada (mismo criterio que la imagen
-        # principal de producto/variante).
+        # Si se eliminó la predeterminada y quedan otras, se promueve la más reciente.
         if was_default:
             remaining = repo.list_addresses(database, user_id)
 

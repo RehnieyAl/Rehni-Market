@@ -1,19 +1,5 @@
-"""
-PayoutService: único servicio responsable del módulo de liquidaciones
-mensuales (ver ALCANCE > Módulo de liquidaciones, Fase 4). Reutilizable
-por los routers de empresa (BankAccountRouter no, ese es CRUD aparte) y
-admin (ver CompanyPayoutRouter.py / AdminPayoutRouter.py) - ninguno de los
-dos routers calcula nada por su cuenta, solo llaman a las funciones de
-acá.
-
-Responsabilidades (ver ALCANCE):
-- obtener ventas válidas       -> OrderRepository.sum_valid_company_sales
-- calcular comisión / neto     -> _calculate_amounts
-- generar liquidación          -> generate_company_payout_service
-- asociar cuenta bancaria      -> generate_company_payout_service (cuenta
-                                   predeterminada de la empresa)
-- registrar movimiento RehniCoin -> _create_rehnicoin_movement
-"""
+"""Único servicio del módulo de liquidaciones mensuales. Los routers de empresa
+y admin solo llaman a estas funciones, no calculan nada por su cuenta."""
 
 import calendar
 import traceback
@@ -73,13 +59,7 @@ def _get_company_or_404(database: Session, company_id: UUID) -> Company:
 
 
 def _month_period(month_start: date) -> tuple[date, date]:
-    """
-    (period_start, period_end) de un mes calendario completo a partir de
-    su primer día - mismo criterio que monthToPeriod() del frontend
-    (GeneratePayoutModal.tsx), pero ahora resuelto acá porque
-    list_available_payout_periods_service es quien decide qué meses
-    existen, no el frontend.
-    """
+    """(period_start, period_end) del mes calendario que empieza en `month_start`."""
 
     last_day = calendar.monthrange(month_start.year, month_start.month)[1]
 
@@ -87,10 +67,7 @@ def _month_period(month_start: date) -> tuple[date, date]:
 
 
 def _calculate_amounts(gross_sales: Decimal) -> tuple[Decimal, Decimal]:
-    """
-    (commission_amount, net_amount) a partir de gross_sales y la comisión
-    configurada (ver app/core/PayoutConfig.py - nunca un 0.05 suelto acá).
-    """
+    """(commission_amount, net_amount) con la comisión de PayoutConfig."""
 
     commission_amount = (gross_sales * COMMISSION_PERCENTAGE).quantize(Decimal("0.01"))
     net_amount = gross_sales - commission_amount
@@ -101,11 +78,7 @@ def _calculate_amounts(gross_sales: Decimal) -> tuple[Decimal, Decimal]:
 def _create_rehnicoin_movement(
     database: Session, company_id: UUID, payout_id: UUID, net_amount: Decimal
 ) -> RehniCoinMovement:
-    """
-    Registra la conversión del neto de la liquidación a RehniCoin, SOLO
-    como auditoría (ver ModelRehniCoinMovement.py) - no acredita el Wallet
-    real de ningún usuario.
-    """
+    """Registra la conversión del neto a RehniCoin como auditoría; no acredita ningún Wallet real."""
 
     movement = RehniCoinMovement(
         company_id=company_id,
@@ -120,14 +93,8 @@ def _create_rehnicoin_movement(
 
 @dataclass
 class _PayoutCalculation:
-    """
-    Resultado de validar + calcular una liquidación, SIN persistir nada
-    (ver _resolve_payout_preview) - tanto generate_company_payout_service
-    como get_payout_preview_service parten de este mismo objeto, así el
-    cálculo (y las validaciones que lo condicionan) viven en un solo
-    lugar (ver ALCANCE > mejora "vista previa", regla "no duplicar
-    cálculos").
-    """
+    """Resultado de validar + calcular una liquidación sin persistir; lo comparten
+    generate_company_payout_service y get_payout_preview_service."""
 
     company: Company
     bank_account: CompanyBankAccount
@@ -139,17 +106,8 @@ class _PayoutCalculation:
 def _resolve_payout_preview(
     database: Session, company_id: UUID, period_start: date, period_end: date
 ) -> _PayoutCalculation:
-    """
-    Corre EXACTAMENTE las mismas validaciones y el mismo cálculo que
-    generate_company_payout_service (existencia de la empresa, liquidación
-    duplicada para el periodo, cuenta bancaria predeterminada, ventas
-    válidas > 0, comisión/neto) pero sin crear ni comitear nada - se usa
-    tanto para generar de verdad como para la vista previa
-    (GET /admin/payouts/preview, ver get_payout_preview_service). Lanza
-    los mismos api_error de siempre (PAYOUT_ALREADY_EXISTS/
-    PAYOUT_NO_BANK_ACCOUNT/PAYOUT_NO_VALID_SALES) - el frontend ya sabe
-    mostrar un mensaje amigable para cada uno (ver ErrorCode.ts).
-    """
+    """Validaciones y cálculo de una liquidación (empresa, duplicado, cuenta por defecto,
+    ventas > 0, comisión/neto) sin crear ni comitear nada."""
 
     if period_end < period_start:
         api_error(422, ErrorCodes.PAYOUT_INVALID_PERIOD, "El periodo seleccionado no es válido.")
@@ -233,9 +191,6 @@ def _to_response(payout: CompanyPayout) -> CompanyPayoutResponse:
     )
 
 
-# ==============================
-# GENERAR LIQUIDACIÓN (admin/owner - ver AdminPayoutRouter.py)
-# ==============================
 def generate_company_payout_service(
     data: GeneratePayoutRequest, database: Session
 ) -> CompanyPayoutResponse:
@@ -275,11 +230,7 @@ def generate_company_payout_service(
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
-# ==============================
-# PERIODOS DISPONIBLES (admin/owner) - ver ALCANCE > selector "Mes a
-# liquidar" ya no es texto libre, solo ofrece meses reales con ventas
-# pendientes de liquidar.
-# ==============================
+# Periodos disponibles: solo meses con ventas DELIVERED sin liquidación generada.
 def list_available_payout_periods_service(
     company_id: UUID, database: Session
 ) -> list[PayoutAvailablePeriodResponse]:
@@ -292,8 +243,7 @@ def list_available_payout_periods_service(
     for month_start in month_starts:
         period_start, period_end = _month_period(month_start)
 
-        # Ya liquidado para ese periodo exacto (cualquier estado, no solo
-        # PAID) - no debe volver a ofrecerse (ver ALCANCE > regla 4).
+        # Ya liquidado para ese periodo exacto (cualquier estado): no se vuelve a ofrecer.
         if repo.get_payout_by_period(database, company.id, period_start, period_end):
             continue
 
@@ -302,12 +252,7 @@ def list_available_payout_periods_service(
     return periods
 
 
-# ==============================
-# VISTA PREVIA (admin/owner) - ver ALCANCE > mejora "vista previa" del
-# GeneratePayoutModal. Mismas validaciones/cálculo que generate_company_
-# payout_service (via _resolve_payout_preview), CERO escritura en BD -
-# ni siquiera abre una transacción propia, es de solo lectura.
-# ==============================
+# Vista previa: mismas validaciones/cálculo que generar, solo lectura.
 def get_payout_preview_service(
     company_id: UUID, period_start: date, period_end: date, database: Session
 ) -> PayoutPreviewResponse:
@@ -326,9 +271,6 @@ def get_payout_preview_service(
     )
 
 
-# ==============================
-# MARCAR COMO PAGADA (admin/owner)
-# ==============================
 def mark_payout_paid_service(payout_id: UUID, database: Session) -> CompanyPayoutResponse:
     try:
         payout = repo.get_payout_by_id(database, payout_id)
@@ -347,11 +289,7 @@ def mark_payout_paid_service(payout_id: UUID, database: Session) -> CompanyPayou
 
         payout = repo.get_payout_by_id(database, payout.id)
 
-        # Correo automático al pasar a PAID (ver ALCANCE > Fase 5) - sin
-        # try/except: send_email nunca revienta el flujo que lo llama (ver
-        # EmailService.py), así que un error de SMTP nunca puede tumbar el
-        # cambio de estado que ya se guardó correctamente (mismo criterio
-        # que OrderEmailService.py).
+        # Correo al pasar a PAID; send_email nunca revienta el flujo que lo llama.
         send_payout_processed_email(payout)
 
         return _to_response(payout)
@@ -366,9 +304,6 @@ def mark_payout_paid_service(payout_id: UUID, database: Session) -> CompanyPayou
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
-# ==============================
-# EMPRESA (ver ALCANCE > Fase 6)
-# ==============================
 def list_company_payouts_service(
     user_id: UUID, database: Session, page: int = 1, limit: int = 10
 ) -> CompanyPayoutsPaginatedResponse:
@@ -418,9 +353,6 @@ def get_company_balance_service(user_id: UUID, database: Session) -> CompanyBala
     )
 
 
-# ==============================
-# ADMIN (ver ALCANCE > Fase 7)
-# ==============================
 def list_admin_payouts_service(
     database: Session, page: int = 1, limit: int = 10, status: str | None = None
 ) -> CompanyPayoutsPaginatedResponse:

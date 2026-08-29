@@ -14,11 +14,7 @@ import type { PublicCatalog } from "@/features/public/products/types/response";
 import type { PublicProductCard } from "@/features/public/home/types/response";
 import type { AdminCompanyResponse } from "@/features/admin/types/response";
 
-// Etiqueta + configuración sugerida por tipo (ver ALCANCE > Anuncios
-// dinámicos): PROMOTION/BLACK_FRIDAY/CYBER_DAYS comparten exactamente el
-// mismo campo (minimumDiscount) - solo cambia qué se le sugiere al admin
-// como umbral típico, no la lógica (esa vive una sola vez en el backend,
-// ver AdvertisementTargeting.py).
+// Etiqueta + umbral sugerido por tipo. PROMOTION/BLACK_FRIDAY/CYBER_DAYS comparten el campo minimumDiscount.
 const TARGET_TYPE_OPTIONS: { value: AdvertisementTargetType; label: string }[] = [
   { value: "PRODUCT", label: "Producto específico" },
   { value: "CATEGORY", label: "Categoría" },
@@ -40,12 +36,11 @@ export interface AdvertisementFormValues {
   isActive: boolean;
   // Desktop/tablet
   image: File | null;
-  // Mobile - opcional
+  // Móvil (opcional)
   mobileImage: File | null;
-  // Solo aplica en edición: elimina la imagen móvil actual sin
-  // reemplazarla. Se ignora si mobileImage también viene seteado.
+  // Solo en edición: elimina la imagen móvil actual; se ignora si llega una nueva.
   removeMobileImage: boolean;
-  // Anuncios dinámicos por reglas (ver ALCANCE) - "" = manual clásico.
+  // "" = anuncio manual clásico.
   targetType: AdvertisementTargetType | "";
   targetProductId: string;
   targetCatalogId: string;
@@ -53,8 +48,7 @@ export interface AdvertisementFormValues {
   minimumDiscount: number | null;
   maximumStock: number | null;
   maxAgeDays: number | null;
-  // Solo en edición: pasar de un tipo dinámico de vuelta a manual
-  // clásico (ver UpdateAdvertisementRequest.clear_target).
+  // Solo en edición: volver de un tipo dinámico a manual clásico.
   clearTarget: boolean;
 }
 
@@ -66,10 +60,7 @@ interface AdvertisementFormModalProps {
   onSubmit: (values: AdvertisementFormValues) => void;
 }
 
-// El padre monta este componente con una `key` distinta cada vez que se
-// abre (ver Advertisements.tsx), así que el valor inicial de useState ya
-// llega "fresco" en cada apertura sin necesitar un efecto para resetearlo
-// (mismo patrón que ColorFormModal.tsx).
+// El padre lo monta con una `key` distinta en cada apertura, así useState arranca fresco sin efecto de reset.
 export default function AdvertisementFormModal({
   isOpen,
   advertisement,
@@ -93,8 +84,7 @@ export default function AdvertisementFormModal({
   );
   const [removeMobileImage, setRemoveMobileImage] = useState(false);
 
-  // Anuncios dinámicos por reglas (ver ALCANCE) - "" = manual clásico
-  // (mismo anuncio de siempre, con button_link editable a mano).
+  // "" = manual clásico, con button_link editable a mano.
   const [targetType, setTargetType] = useState<AdvertisementTargetType | "">(
     advertisement?.target_type ?? "",
   );
@@ -107,15 +97,10 @@ export default function AdvertisementFormModal({
   const [maximumStock, setMaximumStock] = useState(advertisement?.maximum_stock?.toString() ?? "");
   const [maxAgeDays, setMaxAgeDays] = useState(advertisement?.max_age_days?.toString() ?? "");
 
-  // Catálogos reales para el selector de CATEGORY (ver ALCANCE > "No
-  // utilizar datos hardcodeados") - lista corta, se carga completa una
-  // sola vez.
+  // Catálogos reales para el selector de CATEGORY; se cargan completos una vez.
   const [catalogs, setCatalogs] = useState<PublicCatalog[]>([]);
 
-  // Buscador de producto (PRODUCT) y empresa (COMPANY) - mismo patrón de
-  // "buscar y elegir de una lista" que ya usa el navbar público (ver
-  // navbar.tsx), reutilizando los endpoints ya existentes en vez de
-  // crear uno nuevo solo para este selector.
+  // Buscador de producto (PRODUCT) y empresa (COMPANY), sobre los endpoints ya existentes.
   const [productQuery, setProductQuery] = useState("");
   const [productResults, setProductResults] = useState<PublicProductCard[]>([]);
   const [selectedProductLabel, setSelectedProductLabel] = useState("");
@@ -129,10 +114,7 @@ export default function AdvertisementFormModal({
 
   const isEditing = advertisement !== null;
 
-  // Al editar un anuncio que ya apunta a un producto/empresa puntual,
-  // solo se conoce el id (ver AdminAdvertisementResponse) - se resuelve
-  // el nombre una vez para mostrarlo en el buscador en vez de un id
-  // vacío/confuso.
+  // Al editar un anuncio con target puntual solo se conoce el id; se resuelve el nombre para mostrarlo.
   useEffect(() => {
     if (advertisement?.target_type === "PRODUCT" && advertisement.target_product_id) {
       getPublicProductDetail(advertisement.target_product_id)
@@ -156,11 +138,7 @@ export default function AdvertisementFormModal({
       .catch((error) => console.error("Error cargando categorías:", error));
   }, [targetType]);
 
-  // Debounce de la búsqueda de producto (mismo criterio de 300ms que el
-  // resto del dashboard, ver Products.tsx). El caso "vaciar resultados"
-  // también se difiere con setTimeout (mismo patrón que el resto del
-  // proyecto, ver Orders.tsx) para no hacer setState de forma síncrona
-  // dentro del efecto.
+  // Debounce 300ms de la búsqueda de producto.
   useEffect(() => {
     if (targetType !== "PRODUCT" || !productQuery.trim()) {
       const timeout = setTimeout(() => setProductResults([]));
@@ -222,9 +200,7 @@ export default function AdvertisementFormModal({
     }
   };
 
-  // Requisitos mínimos por tipo (ver ALCANCE > "según el tipo mostrar
-  // campos dinámicos") - evita enviar un anuncio "dinámico" a medio
-  // configurar que el backend igual rechazaría.
+  // Requisitos mínimos por tipo: evita enviar un anuncio dinámico a medio configurar.
   const isTargetValid = (() => {
     switch (targetType) {
       case "PRODUCT":
@@ -253,9 +229,7 @@ export default function AdvertisementFormModal({
 
     if (!isValid) return;
 
-    // Solo la config del tipo elegido viaja - los campos de los otros
-    // tipos quedan sin usar (ver AdvertisementTargeting.py, que solo lee
-    // los que aplican a `targetType`).
+    // Solo viaja la config del tipo elegido; los campos de los otros tipos quedan sin usar.
     onSubmit({
       title: title.trim(),
       description: description.trim(),
@@ -273,8 +247,7 @@ export default function AdvertisementFormModal({
       minimumDiscount: minimumDiscount ? Number(minimumDiscount) : null,
       maximumStock: maximumStock ? Number(maximumStock) : null,
       maxAgeDays: maxAgeDays ? Number(maxAgeDays) : null,
-      // Solo tiene efecto si esta edición pasó de un tipo dinámico a
-      // manual clásico (ver UpdateAdvertisementRequest.clear_target).
+      // Solo tiene efecto si la edición pasó de un tipo dinámico a manual clásico.
       clearTarget: isEditing && !!advertisement?.target_type && targetType === "",
     });
   };
@@ -432,10 +405,7 @@ export default function AdvertisementFormModal({
                 value={targetType}
                 onChange={(event) => {
                   setTargetType(event.target.value as AdvertisementTargetType | "");
-                  // Cambiar de tipo invalida la config anterior (ej. un
-                  // targetProductId no tiene sentido si ahora es
-                  // CATEGORY) - se limpia para no enviar una mezcla
-                  // inconsistente.
+                  // Cambiar de tipo limpia la config anterior para no mezclar.
                   setTargetProductId("");
                   setTargetCatalogId("");
                   setTargetCompanyId("");
@@ -458,7 +428,6 @@ export default function AdvertisementFormModal({
               </select>
             </div>
 
-            {/* CAMPOS DINÁMICOS SEGÚN EL TIPO (ver ALCANCE) */}
             {targetType === "PRODUCT" && (
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-700">Producto</label>
@@ -682,11 +651,7 @@ export default function AdvertisementFormModal({
                   type="number"
                   value={order}
                   onChange={(event) => {
-                    // type="number" ya restringe casi todo, pero valores
-                    // extremos (ej. notación científica "1e400") pueden
-                    // producir Infinity - nunca se guarda en el estado
-                    // (ver ValueError: "Out of range float values are not
-                    // JSON compliant").
+                    // type="number" no frena "1e400" -> Infinity; se descarta antes de guardarlo.
                     const parsed = Number(event.target.value);
                     setOrder(Number.isFinite(parsed) ? parsed : 0);
                   }}
@@ -740,8 +705,7 @@ export default function AdvertisementFormModal({
   );
 }
 
-// Chip de "ya elegido" para PRODUCT/COMPANY - reemplaza al buscador una
-// vez que hay una selección, con una X para volver a buscar.
+// Chip de "ya elegido" para PRODUCT/COMPANY, con una X para volver a buscar.
 function SelectedChip({ label, onClear }: { label: string; onClear: () => void }) {
   return (
     <div className="flex items-center justify-between rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-900">
@@ -764,9 +728,7 @@ interface SearchPickerResult {
   sublabel?: string;
 }
 
-// Buscador reutilizado por PRODUCT y COMPANY (ver ALCANCE > "sin
-// duplicar lógica") - mismo patrón de buscar-y-elegir que ya usa el
-// navbar público, sobre los endpoints ya existentes.
+// Buscador reutilizado por PRODUCT y COMPANY, sobre los endpoints ya existentes.
 function SearchPicker({
   query,
   onQueryChange,

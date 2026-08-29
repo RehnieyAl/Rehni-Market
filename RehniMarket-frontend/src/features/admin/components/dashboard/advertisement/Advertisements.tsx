@@ -70,7 +70,7 @@ export default function Advertisements() {
   const sortAdvertisements = (items: AdminAdvertisementResponse[]) =>
     [...items].sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
 
-  // Config del target elegido (ver ALCANCE > Anuncios dinámicos) - un
+  // Config del target elegido - un
   // solo lugar que arma estos 7 campos, reutilizado por create/update en
   // vez de repetirlos en las dos ramas de abajo.
   const buildTargetFields = (values: AdvertisementFormValues) =>

@@ -21,10 +21,7 @@ from app.services.commerce.ReviewService import (
 router = APIRouter(prefix="/reviews", tags=["reviews"])
 
 
-# Estatica ("/reviews/eligibility/{product_id}") - va antes de
-# "/reviews/{review_id}" para que FastAPI no intente interpretar
-# "eligibility" como un UUID (mismo criterio que
-# CompanyRouter.py > /dashboard/orders/status-counts).
+# Ruta estática: va antes de "/reviews/{review_id}" para que "eligibility" no se lea como UUID.
 @router.get("/eligibility/{product_id}", response_model=ReviewEligibilityResponse)
 def get_review_eligibility(request: Request, product_id: UUID, database: Session = Depends(get_db)):
     return check_review_eligibility_service(

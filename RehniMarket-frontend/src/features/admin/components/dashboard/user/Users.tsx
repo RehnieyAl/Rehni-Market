@@ -24,8 +24,7 @@ import type { AdminUserResponse } from "@/features/admin/types/response";
 import { useRole } from "@/hooks/useRole";
 
 export default function Users() {
-  // Solo lectura: el backend es quien realmente hace cumplir estas
-  // reglas. Aquí se usa únicamente para mostrar/ocultar acciones.
+  // Solo para mostrar/ocultar acciones; el backend hace cumplir las reglas.
   const { isOwner } = useRole();
 
   const [users, setUsers] = useState<AdminUserResponse[]>([]);
@@ -55,10 +54,6 @@ export default function Users() {
   const [rechargeModalOpen, setRechargeModalOpen] = useState(false);
   const [selectedRechargeUser, setSelectedRechargeUser] =
     useState<AdminUserResponse | null>(null);
-
-  // =========================
-  // CARGA INICIAL
-  // =========================
 
   useEffect(() => {
     let cancelled = false;
@@ -99,10 +94,6 @@ export default function Users() {
     };
   }, []);
 
-  // =========================
-  // CARGAR USUARIOS
-  // =========================
-
   const loadUsers = async (
     cursor?: string,
     beforeCursor?: string,
@@ -130,10 +121,6 @@ export default function Users() {
     }
   };
 
-  // =========================
-  // BUSCAR
-  // =========================
-
   const handleSearch = async (value: string) => {
     setSearch(value);
 
@@ -143,10 +130,6 @@ export default function Users() {
       value,
     );
   };
-
-  // =========================
-  // PAGINACIÓN
-  // =========================
 
   const handleNextPage = async () => {
     if (!nextCursor || loading) return;
@@ -167,10 +150,6 @@ export default function Users() {
       search,
     );
   };
-
-  // =========================
-  // ESTADO
-  // =========================
 
   const handleOpenStatusModal = (
     user: AdminUserResponse,
@@ -217,14 +196,7 @@ export default function Users() {
     }
   };
 
-  // =========================
-  // ELIMINAR
-  // =========================
-
-  // Las cuentas owner nunca se pueden eliminar desde aquí (ni siquiera
-  // otro owner). Las cuentas admin solo pueden eliminarse si quien opera
-  // es owner (gestionar administradores es una capacidad exclusiva de
-  // OWNER). El backend aplica exactamente esta misma regla.
+  // Owner no se elimina desde aquí; admin solo lo elimina un owner. El backend aplica lo mismo.
   const canDeleteUser = (user: AdminUserResponse) => {
     if (user.role === "owner") return false;
     if (user.role === "admin") return isOwner;
@@ -250,7 +222,6 @@ export default function Users() {
   const handleConfirmDelete = async () => {
     if (!selectedDeleteUser) return;
 
-    // Protección adicional
     if (!canDeleteUser(selectedDeleteUser)) {
       return;
     }
@@ -283,9 +254,6 @@ export default function Users() {
 
   return (
     <div className="shrink-0">
-      {/* =========================
-          ENCABEZADO
-      ========================= */}
 
       <div className="shrink-0">
         <h1 className="text-2xl font-bold text-gray-900">
@@ -297,10 +265,6 @@ export default function Users() {
           en la plataforma.
         </p>
       </div>
-
-      {/* =========================
-          BUSCADOR
-      ========================= */}
 
       <section className="mt-6 shrink-0 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         <div className="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-2.5">
@@ -321,12 +285,7 @@ export default function Users() {
         </div>
       </section>
 
-      {/* =========================
-          TABLA
-      ========================= */}
-
       <section className="mt-6 flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-        {/* HEADER */}
 
         <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-5 py-4">
           <div>
@@ -340,11 +299,6 @@ export default function Users() {
             </p>
           </div>
         </div>
-
-        {/* =========================
-            CONTENEDOR DE TABLA
-            SCROLL SOLO AQUÍ
-        ========================= */}
 
         <div className="h-[360px] overflow-y-auto overflow-x-auto">
           <table className="w-full min-w-[900px]">
@@ -405,7 +359,6 @@ export default function Users() {
                     key={user.id}
                     className="border-b border-gray-100 last:border-0 hover:bg-gray-50"
                   >
-                    {/* USUARIO */}
 
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
@@ -429,19 +382,13 @@ export default function Users() {
                       </div>
                     </td>
 
-                    {/* CORREO */}
-
                     <td className="px-5 py-3 text-sm text-gray-600">
                       {user.email}
                     </td>
 
-                    {/* TELÉFONO */}
-
                     <td className="px-5 py-3 text-sm text-gray-600">
                       {user.tell}
                     </td>
-
-                    {/* ROL */}
 
                     <td className="px-5 py-3">
                       <RoleStatus
@@ -449,15 +396,11 @@ export default function Users() {
                       />
                     </td>
 
-                    {/* ESTADO */}
-
                     <td className="px-5 py-3">
                       <UserStatus
                         active={user.isActive}
                       />
                     </td>
-
-                    {/* REGISTRO */}
 
                     <td className="px-5 py-3 text-sm text-gray-500">
                       {new Date(
@@ -467,11 +410,8 @@ export default function Users() {
                       )}
                     </td>
 
-                    {/* ACCIONES */}
-
                     <td className="px-5 py-3">
                       <div className="flex items-center justify-center gap-1">
-                        {/* VER */}
 
                         <button
                           type="button"
@@ -485,8 +425,6 @@ export default function Users() {
                         >
                           <Eye size={18} />
                         </button>
-
-                        {/* BLOQUEAR / DESBLOQUEAR */}
 
                         {(user.role !== "owner" || isOwner) && (
                           <button
@@ -531,8 +469,6 @@ export default function Users() {
                           </button>
                         )}
 
-                        {/* ELIMINAR */}
-
                         {canDeleteUser(user) && (
                           <button
                             type="button"
@@ -556,10 +492,6 @@ export default function Users() {
             </tbody>
           </table>
         </div>
-
-        {/* =========================
-            PAGINACIÓN
-        ========================= */}
 
         <div className="flex shrink-0 items-center justify-between border-t border-gray-200 px-5 py-3">
           <span className="text-xs text-gray-500">
@@ -592,10 +524,6 @@ export default function Users() {
         </div>
       </section>
 
-      {/* =========================
-          MODAL DETALLE
-      ========================= */}
-
       <UserDetailModal
         userId={selectedUserId}
         isOpen={selectedUserId !== null}
@@ -603,10 +531,6 @@ export default function Users() {
           setSelectedUserId(null)
         }
       />
-
-      {/* =========================
-          MODAL ESTADO
-      ========================= */}
 
       {selectedStatusUser && (
         <UserStatusConfirmModal
@@ -623,10 +547,6 @@ export default function Users() {
         />
       )}
 
-      {/* =========================
-          MODAL ELIMINAR
-      ========================= */}
-
       {selectedDeleteUser && (
         <UserDeleteConfirmModal
           isOpen={deleteModalOpen}
@@ -638,10 +558,6 @@ export default function Users() {
           onClose={handleCloseDeleteModal}
         />
       )}
-
-      {/* =========================
-          MODAL RECARGAR REHNICOIN
-      ========================= */}
 
       {selectedRechargeUser && (
         <RechargeWalletModal
@@ -657,10 +573,6 @@ export default function Users() {
     </div>
   );
 }
-
-// =========================
-// ESTADO DEL USUARIO
-// =========================
 
 function UserStatus({
   active,
@@ -679,10 +591,6 @@ function UserStatus({
     </span>
   );
 }
-
-// =========================
-// ROL DEL USUARIO
-// =========================
 
 function RoleStatus({
   role,

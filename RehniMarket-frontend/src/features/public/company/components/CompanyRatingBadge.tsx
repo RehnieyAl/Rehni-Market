@@ -10,12 +10,7 @@ interface CompanyRatingBadgeProps {
   className?: string;
 }
 
-// Único componente de reputación de empresa (ver ALCANCE >
-// Calificaciones de empresa, regla 6) - reutilizado en Dashboard Empresa
-// (Home.tsx), "Mi tienda" (MyCompany.tsx) y el perfil público de empresa
-// (CompanyProfile.tsx). Consume el mismo endpoint reutilizable
-// (GET /public/company/{id}/rating) en los 3 lugares, no recalcula nada
-// en el cliente.
+// Único componente de reputación de empresa; consume GET /public/company/{id}/rating en los 3 lugares donde se usa.
 export default function CompanyRatingBadge({ companyId, className = "" }: CompanyRatingBadgeProps) {
   const [rating, setRating] = useState<CompanyRating | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,9 +38,7 @@ export default function CompanyRatingBadge({ companyId, className = "" }: Compan
     );
   }
 
-  // Regla 7: "Sin calificaciones todavía" cuando no hay reseñas -
-  // nunca "0.0 estrellas" (average_rating es None en ese caso, ver
-  // CompanyRatingResponse).
+  // "Sin calificaciones todavía" cuando no hay reseñas; nunca "0.0 estrellas".
   if (!rating || rating.total_reviews === 0 || rating.average_rating === null) {
     return (
       <span className={`inline-flex items-center gap-1.5 text-sm text-gray-500 ${className}`}>

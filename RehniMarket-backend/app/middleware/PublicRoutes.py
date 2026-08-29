@@ -5,6 +5,7 @@ PUBLIC_ROUTES = [
     "/auth/register-company",
     "/auth/verify-email-user",
     "/auth/change-email",
+    "/auth/resend-verification-code",
     "/auth/forgot-password-user",
     "/auth/reset-password-user",
     "/auth/refresh",

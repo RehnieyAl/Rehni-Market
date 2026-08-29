@@ -31,10 +31,10 @@ export interface ReportDetail {
   id: string;
   targetType: ReportTargetType;
 
-  // IDs, nunca una URL guardada (ver ALCANCE > Reportes, sección 11/15) -
+  // IDs, nunca una URL guardada -
   // el enlace "Ver producto"/"Ver empresa" se arma acá, en el frontend,
   // con estos IDs y las rutas ya existentes (/products/:id,
-  // /company/:companyId - ver ReportDetailModal.tsx).
+  // /company/:companyId
   productId: string | null;
   productName: string | null;
 

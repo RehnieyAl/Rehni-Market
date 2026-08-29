@@ -11,17 +11,8 @@ from app.services.NasService import build_media_url
 from uuid import UUID
 
 
-# ==============================
-# GET /auth/me
-# ==============================
-# Fuente única de verdad del perfil de la cuenta autenticada - la usan
-# tanto el navbar público como el topbar/sidebar de cualquier dashboard
-# (ver AuthProvider.tsx > refreshProfile). No depende del rol.
-
 def _to_me_profile_response(user) -> MeProfileResponse:
-    # profileImagen se guarda como object_name (sin el bucket "uploads/"
-    # incluido) - mismo patron que CompanyLogo/CompanyBanner (ver
-    # DashboardService/company/Dashboard.py).
+    # profileImagen se guarda como object_name.
     profile_image_url = (
         build_media_url(f"uploads/{user.profileImagen}")
         if user.profileImagen
@@ -52,13 +43,6 @@ def get_me_profile_service(user_id: UUID, database: Session) -> MeProfileRespons
         traceback.print_exc()
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
-
-# ==============================
-# PATCH /auth/me
-# ==============================
-# Actualiza nombre y/o correo de la propia cuenta autenticada. Funciona
-# igual para cualquier rol - no vive bajo /company/dashboard (ver
-# ALCANCE > "Configuración de cuenta" común a todos los roles).
 
 def update_me_profile_service(
     user_id: UUID,
@@ -102,14 +86,7 @@ def update_me_profile_service(
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
-# ==============================
-# PATCH /auth/me/photo
-# ==============================
-# Foto de perfil de la CUENTA (no confundir con el logo/banner de la
-# empresa, que son datos públicos del perfil de EMPRESA - ver
-# company_dasboard_upgrade_my_photo_and_banner_profile). Disponible para
-# cualquier rol autenticado.
-
+# Foto de la cuenta (no el logo/banner de la empresa). Disponible para cualquier rol.
 def update_me_photo_service(
     user_id: UUID,
     photo: UploadFile,

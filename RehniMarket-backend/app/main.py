@@ -1,6 +1,4 @@
-## main.py: Este codigo sirve para iniciar la
-#  aplicacion de FastAPI del backend lubix, configurar las rutas y
-#  middlewares necesarios,.
+# Punto de entrada de la app FastAPI: configura routers y middlewares.
 from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
 from pydantic import ValidationError
@@ -37,10 +35,6 @@ from app.utils.seed import run_seed
 from app.Config import config
 
 
-
-# =========================
-# LIFESPAN
-# =========================
 @asynccontextmanager
 async def lifespan(app):
     db = SessionLocal()
@@ -51,21 +45,12 @@ async def lifespan(app):
     db.close()
     yield
 
-# =========================
-# APP
-# =========================
+
 app = FastAPI(lifespan=lifespan)
 
-# =========================
-# EXCEPTION HANDLERS
-# =========================
-# Endpoints que construyen su schema manualmente dentro de un
-# classmethod as_form(...) (patron ya usado en CreateUserRequest,
-# CreateCompanyRequest y UpdateProductRequest) no pasan por la
-# validacion automatica de FastAPI para parametros Body/Form - el
-# ValidationError de Pydantic lo lanza el propio classmethod, y sin
-# este handler quedaba sin capturar (500 "Internal Server Error" en
-# vez de un 422 con el mensaje real de que fallo).
+
+# Los endpoints con as_form(...) lanzan ValidationError fuera de la validación
+# automática de FastAPI; sin este handler quedaría como 500 en vez de 422.
 @app.exception_handler(ValidationError)
 async def pydantic_validation_exception_handler(request: Request, exc: ValidationError):
     errors = exc.errors()
@@ -81,25 +66,19 @@ async def pydantic_validation_exception_handler(request: Request, exc: Validatio
         },
     )
 
-# =========================
-# MIDDLEWARE
-# =========================
+
 app.middleware("http")(auth_middleware)
 app.middleware("http")(rate_limit_middleware)
 setup_cors(app)
 
-# =========================
-# ROUTERS
-# =========================
+
 app.include_router(AuthRouters.router)
 app.include_router(HealthRouter.router)
 app.include_router(CompanyRouter.router)
 app.include_router(mediaRouter.router)
 app.include_router(publicRouters.router)
 
-# =========================
-# AdminRouter
-# =========================
+
 app.include_router(AdminDashboardRouters.router)
 app.include_router(AdminCompanyRouters.router)
 app.include_router(AdminUserRouters.router)
@@ -107,9 +86,7 @@ app.include_router(AdminWalletRouter.router)
 app.include_router(AdminPayoutRouter.router)
 app.include_router(AdminReportRouter.router)
 
-# =========================
-# COMPRAS (carrito / checkout / pedidos / favoritos / direcciones / wallet)
-# =========================
+
 app.include_router(CartRouter.router)
 app.include_router(CheckoutRouter.router)
 app.include_router(OrderRouter.router)
@@ -119,12 +96,8 @@ app.include_router(WalletRouter.router)
 app.include_router(ReviewRouter.router)
 app.include_router(ReportRouter.router)
 
-# =========================
-# LIQUIDACIONES (cuentas bancarias / payouts empresa)
-# =========================
+
 app.include_router(BankAccountRouter.router)
 app.include_router(CompanyPayoutRouter.router)
-
-
 
 

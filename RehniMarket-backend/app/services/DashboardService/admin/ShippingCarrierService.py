@@ -11,11 +11,7 @@ from app.schemas.SchemaDashboard.SchemaShippingCarrier import (
 
 
 def get_shipping_carriers_service(database: Session):
-    """
-    Listado COMPLETO (activas e inactivas) para el panel Admin/Owner - la
-    versión filtrada por is_active=True para la Empresa vive en
-    publicService/ShippingCarriers.py (GET /public/shipping-carriers).
-    """
+    """Listado completo (activas e inactivas) para el panel Admin/Owner."""
 
     return (
         database.query(ShippingCarrier)
@@ -95,14 +91,8 @@ def change_shipping_carrier_status_service(
     carrier_id: UUID,
     is_active: bool,
 ) -> ShippingCarrier:
-    """
-    Activar/desactivar (ver ALCANCE > Transportadoras) - distinto de
-    eliminar: una transportadora inactiva sigue existiendo (los pedidos
-    que ya la usaron conservan la referencia intacta), solo deja de
-    ofrecerse para NUEVAS asignaciones (ver publicService/
-    ShippingCarriers.py, filtra is_active=True). No existe endpoint de
-    borrado físico a propósito - ver ModelShippingCarrier.py.
-    """
+    """Activar/desactivar: una transportadora inactiva sigue existiendo (los pedidos
+    que ya la usaron conservan la referencia), solo deja de ofrecerse para nuevas asignaciones."""
 
     carrier = database.get(ShippingCarrier, carrier_id)
 

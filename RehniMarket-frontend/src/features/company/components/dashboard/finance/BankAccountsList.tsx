@@ -13,12 +13,7 @@ import { useAlert } from "@/shared/components/alert/useAlert";
 
 import type { BankAccount } from "@/features/payouts/types/response";
 
-// Cuentas bancarias de la empresa (ver ALCANCE > Módulo de liquidaciones,
-// Fase 1) - submódulo "Cuentas bancarias" de Finanzas. El número de
-// cuenta se muestra enmascarado en la lista (solo los últimos 4 dígitos,
-// mismo criterio que el backend usa en el resumen de cada liquidación,
-// ver PayoutBankAccountSummary) - el número completo solo se ve/edita
-// dentro del formulario, nunca en la lista.
+// Cuentas bancarias de la empresa. En la lista el número va enmascarado (últimos 4 dígitos); completo solo en el formulario.
 export default function BankAccountsList() {
   const { showAlert } = useAlert();
 
@@ -43,8 +38,7 @@ export default function BankAccountsList() {
     }
   };
 
-  // Diferido con setTimeout (mismo patrón que Orders.tsx/RehniCoin.tsx):
-  // evita hacer setState de forma síncrona dentro del efecto.
+  // Diferido con setTimeout para no hacer setState síncrono dentro del efecto.
   useEffect(() => {
     const timeout = setTimeout(loadAccounts);
     return () => clearTimeout(timeout);

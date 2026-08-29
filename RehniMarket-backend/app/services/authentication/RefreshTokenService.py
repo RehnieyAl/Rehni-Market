@@ -36,11 +36,8 @@ def refresh_token_service(data: RefreshRequest,database: Session):
         if not user:
             api_error(404,ErrorCodes.USER_NOT_FOUND,"Usuario no encontrado.")
 
-        # Una cuenta bloqueada no debe poder recuperar una sesion valida
-        # solo porque tiene un refresh token emitido antes del bloqueo -
-        # mismos chequeos y mismos codigos que ya usa login_service, para
-        # que "bloqueado" se comporte igual sin importar por donde se
-        # intente entrar (ver AUDITORIA de bloqueo de cuentas).
+        # Una cuenta bloqueada no recupera sesión por un refresh token previo al bloqueo:
+        # mismos chequeos y códigos que login_service.
         if not user.isActive:
             api_error(403,ErrorCodes.USER_BLOCKED,"Tu cuenta se encuentra bloqueada. Contacta con un administrador.")
 

@@ -11,19 +11,11 @@ import type { Address } from "../types/response";
 interface AddressSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // Se llama con la dirección elegida al presionar "Continuar" - el
-  // llamador decide qué hacer con ella (ver CheckoutView.tsx).
+  // Se llama con la dirección elegida al presionar "Continuar".
   onSelect: (address: Address) => void;
 }
 
-// Componente reutilizable (ver ALCANCE > Modal de direcciones): se abre
-// cuando el usuario intenta comprar/hacer checkout sin una dirección
-// seleccionada. Envuelve el Modal genérico del proyecto (ver
-// shared/components/modal.tsx) - no crea un overlay/backdrop propio.
-//
-// Maneja su propio listado (no depende de que el llamador ya tenga uno
-// cargado) para poder usarse desde cualquier lugar sin duplicar el
-// fetch.
+// Se abre cuando el usuario intenta comprar sin dirección seleccionada. Maneja su propio listado.
 export default function AddressSelectionModal({
   isOpen,
   onClose,
@@ -47,8 +39,7 @@ export default function AddressSelectionModal({
       const defaultAddress = data.find((a) => a.isDefault) ?? data[0];
       setSelectedId(defaultAddress?.id ?? null);
 
-      // Estado 1 (sin direcciones, ver ALCANCE): entra directo al
-      // formulario - no tiene sentido mostrarle un listado vacío antes.
+      // Sin direcciones: entra directo al formulario.
       setShowForm(data.length === 0);
     } catch (error) {
       console.error("Error cargando direcciones:", error);
@@ -68,9 +59,7 @@ export default function AddressSelectionModal({
 
   const handleSaved = (created: Address) => {
     setAddresses((prev) => [created, ...prev]);
-    // 3. Seleccionar automáticamente la nueva dirección. 4. Cerrar
-    // formulario. 5. Mantener abierto el modal principal (ver ALCANCE >
-    // GUARDAR).
+    // Selecciona la nueva dirección, cierra el formulario y mantiene abierto el modal principal.
     setSelectedId(created.id);
     setShowForm(false);
   };

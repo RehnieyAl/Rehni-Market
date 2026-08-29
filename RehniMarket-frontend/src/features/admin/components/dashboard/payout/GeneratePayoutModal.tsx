@@ -27,24 +27,14 @@ const MONTH_NAMES = [
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
 ];
 
-// "2026-08-01" -> "Agosto 2026" (ver ALCANCE > Formato visual). Se parsea
-// el string a mano (year/month) en vez de `new Date("2026-08-01")` +
-// toLocaleDateString: ese constructor interpreta la fecha en UTC, y en
-// una zona horaria con offset negativo (ej. Colombia, UTC-5) el mes local
-// puede quedar un día atrás - un bug clásico de JS, no una fecha real
-// distinta a la que devolvió el backend.
+// "2026-08-01" -> "Agosto 2026". Se parsea a mano para evitar el desfase UTC de new Date("YYYY-MM-DD").
 function formatPeriodLabel(period: PayoutAvailablePeriod): string {
   const [year, month] = period.periodStart.split("-").map(Number);
   return `${MONTH_NAMES[month - 1]} ${year}`;
 }
 
-// Modal "Generar liquidación" (ver ALCANCE > Módulo de liquidaciones,
-// Fase 7, y mejora "selector de periodos disponibles"): único punto que
-// crea una liquidación nueva (POST /admin/payouts/generate). Reutiliza
-// GET /admin/dashboard/get-companies (ya existente, ver Companies.tsx)
-// como buscador de empresa, y GET /admin/payouts/available-periods (ver
-// ALCANCE) para ofrecer SOLO meses con ventas DELIVERED que la empresa
-// todavía no tiene liquidados - ya no existe un input de fecha libre.
+// Modal "Generar liquidación": único punto que crea una liquidación (POST /admin/payouts/generate).
+// Ofrece solo meses con ventas DELIVERED sin liquidar, no un input de fecha libre.
 export default function GeneratePayoutModal({
   isOpen,
   onClose,
@@ -58,24 +48,19 @@ export default function GeneratePayoutModal({
 
   const [selectedCompany, setSelectedCompany] = useState<AdminCompanyResponse | null>(null);
 
-  // Periodos liquidables de la empresa elegida (ver ALCANCE > regla 1 y
-  // 4: solo periodos con ventas válidas, sin liquidación previa).
+  // Periodos liquidables de la empresa elegida (con ventas válidas, sin liquidación previa).
   const [periods, setPeriods] = useState<PayoutAvailablePeriod[]>([]);
   const [periodsLoading, setPeriodsLoading] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<PayoutAvailablePeriod | null>(null);
 
   const [generating, setGenerating] = useState(false);
 
-  // Vista previa financiera (ver ALCANCE > mejora "vista previa"):
-  // preview=null + previewError=null es el estado inicial "todavía no hay
-  // suficiente selección" - se distingue de un error real (previewError
-  // seteado) para no mostrar mensajes de error antes de tiempo.
+  // Vista previa financiera. preview=null + previewError=null = estado inicial sin selección suficiente.
   const [preview, setPreview] = useState<PayoutPreview | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
 
-  // Diferido con setTimeout (mismo patrón que Orders.tsx/RehniCoin.tsx):
-  // evita hacer setState de forma síncrona dentro del efecto.
+  // Diferido con setTimeout para no hacer setState síncrono dentro del efecto.
   useEffect(() => {
     if (isOpen) return;
 
@@ -118,10 +103,7 @@ export default function GeneratePayoutModal({
     };
   }, [isOpen, search, selectedCompany]);
 
-  // Carga los periodos liquidables al elegir empresa (ver ALCANCE >
-  // selector "Mes a liquidar" ya no es texto libre). Se reinicia la
-  // selección de periodo/preview cada vez que cambia la empresa - un
-  // periodo elegido para la empresa anterior no tiene sentido acá.
+  // Carga los periodos liquidables al elegir empresa; se reinicia periodo/preview al cambiar de empresa.
   useEffect(() => {
     if (!isOpen || !selectedCompany) {
       const timeout = setTimeout(() => {
@@ -155,12 +137,8 @@ export default function GeneratePayoutModal({
     };
   }, [isOpen, selectedCompany]);
 
-  // Vista previa automática: se dispara al elegir empresa+periodo (ver
-  // ALCANCE > mejora "vista previa"), y se vuelve a disparar si cambia
-  // cualquiera de los dos. Llama a GET /admin/payouts/preview, que corre
-  // EXACTAMENTE la misma validación/cálculo que POST
-  // /admin/payouts/generate sin persistir nada (ver
-  // PayoutService._resolve_payout_preview).
+  // Vista previa automática al elegir empresa+periodo; GET /admin/payouts/preview corre la misma
+  // validación/cálculo que generar, sin persistir.
   useEffect(() => {
     if (!isOpen || !selectedCompany || !selectedPeriod) {
       const timeout = setTimeout(() => {
@@ -218,8 +196,7 @@ export default function GeneratePayoutModal({
     try {
       setGenerating(true);
 
-      // Reutiliza el mismo periodo que ya confirmó el preview: garantiza
-      // que lo que se genera es EXACTAMENTE lo que el admin vio en pantalla.
+      // Reutiliza el periodo que confirmó el preview: se genera exactamente lo que el admin vio.
       await generatePayout({
         companyId: selectedCompany.id,
         periodStart: preview.periodStart,
@@ -318,10 +295,6 @@ export default function GeneratePayoutModal({
             )}
           </div>
 
-          {/* SELECTOR DE PERIODO (ver ALCANCE > selector "Mes a liquidar"
-              ya no es texto libre): un <select> con SOLO los meses que
-              GET /admin/payouts/available-periods devuelve - no hay forma
-              de escribir una fecha a mano. */}
           {selectedCompany && (
             <div>
               <label className="mb-1.5 block text-sm text-gray-700">Mes a liquidar</label>
@@ -367,7 +340,6 @@ export default function GeneratePayoutModal({
             </div>
           )}
 
-          {/* VISTA PREVIA */}
           {selectedCompany && selectedPeriod && (
             <div>
               <label className="mb-1.5 block text-sm text-gray-700">Vista previa</label>

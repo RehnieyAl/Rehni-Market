@@ -23,11 +23,7 @@ from app.services.commerce.WalletService import charge_wallet, get_or_create_wal
 from app.services.publicService.Products import _compute_price_fields
 from app.services.email.OrderEmailService import send_order_created_email
 
-# Impuesto aplicado sobre el subtotal de cada pedido - IVA estandar de
-# Colombia (mismo mercado que el resto del proyecto: precios en COP,
-# NIT/DV de empresa, locale es-CO en el frontend). No es un valor
-# inventado por producto/pedido: es una tasa fija y explicita, igual para
-# todo el checkout.
+# IVA de Colombia; tasa fija sobre el subtotal, igual para todo el checkout.
 TAX_RATE = Decimal("0.19")
 
 
@@ -42,16 +38,7 @@ def checkout_service(
         if not cart.items:
             api_error(400, ErrorCodes.CART_EMPTY, "Tu carrito está vacío.")
 
-        # =================================================
-        # DIRECCIÓN OBLIGATORIA (ver ALCANCE > compra obligatoria con
-        # dirección) - antes era opcional (`if data.addressId is not
-        # None`), lo que permitía crear pedidos sin dirección de entrega.
-        # Se valida: existe dirección seleccionada, existe (nombre
-        # completo), existe teléfono - mismo código/mensaje pedidos por
-        # el frontend para que AddressSelectionModal.tsx pueda
-        # reaccionar puntualmente a este error.
-        # =================================================
-
+        # Dirección obligatoria: seleccionada, con nombre completo y teléfono.
         if data.addressId is None:
             api_error(
                 400,
@@ -75,23 +62,14 @@ def checkout_service(
                 "Debes registrar una dirección para continuar con la compra.",
             )
 
-        # =================================================
-        # VALIDAR STOCK / PRODUCTO ACTIVO Y AGRUPAR POR EMPRESA
-        # (ver ALCANCE > Fase 2: "Un pedido pertenece a una sola
-        # empresa" - se revalida todo de nuevo aqui, no se confia en lo
-        # que ya se valido al agregar al carrito, porque pudo cambiar
-        # desde entonces).
-        # =================================================
-
+        # Revalida stock/activo/empresa (pudo cambiar desde que se agregó al carrito)
+        # y agrupa por empresa: un pedido pertenece a una sola empresa.
         items_by_company: dict[UUID, list] = defaultdict(list)
 
         for cart_item in cart.items:
             product = cart_item.product
 
-            # Producto de una empresa suspendida (ver ALCANCE > BUG 2,
-            # "no se puede comprar producto"): se revalida en el checkout
-            # igual que is_active, aunque el producto ya estuviera en el
-            # carrito desde antes de que la empresa se suspendiera.
+            # Producto de empresa suspendida: se revalida en el checkout igual que is_active.
             if (
                 not product
                 or not product.is_active
@@ -124,18 +102,10 @@ def checkout_service(
                     "product": product,
                     "variant": variant,
                     "unit_price": unit_price,
-                    # Snapshot del precio ANTES del descuento (ver ALCANCE
-                    # > Detalle de pedido - Descuentos) - solo si de
-                    # verdad había un descuento activo en este instante,
-                    # si no queda en None (ver ModelOrder.py >
-                    # OrderItem.original_unit_price).
+                    # Precio antes del descuento, solo si había descuento activo en este instante.
                     "original_unit_price": priced_entity.price if discount_enabled else None,
                 }
             )
-
-        # =================================================
-        # CALCULAR TOTAL GLOBAL Y COBRAR UNA SOLA VEZ EN REHNICOIN
-        # =================================================
 
         grand_total = Decimal("0")
         per_company_totals: dict[UUID, tuple[Decimal, Decimal, Decimal]] = {}
@@ -161,10 +131,6 @@ def checkout_service(
                 "Tu saldo de RehniCoin no alcanza para completar la compra.",
             )
 
-        # =================================================
-        # CREAR UN PEDIDO POR EMPRESA + DESCONTAR STOCK
-        # =================================================
-
         created_orders = []
 
         for company_id, entries in items_by_company.items():
@@ -174,10 +140,7 @@ def checkout_service(
                 user_id=user_id,
                 company_id=company_id,
                 address_id=address.id,
-                # Snapshot de la direccion en este instante (ver ALCANCE >
-                # "el pedido debe conservar estos datos incluso si el
-                # usuario modifica la direccion despues" y ModelOrder.py >
-                # Order.delivery_*).
+                # Snapshot de la dirección en este instante.
                 delivery_label=address.label,
                 delivery_full_name=address.full_name,
                 delivery_phone=address.phone,
@@ -231,9 +194,7 @@ def checkout_service(
 
         for order in created_orders:
             database.refresh(order)
-            # Correo "Pedido recibido" (ver ALCANCE > Correos de
-            # pedidos) - uno por pedido creado, ya que el checkout puede
-            # partir el carrito en varios pedidos (uno por empresa).
+            # Correo "Pedido recibido", uno por pedido creado.
             send_order_created_email(order)
 
         return CheckoutSummaryResponse(

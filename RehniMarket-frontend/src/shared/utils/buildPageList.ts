@@ -1,8 +1,4 @@
-// Lista compacta de páginas con "..." para huecos grandes (mismo criterio
-// que usaba antes ProductsList.tsx en solitario, ver ALCANCE > rediseño
-// Categorías > reutilización de paginación): siempre ancla 1, 2, 3 al
-// inicio y las últimas 2 al final, más el entorno inmediato de la página
-// actual. Puramente de presentación sobre `current`/`total`.
+// Lista compacta de páginas con "…": ancla 1-3 al inicio, las 2 últimas al final y el entorno de la actual.
 export function buildPageList(current: number, total: number): (number | "ellipsis")[] {
   const anchors = new Set(
     [1, 2, 3, total - 1, total, current - 1, current, current + 1].filter(

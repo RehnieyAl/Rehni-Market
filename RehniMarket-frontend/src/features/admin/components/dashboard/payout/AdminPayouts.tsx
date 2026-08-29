@@ -17,10 +17,7 @@ const PAGE_SIZE = 10;
 
 type TabId = "all" | PayoutStatus;
 
-// Mismos 4 valores reales de PayoutStatusEnum (ver ModelCompanyPayout.py)
-// + "Todos" - el filtro `status` de GET /admin/payouts ya los soporta a
-// todos, aunque en la práctica hoy solo "pending"/"paid" se producen (ver
-// ALCANCE > FASE 2: el backend solo implementa esa transición).
+// Los 4 valores de PayoutStatusEnum + "Todos"; hoy solo se producen "pending"/"paid".
 const STATUS_TABS: { id: TabId; label: string }[] = [
   { id: "all", label: "Todas" },
   { id: "pending", label: "Pendientes" },
@@ -29,10 +26,7 @@ const STATUS_TABS: { id: TabId; label: string }[] = [
   { id: "failed", label: "Fallidas" },
 ];
 
-// Panel "Liquidaciones" del admin (ver ALCANCE > Módulo de liquidaciones,
-// Fase 7): listar, filtrar por estado, ver detalle, generar y marcar como
-// pagada. Mismo patrón visual que Orders.tsx del lado empresa (tabs +
-// lista de cards + paginación).
+// Panel "Liquidaciones" del admin: listar, filtrar, ver detalle, generar y marcar como pagada.
 export default function AdminPayouts() {
   const [activeTab, setActiveTab] = useState<TabId>("all");
   const [page, setPage] = useState(1);
@@ -63,8 +57,7 @@ export default function AdminPayouts() {
     }
   }, [page, activeTab]);
 
-  // Diferido con setTimeout (mismo patrón que Orders.tsx/RehniCoin.tsx):
-  // evita hacer setState de forma síncrona dentro del efecto.
+  // Diferido con setTimeout para no hacer setState síncrono dentro del efecto.
   useEffect(() => {
     const timeout = setTimeout(loadPayouts);
     return () => clearTimeout(timeout);
@@ -101,7 +94,6 @@ export default function AdminPayouts() {
         </button>
       </div>
 
-      {/* TABS */}
       <div className="mt-6 flex flex-wrap gap-2">
         {STATUS_TABS.map((tab) => (
           <button
@@ -118,7 +110,6 @@ export default function AdminPayouts() {
         ))}
       </div>
 
-      {/* LISTADO */}
       {loading ? (
         <div className="mt-8 space-y-3">
           {Array.from({ length: 5 }).map((_, index) => (

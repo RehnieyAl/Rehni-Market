@@ -30,10 +30,6 @@ def get_all_companies(
         )
     )
 
-    # =========================
-    # BÚSQUEDA
-    # =========================
-
     if search and search.strip():
         search_value = f"%{search.strip()}%"
 
@@ -46,10 +42,6 @@ def get_all_companies(
             )
         )
 
-    # =========================
-    # FILTRO POR ESTADO
-    # =========================
-
     if status in {
         "pending",
         "rejected",
@@ -59,15 +51,7 @@ def get_all_companies(
             Company.CompanyCertificateStatus == status
         )
 
-    # =========================
-    # ORDEN DE ESTADOS
-    # =========================
-    #
-    # 1. Pendientes
-    # 2. Rechazadas
-    # 3. Aprobadas
-    #
-
+    # Orden de estados: pendientes, rechazadas, aprobadas.
     status_order = case(
         (
             Company.CompanyCertificateStatus
@@ -87,17 +71,7 @@ def get_all_companies(
         else_=4,
     )
 
-    # =========================
-    # PAGINACIÓN POR CURSOR
-    # =========================
-    #
-    # El orden real es:
-    #
-    # status_order ASC
-    # created_at DESC
-    # id DESC
-    #
-
+    # Paginación por cursor. Orden real: status_order ASC, created_at DESC, id DESC.
     if (
         cursor_status_order is not None
         and cursor_created_at is not None
@@ -105,16 +79,11 @@ def get_all_companies(
     ):
         query = query.filter(
             or_(
-                # Pasar a un estado posterior
                 status_order > cursor_status_order,
-
-                # Mismo estado pero registro más antiguo
                 and_(
                     status_order == cursor_status_order,
                     Company.created_at < cursor_created_at,
                 ),
-
-                # Misma fecha dentro del mismo estado
                 and_(
                     status_order == cursor_status_order,
                     Company.created_at == cursor_created_at,
@@ -122,10 +91,6 @@ def get_all_companies(
                 ),
             )
         )
-
-    # =========================
-    # CONSULTA
-    # =========================
 
     companies = (
         query
@@ -137,10 +102,6 @@ def get_all_companies(
         .limit(limit + 1)
         .all()
     )
-
-    # =========================
-    # HAS NEXT
-    # =========================
 
     has_next = len(companies) > limit
 
@@ -166,10 +127,6 @@ def get_company_by_id(
     if company is None:
         return None
 
-    # =========================
-    # CERTIFICADO
-    # =========================
-
     certificado = (
         build_media_url(
             f"uploads/{company.CompanyCertificate}"
@@ -178,10 +135,6 @@ def get_company_by_id(
         else None
     )
 
-    # =========================
-    # LOGO
-    # =========================
-
     logo = (
         build_media_url(
             f"uploads/{company.CompanyLogo}"
@@ -189,10 +142,6 @@ def get_company_by_id(
         if company.CompanyLogo
         else None
     )
-
-    # =========================
-    # BANNER
-    # =========================
 
     banner = (
         build_media_url(
@@ -223,14 +172,8 @@ def get_company_by_id_orm(
     database: Session,
     company_id: UUID,
 ) -> Company | None:
-    """
-    A diferencia de get_company_by_id (arriba), devuelve el ORM crudo, no
-    el DTO AdminCompanyDetailResponse - lo necesita update_company_status_
-    service para leer CompanyStatus ANTES de cambiarlo (para saber si
-    esta suspensión es nueva, true->false, o una repetición sobre una
-    empresa que ya estaba suspendida - ver ALCANCE > Suspensión de
-    empresa, punto 6) y para mutar suspension_reason en el mismo objeto.
-    """
+    """Devuelve el ORM crudo (no el DTO): update_company_status_service necesita leer
+    CompanyStatus antes de cambiarlo y mutar suspension_reason en el mismo objeto."""
 
     return (
         database.query(Company)

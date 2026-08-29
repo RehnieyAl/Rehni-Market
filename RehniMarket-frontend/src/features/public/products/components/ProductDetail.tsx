@@ -21,20 +21,11 @@ import { useRedirectToLogin } from "@/features/public/auth/hooks/useRedirectToLo
 
 import type { PublicProductDetail, PublicProductVariant } from "../types/response";
 
-// Detalle público de producto (ver ALCANCE > rediseño detalle de
-// producto, referencia design/products-detail-reference.png). Estructura
-// adaptada a la referencia y al sistema visual ya usado en Home/
-// Categorías/Productos (contenedor ancho progresivo, rounded-2xl, colores
-// RehniMarket) - no es una copia 1:1 de la imagen.
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  // Regla de negocio: solo el rol USER puede comprar. Company/Admin/Owner
-  // pueden ver el catálogo (por eso este detalle sigue siendo público
-  // para ellos) pero no deben ver una acción de compra (ver ALCANCE >
-  // Restricciones de compra). Un visitante sin sesión (role === null)
-  // todavía puede convertirse en comprador, así que sí ve el botón.
+  // Solo el rol USER puede comprar; un visitante sin sesión sí ve el botón (puede registrarse).
   const { role } = useRole();
   const canPurchase = role === null || role === "user";
 
@@ -43,34 +34,20 @@ export default function ProductDetail() {
   const redirectToLogin = useRedirectToLogin();
   const [addingToCart, setAddingToCart] = useState(false);
 
-  // "Reportar producto" (ver ALCANCE > Reportes, sección 3) - reutiliza
-  // ReportModal, el mismo componente que "Reportar empresa"
-  // (CompanyProfile.tsx). Solo el rol USER puede reportar (mismo
-  // criterio que reseñas/compras, ver middleware/RolePermissions.py >
-  // "/reports"); un visitante sin sesión va a login, igual que al
-  // agregar al carrito.
+  // "Reportar producto": reutiliza ReportModal. Solo el rol USER; sin sesión va a login.
   const [reportModalOpen, setReportModalOpen] = useState(false);
 
   const [product, setProduct] = useState<PublicProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  // Variante activa (colores/imágenes/precio propios). `null` = datos
-  // base del producto (ver ALCANCE > variantes en publicService/Products.py).
+  // Variante activa; null = datos base del producto.
   const [activeVariant, setActiveVariant] = useState<PublicProductVariant | null>(null);
 
-  // `activeVariant === null` significa dos cosas distintas: "todavía no
-  // elegí color" y "elegí explícitamente la opción base" (la swatch
-  // "base" también deja `activeVariant` en null - ver colorOptions más
-  // abajo). Sin esta bandera aparte, un producto que tiene color base
-  // propio Y al menos una variante real nunca podía comprarse en su
-  // versión base.
+  // Distingue "aún no elegí color" de "elegí la opción base"; ambos dejan activeVariant en null.
   const [hasChosenColor, setHasChosenColor] = useState(false);
 
-  // Imagen elegida manualmente (click en una miniatura). Si es `null`, o
-  // ya no pertenece a la galería activa (p. ej. tras cambiar de variante),
-  // se usa la imagen principal como valor derivado - evita depender de un
-  // efecto para sincronizar este estado con `images`.
+  // Miniatura elegida a mano; si es null o ya no está en la galería activa, se usa la principal.
   const [manualImage, setManualImage] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
 
@@ -113,10 +90,7 @@ export default function ProductDetail() {
     };
   }, [id]);
 
-  // Datos "en pantalla": los de la variante seleccionada o, por defecto,
-  // los del producto base. Cada variante trae su propio descuento
-  // calculado (discount_enabled/final_price) - ver
-  // PublicProductVariantResponse.
+  // Datos en pantalla: los de la variante elegida o, por defecto, los del producto base.
   const images = useMemo(
     () => (activeVariant ? activeVariant.images : product?.images ?? []),
     [activeVariant, product],
@@ -128,8 +102,7 @@ export default function ProductDetail() {
 
   const stock = activeVariant ? activeVariant.stock : product?.stock ?? 0;
 
-  // Cada variante tiene su propio descuento, independiente del producto
-  // base (ver ModelVariant.py > discount_enable/discount_value).
+  // Cada variante tiene su propio descuento, independiente del producto base.
   const displayPrice = activeVariant ? activeVariant.price : product?.price ?? "0";
 
   const displayFinalPrice = activeVariant
@@ -144,10 +117,7 @@ export default function ProductDetail() {
     ? activeVariant.discount_percentage
     : product?.discount_percentage ?? null;
 
-  // Colores seleccionables: producto base + variantes con color propio.
-  // Las variantes agotadas se incluyen igual (NO se ocultan - ver ALCANCE
-  // > CASO 3): se marcan con `outOfStock` para mostrarlas deshabilitadas
-  // con la etiqueta "Sin stock", en vez de quitarlas de la lista.
+  // Colores seleccionables: base + variantes con color. Las agotadas se marcan outOfStock, no se ocultan.
   const colorOptions = useMemo(() => {
     if (!product) return [];
 
@@ -184,20 +154,11 @@ export default function ProductDetail() {
     return options;
   }, [product]);
 
-  // Antes de elegir un color, `stock` de arriba es el stock del PRODUCTO
-  // BASE - engañoso en un producto con variantes, porque puede ser 0
-  // aunque exista una variante con stock (ver ALCANCE > regla de negocio
-  // "stock padre vs. variantes", mismo criterio que
-  // _has_visible_stock en publicService/Products.py: la disponibilidad
-  // real de un producto con variantes no la decide su stock base). Se usa
-  // solo para el mensaje de STOCK más abajo mientras no haya elección
-  // (una vez elegido, `stock` ya refleja la variante/base real elegida).
+  // Antes de elegir color, `stock` es el del producto base (puede ser 0 aunque
+  // haya variantes con stock); solo se usa para el mensaje de stock inicial.
   const anyVariantInStock = colorOptions.some((option) => !option.outOfStock);
 
-  // Nombre del color activo para el encabezado "Color: X" - solo una vez
-  // que el usuario eligió explícitamente uno (hasChosenColor), nunca antes
-  // (ver hasChosenColor más arriba: la swatch "base" también cuenta como
-  // elección explícita).
+  // Nombre del color activo para "Color: X"; solo tras una elección explícita (incluida la swatch base).
   const selectedColorName = hasChosenColor
     ? (activeVariant?.color?.name ?? product?.color?.name ?? null)
     : null;
@@ -212,31 +173,23 @@ export default function ProductDetail() {
     return mainImage?.url ?? null;
   }, [manualImage, images]);
 
-  // Si el producto tiene variantes, cada una tiene exactamente un color
-  // (regla de negocio del backend - ver CreateVariantRequest), así que
-  // "seleccionar un color" y "seleccionar una variante" son lo mismo acá.
+  // Con variantes, elegir color = elegir variante.
   const requiresVariant = (product?.variants.length ?? 0) > 0;
-  // `hasChosenColor` (no `activeVariant !== null`): elegir la swatch
-  // "base" también deja `activeVariant` en null, y debe habilitar la
-  // compra igual que elegir cualquier otra variante.
+  // hasChosenColor (no activeVariant !== null): la swatch base también habilita la compra.
   const canAddToCart = !requiresVariant || hasChosenColor;
 
   const handleAddToCart = async (redirectToCart: boolean) => {
     if (!product) return;
 
     if (role === null) {
-      // Conserva /products/:id como destino de retorno (ver AUDITORÍA >
-      // CASO 1) en vez del navigate("/login") plano que había antes, que
-      // perdía el producto y siempre terminaba en Home tras autenticar.
+      // Conserva /products/:id como destino de retorno tras el login.
       redirectToLogin();
       return;
     }
 
     if (!canAddToCart) return;
 
-    // Guardia defensiva: los botones ya se deshabilitan con `stock <= 0`
-    // (ver BOTONES más abajo), pero se repite acá por si el estado cambia
-    // entre el render y el click.
+    // Guardia defensiva: los botones ya se deshabilitan con stock <= 0.
     if (stock <= 0) return;
 
     try {
@@ -252,11 +205,8 @@ export default function ProductDetail() {
 
       const detail = axios.isAxiosError(error) ? error.response?.data?.detail : undefined;
 
-      // Caso puntual INSUFFICIENT_STOCK: el mensaje del backend ("Solo
-      // hay N unidades disponibles.") ya es correcto y se muestra tal
-      // cual, pero cuando la cantidad solicitada coincide con lo que ya
-      // está en el carrito puede leerse como "no hay nada disponible"
-      // aunque sí lo hay, ya en el carrito.
+      // INSUFFICIENT_STOCK: si la cantidad pedida iguala lo que ya hay en el carrito,
+      // el mensaje del backend puede confundir.
       const message =
         detail?.code === ErrorCode.INSUFFICIENT_STOCK
           ? (detail?.message ?? "Ya tienes la cantidad máxima disponible en tu carrito.")
@@ -309,12 +259,6 @@ export default function ProductDetail() {
         Volver a productos
       </Link>
 
-      {/* GALERÍA + INFORMACIÓN - una sola tarjeta (ver ALCANCE > referencia
-          design/product-detail-reference.png), con las dos columnas
-          estiradas a la misma altura (items-stretch, default de grid) para
-          que la parte inferior de la imagen quede alineada con la parte
-          inferior del panel de compra, sin importar cuál de las dos tenga
-          más contenido. */}
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <div className="grid items-stretch lg:grid-cols-2">
           <div className="border-b border-gray-100 p-4 sm:p-6 lg:border-b-0 lg:border-r">
@@ -326,7 +270,6 @@ export default function ProductDetail() {
             />
           </div>
 
-          {/* INFORMACIÓN */}
           <div className="p-4 sm:p-6 lg:p-8">
             <p className="text-sm font-medium uppercase tracking-wide text-[#6D0F2D]">
               {product.catalog_name}
@@ -364,7 +307,6 @@ export default function ProductDetail() {
               />
             </div>
 
-            {/* EMPRESA */}
             <SellerCard
               companyId={product.company_id}
               companyName={product.company_name}
@@ -372,7 +314,6 @@ export default function ProductDetail() {
               isVerified={product.company_is_verified}
             />
 
-            {/* COLORES + CANTIDAD */}
             <div className="mt-6 flex flex-wrap items-start justify-between gap-6">
               {colorOptions.length > 0 && (
                 <div>
@@ -434,7 +375,6 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {/* STOCK */}
             <p className="mt-4 text-sm">
               {requiresVariant && !hasChosenColor ? (
                 anyVariantInStock ? (
@@ -454,7 +394,6 @@ export default function ProductDetail() {
               )}
             </p>
 
-            {/* BOTONES */}
             <div className="mt-6 flex flex-col gap-3">
               {canPurchase ? (
                 <>
@@ -491,7 +430,6 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      {/* DESCRIPCIÓN / ESPECIFICACIONES / OPINIONES (tabs) */}
       <div className="mt-12">
         <ProductTabs
           description={product.descripcion}
@@ -500,7 +438,6 @@ export default function ProductDetail() {
         />
       </div>
 
-      {/* OPINIONES */}
       <section className="mt-8">
         <ReviewsSection
           productId={product.id}
@@ -510,7 +447,6 @@ export default function ProductDetail() {
         />
       </section>
 
-      {/* PRODUCTOS RELACIONADOS */}
       <RelatedProducts catalogId={product.catalog_id} excludeProductId={product.id} />
 
       <ReportModal

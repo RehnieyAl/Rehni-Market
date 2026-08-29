@@ -5,11 +5,7 @@ import type {
   WalletRechargeHistoryPaginated,
 } from "@/features/wallet/types/response";
 
-// Modulo RehniCoin del panel de administracion - exclusivo ADMIN/OWNER
-// (el backend lo vuelve a validar, ver AdminWalletRouter.py). Identifica
-// al usuario por email, a diferencia de features/wallet/api/walletService.ts
-// > rechargeWallet (userId), que se usa desde la fila de un usuario
-// puntual en la vista "Usuarios".
+// Módulo RehniCoin del panel admin. Identifica al usuario por email (no por userId como rechargeWallet).
 export async function rechargeWalletByEmail(
   email: string,
   amount: number,

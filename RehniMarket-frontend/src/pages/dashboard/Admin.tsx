@@ -19,7 +19,7 @@ import AccountSettings from "@/features/public/auth/components/AccountSettings";
 
 // Mismo patrón que pages/user/Dashboard.tsx: la pestaña activa se deriva
 // de la URL (?tab=...) en vez de un useState aparte, para poder
-// deep-linkear una sección puntual (ver ProfileDropdown.tsx) sin crear
+// deep-linkear una sección puntual sin crear
 // ninguna ruta nueva - el click del sidebar solo actualiza la URL.
 const VALID_TABS = [
   "home",

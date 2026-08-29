@@ -35,6 +35,7 @@ export class ErrorCode {
   static readonly CODE_EXPIRED = "CODE_EXPIRED";
   static readonly CODE_ALREADY_USED = "CODE_ALREADY_USED";
   static readonly CODE_NOT_FOUND = "CODE_NOT_FOUND";
+  static readonly RESEND_COOLDOWN_ACTIVE = "RESEND_COOLDOWN_ACTIVE";
 
   // ==========================
   // ROLES

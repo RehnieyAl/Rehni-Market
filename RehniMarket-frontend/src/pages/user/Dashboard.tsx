@@ -13,17 +13,11 @@ import Wallet from "@/features/user/components/dashboard/Wallet";
 import Addresses from "@/features/user/components/dashboard/Addresses";
 import AccountSettings from "@/features/public/auth/components/AccountSettings";
 
-// Mismo patrón que pages/dashboard/Company.tsx: página delgada que solo
-// arma el layout y cambia de vista - toda la lógica vive en
-// features/user/components/dashboard/*.
+// Página delgada: arma el layout y cambia de vista; la lógica vive en features/user/components/dashboard.
 const VALID_TABS = ["home", "orders", "favorites", "wallet", "addresses", "profile"];
 
 export default function Dashboard() {
-  // La pestaña activa se deriva directamente de la URL (?tab=...), sin
-  // duplicarla en un useState aparte: permite llegar directo a una
-  // pestaña con /user/dashboard?tab=profile (ver ProfileDropdown.tsx >
-  // "Mi perfil"/"Mi billetera"/"Configuración") sin crear ninguna ruta
-  // nueva, y el click del sidebar solo actualiza la URL.
+  // La pestaña activa se deriva de ?tab= en la URL, sin useState aparte: permite deep-links y el sidebar solo cambia la URL.
   const [searchParams, setSearchParams] = useSearchParams();
 
   const tab = searchParams.get("tab");

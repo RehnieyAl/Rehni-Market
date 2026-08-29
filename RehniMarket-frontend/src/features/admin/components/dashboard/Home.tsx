@@ -47,26 +47,13 @@ export default function Home({ onNavigate }: HomeProps) {
   const [recentUsersLoading, setRecentUsersLoading] =
     useState(true);
 
-  // Solo controla el "—" de las tarjetas de estadísticas cuando la carga
-  // falla (ver getValue más abajo) - el AVISO al usuario ya no se
-  // renderiza a mano acá, lo muestra el sistema global de alertas
-  // (ver showAlert en el catch de abajo).
+  // Muestra "—" en las tarjetas cuando falla la carga; el aviso lo da showAlert.
   const [statsFailed, setStatsFailed] = useState(false);
 
-  /*
-   * Se utiliza únicamente para actualizar
-   * los tiempos relativos de las actividades.
-   *
-   * No se ejecuta Date.now() durante el render.
-   */
+  // Solo para refrescar los tiempos relativos; nunca se llama Date.now() en el render.
   const [currentTime, setCurrentTime] =
     useState<number | null>(null);
 
-  /*
-   * =========================
-   * CARGAR ESTADÍSTICAS
-   * =========================
-   */
   useEffect(() => {
     const loadStatistics = async () => {
       try {
@@ -94,11 +81,6 @@ export default function Home({ onNavigate }: HomeProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /*
-   * =========================
-   * CARGAR ACTIVIDADES
-   * =========================
-   */
   useEffect(() => {
     const loadActivities = async () => {
       try {
@@ -109,10 +91,6 @@ export default function Home({ onNavigate }: HomeProps) {
 
         setActivities(response);
 
-        /*
-         * Obtenemos la hora actual después
-         * de recibir los datos.
-         */
         setCurrentTime(Date.now());
       } catch (error) {
         console.error(
@@ -127,11 +105,6 @@ export default function Home({ onNavigate }: HomeProps) {
     loadActivities();
   }, []);
 
-  /*
-   * =========================
-   * CARGAR USUARIOS RECIENTES
-   * =========================
-   */
   useEffect(() => {
     const loadRecentUsers = async () => {
       try {
@@ -154,19 +127,7 @@ export default function Home({ onNavigate }: HomeProps) {
     loadRecentUsers();
   }, []);
 
-  /*
-   * =========================
-   * ACTUALIZAR TIEMPO
-   * =========================
-   *
-   * No vuelve a consultar el backend.
-   * Solo actualiza el texto:
-   *
-   * Hace unos segundos
-   * Hace 5 minutos
-   * Hace 2 horas
-   * Hace 3 días
-   */
+  // Refresca el texto de tiempo relativo cada 30s sin consultar el backend.
   useEffect(() => {
     const interval = window.setInterval(() => {
       setCurrentTime(Date.now());
@@ -177,11 +138,6 @@ export default function Home({ onNavigate }: HomeProps) {
     };
   }, []);
 
-  /*
-   * =========================
-   * VALORES ESTADÍSTICAS
-   * =========================
-   */
   const getValue = (
     value: number | undefined,
   ) => {
@@ -198,10 +154,6 @@ export default function Home({ onNavigate }: HomeProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {/* =========================
-          ENCABEZADO
-      ========================= */}
-
       <div className="shrink-0">
         <h1 className="text-2xl font-bold text-gray-900">
           Inicio
@@ -212,15 +164,7 @@ export default function Home({ onNavigate }: HomeProps) {
         </p>
       </div>
 
-      {/* =========================
-          CONTENIDO
-      ========================= */}
-
       <div className="min-h-0 flex-1 overflow-hidden">
-        {/* =========================
-            USUARIOS
-        ========================= */}
-
         <section className="mt-6">
           <div className="mb-3 flex items-center gap-2">
             <UserRound
@@ -264,10 +208,6 @@ export default function Home({ onNavigate }: HomeProps) {
           </div>
         </section>
 
-        {/* =========================
-            EMPRESAS
-        ========================= */}
-
         <section className="mt-5">
           <div className="mb-3 flex items-center gap-2">
             <Building2
@@ -304,15 +244,7 @@ export default function Home({ onNavigate }: HomeProps) {
           </div>
         </section>
 
-        {/* =========================
-            USUARIOS + ACTIVIDAD
-        ========================= */}
-
         <section className="mt-5 grid min-h-0 grid-cols-1 gap-4 xl:grid-cols-2">
-          {/* =========================
-              USUARIOS RECIENTES
-          ========================= */}
-
           <div className="min-h-0 overflow-hidden rounded-xl border border-gray-200 bg-white">
             <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
               <div>
@@ -393,10 +325,6 @@ export default function Home({ onNavigate }: HomeProps) {
             </div>
           </div>
 
-          {/* =========================
-              ACTIVIDAD RECIENTE
-          ========================= */}
-
           <div className="flex min-h-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
             <div className="flex shrink-0 items-center gap-3 border-b border-gray-200 px-5 py-4">
               <div className="rounded-lg bg-gray-100 p-2 text-gray-600">
@@ -459,12 +387,6 @@ export default function Home({ onNavigate }: HomeProps) {
   );
 }
 
-/*
- * =========================
- * STAT CARD
- * =========================
- */
-
 function StatCard({
   title,
   value,
@@ -484,12 +406,6 @@ function StatCard({
     </div>
   );
 }
-
-/*
- * =========================
- * USER ROW
- * =========================
- */
 
 function UserRow({
   name,
@@ -537,12 +453,6 @@ function UserRow({
   );
 }
 
-/*
- * =========================
- * ROLE LABEL
- * =========================
- */
-
 function getRoleLabel(role: string): string {
   switch (role) {
     case "admin":
@@ -558,12 +468,6 @@ function getRoleLabel(role: string): string {
       return role;
   }
 }
-
-/*
- * =========================
- * ACTIVITY ITEM
- * =========================
- */
 
 function ActivityItem({
   title,
@@ -621,12 +525,6 @@ function ActivityItem({
   );
 }
 
-/*
- * =========================
- * ACTIVITY TYPE
- * =========================
- */
-
 function getActivityType(
   action: AdminRecentActivity["action"],
 ): "success" | "info" | "danger" | "company" {
@@ -645,34 +543,13 @@ function getActivityType(
   return "success";
 }
 
-/*
- * =========================
- * RELATIVE TIME
- * =========================
- */
-
 function formatRelativeTime(
   dateString: string,
   currentTime: number,
 ): string {
-  /*
-   * PostgreSQL:
-   *
-   * timestamp with time zone
-   *
-   * Ejemplo:
-   *
-   * 2026-08-10T01:05:49.49835+00:00
-   */
-
   let normalizedDate = dateString;
 
-  /*
-   * Compatibilidad con fechas antiguas
-   * que puedan llegar sin timezone.
-   *
-   * En ese caso las tratamos como UTC.
-   */
+  // Fechas sin timezone (formatos antiguos) se tratan como UTC.
   if (
     !dateString.endsWith("Z") &&
     !dateString.includes("+") &&

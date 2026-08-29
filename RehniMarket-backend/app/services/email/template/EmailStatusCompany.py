@@ -8,9 +8,7 @@ def EmailCompanyBlocked(
 ):
     subject = "Cuenta empresarial bloqueada | Rehni Market"
 
-    # Motivo opcional (ver ALCANCE > Suspensión de empresa, punto 13) -
-    # None para llamadas antiguas/otros flujos que no lo tengan, la
-    # sección simplemente no aparece.
+    # Motivo opcional: si es None, la sección no aparece.
     reason_section = (
         f"""
 

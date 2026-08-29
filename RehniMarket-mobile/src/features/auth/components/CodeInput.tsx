@@ -8,6 +8,7 @@ interface Props {
   length?: number;
   value: string[];
   onChange(value: string[]): void;
+  disabled?: boolean;
 }
 
 // Portado de los inputs de 6 dígitos de VerifyEmail.tsx/ResetPassword.tsx
@@ -15,7 +16,7 @@ interface Props {
 // escribir, retrocede con backspace en casilla vacía) - se usa igual en
 // verify-email y reset-password acá, por eso vive en features/auth/
 // components/ y no dentro de una sola pantalla.
-export function CodeInput({ length = 6, value, onChange }: Props) {
+export function CodeInput({ length = 6, value, onChange, disabled = false }: Props) {
   const inputs = useRef<(TextInput | null)[]>([]);
 
   const handleChange = (text: string, index: number) => {
@@ -50,10 +51,11 @@ export function CodeInput({ length = 6, value, onChange }: Props) {
           value={value[index] ?? ""}
           onChangeText={(text) => handleChange(text, index)}
           onKeyPress={(event) => handleKeyPress(event, index)}
+          editable={!disabled}
           maxLength={1}
           keyboardType="number-pad"
           textAlign="center"
-          style={styles.box}
+          style={[styles.box, disabled && styles.boxDisabled]}
         />
       ))}
     </View>
@@ -75,5 +77,9 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xl,
     fontWeight: fontWeight.bold,
     color: colors.textPrimary,
+  },
+  boxDisabled: {
+    backgroundColor: colors.border,
+    color: colors.textMuted,
   },
 });

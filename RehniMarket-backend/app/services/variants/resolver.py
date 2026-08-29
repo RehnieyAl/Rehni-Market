@@ -1,10 +1,5 @@
-"""
-Reglas de negocio de la combinacion de una variante (sistema generico).
-
-Reemplaza a `find_variant_by_color`: una variante ya no es "el producto en
-un color", es "el producto en una combinacion concreta de valores, uno
-por cada eje de variante de su categoria".
-"""
+"""Reglas de la combinación de una variante: el producto en una combinación concreta
+de valores, uno por cada eje de variante de su categoría."""
 
 from __future__ import annotations
 
@@ -25,20 +20,10 @@ from app.services.variants.combo_key import build_combo_key
 def resolve_option_set(
     database: Session, product: Product, option_ids
 ) -> list[CatalogAttributeOption]:
-    """
-    Valida que `option_ids` sea una combinacion COMPLETA y VALIDA para
-    `product` y devuelve las opciones (ORM), ordenadas por la posicion de
-    su eje.
-
-    Reglas:
-      - cada opcion existe;
-      - su atributo es role="variant" y del catalogo del producto;
-      - exactamente una opcion por eje;
-      - se cubren TODOS los ejes de variante del catalogo, ni mas ni menos.
-
-    Un producto cuya categoria no tiene ejes de variante exige
-    `option_ids` vacio (variante de SKU unico).
-    """
+    """Valida que `option_ids` sea una combinación completa y válida para `product`
+    (cada opción existe, su atributo es role="variant" del catálogo, exactamente una
+    por eje, cubre todos los ejes) y devuelve las opciones ordenadas por posición del eje.
+    Sin ejes de variante exige `option_ids` vacío (SKU único)."""
 
     axes = attrs.get_variant_axes(database, product.catalog_id)
     axis_ids = {axis.id for axis in axes}
@@ -137,12 +122,8 @@ def find_variant_by_combo(
 def resolve_variant_by_option_ids(
     database: Session, product_id, option_ids, *, include_deleted: bool = False
 ) -> ProductVariant | None:
-    """
-    Devuelve la variante VIVA (o cualquiera si include_deleted) cuya
-    combinacion coincide EXACTAMENTE con `option_ids`. No valida que la
-    combinacion sea completa - eso es trabajo de resolve_option_set; esta
-    funcion es el "lookup" que usan carrito/checkout/detalle publico.
-    """
+    """Lookup: la variante viva cuya combinación coincide exactamente con `option_ids`.
+    No valida que sea completa (eso es resolve_option_set)."""
 
     combo = build_combo_key(option_ids)
     return find_variant_by_combo(
@@ -151,10 +132,7 @@ def resolve_variant_by_option_ids(
 
 
 def apply_options_to_variant(database: Session, variant: ProductVariant, options) -> None:
-    """
-    Reemplaza las VariantOption de la variante por `options` y recalcula
-    combo_key. No hace commit.
-    """
+    """Reemplaza las VariantOption de la variante por `options` y recalcula combo_key. No hace commit."""
 
     database.query(VariantOption).filter(
         VariantOption.variant_id == variant.id

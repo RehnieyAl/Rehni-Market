@@ -22,11 +22,7 @@ from app.core.Exceptions import api_error
 
 
 def _normalize_specifications(technical_spec):
-    """
-    Acepta tanto una lista de dicts como el string JSON que envia el
-    formulario (mismo formato en creacion y actualizacion:
-    [{specificationTemplateId, value}, ...]).
-    """
+    """Acepta una lista de dicts o el string JSON del formulario: [{specificationTemplateId, value}, ...]."""
 
     if isinstance(technical_spec, str):
         return json.loads(technical_spec) if technical_spec else []
@@ -35,17 +31,7 @@ def _normalize_specifications(technical_spec):
 
 
 def _validate_specifications_belong_to_catalog(database: Session, specifications, catalog_id):
-    """
-    Regla de negocio (ver ALCANCE > punto 4): una specification_template
-    seleccionada por la empresa debe pertenecer al mismo catalogo del
-    producto. Las specification_templates las administra exclusivamente
-    ADMIN/OWNER - la empresa solo selecciona una de las que ya existen
-    para ese catalogo y le asigna un valor.
-
-    Tambien rechaza que la misma plantilla aparezca dos veces en el mismo
-    envio (un producto no puede tener dos valores para la misma
-    especificacion).
-    """
+    """La plantilla elegida debe pertenecer al catálogo del producto y no repetirse en el envío."""
 
     seen_template_ids = set()
 
@@ -229,8 +215,6 @@ def get_product_detail_service(user_id, product_id, database: Session) -> Produc
         created_at=product.created_at,
         deleted_at=product.deleted_at,
         catalog_id=product.catalog_id,
-        # catalog_id es NOT NULL con FK obligatoria (ver esquema real de
-        # PostgreSQL) - un producto siempre tiene catalogo.
         catalog_name=product.catalog.name,
         main_color_id=product.main_color_id,
         main_color=main_color,
@@ -305,13 +289,7 @@ def update_product_service(
             product.discount_value = data.discountValue
 
         if (data.discountEnable is not None or data.discountValue is not None) and product.discount_enable:
-            # Un descuento "activado" con valor 0 (o sin valor) queda
-            # invisible para el comprador: _compute_price_fields
-            # (app/services/publicService/Products.py) lo trata como sin
-            # descuento porque no hay nada que restar. Se rechaza acá para
-            # que la empresa reciba el error en el momento de guardar, en
-            # vez de guardar en silencio un descuento que nunca se refleja
-            # en el storefront público.
+            # Un descuento activado con valor 0 sería invisible para el comprador: se rechaza al guardar.
             if not product.discount_value or product.discount_value <= 0:
                 api_error(
                     400,
@@ -356,9 +334,7 @@ def update_product_service(
             database.flush()
 
         if data.mainImageId is not None:
-            # El frontend permite marcar una imagen YA EXISTENTE como
-            # principal sin borrarla y volver a subirla. Ownership-scoped
-            # igual que el resto de queries de este service.
+            # Marca una imagen ya existente como principal sin volver a subirla.
             new_main_image = (
                 database.query(ProductImage)
                 .filter(
@@ -378,10 +354,7 @@ def update_product_service(
             new_main_image.is_main = True
 
         elif imagesToDeleted or imagesProduct:
-            # Si el producto se quedo sin ninguna imagen marcada como
-            # principal (por ejemplo, se elimino la que lo era),
-            # promovemos la primera que quede - mismo criterio que
-            # create_product_service.
+            # Si el producto quedó sin imagen principal, se promueve la primera que quede.
             remaining_images = (
                 database.query(ProductImage)
                 .filter(ProductImage.product_id == product.id)
@@ -395,11 +368,7 @@ def update_product_service(
         if data.technicalSpecProduct is not None:
             technical_spec = _normalize_specifications(data.technicalSpecProduct)
 
-            # Se valida contra el catalogo VIGENTE del producto (el que
-            # acaba de aplicarse arriba si data.catalogId venia en el
-            # patch) - una especificacion que era valida para el catalogo
-            # anterior puede dejar de serlo tras el cambio (ver ALCANCE >
-            # punto 14, "Cambio de catalogo").
+            # Se valida contra el catálogo vigente del producto (ya aplicado si venía en el patch).
             _validate_specifications_belong_to_catalog(database, technical_spec, product.catalog_id)
 
             database.query(ProductSpecification).filter(
@@ -435,19 +404,8 @@ def update_product_service(
 
 
 def change_product_status_service(user_id,product_id,is_active,database: Session):
-    """
-    Toggle Activo/Inactivo - accion DISTINTA de eliminar (ver
-    delete_product_service y ModelProduct.py > Product.deleted_at):
-    reversible en ambos sentidos, no toca deleted_at.
-
-    Un producto con deleted_at != NULL (eliminado) se trata como "no
-    encontrado" acá tambien - a proposito, para que este toggle nunca
-    pueda reactivar (is_active=True) un producto eliminado. Esta tarea
-    NO implementa una funcion de restauracion (ver ALCANCE > punto 18:
-    "si no existe, no implementarla acá"), asi que mientras no exista,
-    el camino mas seguro es que ningun endpoint pueda deshacer un
-    deleted_at de forma implicita.
-    """
+    """Toggle Activo/Inactivo: reversible, no toca deleted_at. Un producto eliminado
+    (deleted_at != NULL) se trata como "no encontrado" para que este toggle no lo reactive."""
 
     try:
         search_user = database.query(Users).filter(Users.id == user_id).first()
@@ -481,32 +439,9 @@ def change_product_status_service(user_id,product_id,is_active,database: Session
 
 
 def delete_product_service(user_id,product_id,database: Session):
-    """
-    Soft-delete (mismo patron que Review.is_active, ver
-    ReviewService.delete_my_review_service): un producto puede tener
-    historial real que otras tablas referencian por FK sin ON DELETE
-    CASCADE -a proposito, para no perder ese historial- (OrderItem con
-    el detalle de pedidos ya facturados, Review con las reseñas de
-    compradores, Favorite con los favoritos guardados, Report con
-    reportes historicos; ver ModelOrder.py, ModelReview.py,
-    ModelFavorite.py y ModelReport.py). Un DELETE fisico del producto
-    rompe esas FK apenas alguna de esas tablas tiene una fila (ver
-    "violates foreign key constraint" en Postgres), asi que "eliminar"
-    nunca borra la fila: se marca is_active=False + deleted_at=ahora.
-
-    is_active=False por si solo NO significa "eliminado" - tambien lo usa
-    el toggle Activo/Inactivo (ver change_product_status_service), que es
-    una accion distinta y reversible. deleted_at es lo que distingue
-    "eliminado" (con fecha) de "simplemente desactivado" (NULL) - ver
-    ModelProduct.py > Product.deleted_at para la tabla completa de
-    combinaciones. Los listados/busquedas/detalle publicos ya filtran por
-    is_active=True (ver publicService/Products.py y publicService/
-    Company.py) y el checkout ya rechaza productos inactivos (ver
-    CartService/CheckoutService) - como un producto eliminado siempre
-    tiene is_active=False, esos filtros ya alcanzan para que un producto
-    eliminado deje de ser visible/comprable sin necesitar chequear
-    deleted_at ahi tambien.
-    """
+    """Soft-delete: "eliminar" marca is_active=False + deleted_at=ahora, nunca borra la fila
+    (OrderItem/Review/Favorite/Report la referencian por FK sin CASCADE). deleted_at con fecha
+    distingue "eliminado" de "solo desactivado" (NULL)."""
 
     try:
         search_user = (database.query(Users).filter(Users.id == user_id).first())
@@ -516,12 +451,8 @@ def delete_product_service(user_id,product_id,database: Session):
 
         product = (database.query(Product).filter(Product.id == product_id,Product.company_id == search_user.company.id).first())
 
-        # Idempotente: un producto ya eliminado (deleted_at != NULL) se
-        # trata como "no encontrado" para este endpoint - no se re-marca
-        # ni se reintenta nada, evitando cualquier UPDATE/IntegrityError
-        # innecesario. OJO: esto es distinto de "esta desactivado" -
-        # un producto simplemente desactivado (is_active=False,
-        # deleted_at=NULL) SI puede eliminarse normalmente.
+        # Idempotente: un producto ya eliminado se trata como "no encontrado".
+        # Un producto solo desactivado (deleted_at=NULL) sí puede eliminarse.
         if not product or product.deleted_at is not None:
             api_error(404, ErrorCodes.PRODUCT_NOT_FOUND, "Producto no encontrado")
 

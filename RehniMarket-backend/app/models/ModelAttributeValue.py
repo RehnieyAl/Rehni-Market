@@ -1,13 +1,6 @@
-"""
-Valores de atributos role="spec" (sistema generico - ver
-ModelCatalogAttribute.py).
-
-Reemplazan a `ProductSpecification` / `VariantSpecification`: en vez de
-apuntar a una `SpecificationTemplate`, apuntan a un `CatalogAttribute`
-(que unifica specs y ejes de variante bajo un solo modelo). Solo tienen
-sentido para atributos con `role="spec"`; los `role="variant"` se portan
-via `VariantOption`.
-"""
+"""Valores de atributos role="spec". Reemplazan a ProductSpecification /
+VariantSpecification apuntando a un CatalogAttribute en vez de a una
+SpecificationTemplate; los role="variant" van por VariantOption."""
 
 from __future__ import annotations
 

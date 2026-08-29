@@ -80,6 +80,11 @@ export default function Login() {
           navigate("/verify-email", {
             state: {
               email: form.email,
+              // Contadores calculados por el backend (ver
+              // VerificationCodeState): el código ya fue (re)enviado como
+              // parte de este login.
+              expiresIn: errorResponse.expires_in,
+              resendAvailableIn: errorResponse.resend_available_in,
             },
           });
         }

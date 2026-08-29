@@ -80,7 +80,15 @@ export default function LoginScreen() {
       const detail = getApiErrorDetail(err);
 
       if (detail?.code === ErrorCode.EMAIL_NOT_VERIFIED) {
-        router.push({ pathname: "/(auth)/verify-email", params: { email } });
+        router.push({
+          pathname: "/(auth)/verify-email",
+          params: {
+            email,
+            expiresIn: detail.expires_in != null ? String(detail.expires_in) : "",
+            resendAvailableIn:
+              detail.resend_available_in != null ? String(detail.resend_available_in) : "",
+          },
+        });
         return;
       }
 

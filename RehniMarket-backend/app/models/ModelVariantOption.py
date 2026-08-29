@@ -1,20 +1,6 @@
-"""
-Tabla puente variante <-> valor de atributo.
-
-Una `ProductVariant` tiene una fila por cada eje de variante del producto:
-
-    ProductVariant #1  ->  (Color -> Verde), (Talla -> 40)
-    ProductVariant #2  ->  (Color -> Verde), (Talla -> 41)
-    ProductVariant #3  ->  (Color -> Negro), (Talla -> 40)
-
-Reglas (validadas en el servicio, ver app/services/variants/):
-  - a lo sumo UNA opcion por atributo por variante (garantizado tambien
-    por uq_variant_option_attribute mas abajo);
-  - la variante debe cubrir EXACTAMENTE los ejes role="variant" del
-    catalogo del producto;
-  - la combinacion completa se resume en ProductVariant.combo_key, con
-    UNIQUE(product_id, combo_key) -> no hay dos variantes iguales.
-"""
+"""Tabla puente variante <-> opción de atributo: una fila por eje de variante.
+A lo sumo una opción por atributo (uq_variant_option_pair); la combinación
+completa se resume en ProductVariant.combo_key."""
 
 from __future__ import annotations
 

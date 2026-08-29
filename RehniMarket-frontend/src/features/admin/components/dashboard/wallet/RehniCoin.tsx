@@ -10,11 +10,7 @@ import type { WalletRechargeHistoryItem } from "@/features/wallet/types/response
 
 const EMPTY_FORM = { email: "", amount: "", description: "" };
 
-// Modulo RehniCoin (ver ALCANCE > MODULO REHNICOIN) - exclusivo
-// ADMIN/OWNER: solo se agrega a la navegacion de esos dos roles (ver
-// dashboardNavigation.tsx). El backend vuelve a validar el rol en cada
-// endpoint (ver AdminWalletRouter.py), esta vista no es la unica
-// barrera de seguridad.
+// Módulo RehniCoin, exclusivo ADMIN/OWNER; el backend revalida el rol en cada endpoint.
 export default function RehniCoin() {
   const { showAlert } = useAlert();
 
@@ -74,10 +70,7 @@ export default function RehniCoin() {
 
       setForm(EMPTY_FORM);
 
-      // La recarga recien hecha siempre queda primera (orden por fecha
-      // desc en el backend, ver WalletRepository.list_recharge_history) -
-      // volver a la pagina 1 para verla sin que el usuario tenga que
-      // navegar manualmente.
+      // Volver a la página 1: la recarga recién hecha queda primera (orden por fecha desc).
       if (page === 1) {
         await loadHistory(1);
       } else {
@@ -86,9 +79,7 @@ export default function RehniCoin() {
     } catch (error) {
       console.error("Error recargando RehniCoin:", error);
 
-      // Mismo criterio que el resto del flujo de compra (ver
-      // ProductDetail.tsx): mensaje real de la API vía AlertMessage,
-      // nunca alert()/confirm() del navegador.
+      // Mensaje real de la API vía AlertMessage, nunca alert()/confirm().
       const message = axios.isAxiosError(error)
         ? error.response?.data?.detail?.message
         : undefined;
@@ -108,7 +99,6 @@ export default function RehniCoin() {
         COP - es una billetera interna simulada, no una criptomoneda real.
       </p>
 
-      {/* FORMULARIO DE RECARGA */}
       <div className="mt-6 rounded-2xl border bg-white p-6">
         <h2 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
           <Coins size={18} className="text-[#6D0F2D]" />
@@ -169,7 +159,6 @@ export default function RehniCoin() {
         </button>
       </div>
 
-      {/* HISTORIAL */}
       <div className="mt-8">
         <h2 className="mb-4 font-semibold text-gray-900">
           Últimas recargas

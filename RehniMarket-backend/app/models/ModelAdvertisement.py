@@ -9,18 +9,8 @@ from app.database.Connection import Base
 
 
 class AdvertisementTargetType(str, PyEnum):
-    """
-    Anuncios dinámicos por reglas (ver ALCANCE > Anuncios dinámicos).
-    `None` (columna target_type sin valor) = anuncio MANUAL clásico,
-    compatible con los anuncios creados antes de esto: usa `button_link`
-    tal cual lo escribió el admin, sin ninguna regla (ver
-    AdvertisementService.py > resolve_advertisement_destination).
-
-    PROMOTION/BLACK_FRIDAY/CYBER_DAYS comparten el mismo mecanismo real
-    (filtro `minDiscount` del catálogo público) - la diferencia entre
-    ellos es solo la etiqueta/título sugerido en el panel admin, no la
-    lógica (ver AdvertisementTargeting.py, un único resolver para los 4).
-    """
+    """target_type None = anuncio manual clásico (usa button_link tal cual).
+    PROMOTION/BLACK_FRIDAY/CYBER_DAYS comparten resolver (filtro minDiscount)."""
 
     PRODUCT = "PRODUCT"
     CATEGORY = "CATEGORY"
@@ -33,10 +23,6 @@ class AdvertisementTargetType(str, PyEnum):
 
 
 class Advertisement(Base):
-    """
-    Anuncio administrado por ADMIN/OWNER y mostrado en el Hero
-    del Home público.
-    """
 
     __tablename__ = "advertisements"
 
@@ -56,15 +42,13 @@ class Advertisement(Base):
         nullable=True
     )
 
-    # Imagen principal para escritorio/tablet.
-    # Recomendado: 1920x600 px.
+    # Escritorio/tablet. Recomendado: 1920x600 px.
     image_url: Mapped[str] = mapped_column(
         String(255),
         nullable=False
     )
 
-    # Imagen específica para móvil.
-    # Recomendado: 1080x1000 px.
+    # Móvil. Recomendado: 1080x1000 px.
     mobile_image_url: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True
@@ -75,12 +59,7 @@ class Advertisement(Base):
         nullable=True
     )
 
-    # Cuando target_type NO es None, este valor lo calcula el backend
-    # (ver resolve_advertisement_destination) usando rutas/parámetros
-    # reales del catálogo público - el admin ya no lo escribe a mano.
-    # Cuando target_type ES None (anuncio manual clásico, incluye todos
-    # los anuncios creados antes de esta migración), se sigue usando tal
-    # cual el admin lo escribió - compatibilidad total hacia atrás.
+    # Con target_type != None lo calcula el backend; con None se usa tal cual lo escribió el admin.
     button_link: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True
@@ -103,13 +82,7 @@ class Advertisement(Base):
         default=datetime.utcnow
     )
 
-    # =================================================
-    # ANUNCIOS DINÁMICOS POR REGLAS (ver ALCANCE)
-    # =================================================
-    # Todas nullable a propósito: un anuncio manual clásico (target_type
-    # None) no usa ninguna de estas. Columnas explícitas (no JSON), mismo
-    # criterio que el resto del proyecto.
-
+    # Anuncios dinámicos por reglas. Todas nullable: un anuncio manual no usa ninguna.
     target_type: Mapped[AdvertisementTargetType | None] = mapped_column(
         Enum(AdvertisementTargetType, name="advertisementtargettype"),
         nullable=True,
@@ -130,13 +103,11 @@ class Advertisement(Base):
         UUID(as_uuid=True), ForeignKey("company.id", ondelete="SET NULL"), nullable=True
     )
 
-    # PROMOTION / BLACK_FRIDAY / CYBER_DAYS / LIQUIDATION - porcentaje
-    # mínimo de descuento (ej. 20, 30, 15...).
+    # PROMOTION / BLACK_FRIDAY / CYBER_DAYS / LIQUIDATION - % mínimo de descuento.
     minimum_discount: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    # LIQUIDATION - stock máximo (ej. 5). Puede combinarse con
-    # minimum_discount o usarse solo (ver ALCANCE > "y/o").
+    # LIQUIDATION - stock máximo. Combinable con minimum_discount o solo.
     maximum_stock: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    # NEW_RELEASE - productos creados en los últimos N días (ej. 30).
+    # NEW_RELEASE - productos creados en los últimos N días.
     max_age_days: Mapped[int | None] = mapped_column(Integer, nullable=True)

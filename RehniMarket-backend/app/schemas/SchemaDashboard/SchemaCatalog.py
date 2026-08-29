@@ -6,11 +6,7 @@ from pydantic import BaseModel, Field
 
 
 class CreateCatalogRequest(BaseModel):
-    """
-    multipart/form-data (mismo criterio que CreateAdvertisementRequest,
-    ver SchemaAdvertisement.py) - la imagen se recibe como UploadFile
-    directamente desde el router, no puede viajar en JSON.
-    """
+    """multipart/form-data: la imagen llega como UploadFile desde el router."""
 
     name: str = Field(..., min_length=2, max_length=100)
     description: str | None = Field(default=None, max_length=500)
@@ -41,9 +37,7 @@ class UpdateCatalogRequest(BaseModel):
     display_order: int | None = Field(default=None, ge=0)
     is_active: bool | None = None
 
-    # Elimina la imagen actual sin subir una nueva (mismo motivo que
-    # remove_mobile_image en Advertisement: un target ausente es
-    # ambiguo entre "no la toques" y "bórrala").
+    # Elimina la imagen actual sin subir otra; un campo ausente es ambiguo entre "no tocar" y "borrar".
     remove_image: bool = False
 
     @classmethod
@@ -72,10 +66,7 @@ class CatalogResponse(BaseModel):
     display_order: int
     is_active: bool
 
-    # Productos ACTIVOS del catálogo (ver ALCANCE > "Contador de
-    # productos" - mismos criterios que _has_visible_stock del catálogo
-    # público) - calculado en get_catalogs_service con un único query
-    # agregado, no es una columna del modelo.
+    # Productos activos del catálogo; calculado, no es columna del modelo.
     product_count: int = 0
 
     model_config = {

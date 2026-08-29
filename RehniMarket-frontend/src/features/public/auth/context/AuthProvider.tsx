@@ -15,11 +15,9 @@ import type {
   Role,
 } from "@/features/public/auth/types/response";
 
-
 interface Props {
   children: ReactNode;
 }
-
 
 export function AuthProvider({ children }: Props) {
 
@@ -48,7 +46,6 @@ export function AuthProvider({ children }: Props) {
 
   const [user, setUser] = useState<AuthUser | null>(null);
 
-
   useEffect(() => {
     const loadProfile = async () => {
 
@@ -57,7 +54,6 @@ export function AuthProvider({ children }: Props) {
         setRole(null);
         return;
       }
-
 
       try {
         const profile = await getProfile();
@@ -71,17 +67,11 @@ export function AuthProvider({ children }: Props) {
 
     };
 
-
     loadProfile();
 
   }, [accessToken]);
 
-
-  // Expuesta vía contexto para volver a pedir GET /auth/me bajo demanda
-  // desde "Configuración de cuenta" después de editar nombre/correo/foto,
-  // sin necesitar recargar la página - mismo fetch que el efecto de
-  // arriba, pero disparado manualmente (no como dependencia de un
-  // efecto).
+  // Vuelve a pedir GET /auth/me bajo demanda (tras editar la cuenta), sin recargar la página.
   const refreshProfile = useCallback(async () => {
     if (!accessToken) {
       setUser(null);
@@ -100,13 +90,11 @@ export function AuthProvider({ children }: Props) {
     }
   }, [accessToken]);
 
-
   const login = (data: TokenResponse) => {
 
     setAccessToken(data.access_token);
     setRefreshToken(data.refresh_token);
     setRole(data.role);
-
 
     localStorage.setItem(
       "accessToken",
@@ -125,7 +113,6 @@ export function AuthProvider({ children }: Props) {
 
   };
 
-
   const logout = () => {
 
     setAccessToken(null);
@@ -133,13 +120,11 @@ export function AuthProvider({ children }: Props) {
     setRole(null);
     setUser(null);
 
-
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("role");
 
   };
-
 
   const value: AuthContextType = {
     accessToken,
@@ -150,7 +135,6 @@ export function AuthProvider({ children }: Props) {
     logout,
     refreshProfile,
   };
-
 
   return (
     <AuthContext.Provider value={value}>

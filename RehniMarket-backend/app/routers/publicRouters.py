@@ -1,4 +1,3 @@
-#Public
 from fastapi import APIRouter,Depends,Query
 from sqlalchemy.orm import Session
 from app.database.Connection import get_db
@@ -52,18 +51,10 @@ def get_colors(database: Session = Depends(get_db)):
     return get_colors_service(database)
 
 
-# ==========================
-# ANUNCIOS (Hero del Home)
-# ==========================
-
 @router.get("/advertisements", response_model=list[AdvertisementResponse])
 def get_advertisements(database: Session = Depends(get_db)):
     return get_active_advertisements_service(database)
 
-
-# ==========================
-# PRODUCTOS PÚBLICOS (catálogo completo + Productos del día)
-# ==========================
 
 @router.get("/products", response_model=PublicProductsPaginatedResponse)
 def get_public_products(
@@ -73,11 +64,7 @@ def get_public_products(
     max_price: Decimal | None = Query(None, ge=0),
     discount: bool | None = Query(None),
     in_stock: bool | None = Query(None),
-    # Anuncios dinamicos por reglas (ver ALCANCE > Anuncios dinamicos):
-    # mismo criterio snake_case que min_price/max_price/in_stock - el
-    # frontend traduce esto desde los parametros camelCase de la URL de
-    # la pagina (minDiscount/maxStock/days, ver
-    # features/public/products/api/productsService.ts > getPublicProducts).
+    # Filtros de anuncios dinámicos; el frontend los traduce desde los parámetros camelCase de la URL.
     min_discount: int | None = Query(None, ge=0, le=100),
     max_stock: int | None = Query(None, ge=0),
     days: int | None = Query(None, ge=1),
@@ -126,10 +113,6 @@ def get_public_product_reviews(
     return list_product_reviews_service(database, product_id, page=page, limit=limit)
 
 
-# ==========================
-# PERFIL PUBLICO DE EMPRESA
-# ==========================
-
 @router.get("/company/{company_id}", response_model=PublicCompanyProfileResponse)
 def get_public_company(company_id: UUID, database: Session = Depends(get_db)):
     return get_public_company_profile_service(database, company_id)
@@ -147,10 +130,7 @@ def get_public_company_products(
     )
 
 
-# Reputación de empresa (ver ALCANCE > Calificaciones de empresa) -
-# endpoint único y reutilizable (regla 9), consumido desde 3 lugares
-# distintos del frontend (Dashboard Empresa, Mi tienda, perfil público de
-# empresa - ver CompanyRatingBadge.tsx).
+# Reputación de empresa: endpoint único, consumido desde dashboard, "Mi tienda" y perfil público.
 @router.get("/company/{company_id}/rating", response_model=CompanyRatingResponse)
 def get_public_company_rating(company_id: UUID, database: Session = Depends(get_db)):
     return get_company_rating_service(database, company_id)

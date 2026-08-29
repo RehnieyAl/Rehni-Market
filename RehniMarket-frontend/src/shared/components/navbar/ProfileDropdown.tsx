@@ -14,25 +14,8 @@ import { dashboardNavigation } from "@/shared/config/dashboardNavigation";
 import type { SidebarItem } from "@/shared/components/dashboard/Sidebar";
 import type { Role } from "@/features/public/auth/types/auth";
 
-// Acceso rápido por rol: qué ids de dashboardNavigation (ver
-// shared/config/dashboardNavigation.tsx) se muestran en este dropdown, y
-// a qué dashboard real pertenecen. Los labels/iconos NO se duplican acá -
-// se toman de dashboardNavigation por id (ver `pickItems` más abajo), así
-// que si algún día cambia un nombre o un ícono en el sidebar, este menú
-// lo hereda solo.
-//
-// Selección (ver AUDITORÍA ProfileDropdown):
-// - admin/owner: de las 9 pestañas reales, se muestran las 5 de gestión
-//   core + cuenta; "Anuncios", "Reportes" y "RehniCoin" quedan
-//   disponibles desde el propio sidebar del dashboard, no acá, para no
-//   convertir el dropdown en un segundo sidebar.
-// - company: se muestran las 6 pestañas reales completas - el dashboard
-//   de empresa ya es compacto, no hace falta recortar.
-// - user: de las 6 pestañas reales (incluye "wallet"/RehniCoins, ver
-//   ALCANCE > módulo RehniCoin comprador), se excluye "addresses": las
-//   direcciones de envío se gestionan en el flujo de checkout
-//   (AddressSelectionModal, ver features/cart/components/CheckoutView.tsx),
-//   no es una acción de acceso frecuente desde el header.
+// Qué ids de dashboardNavigation se muestran en este dropdown por rol. Labels/iconos se heredan por id.
+// admin/owner: gestión core + cuenta. company: las 6 pestañas. user: todas menos "addresses" (van en el checkout).
 const ADMIN_DROPDOWN_CONFIG = {
   basePath: "/admin/dashboard",
   navIds: ["home", "companies", "users", "products", "payouts"],
@@ -60,10 +43,7 @@ const DROPDOWN_CONFIG: Record<
   },
 };
 
-// Mismo mecanismo real que ya usan pages/user/Dashboard.tsx,
-// pages/dashboard/Company.tsx y pages/dashboard/Admin.tsx para elegir
-// pestaña: query param ?tab=, con "home" como caso especial que no lo
-// necesita (coincide con handleViewChange en esas tres páginas).
+// Mismo mecanismo que las páginas de dashboard: query param ?tab=, con "home" como caso especial.
 const buildTabPath = (basePath: string, tabId: string) =>
   tabId === "home" ? basePath : `${basePath}?tab=${tabId}`;
 
@@ -133,16 +113,12 @@ export default function ProfileDropdown() {
       ref={ref}
       className="relative"
     >
-      {/* =====================================================
-          BOTÓN PERFIL
-      ===================================================== */}
 
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
         className="flex items-center gap-3 rounded-xl px-2 py-1.5 transition hover:bg-gray-100"
       >
-        {/* AVATAR */}
 
         <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#6D0F2D] text-sm font-bold text-white">
           {user?.profileImagen ? (
@@ -155,8 +131,6 @@ export default function ProfileDropdown() {
             initial
           )}
         </div>
-
-        {/* INFORMACIÓN */}
 
         <div className="min-w-0 text-left">
           <p className="max-w-[150px] truncate text-sm font-semibold text-gray-900">
@@ -176,16 +150,8 @@ export default function ProfileDropdown() {
         />
       </button>
 
-      {/* =====================================================
-          DROPDOWN
-      ===================================================== */}
-
       {open && (
         <div className="absolute right-0 z-50 mt-3 w-72 overflow-hidden rounded-2xl bg-white shadow-xl">
-
-          {/* =================================================
-              INFORMACIÓN DEL USUARIO
-          ================================================= */}
 
           <div className="bg-gray-50 p-4">
             <div className="flex items-center gap-3">

@@ -26,7 +26,7 @@ interface PayoutDetailModalProps {
   // que el modal queda de solo lectura ahí.
   footer?: (payout: CompanyPayout) => ReactNode;
   // companyName solo lo trae CompanyPayoutResponse cuando lo consulta el
-  // admin (ver PayoutService._to_response) - se muestra el título acorde.
+  // admin - se muestra el título acorde.
   showCompanyName?: boolean;
 }
 
@@ -101,14 +101,13 @@ export default function PayoutDetailModal({
             <p className="py-8 text-center text-sm text-gray-500">Cargando liquidación...</p>
           ) : (
             <div className="space-y-6">
-              {/* ESTADO */}
+
               <div className="flex items-center justify-between">
                 <PayoutStatusBadge status={payout.payoutStatus} />
 
                 <span className="text-sm text-gray-500">{periodLabel(payout)}</span>
               </div>
 
-              {/* MONTOS */}
               <section className="rounded-2xl border bg-gray-50 p-4">
                 <dl className="space-y-2 text-sm">
                   <div className="flex justify-between text-gray-600">
@@ -133,7 +132,6 @@ export default function PayoutDetailModal({
                 </dl>
               </section>
 
-              {/* CUENTA DE DESTINO */}
               <section>
                 <h3 className="mb-3 font-semibold text-gray-900">Cuenta de destino</h3>
 
@@ -147,7 +145,6 @@ export default function PayoutDetailModal({
                 </div>
               </section>
 
-              {/* REHNICOIN */}
               {payout.rehniCoinMovement && (
                 <section>
                   <h3 className="mb-3 font-semibold text-gray-900">Conversión RehniCoin</h3>
@@ -168,7 +165,6 @@ export default function PayoutDetailModal({
                 </section>
               )}
 
-              {/* FECHAS */}
               <section className="space-y-1.5 border-t border-gray-100 pt-4 text-sm text-gray-500">
                 <div className="flex justify-between">
                   <span>Generada</span>

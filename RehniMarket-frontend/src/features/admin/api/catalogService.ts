@@ -20,7 +20,7 @@ export async function getAdminCatalogs(): Promise<AdminCatalogResponse[]> {
   return response.data;
 }
 
-// multipart/form-data (mismo criterio que advertisementService.ts) - la
+// multipart/form-data - la
 // imagen viaja como archivo, no puede ir en JSON.
 export async function createAdminCatalog(
   data: CreateCatalogRequest,
@@ -81,7 +81,6 @@ export async function changeAdminCatalogStatus(
 export async function deleteAdminCatalog(catalogId: string): Promise<void> {
   await api.delete(`/admin/dashboard/delete-catalogs/${catalogId}`);
 }
-
 
 export async function getAdminSpecifications(
   catalogId: string,

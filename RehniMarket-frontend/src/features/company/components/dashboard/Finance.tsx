@@ -12,11 +12,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "bankAccounts", label: "Cuentas bancarias" },
 ];
 
-// Sección "Finanzas" del dashboard de empresa (ver ALCANCE > Módulo de
-// liquidaciones, Fase 6): Resumen financiero / Liquidaciones / Cuentas
-// bancarias, mismo patrón de tabs locales que Orders.tsx (STATUS_TABS),
-// sin sub-rutas de React Router - este dashboard ya funciona por
-// vistas/tabs con useState (ver Company.tsx).
+// Sección "Finanzas": Resumen / Liquidaciones / Cuentas bancarias, con tabs locales (useState, sin sub-rutas).
 export default function Finance() {
   const [tab, setTab] = useState<TabId>("summary");
 
@@ -29,7 +25,6 @@ export default function Finance() {
         bancarias donde recibes tus pagos.
       </p>
 
-      {/* TABS */}
       <div className="mt-6 flex flex-wrap gap-2">
         {TABS.map((item) => (
           <button

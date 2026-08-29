@@ -23,14 +23,8 @@ from app.schemas.SchemaCommerce.SchemaWallet import (
     WalletRechargeHistoryPaginatedResponse,
 )
 
-# RehniCoin es un simulador interno (ver ModelWallet.py) - NO hay
-# blockchain ni criptomoneda real, ni ninguna integracion externa aqui.
-
-
 def _to_transaction_response(transaction: WalletTransaction) -> WalletTransactionResponse:
-    # No se usa .model_validate(): from_attributes solo lee atributos con
-    # el MISMO nombre, y createdAt (schema) no coincide con created_at
-    # (modelo) - se mapea a mano (mismo caso que AddressService.py).
+    # Mapeo a mano: createdAt (schema) no coincide con created_at (modelo).
     return WalletTransactionResponse(
         id=transaction.id,
         type=transaction.type.value,
@@ -76,15 +70,7 @@ def get_my_transactions_service(
 def recharge_wallet_service(
     data: RechargeWalletRequest, database: Session, created_by: UUID | None = None
 ) -> WalletResponse:
-    """
-    Solo ADMIN/OWNER pueden llamar este servicio - la validacion de rol
-    vive en el router (mismo patron que el resto del backoffice de
-    admin, ver AdminUserRouters.py), no aqui.
-
-    `created_by` es opcional para no romper el contrato existente de este
-    endpoint (userId), pero el router siempre lo pasa (request.state.user_id)
-    - ver ALCANCE > AUDITORIA.
-    """
+    """Solo admin/owner (validado en el router). `created_by` es el admin que recarga."""
 
     try:
         target_user = get_by_id(database, data.userId)
@@ -124,13 +110,7 @@ def recharge_wallet_service(
 def recharge_wallet_by_email_service(
     data: RechargeWalletByEmailRequest, created_by: UUID, database: Session
 ) -> RechargeWalletByEmailResponse:
-    """
-    POST /admin/wallet/recharge (ver AdminWalletRouter.py) - identifica al
-    usuario por email en vez de userId (ver ALCANCE > IDENTIFICACION DEL
-    USUARIO). Reutiliza la misma mecanica de ledger que
-    recharge_wallet_service (no se duplica: se llama a get_or_create_wallet
-    y se arma el mismo tipo de WalletTransaction).
-    """
+    """POST /admin/wallet/recharge: identifica al usuario por email; misma mecánica de ledger."""
 
     try:
         target_user = get_by_email(database, data.email)
@@ -194,10 +174,7 @@ def _to_history_response(transaction: WalletTransaction) -> WalletRechargeHistor
 def list_recharge_history_service(
     database: Session, page: int = 1, limit: int = 10
 ) -> WalletRechargeHistoryPaginatedResponse:
-    """
-    Historial de recargas administrativas para la vista "RehniCoin" (ver
-    ALCANCE > HISTORIAL) - solo ADMIN/OWNER (validado en el router).
-    """
+    """Historial de recargas administrativas; solo admin/owner (validado en el router)."""
 
     transactions, total = repo.list_recharge_history(database, page, limit)
 
@@ -211,12 +188,8 @@ def list_recharge_history_service(
 
 
 def charge_wallet(database: Session, user_id: UUID, amount: Decimal, description: str):
-    """
-    Descuenta `amount` de la billetera del usuario (usado por
-    CheckoutService al confirmar un pedido). NO hace commit - el llamador
-    controla la transaccion completa (pedido + descuento atomicos). Lanza
-    INSUFFICIENT_BALANCE si no alcanza el saldo.
-    """
+    """Descuenta `amount` de la billetera (usado por el checkout). No hace commit;
+    lanza INSUFFICIENT_BALANCE si no alcanza el saldo."""
 
     wallet = repo.get_wallet_by_user_id(database, user_id)
 
@@ -248,22 +221,8 @@ def refund_wallet(
     description: str,
     order_id: UUID | None = None,
 ):
-    """
-    Acredita `amount` a la billetera del usuario (reembolso). Misma
-    mecánica de ledger que charge_wallet (suma/resta sobre wallet.balance
-    + WalletTransaction) y mismo contrato: NO hace commit, el llamador
-    controla la transacción completa (ver
-    OrderService.cancel_and_refund_company_orders_for_suspension, que
-    necesita que el reembolso, el cambio de estado del pedido y el
-    bloqueo de la empresa sean atómicos).
-
-    `order_id` enlaza el movimiento con el pedido reembolsado (ver
-    ModelWallet.py > WalletTransaction.order_id) para poder distinguir
-    "cancelado" de "cancelado Y reembolsado" y evitar un doble reembolso
-    (ver WalletRepository.has_order_been_refunded) - el llamador es
-    responsable de verificar esa idempotencia ANTES de llamar acá, esta
-    función no lo hace por sí sola.
-    """
+    """Acredita `amount` a la billetera (reembolso). No hace commit. `order_id` enlaza
+    el movimiento con el pedido; la idempotencia contra el doble reembolso es del llamador."""
 
     wallet = get_or_create_wallet(database, user_id)
 

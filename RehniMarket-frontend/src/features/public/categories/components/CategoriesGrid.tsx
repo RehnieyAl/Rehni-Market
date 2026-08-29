@@ -14,11 +14,7 @@ import type { CategorySort } from "../utils/categorySort";
 const PAGE_SIZE = 8;
 const SKELETON_COUNT = PAGE_SIZE;
 
-// Página pública "Explorar categorías" (ver ALCANCE > rediseño
-// Categorías). Único punto de datos real: GET /public/catalogs (ver
-// getCatalogs, sin paginar en el backend) - búsqueda/filtro/orden/
-// paginación (8 por página) se resuelven en el cliente sobre ese
-// resultado, son pocas categorías y no justifican un endpoint aparte.
+// Página "Explorar categorías". Datos: GET /public/catalogs; búsqueda/orden/paginación en el cliente.
 export default function CategoriesGrid() {
   const [categories, setCategories] = useState<PublicCatalog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,8 +58,7 @@ export default function CategoriesGrid() {
     };
   }, []);
 
-  // Nombres reales para el dropdown de categoría (sobre la lista completa,
-  // no la ya filtrada) - siempre ofrece todas las opciones disponibles.
+  // Nombres para el dropdown de categoría, sobre la lista completa.
   const categoryNames = useMemo(
     () => [...new Set(categories.map((category) => category.name))],
     [categories],
@@ -79,13 +74,8 @@ export default function CategoriesGrid() {
       return matchesSearch && matchesSelected;
     });
 
-    // "Más populares" no tiene una métrica real detrás (no hay
-    // visitas/ventas por categoría en el modelo actual, mismo criterio
-    // que company_dashboard_products_summary_service - ver
-    // DashboardService/company/Dashboard.py: no se inventan estadísticas
-    // que no existen) - se deja el orden real que ya devuelve el backend
-    // (alfabético, ver get_catalogs_service) en vez de simular
-    // popularidad. "Más productos" sí es un dato real y ordena por él.
+    // "Más populares" no tiene métrica real (sin visitas/ventas por categoría): se deja el orden del backend.
+    // "Más productos" sí es un dato real.
     if (sort === "products") {
       result = [...result].sort((a, b) => b.product_count - a.product_count);
     } else if (sort === "az") {
@@ -99,9 +89,7 @@ export default function CategoriesGrid() {
 
   const totalPages = Math.max(1, Math.ceil(visibleCategories.length / PAGE_SIZE));
 
-  // Si un filtro deja menos páginas de las que había y `page` quedó fuera
-  // de rango, se recalcula acá mismo (derivado, no en un efecto aparte)
-  // en vez de guardar un estado inválido.
+  // Si `page` queda fuera de rango tras filtrar, se recalcula acá (derivado, no en un efecto).
   const currentPage = Math.min(page, totalPages);
 
   const pagedCategories = useMemo(
@@ -128,9 +116,6 @@ export default function CategoriesGrid() {
     <div>
       <CategoriesHero />
 
-      {/* Mismo contenedor que Home/Navbar/Footer (ver ALCANCE > rediseño
-          visual Categorías): max-w-[clamp(1280px,90vw,1600px)] en vez de
-          max-w-7xl fijo, para quedar alineado con el resto del sitio. */}
       <div className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-2 py-6 sm:px-4 sm:py-8 lg:px-8">
         <CategoriesFilterBar
           search={search}
@@ -142,12 +127,6 @@ export default function CategoriesGrid() {
           onSortChange={handleSortChange}
         />
 
-        {/* Grid: mobile 2 col, tablet 3 col, desktop 4 col (ver ALCANCE >
-            rediseño Categorías, design/category-reference.png) - 8
-            categorías por página exactas, 4 x 2 en desktop. Paginación
-            real debajo (ver Pagination) sobre `visibleCategories`, que ya
-            son datos reales del backend (GET /public/catalogs) filtrados/
-            ordenados en el cliente. */}
         <div className="mt-6 sm:mt-8">
           {loading ? (
             <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">

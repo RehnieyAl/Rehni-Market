@@ -16,18 +16,8 @@ class BankAccountTypeEnum(str, PyEnum):
 
 
 class CompanyBankAccount(Base):
-    """
-    Cuentas bancarias registradas por una empresa para recibir el giro del
-    95% neto de sus liquidaciones mensuales (ver ALCANCE > Módulo de
-    liquidaciones, Fase 1 y ModelCompanyPayout.py > bank_account_id).
-
-    Una empresa puede registrar varias cuentas, pero solo una puede estar
-    marcada como predeterminada a la vez (ver la restricción a nivel de
-    aplicación en BankAccountService.py, mismo patrón que
-    Address.is_default/AddressService.clear_default, más el índice único
-    parcial de abajo como defensa a nivel de base de datos, ya que acá el
-    dato es financiero).
-    """
+    """Cuentas para recibir el giro neto de las liquidaciones. Solo una is_default
+    por empresa (garantizado en BankAccountService + índice único parcial)."""
 
     __tablename__ = "company_bank_accounts"
 
@@ -66,12 +56,7 @@ class CompanyBankAccount(Base):
     payouts = relationship("CompanyPayout", back_populates="bank_account")
 
     __table_args__ = (
-        # Defensa a nivel de BD de "una sola cuenta por defecto por
-        # empresa" - la aplicación ya lo garantiza (ver
-        # BankAccountService.clear_default antes de cada insert/update),
-        # pero un índice único parcial evita que una carrera de dos
-        # requests concurrentes deje dos cuentas is_default=true para la
-        # misma empresa.
+        # Defensa a nivel de BD contra carreras: una sola cuenta is_default por empresa.
         Index(
             "uq_company_bank_account_default",
             "company_id",

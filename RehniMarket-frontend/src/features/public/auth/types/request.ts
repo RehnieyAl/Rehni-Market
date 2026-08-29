@@ -33,6 +33,11 @@ export interface ChangeEmailRequest {
 }
 
 
+export interface ResendVerificationCodeRequest {
+  email: string;
+}
+
+
 export interface ForgotPasswordRequest {
   email: string;
 }

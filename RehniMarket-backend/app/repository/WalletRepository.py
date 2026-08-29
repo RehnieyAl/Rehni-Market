@@ -22,16 +22,8 @@ def create_transaction(database: Session, transaction: WalletTransaction) -> Wal
 
 
 def has_order_been_refunded(database: Session, order_id: UUID) -> bool:
-    """
-    Idempotencia del reembolso por suspensión de empresa (ver ALCANCE >
-    "CRÍTICO: doble reembolso" y WalletService.refund_wallet). Se apoya en
-    WalletTransaction.order_id (no en order.status == CANCELLED: un
-    pedido pudo cancelarse por otro motivo sin haber sido reembolsado, o
-    viceversa). El índice único parcial ux_wallet_transactions_order_
-    refund_once (ver migración 1338b2c2d72b) es la garantía real a nivel
-    de base de datos; este chequeo evita intentar el insert dos veces en
-    el camino feliz.
-    """
+    """Idempotencia del reembolso: se apoya en WalletTransaction.order_id, no en
+    order.status. La garantía real es el índice único parcial; esto evita el doble insert."""
 
     return (
         database.query(WalletTransaction)
@@ -59,12 +51,7 @@ def list_transactions(database: Session, wallet_id: UUID, page: int, limit: int)
 
 
 def list_recharge_history(database: Session, page: int, limit: int):
-    """
-    Historial de recargas administrativas (ver ALCANCE > HISTORIAL) - solo
-    movimientos RECHARGE con created_by (o sea, hechos por un admin/owner
-    desde /admin/wallet/recharge, no descuentos de checkout ni recargas
-    legacy sin auditoria).
-    """
+    """Historial de recargas: solo movimientos RECHARGE con created_by (hechos por un admin/owner)."""
 
     query = (
         database.query(WalletTransaction)

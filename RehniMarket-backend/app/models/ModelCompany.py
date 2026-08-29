@@ -36,9 +36,7 @@ class Company(Base):
         nullable=False,
     )
 
-    # Descripcion publica de la empresa (perfil publico > "Descripcion").
-    # Nullable porque las empresas ya existentes antes de este campo no
-    # tienen valor - ver migracion add_description_to_company.
+    # Nullable: empresas anteriores a este campo no tienen valor.
     description: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
@@ -81,13 +79,8 @@ class Company(Base):
         nullable=False,
     )
 
-    # Motivo de la suspension actual, proporcionado por el admin/owner que
-    # ejecuta update_company_status_service (ver CompanyService.py). Solo
-    # tiene sentido mientras CompanyStatus=False - se limpia (None) al
-    # desbloquear. El historial completo (quien, cuando, motivo de CADA
-    # suspension/desbloqueo) vive en AdminActivity.reason, no aca - esta
-    # columna es solo "cual es el motivo VIGENTE ahora mismo", para
-    # mostrarlo sin tener que ir a buscar en el log de actividad.
+    # Motivo de la suspensión vigente; se limpia al desbloquear. El historial
+    # completo vive en AdminActivity.reason.
     suspension_reason: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
@@ -122,8 +115,6 @@ class Company(Base):
         back_populates="target_company",
     )
 
-    # Módulo de liquidaciones (ver ALCANCE > Módulo de liquidaciones,
-    # ModelCompanyBankAccount.py / ModelCompanyPayout.py).
     bank_accounts: Mapped[list["CompanyBankAccount"]] = relationship(
         "CompanyBankAccount", back_populates="company"
     )

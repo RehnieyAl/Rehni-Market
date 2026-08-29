@@ -12,12 +12,7 @@ interface ConfirmModalProps {
   onClose: () => void;
 }
 
-// Confirmación genérica para acciones críticas/destructivas (eliminar,
-// cancelar) - reemplaza a window.confirm() en todo el proyecto (ver
-// ALCANCE > auditoría frontend, "código legado"). Mismo shell visual que
-// ya usaban AddressDeleteConfirmModal.tsx/BankAccountDeleteConfirmModal.tsx
-// (icono de alerta + Cancelar/Confirmar), generalizado con props en vez
-// de duplicar ese mismo modal por cada entidad nueva.
+// Confirmación genérica para acciones críticas/destructivas; reemplaza a window.confirm().
 export default function ConfirmModal({
   isOpen,
   title,

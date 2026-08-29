@@ -8,11 +8,7 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-// Paginación reutilizable (ver design/category-reference.png): flechas
-// anterior/siguiente + números + "..." para huecos grandes, mismo
-// vocabulario visual que el resto de RehniMarket (rounded-xl,
-// bg-[#6D0F2D] en la página activa). No se renderiza si solo hay una
-// página.
+// Paginación reutilizable: anterior/siguiente + números + "…". No se renderiza con una sola página.
 export default function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
   if (totalPages <= 1) return null;
 

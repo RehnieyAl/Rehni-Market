@@ -26,12 +26,7 @@ from app.services.PayoutService import (
     mark_payout_paid_service,
 )
 
-# Módulo de liquidaciones del panel de administración (ver ALCANCE >
-# Módulo de liquidaciones, Fase 7) - exclusivo ADMIN/OWNER. No está en
-# ROLES_PERMISSIONS_ROUTERS["company"|"user"] (ver RolePermissions.py), así
-# que esos roles ya reciben 403 antes de llegar acá; ADMIN/OWNER tienen
-# bypass total vía FULL_ACCESS_ROLES, por eso se revalida el rol
-# explícitamente en cada endpoint (mismo patrón que AdminWalletRouter.py).
+# Exclusivo ADMIN/OWNER; el rol se revalida en cada endpoint (tienen bypass del middleware).
 router = APIRouter(prefix="/admin/payouts", tags=["admin", "payouts"])
 
 
@@ -66,12 +61,7 @@ def get_payouts(
     return list_admin_payouts_service(database, page=page, limit=limit, status=status)
 
 
-# Ambas rutas ESTÁTICAS - deben quedar registradas ANTES de
-# GET /{payout_id} (mismo criterio que /public/products/daily vs
-# /public/products/{product_id} en publicRouters.py): FastAPI/Starlette
-# matchean por orden de registro, y "preview"/"available-periods"
-# calzarían con el patrón {payout_id} (fallan al convertir a UUID en vez
-# de caer acá) si se registraran después.
+# Rutas estáticas: deben registrarse antes de GET /{payout_id} para que no las capture como UUID.
 @router.get("/available-periods", response_model=list[PayoutAvailablePeriodResponse])
 def get_available_periods(
     request: Request,

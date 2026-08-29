@@ -1,7 +1,9 @@
 from typing import Annotated
 import re
 from fastapi import Form
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, field_validator, model_validator
+
+from app.utils.NitValidator import validate_nit_dv
 
 class CreateUserRequest(BaseModel):
     full_name: str
@@ -155,3 +157,12 @@ class CreateCompanyRequest(BaseModel):
             )
 
         return value
+
+    @model_validator(mode="after")
+    def validate_nit_check_digit(self):
+        if not validate_nit_dv(self.company_nit, self.company_nit_dv):
+            raise ValueError(
+                "El dígito de verificación no coincide con el NIT ingresado."
+            )
+
+        return self

@@ -61,8 +61,16 @@ export default function RegisterScreen() {
     setLoading(true);
 
     try {
-      await register({ full_name: fullName, email, password, tell });
-      router.push({ pathname: "/(auth)/verify-email", params: { email } });
+      const res = await register({ full_name: fullName, email, password, tell });
+      router.push({
+        pathname: "/(auth)/verify-email",
+        params: {
+          email,
+          expiresIn: res?.expires_in != null ? String(res.expires_in) : "",
+          resendAvailableIn:
+            res?.resend_available_in != null ? String(res.resend_available_in) : "",
+        },
+      });
     } catch (err) {
       setError(getApiErrorMessage(err, "No se pudo crear la cuenta."));
     } finally {

@@ -18,25 +18,14 @@ const EMPTY_FORM = {
 };
 
 interface AddressFormProps {
-  // Se llama con la dirección recién creada - tanto
-  // AddressSelectionModal.tsx (selecciona y vuelve al listado) como
-  // Addresses.tsx (refresca su propio listado) reaccionan distinto, por
-  // eso no se resuelve acá.
+  // Se llama con la dirección recién creada; cada consumidor reacciona distinto.
   onSaved: (address: Address) => void;
   onCancel: () => void;
   hasExistingAddresses: boolean;
 }
 
-// Formulario "Nueva dirección" (ver ALCANCE > Modal de direcciones) -
-// componente único reutilizado por AddressSelectionModal.tsx (durante la
-// compra) y por la pantalla "Direcciones" del dashboard, para no
-// mantener dos formularios con campos distintos.
-//
-// `country` NO es un campo del formulario (Rehni Market solo opera en
-// Colombia, mismo criterio que ya usaba la pantalla de direcciones del
-// dashboard) - se envía fijo. Omitirlo del payload es exactamente lo que
-// causaba el 422 original en POST /addresses (ver informe: el backend
-// exige `country`, ver CreateAddressRequest en SchemaAddress.py).
+// Formulario "Nueva dirección", reutilizado en el checkout y en el dashboard.
+// `country` no es un campo (solo Colombia): se envía fijo, pero el backend lo exige.
 export default function AddressForm({ onSaved, onCancel, hasExistingAddresses }: AddressFormProps) {
   const { showAlert } = useAlert();
 
@@ -72,10 +61,7 @@ export default function AddressForm({ onSaved, onCancel, hasExistingAddresses }:
         address: form.address.trim(),
         phone: form.phone.trim(),
         additionalInstructions: form.additionalInstructions.trim() || undefined,
-        // La primera dirección de un usuario ya queda predeterminada
-        // automáticamente en el backend (ver
-        // AddressService.create_address_service) - este checkbox solo
-        // importa cuando ya existe al menos una.
+        // La primera dirección ya queda predeterminada en el backend; este checkbox solo importa a partir de la segunda.
         isDefault: form.isDefault,
       });
 

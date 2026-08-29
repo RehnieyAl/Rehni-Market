@@ -1,5 +1,4 @@
-# Importación de modelos para inicializarlos
-# Evita errores de relaciones entre modelos
+# Importa todos los modelos para registrarlos en el mapper de SQLAlchemy.
 
 from .ModelCompany import Company
 from .ModelCode import Codes

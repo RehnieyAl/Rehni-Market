@@ -6,13 +6,8 @@ interface OrderTimelineProps {
   status: OrderStatus;
 }
 
-// 5 pasos pedidos (ver ALCANCE > Detalle de pedido): Pendiente, Pagado,
-// En proceso, Enviado, Entregado. El backend real (ver
-// OrderService.ALLOWED_TRANSITIONS) NUNCA pasa por PAID como un estado
-// propio: el pago ocurre en el checkout, antes de que el pedido exista
-// (ver ModelOrder.py > Order, docstring) - por eso "Pendiente" y
-// "Pagado" se marcan alcanzados juntos, apenas el pedido existe, en vez
-// de fingir una transición que nunca sucede.
+// 5 pasos: Pendiente, Pagado, En proceso, Enviado, Entregado. "Pendiente" y "Pagado" se marcan juntos
+// (el pago ocurre en el checkout, PAID no es un estado propio del pedido).
 const STEPS: { label: string; isReached: (status: OrderStatus) => boolean }[] = [
   { label: "Pendiente", isReached: () => true },
   { label: "Pagado", isReached: () => true },
@@ -25,9 +20,7 @@ const STEPS: { label: string; isReached: (status: OrderStatus) => boolean }[] = 
 ];
 
 export default function OrderTimeline({ status }: OrderTimelineProps) {
-  // Un pedido cancelado no "va en camino" a ningún paso futuro - mostrar
-  // la barra de progreso igual sería engañoso (ver ALCANCE). Se muestra
-  // un estado propio en su lugar.
+  // Un pedido cancelado muestra un estado propio, no la barra de progreso.
   if (status === "cancelled") {
     return (
       <div className="flex items-center gap-3 rounded-2xl border border-red-100 bg-red-50 p-4">

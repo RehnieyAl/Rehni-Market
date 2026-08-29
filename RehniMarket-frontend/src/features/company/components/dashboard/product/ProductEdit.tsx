@@ -56,8 +56,7 @@ export default function EditProductModal({
 
   const [nameProduct, setNameProduct] = useState("");
   const [catalogId, setCatalogId] = useState("");
-  // String crudo mientras el usuario escribe - la conversión a número
-  // ocurre únicamente al enviar (ver shared/utils/parseNumericField.ts).
+  // String crudo mientras se escribe; la conversión a número ocurre al enviar.
   const [priceProduct, setPriceProduct] = useState("");
   const [discountEnable, setDiscountEnable] = useState(false);
   const [discountValue, setDiscountValue] = useState("");
@@ -73,10 +72,7 @@ export default function EditProductModal({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Carga el producto real y los catalogos/colores cada vez que se abre el
-  // modal para un producto distinto. Sin esto, el formulario mostraba
-  // datos de ejemplo hardcodeados sin ninguna relacion con el producto
-  // real que se estaba editando.
+  // Carga el producto y los catálogos/colores al abrir el modal para un producto distinto.
   useEffect(() => {
     if (!isOpen || !productId) return;
 
@@ -101,8 +97,7 @@ export default function EditProductModal({
 
         setNameProduct(detail.name);
         setCatalogId(detail.catalog_id);
-        // detail.price / detail.discount_value ya llegan como string
-        // (Decimal serializado) - se usan tal cual, sin pasar por Number().
+        // detail.price / detail.discount_value llegan como string (Decimal); se usan tal cual.
         setPriceProduct(detail.price);
         setDiscountEnable(detail.discount_enable);
         setDiscountValue(detail.discount_value);
@@ -117,9 +112,7 @@ export default function EditProductModal({
           detail.images.find((image) => image.is_main)?.id ?? null,
         );
         setNewImages([]);
-        // Precarga las especificaciones ya asignadas al producto (las
-        // disponibles para el catálogo se cargan aparte, en el efecto de
-        // abajo, y filtran esta lista si el catálogo cambia).
+        // Precarga las especificaciones ya asignadas al producto.
         setSpecValues(
           detail.specifications.map((spec) => ({
             specificationTemplateId: spec.specification_template_id,
@@ -143,11 +136,7 @@ export default function EditProductModal({
     };
   }, [isOpen, productId]);
 
-  // Carga las especificaciones disponibles del catálogo seleccionado. Si
-  // el usuario cambia de categoría, las especificaciones ya seleccionadas
-  // que no pertenezcan al catálogo nuevo dejan de ser válidas y se
-  // descartan aquí mismo - nunca se envían al backend (ver ALCANCE >
-  // "Cambio de catálogo"). El backend vuelve a validar de todos modos.
+  // Carga las especificaciones del catálogo; al cambiar de categoría descarta las que ya no pertenecen.
   useEffect(() => {
     let cancelled = false;
 
@@ -182,11 +171,7 @@ export default function EditProductModal({
     };
   }, [catalogId]);
 
-  // Si la imagen marcada como principal termina en la lista de "a
-  // eliminar", dejamos de considerarla principal y promovemos otra
-  // existente automáticamente (mismo criterio que aplica el backend). Se
-  // deriva en cada render en vez de "corregirse" desde un efecto para no
-  // encadenar renders innecesarios.
+  // Si la principal queda entre las "a eliminar", se promueve otra (derivado en cada render, no en un efecto).
   const effectiveMainImageId = useMemo(() => {
     if (selectedMainImageId && !imagesToDelete.has(selectedMainImageId)) {
       return selectedMainImageId;
@@ -249,10 +234,7 @@ export default function EditProductModal({
   const handleSubmit = async () => {
     if (!product || !productId) return;
 
-    // La conversión a número ocurre únicamente aquí, al enviar - nunca
-    // mientras el usuario escribe (ver shared/utils/parseNumericField.ts).
-    // Un campo vacío significa "no tocar" (mismo criterio que ya tenía el
-    // PATCH), así que solo se valida cuando trae contenido.
+    // La conversión a número ocurre solo aquí, al enviar. Un campo vacío = "no tocar".
     const parsedPrice = priceProduct === "" ? null : parseNumericField(priceProduct);
     const parsedStock =
       stockProduct === "" ? null : parseNumericField(stockProduct, { integer: true });
@@ -316,9 +298,7 @@ export default function EditProductModal({
         }
       }
 
-      // No se envían especificaciones marcadas pero sin valor todavía -
-      // solo cuentan las que la empresa realmente completó (mismo
-      // criterio que ProductForm al crear un producto).
+      // No se envían especificaciones marcadas sin valor; solo las completadas.
       const meaningfulSpecValues = specValues.filter(
         (item) => item.value.trim() !== "",
       );
@@ -513,11 +493,7 @@ export default function EditProductModal({
 
                       {discountEnable && (
                         <>
-                          {/* Porcentaje (0-100), no un monto en pesos - ver
-                              _compute_price_fields en
-                              app/services/publicService/Products.py. El
-                              rango se valida al enviar (ver handleSubmit),
-                              no mientras se escribe. */}
+                          {/* Porcentaje (0-100), no un monto en pesos */}
                           <input
                             type="text"
                             inputMode="numeric"

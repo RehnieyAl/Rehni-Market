@@ -4,7 +4,7 @@ export interface PublicAdvertisement {
   description: string | null;
   // Desktop/tablet
   image_url: string;
-  // Mobile - nullable, hacer fallback a image_url si es null
+  // Móvil, nullable: fallback a image_url si es null
   mobile_image_url: string | null;
   button_text: string | null;
   button_link: string | null;
@@ -18,25 +18,19 @@ export interface PublicProductCard {
   name: string;
   image: string | null;
   company_name: string;
-  // Catálogo del producto (ver backend > SchemaPublic.py >
-  // PublicProductCardResponse) - habilita filtrar/navegar por categoría
-  // desde el listado público (ver features/public/categories).
+  // Catálogo del producto; habilita filtrar/navegar por categoría.
   catalog_id: string;
   catalog_name: string;
-  // Pydantic serializa Decimal como string en JSON (mismo criterio que
-  // ProductDetailResponse en el dashboard de empresa).
+  // Pydantic serializa Decimal como string.
   price: string;
   discount_enabled: boolean;
   // null cuando discount_enabled es false.
   discount_percentage: number | null;
   final_price: string;
-  // Para el badge "Agotado" (ver ProductCard.tsx) y el filtro
-  // "Disponibilidad" del catálogo público.
+  // Para el badge "Agotado" y el filtro de disponibilidad.
   stock: number;
 
-  // Calificación real (ver backend > SchemaPublic.py >
-  // PublicProductCardResponse) - null/0 cuando el producto todavía no
-  // tiene reseñas activas.
+  // Calificación; null/0 cuando no tiene reseñas activas.
   average_rating: number | null;
   review_count: number;
 }

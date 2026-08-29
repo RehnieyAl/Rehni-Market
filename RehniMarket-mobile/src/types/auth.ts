@@ -29,6 +29,23 @@ export interface MessageResponse {
   message: string;
 }
 
+// Estado de los dos contadores de la pantalla de verificacion, calculado
+// SIEMPRE por el backend (ver app/services/email/CodeService.py):
+// - expires_in: segundos que le quedan al codigo (5 min).
+// - resend_available_in: segundos para poder reenviar (60 s).
+export interface VerificationCodeState {
+  expires_in: number;
+  resend_available_in: number;
+}
+
+// register-user devuelve el mensaje + (opcionalmente) el estado de los
+// contadores para arrancar la pantalla de verificacion.
+export type RegisterUserResponse = MessageResponse & Partial<VerificationCodeState>;
+
+export interface ResendVerificationCodeRequest {
+  email: string;
+}
+
 export interface RegisterUserRequest {
   full_name: string;
   email: string;

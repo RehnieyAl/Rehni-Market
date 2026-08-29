@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 
 import { getDailyProducts } from "../api/homeService";
-import ProductCard from "./ProductCard";
-import ProductCardSkeleton from "./ProductCardSkeleton";
+import HomeProductCard, {
+  HomeProductCardSkeleton,
+} from "./HomeProductCard";
 
 import type { PublicProductCard } from "../types/response";
 
@@ -29,7 +30,7 @@ export default function DailyProducts() {
           setProducts(response);
         }
       } catch (error) {
-        console.error("Error cargando productos del día:", error);
+        console.error("Error cargando productos destacados:", error);
 
         if (!cancelled) {
           setFailed(true);
@@ -53,60 +54,48 @@ export default function DailyProducts() {
   }
 
   return (
-    // Sin contenedor/ancho propio (ver ALCANCE > auditoría visual,
-    // "Unificar contenedores") - hereda el max-w-7xl/px de Home.tsx, así
-    // no vuelve a acotar/paddear por dentro del contenedor que ya lo
-    // hace. Margen superior propio, mismo valor que CategoriesSection.tsx
-    // (ritmo uniforme + evita el margen huérfano si abajo se retorna
-    // null).
     <section className="mt-10 sm:mt-12">
-      {/* ENCABEZADO */}
-      <div className="flex items-end justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
-            Productos del día
-          </h2>
-
-          <p className="mt-1 text-sm text-gray-500">
-            Selección de productos disponibles hoy en Rehni-Market.
-          </p>
-        </div>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
+          Productos destacados
+        </h2>
 
         {!loading && products.length > 0 && (
           <Link
             to="/products"
-            className="group inline-flex items-center gap-1.5 text-sm font-semibold text-[#6D0F2D] transition hover:text-[#530A20]"
+            className="flex items-center gap-1 text-sm font-medium text-[#6D0F2D] transition hover:text-[#530A20]"
           >
-            Ver todos
-            <ArrowRight
-              size={17}
-              className="transition-transform duration-200 group-hover:translate-x-1"
-            />
+            Ver todas
+            <ArrowRight size={16} />
           </Link>
         )}
       </div>
 
-      {/* GRID */}
-      <div className="mt-7 grid w-full grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-5 lg:grid-cols-4">
-        {loading ? (
-          Array.from({ length: DAILY_PRODUCTS_LIMIT }).map((_, index) => (
-            <ProductCardSkeleton key={index} />
-          ))
-        ) : products.length === 0 ? (
-          <div className="col-span-full py-12 text-center">
-            <p className="text-sm text-gray-400">
-              No hay productos disponibles.
-            </p>
-          </div>
-        ) : (
-          products.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-            />
-          ))
-        )}
-      </div>
+      {!loading && products.length === 0 ? (
+        <div className="mt-5 rounded-2xl border border-gray-200 p-8 text-center text-sm text-gray-400">
+          No hay productos disponibles.
+        </div>
+      ) : (
+        <div className="mt-5 flex snap-x gap-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {loading
+            ? Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="w-[158px] shrink-0 snap-start sm:w-[188px] lg:w-[224px] xl:w-[236px]"
+                >
+                  <HomeProductCardSkeleton />
+                </div>
+              ))
+            : products.map((product) => (
+                <div
+                  key={product.id}
+                  className="w-[158px] shrink-0 snap-start sm:w-[188px] lg:w-[224px] xl:w-[236px]"
+                >
+                  <HomeProductCard product={product} />
+                </div>
+              ))}
+        </div>
+      )}
     </section>
   );
 }

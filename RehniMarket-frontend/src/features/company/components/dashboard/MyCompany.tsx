@@ -35,7 +35,7 @@ export default function Company() {
 
   // Solo información pública de la tienda - el correo (y cualquier otro
   // dato de la cuenta) se gestiona en "Configuración de cuenta"
-  // (ver Profile.tsx), no aquí.
+  // , no aquí.
   const [form, setForm] = useState({
     nameCompany: "",
     addressCompany: "",
@@ -125,7 +125,7 @@ export default function Company() {
 
   return (
     <>
-      {/* HEADER */}
+
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
           Mi tienda
@@ -141,7 +141,6 @@ export default function Company() {
         {company && <CompanyRatingBadge companyId={company.id} className="mt-3" />}
       </div>
 
-      {/* IMAGEN EMPRESA */}
       <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
         <h2 className="text-xl font-semibold text-gray-900">
           Imagen de la empresa
@@ -152,7 +151,7 @@ export default function Company() {
         </p>
 
         <div className="mt-8 grid gap-10 lg:grid-cols-2">
-          {/* LOGO */}
+
           <div className="flex flex-col items-center">
             <h3 className="mb-6 font-medium text-gray-800">
               Logo empresa
@@ -213,7 +212,6 @@ export default function Company() {
             </button>
           </div>
 
-          {/* BANNER */}
           <div>
             <h3 className="mb-6 text-center font-medium text-gray-800">
               Banner empresa
@@ -296,7 +294,6 @@ export default function Company() {
         </div>
       </section>
 
-      {/* INFORMACIÓN */}
       <section className="mt-8 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
         <div className="flex items-center justify-between">
           <div>

@@ -6,9 +6,7 @@ from pydantic import BaseModel, Field
 
 
 class CreateAddressRequest(BaseModel):
-    # Nombre de referencia (ej. "Casa", "Oficina") - identifica la
-    # dirección en el modal de selección (ver ALCANCE > Modal de
-    # direcciones). Requerido para direcciones nuevas.
+    # Nombre de referencia ("Casa", "Oficina"); requerido en direcciones nuevas.
     label: str = Field(min_length=2, max_length=60)
     fullName: str = Field(min_length=2, max_length=150)
     country: str = Field(min_length=2, max_length=60)

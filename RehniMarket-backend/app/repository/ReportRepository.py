@@ -37,20 +37,11 @@ def list_reports(
     status: ReportStatus | None = None,
     search: str | None = None,
 ):
-    """
-    Listado paginado para Admin > Reportes (ver ALCANCE > sección 6).
-    `search` busca por nombre de producto, nombre de empresa (la propia,
-    en un reporte de empresa, o la dueña del producto, en uno de
-    producto) y correo/nombre del usuario reportante - todo con outer
-    join para no excluir reportes de un tipo por columnas del otro tipo.
-    """
+    """Listado paginado para Admin > Reportes. `search` cubre producto, empresa y
+    reportante, todo con outer join para no excluir un tipo de reporte por el otro."""
 
-    # Dos alias de Company distintos a propósito: un reporte de PRODUCTO
-    # tiene Report.company_id en NULL (ver ModelReport.py > regla de
-    # exclusividad) - su empresa dueña solo se alcanza vía
-    # Product.company_id, nunca vía Report.company_id. Sin esta segunda
-    # ruta, buscar por el nombre de la empresa dueña de un producto
-    # reportado no encontraba ese reporte.
+    # Dos alias de Company: un reporte de producto tiene Report.company_id NULL;
+    # su empresa dueña solo se alcanza vía Product.company_id.
     reported_company = aliased(Company)
     product_owner_company = aliased(Company)
 

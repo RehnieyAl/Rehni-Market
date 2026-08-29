@@ -14,7 +14,7 @@ interface ColorFormModalProps {
 const HEX_PATTERN = /^#[0-9A-Fa-f]{6}$/;
 
 // El padre monta este componente con una `key` distinta cada vez que se
-// abre (ver Colors.tsx), así que el valor inicial de useState ya llega
+// abre, así que el valor inicial de useState ya llega
 // "fresco" en cada apertura sin necesitar un efecto para resetearlo.
 export default function ColorFormModal({
   isOpen,

@@ -7,16 +7,7 @@ interface CategoryCardProps {
   category: PublicCatalog;
 }
 
-// Tarjeta de categoría (ver design/category-reference.png): imagen real
-// (image_url, con placeholder si es null - nunca hardcodeada) arriba, y
-// nombre + cantidad de productos + flecha en un cuerpo blanco separado
-// debajo - sin overlay ni iconos decorativos sobre la imagen (ver ALCANCE
-// > rediseño Categorías). Toda la tarjeta es clickeable y navega al
-// catálogo ya filtrado por esta categoría (ver ProductsList.tsx, que lee
-// `?catalog=` de la URL).
-//
-// Mismo lenguaje que ProductCard.tsx: rounded-2xl, border-gray-200,
-// shadow-sm en reposo, hover:-translate-y-1 + hover:shadow-lg.
+// Tarjeta de categoría: imagen (con placeholder si es null) + nombre + conteo. Navega al catálogo filtrado por `?catalog=`.
 export default function CategoryCard({ category }: CategoryCardProps) {
   return (
     <Link

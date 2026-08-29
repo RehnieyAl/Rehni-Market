@@ -8,13 +8,7 @@ interface SellerCardProps {
   isVerified: boolean;
 }
 
-// Tarjeta "Vendido por" (ver ALCANCE > rediseño detalle de producto,
-// referencia design/products-detail-reference.png): solo lo esencial
-// para decidir/confiar en la compra - nombre, verificación real
-// (company_is_verified, ver publicService/Products.py) y el enlace al
-// perfil público de la empresa. Mismo ícono BadgeCheck que ya usa
-// CompanyProfile.tsx para "Empresa verificada" - una sola fuente visual
-// de ese badge en todo el sitio.
+// Tarjeta "Vendido por": nombre, badge de verificación y enlace al perfil público de la empresa.
 export default function SellerCard({
   companyId,
   companyName,

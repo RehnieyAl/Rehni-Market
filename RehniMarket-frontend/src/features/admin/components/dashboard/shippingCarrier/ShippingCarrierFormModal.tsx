@@ -12,9 +12,9 @@ interface ShippingCarrierFormModalProps {
 }
 
 // El padre monta este componente con una `key` distinta cada vez que se
-// abre (ver ShippingCarriers.tsx), así que el valor inicial de useState
+// abre, así que el valor inicial de useState
 // ya llega "fresco" en cada apertura sin necesitar un efecto para
-// resetearlo (mismo patrón que ColorFormModal.tsx).
+// resetearlo.
 export default function ShippingCarrierFormModal({
   isOpen,
   carrier,

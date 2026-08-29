@@ -9,16 +9,7 @@ class CatalogResponse(BaseModel):
     id: UUID
     name: str
 
-    # product_count: calculado en get_catalogs_service con un único query
-    # agregado (ver ALCANCE > Rendimiento) - productos activos, visibles
-    # y con stock válido (mismo criterio que _has_visible_stock). No es
-    # una columna del modelo.
-    #
-    # image_url: SÍ es una columna real (ver ModelCatalog.py >
-    # Catalog.image_url, subida por admin/owner con el mismo flujo NAS
-    # que productos/anuncios) - None si la categoría todavía no tiene
-    # imagen propia (el frontend muestra un placeholder, ver
-    # CategoryCard.tsx).
+    # product_count: calculado (productos activos y con stock válido), no es columna.
     product_count: int
     image_url: str | None
 
@@ -46,22 +37,12 @@ class ColorResponse(BaseModel):
     }
 
 
-# ==========================
-# PRODUCTOS PÚBLICOS
-# ==========================
-# "Productos del dia" (Home) y detalle publico de producto. No exponen
-# nada scoped a la empresa (company_id, catalog_id crudo, etc.) - solo lo
-# necesario para mostrarse en el storefront publico.
-
 class PublicProductCardResponse(BaseModel):
     id: UUID
     name: str
     image: str | None
     company_name: str
 
-    # Catálogo del producto (ver ALCANCE > filtros de catálogo público:
-    # "Categoría") - antes no se exponía, así que el listado público no
-    # podía filtrar/mostrar categoría en el cliente.
     catalog_id: UUID
     catalog_name: str
 
@@ -71,17 +52,10 @@ class PublicProductCardResponse(BaseModel):
     discount_percentage: int | None
     final_price: Decimal
 
-    # Para el filtro "Disponibilidad" y el badge "Agotado" en la tarjeta
-    # (ver ALCANCE > filtros de catálogo público). Con variantes, este es
-    # el stock del producto base (ver ModelProduct.py) - la
-    # disponibilidad real en ese caso ya la resuelve _has_visible_stock
-    # del lado del filtro, no este número aislado.
+    # Con variantes es el stock del producto base; la disponibilidad real la resuelve el filtro.
     stock: int
 
-    # Calificación real del producto (ver ALCANCE > rediseño Product Card,
-    # mismo cálculo que PublicProductDetailResponse.average_rating -
-    # ver publicService/Products.py > get_products_rating_summary).
-    # None/0 cuando todavía no tiene reseñas activas.
+    # None cuando no tiene reseñas activas.
     average_rating: float | None
     review_count: int
 
@@ -103,21 +77,11 @@ class PublicProductColorResponse(BaseModel):
 
 
 class PublicProductVariantResponse(BaseModel):
-    """
-    Variante real del producto (ProductVariant) expuesta al storefront
-    publico - mismos campos que ya administra la empresa (ver
-    app/services/DashboardService/company/Variants.py), sin nada
-    scoped a la empresa.
-    """
-
     id: UUID
     name: str
     price: Decimal
 
-    # Descuento propio de la variante (independiente del descuento del
-    # producto base) - mismos campos calculados que
-    # PublicProductCardResponse/PublicProductDetailResponse (ver
-    # _compute_price_fields en publicService/Products.py).
+    # Descuento propio de la variante, independiente del producto base.
     discount_enabled: bool
     discount_percentage: int | None
     final_price: Decimal
@@ -129,11 +93,7 @@ class PublicProductVariantResponse(BaseModel):
 
 
 class PublicRatingDistributionResponse(BaseModel):
-    """
-    Conteo de reseñas ACTIVAS por cada puntaje (ver ALCANCE > rediseño
-    detalle de producto, panel "Opiniones de compradores") - mismo
-    criterio de "activa" que ReviewRepository.list_product_reviews.
-    """
+    """Conteo de reseñas activas por puntaje."""
 
     five: int
     four: int
@@ -147,21 +107,11 @@ class PublicProductDetailResponse(BaseModel):
     name: str
     descripcion: str
     catalog_name: str
-    # Id real del catálogo (no solo el nombre) - necesario para pedir
-    # "Productos relacionados" (ver ALCANCE > rediseño detalle de
-    # producto): GET /public/products ya filtra por catalog_id, no hace
-    # falta un endpoint nuevo para eso.
     catalog_id: UUID
     company_name: str
-    # Datos minimos de la empresa para el bloque "Vendido por" del detalle
-    # publico de producto (ver ProductDetail.tsx > "Ver perfil de empresa").
-    # No se reutiliza PublicCompanyProfileResponse completo a proposito:
-    # aqui solo hace falta lo necesario para el link, no todo el perfil.
     company_id: UUID
     company_logo: str | None
-    # Mismo criterio que company_dashboard_me_service/CompanyProfile.tsx
-    # (CompanyCertificateStatus == APPROVED) - para el badge "Empresa
-    # verificada" del rediseño.
+    # CompanyCertificateStatus == APPROVED.
     company_is_verified: bool
     is_active: bool
 
@@ -172,10 +122,6 @@ class PublicProductDetailResponse(BaseModel):
 
     stock: int
 
-    # Resumen real de reseñas ACTIVAS del producto (ver ALCANCE > rediseño
-    # detalle de producto) - se calcula una sola vez acá y lo reutilizan
-    # tanto el encabezado (promedio + total) como el panel de Opiniones,
-    # sin pedirlo dos veces ni inventar datos en el frontend.
     average_rating: float | None
     review_count: int
     rating_distribution: PublicRatingDistributionResponse
@@ -185,14 +131,6 @@ class PublicProductDetailResponse(BaseModel):
     specifications: list[PublicProductSpecificationResponse]
     variants: list[PublicProductVariantResponse]
 
-
-# ==========================
-# PERFIL PUBLICO DE EMPRESA
-# ==========================
-# Vista publica de una empresa (ver /company/:companyId en el frontend),
-# accesible desde el detalle de producto. Solo expone lo necesario para el
-# storefront - nada scoped a la propia empresa (correo, NIT, certificado,
-# etc.), a diferencia de AdminCompanyDetailResponse.
 
 class PublicCompanyProfileResponse(BaseModel):
     id: UUID
@@ -206,29 +144,14 @@ class PublicCompanyProfileResponse(BaseModel):
 
 
 class CompanyRatingResponse(BaseModel):
-    """
-    Reputación de empresa (ver ALCANCE > Calificaciones de empresa):
-    calculada en caliente agregando las reseñas ACTIVAS de todos los
-    productos de la empresa (ver ReviewRepository.get_company_rating) -
-    la empresa no tiene reseñas propias, no hay ninguna columna de
-    calificación en Company.
-
-    average_rating es None (no 0) cuando total_reviews es 0 - el
-    frontend muestra "Sin calificaciones todavía" en ese caso, nunca
-    "0.0 estrellas" (ver ALCANCE > regla 7).
-    """
+    """Reputación agregada de las reseñas activas de los productos de la empresa.
+    average_rating es None (no 0) cuando total_reviews es 0."""
 
     average_rating: float | None
     total_reviews: int
 
 
 class PublicCompanyProductsResponse(BaseModel):
-    """
-    Productos activos de una empresa, paginados. Mismo shape de paginacion
-    que company_dashboard_get_my_products (page/limit/total/total_pages) -
-    ver app/services/DashboardService/company/Dashboard.py.
-    """
-
     page: int
     limit: int
     total: int
@@ -237,13 +160,6 @@ class PublicCompanyProductsResponse(BaseModel):
 
 
 class PublicProductsPaginatedResponse(BaseModel):
-    """
-    Listado público de productos con filtros (ver ALCANCE > catálogo
-    público: Categoría, Precio, Descuento, Disponibilidad, Ordenamiento -
-    GET /public/products). Mismo shape de paginación que
-    PublicCompanyProductsResponse.
-    """
-
     page: int
     limit: int
     total: int

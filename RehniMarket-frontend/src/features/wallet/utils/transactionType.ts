@@ -1,10 +1,6 @@
 import type { WalletTransaction } from "../types/response";
 
-// Mismo criterio que features/orders/utils/orderStatus.ts: mapa de
-// etiqueta/color legible por cada valor real de WalletTransactionType
-// (ver ModelWallet.py, backend - única fuente de verdad de estos 4
-// valores) para no repetir este switch/mapeo en cada vista que liste
-// movimientos de la billetera.
+// Mapa de etiqueta/color por cada WalletTransactionType, para no repetir el mapeo en cada vista.
 export const WALLET_TRANSACTION_TYPE_LABEL: Record<WalletTransaction["type"], string> = {
   recharge: "Recarga",
   purchase: "Compra",

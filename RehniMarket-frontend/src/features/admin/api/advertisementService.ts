@@ -7,7 +7,7 @@ import type {
   UpdateAdvertisementRequest,
 } from "../types/request";
 
-// Compartido por create/update (ver ALCANCE > "sin duplicar lógica") -
+// Compartido por create/update -
 // un solo lugar que sabe qué campos de target existen, en vez de repetir
 // la lista de 7 campos en ambas funciones.
 function appendTargetFields(

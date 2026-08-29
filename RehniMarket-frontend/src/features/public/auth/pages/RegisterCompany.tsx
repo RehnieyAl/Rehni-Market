@@ -79,7 +79,7 @@ export default function CompanyForm() {
     try {
       setLoading(true);
 
-      await registerCompany({
+      const res = await registerCompany({
         ...form,
         certificate,
       });
@@ -87,6 +87,8 @@ export default function CompanyForm() {
       navigate("/verify-email", {
         state: {
           email: form.email,
+          expiresIn: res?.expires_in,
+          resendAvailableIn: res?.resend_available_in,
         },
       });
     } catch (err) {

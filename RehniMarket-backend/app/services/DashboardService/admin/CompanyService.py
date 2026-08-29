@@ -48,10 +48,6 @@ from app.models.ModelAdminActivity import AdminActivityAction
 from app.models.ModelCompany import CompanyCertificateEnum
 
 
-# =========================================================
-# OBTENER TODAS LAS EMPRESAS
-# =========================================================
-
 def get_all_companies_service(
     database: Session,
     limit: int = 10,
@@ -64,10 +60,6 @@ def get_all_companies_service(
     cursor_created_at = None
     cursor_id = None
 
-    # =====================================================
-    # VALIDAR FILTRO DE ESTADO
-    # =====================================================
-
     if status not in (
         None,
         "pending",
@@ -79,10 +71,6 @@ def get_all_companies_service(
             ErrorCodes.INVALID_STATUS,
             "Estado de certificado inválido.",
         )
-
-    # =====================================================
-    # DECODIFICAR CURSOR
-    # =====================================================
 
     if cursor:
         try:
@@ -125,10 +113,6 @@ def get_all_companies_service(
                 "Cursor inválido.",
             )
 
-    # =====================================================
-    # OBTENER EMPRESAS
-    # =====================================================
-
     companies, has_next = get_all_companies(
         database=database,
         limit=limit,
@@ -139,19 +123,11 @@ def get_all_companies_service(
         status=status,
     )
 
-    # =====================================================
-    # CREAR NEXT CURSOR
-    # =====================================================
-
     next_cursor = None
 
     if has_next and companies:
 
         last_company = companies[-1]
-
-        # ================================================
-        # DETERMINAR ORDEN DEL ESTADO
-        # ================================================
 
         if (
             last_company.CompanyCertificateStatus
@@ -178,10 +154,6 @@ def get_all_companies_service(
 
             status_order = 4
 
-        # ================================================
-        # DATOS DEL CURSOR
-        # ================================================
-
         cursor_data = {
             "status_order": status_order,
             "created_at": (
@@ -189,10 +161,6 @@ def get_all_companies_service(
             ),
             "id": str(last_company.id),
         }
-
-        # ================================================
-        # CODIFICAR CURSOR
-        # ================================================
 
         next_cursor = (
             base64.urlsafe_b64encode(
@@ -203,20 +171,12 @@ def get_all_companies_service(
             .decode()
         )
 
-    # =====================================================
-    # RESPUESTA
-    # =====================================================
-
     return {
         "items": companies,
         "next_cursor": next_cursor,
         "has_next": has_next,
     }
 
-
-# =========================================================
-# OBTENER EMPRESA POR ID
-# =========================================================
 
 def get_admin_company_service(
     company_id: UUID,
@@ -239,10 +199,6 @@ def get_admin_company_service(
     return company
 
 
-# =========================================================
-# ACTUALIZAR ESTADO DEL CERTIFICADO
-# =========================================================
-
 def update_certificate_status_service(
     company_id: UUID,
     status: str,
@@ -251,10 +207,6 @@ def update_certificate_status_service(
 ):
 
     try:
-
-        # =================================================
-        # VALIDAR STATUS
-        # =================================================
 
         if status not in (
             "pending",
@@ -267,10 +219,6 @@ def update_certificate_status_service(
                 ErrorCodes.INVALID_STATUS,
                 "Estado de certificado inválido.",
             )
-
-        # =================================================
-        # ACTUALIZAR CERTIFICADO
-        # =================================================
 
         company = update_certificate_status(
             database=database,
@@ -286,10 +234,6 @@ def update_certificate_status_service(
                 "Empresa no encontrada...",
             )
 
-        # =================================================
-        # APROBADO
-        # =================================================
-
         if status == "approved":
 
             EmailCertificateApproved(
@@ -300,10 +244,6 @@ def update_certificate_status_service(
             action = (
                 AdminActivityAction.COMPANY_APPROVED
             )
-
-        # =================================================
-        # RECHAZADO
-        # =================================================
 
         elif status == "rejected":
 
@@ -316,19 +256,9 @@ def update_certificate_status_service(
                 AdminActivityAction.COMPANY_REJECTED
             )
 
-        # =================================================
-        # PENDIENTE
-        # =================================================
-
         else:
-
-            # No enviamos correo ni registramos
-            # aprobación/rechazo para pending.
+            # pending no envía correo ni registra actividad.
             action = None
-
-        # =================================================
-        # REGISTRAR ACTIVIDAD
-        # =================================================
 
         if action is not None:
 
@@ -339,17 +269,9 @@ def update_certificate_status_service(
                 target_company_id=company.id,
             )
 
-        # =================================================
-        # GUARDAR
-        # =================================================
-
         database.commit()
 
         database.refresh(company)
-
-        # =================================================
-        # RESPUESTA
-        # =================================================
 
         return {
             "message": (
@@ -369,22 +291,6 @@ def update_certificate_status_service(
         raise
 
 
-# =========================================================
-# ACTUALIZAR ESTADO DE LA EMPRESA (BLOQUEAR/SUSPENDER, DESBLOQUEAR)
-# =========================================================
-#
-# Suspensión de empresa (ver ALCANCE > Suspensión de empresa): al pasar
-# CompanyStatus true -> false, además de bloquear la empresa, se cancela
-# y reembolsa (RehniCoin) cada pedido suyo que todavía esté en PENDING/
-# PAID/PROCESSING (ver OrderService.cancel_and_refund_company_orders_for_
-# suspension - SHIPPED/DELIVERED/CANCELLED se dejan intactos a propósito).
-# Todo (bloqueo + cancelaciones + reembolsos) es UNA sola transacción:
-# register_admin_activity es quien hace el commit real acá abajo (ver
-# DashboarService.py/activityRepository.py) - se llama al final, después
-# de mutar la empresa y procesar los pedidos, para que su commit cubra
-# todo junto. Si algo falla antes de esa línea, nada de esto se guarda
-# (ver except más abajo).
-
 def update_company_status_service(
     company_id: UUID,
     status: bool,
@@ -395,11 +301,7 @@ def update_company_status_service(
 
     try:
 
-        # =================================================
-        # OBTENER EMPRESA (ORM crudo - hace falta el CompanyStatus
-        # ANTERIOR para saber si esto es una suspensión NUEVA)
-        # =================================================
-
+        # ORM crudo: hace falta el CompanyStatus anterior para saber si es una suspensión nueva.
         company = get_company_by_id_orm(
             database=database,
             company_id=company_id,
@@ -415,19 +317,11 @@ def update_company_status_service(
 
         was_active = company.CompanyStatus
 
-        # Solo es una suspensión "nueva" al pasar true -> false. Si ya
-        # estaba suspendida (false -> false, la operación se repite) NO
-        # se vuelve a procesar nada (ver ALCANCE > punto 6) - se deja
-        # bloqueada, sin tocar pedidos ni el motivo ya guardado.
+        # Suspensión "nueva" solo al pasar true -> false; repetirla sobre una empresa
+        # ya suspendida no procesa nada de nuevo.
         is_new_suspension = was_active and not status
 
-        # =================================================
-        # MOTIVO OBLIGATORIO AL SUSPENDER
-        # =================================================
-        # Se valida solo cuando de verdad se va a suspender (was_active y
-        # status=False) - no bloquea el desbloqueo (status=True) ni una
-        # llamada repetida sobre una empresa ya suspendida.
-
+        # Motivo obligatorio solo al suspender de verdad, no al desbloquear.
         if is_new_suspension and not (reason and reason.strip()):
 
             api_error(
@@ -438,22 +332,12 @@ def update_company_status_service(
 
         reason_clean = reason.strip() if reason else None
 
-        # =================================================
-        # ACTUALIZAR ESTADO
-        # =================================================
-
         company.CompanyStatus = status
 
         if is_new_suspension:
             company.suspension_reason = reason_clean
         elif status:
-            # Desbloqueo: el motivo ya no aplica.
             company.suspension_reason = None
-
-        # =================================================
-        # CANCELAR + REEMBOLSAR PEDIDOS AFECTADOS (solo en una
-        # suspensión nueva)
-        # =================================================
 
         refunded_orders = []
 
@@ -469,10 +353,6 @@ def update_company_status_service(
             Decimal("0"),
         )
 
-        # =================================================
-        # EMPRESA DESBLOQUEADA
-        # =================================================
-
         if status:
 
             EmailCompanyUnblocked(
@@ -483,10 +363,6 @@ def update_company_status_service(
             action = (
                 AdminActivityAction.COMPANY_UNBLOCKED
             )
-
-        # =================================================
-        # EMPRESA BLOQUEADA/SUSPENDIDA
-        # =================================================
 
         else:
 
@@ -500,11 +376,7 @@ def update_company_status_service(
                 AdminActivityAction.COMPANY_BLOCKED
             )
 
-        # =================================================
-        # REGISTRAR ACTIVIDAD (hace el commit de TODO lo anterior -
-        # ver docstring de la sección más arriba)
-        # =================================================
-
+        # register_admin_activity hace el commit que cubre bloqueo + cancelaciones + reembolsos.
         register_admin_activity(
             database=database,
             admin_id=admin_id,
@@ -517,13 +389,7 @@ def update_company_status_service(
 
         database.refresh(company)
 
-        # =================================================
-        # CORREOS DE PEDIDOS CANCELADOS (después del commit, best-effort
-        # - mismo criterio que checkout_service/update_company_order_
-        # status_service: si el guardado ya se confirmó, un error de SMTP
-        # nunca debe deshacer nada)
-        # =================================================
-
+        # Correos best-effort tras el commit: un fallo de SMTP no debe deshacer nada.
         for order in refunded_orders:
             database.refresh(order)
 

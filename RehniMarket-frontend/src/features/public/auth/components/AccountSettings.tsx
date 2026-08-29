@@ -7,13 +7,8 @@ import { useAlert } from "@/shared/components/alert/useAlert";
 import { useAuth } from "@/features/public/auth/context/useAuth";
 import { forgotPassword, updateMe, updateMePhoto } from "@/features/public/auth/api/authService";
 
-// Configuración de cuenta - COMÚN a cualquier rol autenticado (user,
-// company, admin, owner). No vive en ningún módulo específico de rol:
-// nombre, correo, foto de perfil y contraseña pertenecen a la CUENTA, no
-// al perfil público de una empresa ni a ningún otro dato scoped a rol.
-// Cada dashboard solo monta este mismo componente (ver Profile.tsx en
-// company, Admin.tsx, pages/user/Dashboard.tsx) - la lógica vive aquí
-// una sola vez.
+// Configuración de cuenta, común a cualquier rol: nombre, correo, foto y contraseña son de la cuenta.
+// Cada dashboard monta este mismo componente.
 export default function AccountSettings() {
   const navigate = useNavigate();
   const { user, refreshProfile } = useAuth();
@@ -114,10 +109,7 @@ export default function AccountSettings() {
     }
   };
 
-  // Reutiliza el mismo flujo de recuperación de contraseña que ya existe
-  // para todo el sistema (no hay, ni se necesita, un endpoint aparte para
-  // "cambiar contraseña estando logueado" - ver ForgotPasswordService /
-  // ResetPasswordService).
+  // Reutiliza el flujo de recuperación de contraseña; no hay endpoint aparte para "cambiar estando logueado".
   const handleChangePassword = async () => {
     if (!user) return;
 

@@ -31,6 +31,9 @@ class ErrorCodes:
     CODE_EXPIRED = "CODE_EXPIRED"
     CODE_ALREADY_USED = "CODE_ALREADY_USED"
     CODE_NOT_FOUND = "CODE_NOT_FOUND"
+    # Se pidio un reenvio del codigo de verificacion antes de que
+    # terminara el cooldown de 60 s (ver CodeService.resend_verification_code).
+    RESEND_COOLDOWN_ACTIVE = "RESEND_COOLDOWN_ACTIVE"
 
     # ==========================
     # ROLES

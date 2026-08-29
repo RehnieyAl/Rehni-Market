@@ -3,9 +3,8 @@ from app.core.ErrorCodes import ErrorCodes
 from app.core.Exceptions import api_error
 from sqlalchemy.orm import Session
 from app.services.email.CodeService import (
-    create_code_and_send_service
+    issue_verification_code
 )
-from app.models.ModelCode import TypeCode
 from app.services.email.template.EmailRegisterCompany import EmailRegisterCompany
 from app.core.ErrorCodes import ErrorCodes
 import traceback
@@ -47,13 +46,14 @@ def register_user_service(user: CreateUserRequest, database: Session):
             role_id = user_role.id
         )
     
-        create_code_and_send_service(database, new_user.id, email=user.email, code_type=TypeCode.VERIFY_EMAIL, role=user_role.name)
+        code_state = issue_verification_code(database, new_user.id, user.email, role=user_role.name)
 
         database.commit()
         database.refresh(new_user)
 
         return {
-            "message": "Usuario registrado correctamente, se ha enviado un código de verificación a tu correo electrónico para verificar tu cuenta."
+            "message": "Usuario registrado correctamente, se ha enviado un código de verificación a tu correo electrónico para verificar tu cuenta.",
+            **code_state,
         }
     
     except HTTPException:
@@ -109,14 +109,15 @@ def register_company_service(user: CreateUserRequest, company: CreateCompanyRequ
             certificate_path = result["object_name"]
         )
 
-        create_code_and_send_service(database, new_user.id, email=user.email, code_type=TypeCode.VERIFY_EMAIL, role=user_role.name, company_name=company.company_name)
+        code_state = issue_verification_code(database, new_user.id, user.email, role=user_role.name, company_name=company.company_name)
 
         database.commit()
         return {
             "message": "Empresa registrada correctamente. espera que el equipo de RehniMarket se ponga en contacto contigo para verificar tu empresa y activar tu cuenta.",
             "certificate_url": new_company.CompanyCertificate,
             "company_name": new_company.nameCompany,
-            "company_nit": new_company.CompanyNIT
+            "company_nit": new_company.CompanyNIT,
+            **code_state,
         }
     
 

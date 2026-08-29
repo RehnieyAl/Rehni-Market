@@ -8,7 +8,6 @@ export default function UserTerms() {
         términos y condiciones.
       </p>
 
-
       <h3 className="text-lg font-semibold">
         1. Uso de la plataforma
       </h3>
@@ -19,7 +18,6 @@ export default function UserTerms() {
         dentro de la plataforma.
       </p>
 
-
       <h3 className="text-lg font-semibold">
         2. Información de la cuenta
       </h3>
@@ -28,7 +26,6 @@ export default function UserTerms() {
         El usuario debe proporcionar información real y mantener
         la seguridad de sus datos de acceso.
       </p>
-
 
       <h3 className="text-lg font-semibold">
         3. Compras y pedidos
@@ -39,7 +36,6 @@ export default function UserTerms() {
         de confirmar una compra.
       </p>
 
-
       <h3 className="text-lg font-semibold">
         4. Uso responsable
       </h3>
@@ -48,7 +44,6 @@ export default function UserTerms() {
         Está prohibido utilizar la plataforma para actividades
         fraudulentas o que afecten a otros usuarios.
       </p>
-
 
       <h3 className="text-lg font-semibold">
         5. Aceptación

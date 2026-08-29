@@ -1,6 +1,6 @@
 // Skeleton con la misma silueta que la página real (banner + logo +
 // información + grid de productos) - mismo criterio que
-// ProductDetailSkeleton (ver ALCANCE > LOADING).
+// ProductDetailSkeleton.
 export default function CompanyProfileSkeleton() {
   return (
     <div className="animate-pulse">

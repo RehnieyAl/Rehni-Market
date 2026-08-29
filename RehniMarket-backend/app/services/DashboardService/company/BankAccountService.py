@@ -1,10 +1,5 @@
-"""
-CRUD de cuentas bancarias de la empresa (ver ALCANCE > Módulo de
-liquidaciones, Fase 1). Mismo patrón que AddressService.py (una sola
-predeterminada, se promueve otra al borrar la predeterminada) - la
-diferencia es que acá el dueño es una Company, no un Users directo, así
-que primero se resuelve la empresa del usuario autenticado.
-"""
+"""CRUD de cuentas bancarias de la empresa. Mismo patrón que AddressService (una sola
+predeterminada), pero el dueño es una Company, resuelta desde el usuario autenticado."""
 
 import traceback
 from uuid import UUID
@@ -38,9 +33,7 @@ def _get_company_for_user(database: Session, user_id: UUID) -> Company:
 
 
 def _to_response(bank_account: CompanyBankAccount) -> BankAccountResponse:
-    # from_attributes no alcanza: el modelo es snake_case
-    # (account_holder/is_default/created_at) y el schema es camelCase
-    # (accountHolder/isDefault/createdAt) - mismo caso que AddressService.
+    # Mapeo a mano: modelo snake_case, schema camelCase.
     return BankAccountResponse(
         id=bank_account.id,
         accountHolder=bank_account.account_holder,
@@ -70,9 +63,7 @@ def create_bank_account_service(
     try:
         existing = repo.list_bank_accounts(database, company.id)
 
-        # La primera cuenta que registra la empresa queda predeterminada
-        # automáticamente, sin importar lo que haya enviado el formulario
-        # (mismo criterio que AddressService.create_address_service).
+        # La primera cuenta queda predeterminada automáticamente.
         is_default = data.isDefault or len(existing) == 0
 
         if is_default:
@@ -135,10 +126,7 @@ def update_bank_account_service(
             repo.clear_default(database, company.id)
             bank_account.is_default = True
         elif data.isDefault is False and bank_account.is_default:
-            # No se permite dejar a la empresa sin ninguna predeterminada
-            # desmarcando la única existente (mismo criterio que
-            # AddressService: siempre debe haber una predeterminada
-            # mientras existan cuentas) - se ignora el False en ese caso.
+            # No se permite desmarcar la única predeterminada: siempre debe haber una.
             pass
 
         database.commit()
@@ -179,8 +167,7 @@ def delete_bank_account_service(
         repo.delete_bank_account(database, bank_account)
         database.flush()
 
-        # Si se eliminó la predeterminada y quedan otras, se promueve la
-        # más reciente (mismo criterio que AddressService).
+        # Si se eliminó la predeterminada y quedan otras, se promueve la más reciente.
         if was_default:
             remaining = repo.list_bank_accounts(database, company.id)
 

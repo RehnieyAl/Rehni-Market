@@ -15,15 +15,11 @@ interface ReportDetailModalProps {
   reportId: string | null;
   isOpen: boolean;
   onClose: () => void;
-  // Avisa al listado (Reports.tsx) para que recargue la página actual -
-  // el reporte pudo dejar de pertenecer al filtro de estado activo tras
-  // resolverse/rechazarse.
+  // Avisa al listado para que recargue: el reporte pudo salir del filtro de estado.
   onResolved: () => void;
 }
 
-// Detalle de un reporte, reutilizado tanto para PRODUCT como para
-// COMPANY (ver ALCANCE > Reportes, sección 7 - "utilizar el mismo
-// componente de detalle, renderizar dinámicamente según el tipo").
+// Detalle de un reporte, reutilizado para PRODUCT y COMPANY (render dinámico según el tipo).
 export default function ReportDetailModal({
   reportId,
   isOpen,
@@ -35,10 +31,7 @@ export default function ReportDetailModal({
   const [report, setReport] = useState<ReportDetail | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Acción admin en curso (ver ALCANCE > sección 9: revisar/resolver/
-  // rechazar). "reviewing" se confirma directo (no necesita respuesta);
-  // "resolved"/"rejected" revelan el campo de respuesta administrativa
-  // antes de confirmar.
+  // Acción admin en curso. "reviewing" se confirma directo; "resolved"/"rejected" piden respuesta antes.
   const [pendingAction, setPendingAction] = useState<
     "reviewing" | "resolved" | "rejected" | null
   >(null);

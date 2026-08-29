@@ -15,7 +15,7 @@ export default function ProductSearchBar({
 }: ProductSearchBarProps) {
   return (
     <div className="flex w-full items-center gap-3">
-      {/* BUSCADOR */}
+
       <div className="flex h-12 min-w-0 flex-1 items-center rounded-xl border border-gray-200 bg-white px-4 transition focus-within:border-[#6D0F2D] focus-within:ring-2 focus-within:ring-[#6D0F2D]/10">
         <Search
           size={19}
@@ -43,7 +43,6 @@ export default function ProductSearchBar({
         )}
       </div>
 
-      {/* BOTÓN FILTROS */}
       {showFiltersButton && (
         <button
           type="button"

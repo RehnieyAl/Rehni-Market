@@ -37,11 +37,7 @@ export default function Favorites() {
     try {
       setRemovingId(favorite.id);
 
-      // Mismo toggleFavorite que usa el corazón de ProductCard (ver
-      // FavoritesProvider.tsx) - no un removeFavorite aparte, para que el
-      // estado global se actualice también y cualquier ProductCard de
-      // este mismo producto, en otra pantalla, deje de verse marcada sin
-      // necesitar recargar.
+      // Mismo toggleFavorite que ProductCard, para que el estado global se actualice en todas partes.
       await toggleFavorite(favorite.product.id);
 
       setFavorites((prev) => prev.filter((f) => f.id !== favorite.id));

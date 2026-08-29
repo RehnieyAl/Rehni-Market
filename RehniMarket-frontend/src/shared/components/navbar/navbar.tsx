@@ -1,6 +1,11 @@
-import { ImageOff, Menu, Search, ShoppingCart, X } from "lucide-react";
+import { Heart, ImageOff, Menu, Search, ShoppingCart, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  type Location,
+} from "react-router-dom";
 import { useAuth } from "@/features/public/auth/context/useAuth";
 import { useCart } from "@/features/cart/context/useCart";
 import ProfileDropdown from "./ProfileDropdown";
@@ -14,23 +19,53 @@ import type { PublicProductCard } from "@/features/public/home/types/response";
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULTS_LIMIT = 5;
 
-// Dropdown de búsqueda rápida del navbar: reutiliza /products/daily como
-// fuente de "varios productos" y filtra por nombre en el cliente sobre
-// ese resultado (se cachea en memoria para no repetir la llamada en cada
-// tecla). GET /public/products ya soporta un filtro `search` real (ver
-// ProductsList.tsx) - este dropdown puntual no fue migrado a ese
-// endpoint todavía.
+const NAV_ITEMS: {
+  label: string;
+  to: string;
+  isActive: (location: Location) => boolean;
+}[] = [
+  {
+    label: "Inicio",
+    to: "/",
+    isActive: (location) => location.pathname === "/",
+  },
+  {
+    label: "Categorías",
+    to: "/categories",
+    isActive: (location) => location.pathname === "/categories",
+  },
+  {
+    label: "Productos",
+    to: "/products",
+    isActive: (location) =>
+      location.pathname === "/products" &&
+      !location.search.includes("discount=1") &&
+      !location.search.includes("days="),
+  },
+  {
+    label: "Ofertas",
+    to: "/products?discount=1",
+    isActive: (location) =>
+      location.pathname === "/products" && location.search.includes("discount=1"),
+  },
+  {
+    label: "Novedades",
+    to: "/products?days=30",
+    isActive: (location) =>
+      location.pathname === "/products" && location.search.includes("days="),
+  },
+];
 
-const desktopLink = ({ isActive }: { isActive: boolean }) =>
+const desktopLinkClass = (active: boolean) =>
   `relative py-1 transition hover:text-[#6D0F2D] ${
-    isActive
+    active
       ? "text-[#6D0F2D] after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:bg-[#6D0F2D]"
       : "text-gray-700"
   }`;
 
-const mobileLink = ({ isActive }: { isActive: boolean }) =>
+const mobileLinkClass = (active: boolean) =>
   `rounded-xl px-4 py-3.5 text-sm font-medium transition ${
-    isActive ? "bg-[#6D0F2D]/10 text-[#6D0F2D]" : "text-gray-800 hover:bg-gray-50"
+    active ? "bg-[#6D0F2D]/10 text-[#6D0F2D]" : "text-gray-800 hover:bg-gray-50"
   }`;
 
 export default function Navbar() {
@@ -44,13 +79,14 @@ export default function Navbar() {
   const { role } = useAuth();
   const { cart } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isBuyer = role === "user";
 
   const desktopSearchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
   const productsCacheRef = useRef<PublicProductCard[] | null>(null);
 
-  // Cierra el dropdown al hacer click afuera de cualquiera de los dos
-  // buscadores (desktop/mobile - solo uno está visible a la vez).
+  // Cierra el dropdown al hacer click fuera de los buscadores (desktop/mobile).
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -68,10 +104,7 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Búsqueda en vivo (debounced) mientras el usuario escribe. El cierre
-  // del dropdown al limpiar el campo se maneja en handleSearchChange (evento
-  // directo del input, no acá) para no disparar setState de forma síncrona
-  // dentro del efecto.
+  // Búsqueda en vivo (debounced); limpiar el campo cierra el dropdown desde handleSearchChange.
   useEffect(() => {
     const query = search.trim().toLowerCase();
 
@@ -118,8 +151,7 @@ export default function Navbar() {
   const handleSearchChange = (value: string) => {
     setSearch(value);
 
-    // Limpiar la búsqueda cierra el dropdown de inmediato (ver REQUISITOS
-    // > BUSCADOR DEL NAVBAR > 8).
+    // Limpiar la búsqueda cierra el dropdown de inmediato.
     if (!value.trim()) {
       setShowDropdown(false);
       setSearchResults([]);
@@ -196,33 +228,35 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white">
-      <div className="mx-auto flex h-20 max-w-[1600px] items-center justify-between px-4 lg:px-8">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-white">
+      <div className="mx-auto flex h-20 max-w-[clamp(1280px,90vw,1600px)] items-center gap-4 px-2 sm:px-4 lg:px-8">
 
-        <Link to="/" className="flex items-center gap-3">
-          <img
-            src={logo}
-            alt="RehniMarket"
-            className="h-40 w-auto object-contain"
-          />
-        </Link>
+        <div className="flex shrink-0 items-center gap-6 xl:gap-10">
+          <Link to="/" className="flex shrink-0 items-center gap-3">
+            <img
+              src={logo}
+              alt="RehniMarket"
+              className="h-10 w-auto object-contain"
+            />
+          </Link>
 
-        <nav className="hidden gap-8 font-medium lg:flex">
-          <NavLink to="/" end className={desktopLink}>
-            Inicio
-          </NavLink>
+          <nav className="hidden items-center gap-5 font-medium lg:flex xl:gap-7">
+            {NAV_ITEMS.map((item) => (
+              <Link
+                key={item.label}
+                to={item.to}
+                className={desktopLinkClass(item.isActive(location))}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
 
-          <NavLink to="/categories" className={desktopLink}>
-            Categorías
-          </NavLink>
-
-          <NavLink to="/products" className={desktopLink}>
-            Productos
-          </NavLink>
-        </nav>
-
-        {/* BUSCADOR DESKTOP */}
-        <div ref={desktopSearchRef} className="relative hidden w-96 xl:block">
+        <div
+          ref={desktopSearchRef}
+          className="relative mx-auto hidden w-full min-w-0 max-w-sm lg:block"
+        >
           <input
             type="text"
             value={search}
@@ -236,29 +270,39 @@ export default function Navbar() {
               }
             }}
             placeholder="Buscar productos..."
-            className="w-full rounded-full border py-3 pl-5 pr-12 outline-none focus:border-[#6D0F2D]"
+            className="w-full rounded-full bg-gray-100 py-2.5 pl-5 pr-11 text-sm text-gray-700 outline-none transition focus:bg-white focus:ring-2 focus:ring-[#6D0F2D]/30"
           />
 
           <Search
-            size={20}
+            size={18}
             onClick={handleSearch}
-            className="absolute right-5 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500"
+            className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400"
           />
 
           {renderSearchDropdown()}
         </div>
 
-        <div className="hidden items-center gap-5 lg:flex">
-          {role === "user" && (
+        <div className="hidden shrink-0 items-center gap-4 lg:flex">
+          {isBuyer && (
+            <Link
+              to="/user/dashboard?tab=favorites"
+              className="rounded-xl p-2 text-gray-600 transition hover:bg-gray-100 hover:text-[#6D0F2D]"
+              aria-label="Mis favoritos"
+            >
+              <Heart size={22} />
+            </Link>
+          )}
+
+          {isBuyer && (
             <Link
               to="/cart"
-              className="relative rounded-xl p-2 text-gray-700 transition hover:bg-gray-100"
+              className="relative rounded-xl p-2 text-gray-600 transition hover:bg-gray-100 hover:text-[#6D0F2D]"
               aria-label="Mi carrito"
             >
               <ShoppingCart size={22} />
 
               {!!cart?.totalItems && (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#6D0F2D] text-[10px] font-bold text-white">
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#B0123E] text-[10px] font-bold text-white">
                   {cart.totalItems}
                 </span>
               )}
@@ -287,7 +331,7 @@ export default function Navbar() {
           onClick={() => setOpen(!open)}
           aria-label={open ? "Cerrar menú" : "Abrir menú"}
           aria-expanded={open}
-          className="lg:hidden"
+          className="ml-auto text-gray-700 lg:hidden"
         >
           {open ? <X size={28} /> : <Menu size={28} />}
         </button>
@@ -298,7 +342,6 @@ export default function Navbar() {
         <div className="border-t border-gray-200 bg-white lg:hidden">
           <div className="p-5">
 
-            {/* BUSCADOR MÓVIL */}
             <div ref={mobileSearchRef} className="relative mb-5">
               <input
                 type="text"
@@ -325,53 +368,49 @@ export default function Navbar() {
               {renderSearchDropdown()}
             </div>
 
-            {/* NAVEGACIÓN */}
             <nav className="flex flex-col gap-1">
-              <NavLink
-                to="/"
-                end
-                onClick={() => setOpen(false)}
-                className={mobileLink}
-              >
-                Inicio
-              </NavLink>
-
-              <NavLink
-                to="/categories"
-                onClick={() => setOpen(false)}
-                className={mobileLink}
-              >
-                Categorías
-              </NavLink>
-
-              <NavLink
-                to="/products"
-                onClick={() => setOpen(false)}
-                className={mobileLink}
-              >
-                Productos
-              </NavLink>
+              {NAV_ITEMS.map((item) => (
+                <Link
+                  key={item.label}
+                  to={item.to}
+                  onClick={() => setOpen(false)}
+                  className={mobileLinkClass(item.isActive(location))}
+                >
+                  {item.label}
+                </Link>
+              ))}
             </nav>
 
             <div className="my-4 border-t border-gray-200" />
 
-            {role === "user" && (
-              <Link
-                to="/cart"
-                onClick={() => setOpen(false)}
-                className="mb-4 flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700"
-              >
-                <span className="flex items-center gap-2">
-                  <ShoppingCart size={18} />
-                  Mi carrito
-                </span>
+            {isBuyer && (
+              <div className="mb-4 flex flex-col gap-2">
+                <Link
+                  to="/user/dashboard?tab=favorites"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700"
+                >
+                  <Heart size={18} />
+                  Mis favoritos
+                </Link>
 
-                {!!cart?.totalItems && (
-                  <span className="rounded-full bg-[#6D0F2D] px-2 py-0.5 text-xs font-bold text-white">
-                    {cart.totalItems}
+                <Link
+                  to="/cart"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700"
+                >
+                  <span className="flex items-center gap-2">
+                    <ShoppingCart size={18} />
+                    Mi carrito
                   </span>
-                )}
-              </Link>
+
+                  {!!cart?.totalItems && (
+                    <span className="rounded-full bg-[#B0123E] px-2 py-0.5 text-xs font-bold text-white">
+                      {cart.totalItems}
+                    </span>
+                  )}
+                </Link>
+              </div>
             )}
 
             {role == null ? (

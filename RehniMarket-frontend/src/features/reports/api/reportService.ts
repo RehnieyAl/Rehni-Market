@@ -7,17 +7,8 @@ import type {
   ReportTargetType,
 } from "../types/response";
 
-// ==============================
-// PÚBLICO (usuario autenticado) - crear un reporte de producto o de
-// empresa, ver ALCANCE > Reportes, secciones 3/4.
-// ==============================
-//
-// multipart/form-data (no JSON): las evidencias viajan como archivos en
-// el mismo request (ver ALCANCE > Reportes - EVIDENCIAS/IMÁGENES),
-// mismo patrón que registerCompany (ver auth/api/authService.ts) y la
-// subida de imágenes de producto (ver company/api/productService.ts).
-// `evidences` es opcional - un reporte sin ninguna imagen es igual de
-// válido.
+// Crea un reporte de producto o de empresa (usuario autenticado).
+// multipart/form-data: las evidencias viajan como archivos; `evidences` es opcional.
 
 export async function createReport(
   targetType: ReportTargetType,
@@ -49,9 +40,7 @@ export async function createReport(
   return response.data;
 }
 
-// ==============================
 // ADMIN - centro único de gestión (Admin > Reportes)
-// ==============================
 
 export type ReportTypeFilter = "all" | ReportTargetType;
 export type ReportStatusFilter = "all" | ReportStatus;

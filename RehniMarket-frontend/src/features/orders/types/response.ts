@@ -1,6 +1,4 @@
-// Espejo de OrderStatusEnum (backend > app/models/ModelOrder.py). El
-// valor real que viaja en la API es el .value del enum de Python
-// (minúsculas), no el nombre del enum.
+// Espejo de OrderStatusEnum; en la API viaja el .value (minúsculas).
 export type OrderStatus =
   | "pending"
   | "paid"
@@ -15,24 +13,15 @@ export interface OrderItem {
   variantId: string | null;
   productName: string;
   variantName: string | null;
-  // Precio FINAL (con descuento ya aplicado) - lo que realmente se pagó.
+  // Precio final ya con descuento: lo que se pagó.
   unitPrice: string;
-  // Precio ANTES del descuento (snapshot del momento de la compra) -
-  // null cuando no había descuento activo entonces, o en pedidos de
-  // antes de que existiera este campo (ver backend >
-  // OrderItemResponse.originalUnitPrice). Nunca inferir un descuento a
-  // partir del precio actual del producto.
+  // Precio antes del descuento, snapshot al comprar. null si no había descuento.
   originalUnitPrice: string | null;
   quantity: number;
   subtotal: string;
 }
 
-// Snapshot minimo de la direccion de entrega (ver backend >
-// SchemaOrder.py > OrderAddressResponse).
-// Snapshot de la dirección de entrega GUARDADO EN EL PEDIDO (ver backend
-// > ModelOrder.py > Order.delivery_* y SchemaOrder.py >
-// OrderAddressResponse) - no cambia aunque el comprador edite/elimine la
-// dirección original después.
+// Snapshot de la dirección guardado en el pedido; no cambia si el comprador la edita después.
 export interface OrderAddress {
   label: string | null;
   fullName: string;
@@ -44,9 +33,7 @@ export interface OrderAddress {
 
 export interface Order {
   id: string;
-  // Numero de referencia amigable ("RM-000001") - usar esto en vez de
-  // `id` en cualquier lugar visible para el usuario/empresa (ver
-  // ALCANCE > Refactor Pedidos Empresa, punto 5).
+  // Referencia legible ("RM-000001"); usar esto, no `id`, en cualquier vista.
   reference: string;
   status: OrderStatus;
   companyId: string;
@@ -73,9 +60,7 @@ export interface OrdersPaginated {
   total_pages: number;
 }
 
-// Contadores para las pestañas de "Pedidos" del dashboard de empresa
-// (ver backend > SchemaOrder.py > OrderStatusCountsResponse). Ya vienen
-// agrupados por pestaña, no por OrderStatus crudo.
+// Contadores para las pestañas de "Pedidos", ya agrupados por pestaña.
 export interface OrderStatusCounts {
   all: number;
   pending: number;

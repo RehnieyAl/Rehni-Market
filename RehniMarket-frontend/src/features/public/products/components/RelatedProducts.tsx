@@ -9,12 +9,8 @@ import { getPublicProducts } from "../api/productsService";
 import type { PublicProductCard } from "@/features/public/home/types/response";
 
 const MAX_RELATED = 8;
-// Se piden MAX_RELATED + 1: el producto actual puede venir incluido en el
-// propio catálogo (ver ALCANCE > requisito 7, "excluir el producto
-// actual") - con el +1 de margen, aunque venga, siguen quedando 8 después
-// de filtrarlo. No es aleatorio: es la misma categoría real del producto
-// (catalog_id), vía GET /public/products, el mismo endpoint del listado
-// público.
+// Se piden MAX_RELATED + 1 por si el producto actual viene en su propio catálogo (se filtra después).
+// Misma categoría (catalog_id), vía GET /public/products.
 const FETCH_LIMIT = MAX_RELATED + 1;
 
 interface RelatedProductsProps {
@@ -60,9 +56,7 @@ export default function RelatedProducts({ catalogId, excludeProductId }: Related
     scrollRef.current?.scrollBy({ left: direction * 320, behavior: "smooth" });
   };
 
-  // Ninguna categoría activa todavía / catálogo sin más productos - se
-  // omite la sección entera en vez de mostrar un bloque vacío (mismo
-  // criterio que CategoriesSection.tsx del Home).
+  // Sin otros productos en el catálogo: se omite la sección entera.
   if (!loading && products.length === 0) {
     return null;
   }

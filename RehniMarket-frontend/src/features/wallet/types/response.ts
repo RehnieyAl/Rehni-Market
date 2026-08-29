@@ -19,7 +19,7 @@ export interface WalletTransactionsPaginated {
 }
 
 // Respuesta de POST /admin/wallet/recharge (recarga exclusiva
-// ADMIN/OWNER, identificada por email - ver AdminWalletRouter.py).
+// ADMIN/OWNER, identificada por email
 export interface RechargeByEmailResult {
   balance: string;
   userName: string;

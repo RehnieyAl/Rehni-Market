@@ -11,16 +11,7 @@ ReportTargetTypeLiteral = Literal["product", "company"]
 ReportStatusLiteral = Literal["pending", "reviewing", "resolved", "rejected"]
 
 
-# ==============================
-# CREAR REPORTE (público, comprador autenticado)
-# ==============================
-#
-# multipart/form-data, no JSON: las evidencias (ver ALCANCE > Reportes -
-# EVIDENCIAS/IMÁGENES) viajan como archivos en el mismo request (ver
-# ReportRouter.py > evidences: list[UploadFile]), así que estos campos
-# tienen que llegar como Form, no como body JSON - mismo patrón que
-# CreateAdvertisementRequest.as_form (ver SchemaAdvertisement.py).
-
+# multipart/form-data: las evidencias viajan como archivos en el mismo request.
 class CreateReportRequest(BaseModel):
     targetType: ReportTargetTypeLiteral
     targetId: UUID
@@ -43,23 +34,14 @@ class CreateReportRequest(BaseModel):
         )
 
 
-# ==============================
-# LISTADO (Admin > Reportes)
-# ==============================
-
 class ReportListItemResponse(BaseModel):
     id: UUID
     targetType: ReportTargetTypeLiteral
 
-    # Nombre del producto (reporte de producto) o de la empresa (reporte
-    # de empresa) - lo que la tabla del admin llama "Objetivo" (ver
-    # ALCANCE > sección 6).
+    # Nombre del producto o de la empresa reportada.
     targetLabel: str
 
-    # Empresa dueña: la que vende el producto reportado, o la propia
-    # empresa en un reporte de empresa. None solo si el producto/empresa
-    # ya no existiera (no debería pasar - ni productos ni empresas se
-    # borran físicamente, ver ModelReport.py).
+    # Empresa dueña. None solo si el producto/empresa ya no existiera.
     companyName: str | None
 
     reporterName: str
@@ -78,29 +60,18 @@ class ReportsPaginatedResponse(BaseModel):
 
 class ReportEvidenceResponse(BaseModel):
     id: UUID
-    # URL ya armada con build_media_url (mismo mecanismo público que el
-    # resto de imágenes del proyecto - ver ModelReport.py > ReportEvidence).
+    # Ya armada con build_media_url.
     url: str
 
-
-# ==============================
-# DETALLE (Admin > Reportes > abrir uno)
-# ==============================
 
 class ReportResponse(BaseModel):
     id: UUID
     targetType: ReportTargetTypeLiteral
 
-    # product_id/company_id (nunca una URL guardada) - el frontend arma
-    # el enlace "Ver producto"/"Ver empresa" con estos IDs y sus propias
-    # rutas (ver ALCANCE > Reportes, sección 11/15: "no guardar URL fija").
+    # IDs, nunca URLs: el frontend arma el enlace con sus propias rutas.
     productId: UUID | None
     productName: str | None
 
-    # Empresa dueña del producto (reporte de producto) o la empresa
-    # reportada directamente (reporte de empresa) - un solo campo, el
-    # componente de detalle lo etiqueta distinto según targetType (ver
-    # ALCANCE > sección 7).
     companyId: UUID | None
     companyName: str | None
 
@@ -122,10 +93,6 @@ class ReportResponse(BaseModel):
     updatedAt: datetime | None
     resolvedAt: datetime | None
 
-
-# ==============================
-# ACCIONES ADMIN
-# ==============================
 
 class UpdateReportStatusRequest(BaseModel):
     status: ReportStatusLiteral

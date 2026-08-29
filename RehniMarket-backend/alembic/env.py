@@ -1,6 +1,3 @@
-# Este archivo es parte de lubix-backend
-# Sirve para crear las tablas en la base de datos utilizando Alembic
-
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config

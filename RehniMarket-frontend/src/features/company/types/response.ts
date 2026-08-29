@@ -1,5 +1,4 @@
-// Estados posibles del certificado de la empresa (espejo de
-// CompanyCertificateEnum en el backend).
+// Estados del certificado de la empresa (espejo de CompanyCertificateEnum).
 export type CompanyCertificateStatus = "pending" | "approved" | "rejected";
 
 export interface DashboardHomeResponse {
@@ -14,8 +13,7 @@ is_verified: boolean;
 memberAT: string;
 }
 
-// Solo datos reales calculados sobre los productos de la empresa (ver
-// ALCANCE > Home > ESTADÍSTICAS) - no hay ventas/ingresos/visitas.
+// Solo datos calculados sobre los productos; no hay ventas/ingresos/visitas.
 export interface ProductsSummaryResponse {
 total: number;
 active: number;
@@ -23,8 +21,7 @@ hidden: number;
 out_of_stock: number;
 }
 
-// Solo información PÚBLICA de la tienda - nombre/correo de la cuenta se
-// consultan con GET /auth/me (ver "Configuración de cuenta"), no aquí.
+// Solo información pública de la tienda; el nombre/correo de la cuenta van por GET /auth/me.
 export interface CompanyProfileResponse {
 id: string;
 nameCompany: string;
@@ -63,9 +60,7 @@ price: number;
 stock: number;
 image: string | null;
 is_active: boolean;
-// null = nunca eliminado (activo o solo desactivado con el toggle).
-// Con fecha = eliminado por la empresa - distingue "Inactivo" de
-// "Eliminado" (ver backend > ModelProduct.py > Product.deleted_at).
+// null = nunca eliminado; con fecha = eliminado por la empresa (distinto de "Inactivo").
 deleted_at: string | null;
 }
 
@@ -98,8 +93,7 @@ hex_color: string;
 export interface ProductDetailResponse {
 id: string;
 name: string;
-// Pydantic serializa Decimal como string en JSON (verificado contra la
-// respuesta real del backend), no como number.
+// Pydantic serializa Decimal como string.
 price: string;
 discount_enable: boolean;
 discount_value: string;
@@ -116,10 +110,6 @@ main_color: ProductColorResponse | null;
 images: ProductImageResponse[];
 specifications: ProductSpecificationResponse[];
 }
-
-// ==========================
-// VARIANTES
-// ==========================
 
 export interface VariantColorResponse {
 id: string;
@@ -144,8 +134,7 @@ id: string;
 name: string;
 // Pydantic serializa Decimal como string en JSON.
 price: string;
-// Descuento propio de la variante (independiente del producto base).
-// discount_value es un porcentaje (0-100), no un monto en pesos.
+// Descuento propio de la variante; discount_value es un porcentaje (0-100).
 discount_enable: boolean;
 discount_value: string;
 stock: number;

@@ -28,7 +28,7 @@ const ROLE_LABEL: Record<Role, string> = {
   spec: "Especificación",
 };
 
-// Gestion de atributos por categoria (ver CatalogAttributeService.py).
+// Gestion de atributos por categoria.
 // El Admin define, por categoria, que atributos existen (Color, Talla,
 // Almacenamiento, Marca...), si generan variantes comprables
 // (role="variant") o solo describen (role="spec"), y sus valores.

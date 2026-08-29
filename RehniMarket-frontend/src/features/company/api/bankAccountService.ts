@@ -2,11 +2,7 @@ import { api } from "@/api/Client";
 
 import type { BankAccount, BankAccountType } from "@/features/payouts/types/response";
 
-// Cuentas bancarias de la empresa (ver ALCANCE > Módulo de liquidaciones,
-// Fase 1) - CRUD real contra /company/bank-accounts (ver
-// BankAccountRouter.py). Único lado que puede mutarlas: el admin nunca
-// crea/edita cuentas bancarias de una empresa, solo las lee de forma
-// resumida embebidas en un payout (ver features/admin/api/payoutService.ts).
+// CRUD de cuentas bancarias de la empresa contra /company/bank-accounts. El admin nunca las muta, solo las lee.
 
 export interface BankAccountFormPayload {
   accountHolder: string;

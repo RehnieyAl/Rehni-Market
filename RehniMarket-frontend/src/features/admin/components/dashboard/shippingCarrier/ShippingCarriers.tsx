@@ -12,11 +12,7 @@ import {
 
 import type { AdminShippingCarrierResponse } from "@/features/admin/types/response";
 
-// CRUD de transportadoras (ver ALCANCE > Transportadoras) - mismo
-// patrón que Catalogs.tsx: activar/desactivar en vez de eliminar (no hay
-// endpoint de borrado físico, ver backend > ModelShippingCarrier.py),
-// para no romper la referencia de los pedidos que ya usaron una
-// transportadora.
+// CRUD de transportadoras: activar/desactivar en vez de eliminar (los pedidos conservan la referencia).
 export default function ShippingCarriers() {
   const [carriers, setCarriers] = useState<AdminShippingCarrierResponse[]>([]);
   const [loading, setLoading] = useState(true);

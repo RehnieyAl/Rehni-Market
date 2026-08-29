@@ -67,10 +67,6 @@ export default function Companies() {
   const [certificateFilter, setCertificateFilter] =
     useState<CompanyCertificateFilter>("all");
 
-  // =========================
-  // CARGAR EMPRESAS
-  // =========================
-
   const loadCompanies = async (
     cursor?: string,
     searchValue: string = search,
@@ -98,10 +94,6 @@ export default function Companies() {
       setLoading(false);
     }
   };
-
-  // =========================
-  // CARGA INICIAL
-  // =========================
 
   useEffect(() => {
     const loadInitialCompanies = async () => {
@@ -132,10 +124,6 @@ export default function Companies() {
     loadInitialCompanies();
   }, []);
 
-  // =========================
-  // BUSCAR
-  // =========================
-
   const handleSearch = async (
     value: string,
   ) => {
@@ -149,10 +137,6 @@ export default function Companies() {
       certificateFilter,
     );
   };
-
-  // =========================
-  // CAMBIAR FILTRO
-  // =========================
 
   const handleCertificateFilter = async (
     filter: CompanyCertificateFilter,
@@ -168,10 +152,6 @@ export default function Companies() {
       filter,
     );
   };
-
-  // =========================
-  // SIGUIENTE
-  // =========================
 
   const handleNextPage = async () => {
     if (!nextCursor || loading) {
@@ -191,10 +171,6 @@ export default function Companies() {
       certificateFilter,
     );
   };
-
-  // =========================
-  // ANTERIOR
-  // =========================
 
   const handlePreviousPage = async () => {
     if (
@@ -224,10 +200,6 @@ export default function Companies() {
     );
   };
 
-  // =========================
-  // MODAL ESTADO EMPRESA
-  // =========================
-
   const handleOpenStatusModal = (
     company: AdminCompanyResponse,
   ) => {
@@ -246,10 +218,6 @@ export default function Companies() {
     setStatusReason("");
   };
 
-  // =========================
-  // CAMBIAR ESTADO EMPRESA
-  // =========================
-
   const handleCompanyStatus = async () => {
     if (!selectedStatusCompany) {
       return;
@@ -258,10 +226,7 @@ export default function Companies() {
     const newStatus =
       !selectedStatusCompany.CompanyStatus;
 
-    // El motivo es obligatorio solo al suspender, es decir cuando
-    // newStatus es false (ver CompanyStatusConfirmModal, que ya
-    // deshabilita el botón en este caso - esta validación es la de
-    // respaldo del lado del padre).
+    // El motivo es obligatorio solo al suspender (newStatus false); respaldo del modal.
     if (!newStatus && !statusReason.trim()) {
       return;
     }
@@ -272,9 +237,7 @@ export default function Companies() {
       const result = await updateCompanyStatus(
         selectedStatusCompany.id,
         newStatus,
-        // El motivo aplica al SUSPENDER (newStatus=false), no al
-        // desbloquear (newStatus=true, ver update_company_status_service
-        // > is_new_suspension) - "!newStatus", no "newStatus".
+        // El motivo aplica al suspender (newStatus=false), no al desbloquear.
         !newStatus ? statusReason.trim() : undefined,
       );
 
@@ -299,8 +262,7 @@ export default function Companies() {
       setStatusModalOpen(false);
       setStatusReason("");
 
-      // Feedback global con los valores REALES devueltos por el backend
-      // (ver ALCANCE > FEEDBACK ADMIN) - nunca un mensaje inventado.
+      // Feedback con los valores reales devueltos por el backend.
       if (newStatus) {
         showAlert(
           "success",
@@ -331,10 +293,6 @@ export default function Companies() {
     }
   };
 
-  // =========================
-  // EMPRESA ACTUALIZADA
-  // =========================
-
   const handleCompanyUpdated = (
     updatedCompany: AdminCompanyResponse,
   ) => {
@@ -349,10 +307,6 @@ export default function Companies() {
         ),
     );
   };
-
-  // =========================
-  // TEXTO DEL FILTRO
-  // =========================
 
   const getFilterLabel = () => {
     switch (certificateFilter) {
@@ -373,10 +327,6 @@ export default function Companies() {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
 
-      {/* =========================
-          ENCABEZADO
-      ========================= */}
-
       <div className="shrink-0">
         <h1 className="text-2xl font-bold text-gray-900">
           Empresas
@@ -388,14 +338,8 @@ export default function Companies() {
         </p>
       </div>
 
-      {/* =========================
-          BUSCADOR + FILTRO
-      ========================= */}
-
       <section className="mt-6 shrink-0 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-3 md:flex-row">
-
-          {/* BUSCADOR */}
 
           <div className="flex flex-1 items-center gap-3 rounded-lg border border-gray-200 px-4 py-3">
             <Search
@@ -415,8 +359,6 @@ export default function Companies() {
               className="w-full text-sm outline-none"
             />
           </div>
-
-          {/* FILTRO */}
 
           <div className="relative">
             <select
@@ -454,13 +396,7 @@ export default function Companies() {
         </div>
       </section>
 
-      {/* =========================
-          EMPRESAS
-      ========================= */}
-
       <section className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-
-        {/* HEADER */}
 
         <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-5 py-4">
 
@@ -477,14 +413,10 @@ export default function Companies() {
             </p>
           </div>
 
-          {/* FILTRO ACTUAL */}
-
           <span className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600">
             {getFilterLabel()}
           </span>
         </div>
-
-        {/* TABLA */}
 
         <div className="h-[360px] overflow-y-auto overflow-x-auto">
           <table className="w-full min-w-[900px]">
@@ -552,8 +484,6 @@ export default function Companies() {
                       className="border-b border-gray-100 last:border-0 hover:bg-gray-50"
                     >
 
-                      {/* EMPRESA */}
-
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
 
@@ -584,21 +514,15 @@ export default function Companies() {
                         </div>
                       </td>
 
-                      {/* NIT */}
-
                       <td className="px-5 py-3 text-sm text-gray-600">
                         {company.CompanyNIT}-
                         {company.CompanyNITDV}
                       </td>
 
-                      {/* DIRECCIÓN */}
-
                       <td className="px-5 py-3 text-sm text-gray-600">
                         {company.addressCompany ||
                           "No registrada"}
                       </td>
-
-                      {/* CERTIFICADO */}
 
                       <td className="px-5 py-3">
                         <CertificateStatus
@@ -608,8 +532,6 @@ export default function Companies() {
                         />
                       </td>
 
-                      {/* ESTADO */}
-
                       <td className="px-5 py-3">
                         <CompanyStatus
                           active={
@@ -617,8 +539,6 @@ export default function Companies() {
                           }
                         />
                       </td>
-
-                      {/* REGISTRO */}
 
                       <td className="px-5 py-3 text-sm text-gray-500">
                         {new Date(
@@ -628,12 +548,8 @@ export default function Companies() {
                         )}
                       </td>
 
-                      {/* ACCIONES */}
-
                       <td className="px-5 py-3">
                         <div className="flex items-center justify-center gap-1">
-
-                          {/* VER */}
 
                           <button
                             type="button"
@@ -647,8 +563,6 @@ export default function Companies() {
                           >
                             <Eye size={18} />
                           </button>
-
-                          {/* BLOQUEAR / DESBLOQUEAR */}
 
                           <button
                             type="button"
@@ -694,10 +608,6 @@ export default function Companies() {
           </table>
         </div>
 
-        {/* =========================
-            PAGINACIÓN
-        ========================= */}
-
         <div className="flex shrink-0 items-center justify-between border-t border-gray-200 px-5 py-3">
 
           <span className="text-sm text-gray-500">
@@ -741,10 +651,6 @@ export default function Companies() {
         </div>
       </section>
 
-      {/* =========================
-          MODAL DETALLE
-      ========================= */}
-
       <CompanyDetailModal
         companyId={
           selectedCompanyId
@@ -759,10 +665,6 @@ export default function Companies() {
           handleCompanyUpdated
         }
       />
-
-      {/* =========================
-          MODAL ESTADO
-      ========================= */}
 
       {selectedStatusCompany && (
         <CompanyStatusConfirmModal
@@ -791,10 +693,6 @@ export default function Companies() {
     </div>
   );
 }
-
-// =========================
-// CERTIFICADO
-// =========================
 
 function CertificateStatus({
   status,
@@ -831,10 +729,6 @@ function CertificateStatus({
     </span>
   );
 }
-
-// =========================
-// ESTADO EMPRESA
-// =========================
 
 function CompanyStatus({
   active,

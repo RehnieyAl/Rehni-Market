@@ -1,18 +1,6 @@
-"""
-Correos de pedidos (ver ALCANCE > Correos de pedidos). Mismo criterio de
-diseño y de integración que el resto de app/services/email/template/*.py:
-cada función arma subject + body y llama a send_email directamente al
-final - la diferencia es que el HTML se arma con los helpers de
-EmailBase.py en vez de repetir el wrapper a mano.
-
-Los datos (buyer_name, reference, items, etc.) llegan ya resueltos desde
-OrderEmailService.py - este archivo no conoce los modelos de SQLAlchemy,
-igual que el resto de los templates existentes no conocen Company/Users
-directamente.
-
-REGLA DE REFERENCIA: nunca se recibe ni se muestra el UUID del pedido acá
-- solo `reference` ("RM-000123", ver OrderService._to_order_response).
-"""
+"""Correos de pedidos: cada función arma subject + body con los helpers de EmailBase.py
+y llama a send_email. Los datos llegan resueltos desde OrderEmailService.py; este
+archivo no conoce los modelos ni el UUID del pedido, solo `reference`."""
 
 from decimal import Decimal
 
@@ -30,9 +18,6 @@ from app.services.email.template.EmailBase import (
 )
 
 
-# ==============================
-# PEDIDO CREADO
-# ==============================
 def EmailOrderCreated(
     to_email: str,
     buyer_name: str,
@@ -133,9 +118,6 @@ Resumen del pedido
     send_email(to_email, subject, email_wrapper("Pedido recibido", content))
 
 
-# ==============================
-# PEDIDO EN PROCESO
-# ==============================
 def EmailOrderProcessing(
     to_email: str,
     buyer_name: str,
@@ -181,9 +163,6 @@ Resumen de productos
     send_email(to_email, subject, email_wrapper("Pedido en proceso", content))
 
 
-# ==============================
-# PEDIDO ENVIADO
-# ==============================
 def EmailOrderShipped(
     to_email: str,
     buyer_name: str,
@@ -245,9 +224,6 @@ Resumen de productos
     send_email(to_email, subject, email_wrapper("Pedido enviado", content))
 
 
-# ==============================
-# PEDIDO ENTREGADO
-# ==============================
 def EmailOrderDelivered(
     to_email: str,
     buyer_name: str,
@@ -298,9 +274,6 @@ Resumen de productos
     send_email(to_email, subject, email_wrapper("Pedido entregado", content))
 
 
-# ==============================
-# PEDIDO CANCELADO
-# ==============================
 def EmailOrderCancelled(
     to_email: str,
     buyer_name: str,

@@ -27,10 +27,7 @@ def get_owned_product(database: Session, company_id, product_id) -> Product | No
 
 
 def get_owned_variant(database: Session, company_id, product_id, variant_id) -> ProductVariant | None:
-    """
-    Resuelve la variante validando de una sola vez toda la cadena de
-    ownership: company -> product -> variant (ver ALCANCE > OWNERSHIP).
-    """
+    """Valida la cadena de ownership company -> product -> variant en un solo query."""
 
     return (
         database.query(ProductVariant)
@@ -60,10 +57,7 @@ def get_color_by_id(database: Session, color_id) -> ColorVariant | None:
 
 
 def find_variant_by_color(database: Session, product_id, color_id, exclude_variant_id=None) -> ProductVariant | None:
-    """
-    Busca otra variante del mismo producto con el mismo color - usada para
-    impedir variantes duplicadas por color dentro de un producto.
-    """
+    """Otra variante del mismo producto con el mismo color (para impedir duplicados)."""
 
     query = database.query(ProductVariant).filter(
         ProductVariant.product_id == product_id,
@@ -88,10 +82,7 @@ def get_specification_template(database: Session, template_id) -> SpecificationT
 def find_variant_specification_by_template(
     database: Session, variant_id, template_id, exclude_specification_id=None
 ) -> VariantSpecification | None:
-    """
-    Busca otra especificacion de la misma variante con la misma plantilla -
-    usada para impedir dos valores para la misma plantilla en una variante.
-    """
+    """Otra especificación de la misma variante con la misma plantilla (para impedir duplicados)."""
 
     query = database.query(VariantSpecification).filter(
         VariantSpecification.variant_id == variant_id,
@@ -139,11 +130,7 @@ def list_variant_images(database: Session, variant_id):
 
 
 def clear_main_image(database: Session, variant_id) -> None:
-    """
-    Desmarca cualquier imagen principal actual de la variante. Se usa antes
-    de asignar una nueva principal, para garantizar que solo exista una a
-    la vez (ver ALCANCE > IMAGENES).
-    """
+    """Desmarca la imagen principal actual antes de asignar otra."""
 
     database.query(ProductVariantImage).filter(
         ProductVariantImage.variant_id == variant_id

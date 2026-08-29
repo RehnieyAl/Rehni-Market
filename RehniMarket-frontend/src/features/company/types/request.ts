@@ -1,5 +1,4 @@
-// Solo información PÚBLICA de la tienda - nombre/correo de la cuenta se
-// editan con PATCH /auth/me (ver "Configuración de cuenta"), no aquí.
+// Solo información pública de la tienda; el nombre/correo de la cuenta van por PATCH /auth/me.
 export interface UpdateProfileRequest {
 nameCompany?: string;
 addressCompany?: string;
@@ -26,16 +25,13 @@ isMain: boolean;
 export interface CreateProductRequest {
 nameProduct: string;
 catalogId: string;
-// String crudo mientras el usuario escribe - la conversión a número
-// ocurre únicamente al enviar el formulario (ver
-// shared/utils/parseNumericField.ts). Nunca debe contener NaN.
+// String crudo mientras se escribe; la conversión a número ocurre al enviar. Nunca NaN.
 priceProduct: string;
 stockProduct: string;
 descripcionProduct: string;
 technicalSpecProduct: ProductSpecification[];
 imagesProduct: ProductImage[];
-// Color principal del producto (opcional). Independiente del color de
-// cada variante, que se gestiona por separado.
+// Color principal del producto (opcional), independiente del color de las variantes.
 mainColorId?: string;
 }
 
@@ -43,9 +39,7 @@ export interface ChangeProductStatus {
 is_active: boolean;
 }
 
-// PATCH parcial: todos los campos son opcionales. Un campo ausente
-// (undefined) significa "no tocar" - mismo contrato que
-// UpdateProductRequest en el backend (SchemaProduct.py).
+// PATCH parcial: un campo ausente (undefined) = "no tocar".
 export interface UpdateProductRequest {
 nameProduct?: string;
 catalogId?: string;
@@ -54,8 +48,7 @@ discountEnable?: boolean;
 discountValue?: number;
 stockProduct?: number;
 descripcionProduct?: string;
-// mainColorId ausente -> no tocar. mainColorId con id -> asignar ese
-// color. clearMainColor=true -> quitar el color principal.
+// mainColorId ausente = no tocar; con id = asignar; clearMainColor=true = quitar.
 mainColorId?: string;
 clearMainColor?: boolean;
 technicalSpecProduct?: ProductSpecification[];
@@ -66,10 +59,6 @@ imagesProduct?: File[];
 mainImageId?: string;
 }
 
-// ==========================
-// VARIANTES
-// ==========================
-
 export interface VariantImage {
 file: File;
 preview: string;
@@ -77,25 +66,20 @@ preview: string;
 
 export interface CreateVariantRequest {
 name: string;
-// String crudo mientras el usuario escribe - la conversión a número
-// ocurre únicamente al enviar el formulario (ver
-// shared/utils/parseNumericField.ts). Nunca debe contener NaN.
+// String crudo mientras se escribe; la conversión a número ocurre al enviar. Nunca NaN.
 price: string;
 stock: string;
-// Obligatorio: cada variante debe tener exactamente un color.
+// Obligatorio: cada variante tiene un color.
 colorId: string;
 specifications: ProductSpecification[];
 images: VariantImage[];
 }
 
-// PATCH parcial: un campo ausente (undefined) significa "no tocar". No
-// incluye imagenes ni especificaciones - tienen su propio circuito (mismo
-// contrato que UpdateVariantRequest en el backend, SchemaVariant.py).
+// PATCH parcial: un campo ausente (undefined) = "no tocar". Imágenes y especificaciones aparte.
 export interface UpdateVariantRequest {
 name?: string;
 price?: number;
-// Descuento propio de la variante. discountValue es un porcentaje
-// (0-100), no un monto en pesos - igual que UpdateProductRequest.
+// Descuento propio de la variante; discountValue es un porcentaje (0-100).
 discountEnable?: boolean;
 discountValue?: number;
 stock?: number;

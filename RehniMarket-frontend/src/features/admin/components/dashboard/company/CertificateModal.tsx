@@ -56,7 +56,6 @@ export default function CertificateModal({
           </div>
         </div>
 
-        {/* PDF */}
         <div className="min-h-0 flex-1 bg-gray-100">
           <iframe
             src={certificateUrl}

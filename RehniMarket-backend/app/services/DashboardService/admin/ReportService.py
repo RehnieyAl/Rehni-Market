@@ -23,10 +23,6 @@ from app.schemas.SchemaCommerce.SchemaReport import (
 )
 
 
-# ==============================
-# LISTADO (Admin > Reportes, ver ALCANCE > sección 6)
-# ==============================
-
 def list_reports_service(
     database: Session,
     page: int = 1,
@@ -99,10 +95,6 @@ def _to_list_item(report: Report) -> ReportListItemResponse:
     )
 
 
-# ==============================
-# DETALLE
-# ==============================
-
 def get_report_detail_service(
     database: Session, report_id: UUID
 ) -> ReportResponse:
@@ -151,25 +143,8 @@ def _to_report_response(report: Report) -> ReportResponse:
     )
 
 
-# ==============================
-# RESOLVED ES TERMINAL (ver ALCANCE > Reportes - "RESOLVED = estado
-# terminal")
-# ==============================
-#
-# Ningún endpoint que modifique un Report puede tocar uno que ya está
-# RESOLVED - ni cambiarle el estado (a PENDING/REVIEWING/REJECTED, o
-# "resolverlo de nuevo" con otra respuesta), ni ningún otro campo. Esta
-# es la única función de este archivo que decide eso; TODO endpoint
-# actual o futuro que modifique un Report debe llamarla primero, antes
-# de tocar cualquier campo (hoy solo update_report_status_service la usa
-# porque es el único endpoint de escritura que existe sobre Report - ver
-# AUDITORÍA, no hay edición de reason/description ni evidencias/
-# imágenes en este sistema).
-#
-# NO se aplica a get_report_detail_service/list_reports_service (son de
-# solo lectura) ni a create_report_service (crea un reporte nuevo, no
-# modifica uno existente).
-
+# RESOLVED es terminal: ningún endpoint de escritura puede tocar un Report ya resuelto.
+# Todo endpoint que modifique un Report debe llamar a esto primero.
 def _assert_report_editable(report: Report) -> None:
     if report.status == ReportStatus.RESOLVED:
         api_error(
@@ -179,19 +154,8 @@ def _assert_report_editable(report: Report) -> None:
         )
 
 
-# ==============================
-# ACCIONES ADMIN: revisar / resolver / rechazar (ver ALCANCE > sección 9)
-# ==============================
-#
-# Un solo endpoint genérico de cambio de estado (PENDING/REVIEWING/
-# RESOLVED/REJECTED) en vez de 3 endpoints separados - mismo criterio que
-# update_company_order_status_service (un PATCH de estado, no uno por
-# transición). Reportar/gestionar un reporte NUNCA toca CompanyStatus,
-# Product.is_active, ni ningún otro servicio de negocio (ver ALCANCE >
-# punto 10) - si el admin decide suspender la empresa o eliminar el
-# producto a raíz de un reporte, lo hace aparte, con los servicios ya
-# existentes (update_company_status_service / delete_product_service).
-
+# Un solo PATCH de estado (PENDING/REVIEWING/RESOLVED/REJECTED). Gestionar un reporte
+# nunca toca CompanyStatus/Product.is_active: eso lo hace el admin aparte.
 def update_report_status_service(
     database: Session,
     report_id: UUID,
@@ -205,9 +169,7 @@ def update_report_status_service(
         if not report:
             api_error(404, ErrorCodes.REPORT_NOT_FOUND, "Reporte no encontrado.")
 
-        # Terminal: se valida ANTES de leer/tocar cualquier otro campo
-        # del request, así que ni siquiera un intento de "resolverlo de
-        # nuevo" con el mismo status puede colarse.
+        # Se valida antes de tocar cualquier campo del request.
         _assert_report_editable(report)
 
         try:

@@ -11,7 +11,7 @@ interface ReviewFormProps {
 }
 
 // Formulario "Escribir reseña" - solo se monta cuando el backend ya
-// confirmó elegibilidad (ver ReviewsSection.tsx > ReviewEligibility), no
+// confirmó elegibilidad, no
 // reimplementa esa validación acá.
 export default function ReviewForm({ productId, onCreated }: ReviewFormProps) {
   const { showAlert } = useAlert();

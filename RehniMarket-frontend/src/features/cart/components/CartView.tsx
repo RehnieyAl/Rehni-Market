@@ -35,7 +35,7 @@ export default function CartView() {
         </div>
       ) : (
         <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
-          {/* ITEMS */}
+
           <div className="space-y-4">
             {items.map((item) => (
               <div
@@ -127,7 +127,6 @@ export default function CartView() {
             </button>
           </div>
 
-          {/* RESUMEN */}
           <div className="h-fit rounded-2xl border bg-white p-6">
             <h2 className="mb-4 font-semibold text-gray-900">Resumen</h2>
 

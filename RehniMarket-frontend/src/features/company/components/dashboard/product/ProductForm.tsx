@@ -77,7 +77,7 @@ export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModal
 
   const handleSubmit = async () => {
     // La conversión a número ocurre únicamente aquí, al enviar - nunca
-    // mientras el usuario escribe (ver shared/utils/parseNumericField.ts).
+    // mientras el usuario escribe.
     const parsedPrice = parseNumericField(product.priceProduct);
     const parsedStock = parseNumericField(product.stockProduct, { integer: true });
 

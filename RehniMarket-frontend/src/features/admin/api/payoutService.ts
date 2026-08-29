@@ -8,10 +8,7 @@ import type {
   PayoutStatus,
 } from "@/features/payouts/types/response";
 
-// Módulo de liquidaciones del panel admin (ver ALCANCE > Módulo de
-// liquidaciones, Fase 7) - exclusivo admin/owner (ver AdminPayoutRouter.py,
-// revalidado también en el backend). Único lado que puede generar una
-// liquidación nueva o marcarla como pagada.
+// Módulo de liquidaciones del panel admin; único lado que genera o marca como pagada una liquidación.
 
 export interface GeneratePayoutPayload {
   companyId: string;
@@ -41,9 +38,7 @@ export async function generatePayout(payload: GeneratePayoutPayload): Promise<Co
   return data;
 }
 
-// GET /admin/payouts/available-periods (ver ALCANCE > selector "Mes a
-// liquidar" ya no es texto libre) - solo meses con ventas DELIVERED que
-// todavía no tienen liquidación generada para esta empresa.
+// GET /admin/payouts/available-periods: meses con ventas DELIVERED sin liquidación generada.
 export async function getAvailablePayoutPeriods(companyId: string): Promise<PayoutAvailablePeriod[]> {
   const { data } = await api.get<PayoutAvailablePeriod[]>("/admin/payouts/available-periods", {
     params: { company_id: companyId },
@@ -52,10 +47,7 @@ export async function getAvailablePayoutPeriods(companyId: string): Promise<Payo
   return data;
 }
 
-// GET /admin/payouts/preview (ver ALCANCE > mejora "vista previa" del
-// GeneratePayoutModal) - misma validación/cálculo que generatePayout de
-// arriba, sin crear nada. Se llama automáticamente al elegir
-// empresa+mes, antes de habilitar el botón "Generar liquidación".
+// GET /admin/payouts/preview: misma validación/cálculo que generatePayout, sin crear nada.
 export async function getPayoutPreview(
   companyId: string,
   periodStart: string,

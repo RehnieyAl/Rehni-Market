@@ -35,10 +35,9 @@ interface VariantModalProps {
   onSuccess: () => void;
   productId: string;
   catalogId: string;
-  // null -> modo creación. Con valor -> modo edición de esa variante.
+  // null = modo creación; con valor = edición de esa variante.
   variantId: string | null;
-  // Colores ya usados por OTRAS variantes del producto, para evitar que
-  // la empresa intente crear un duplicado (el backend igual lo valida).
+  // Colores usados por otras variantes del producto, para no crear duplicados.
   usedColorIds: string[];
 }
 
@@ -65,35 +64,26 @@ export default function VariantModal({
   const [specTemplates, setSpecTemplates] = useState<SpecificationResponse[]>([]);
 
   const [name, setName] = useState("");
-  // String crudo mientras el usuario escribe - la conversión a número
-  // ocurre únicamente al enviar (ver shared/utils/parseNumericField.ts).
+  // String crudo mientras se escribe; la conversión a número ocurre al enviar.
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
   const [colorId, setColorId] = useState("");
   const [errors, setErrors] = useState<{ price?: string; stock?: string; discount?: string }>({});
 
-  // Descuento propio de la variante - solo editable en modo edición (igual
-  // que el descuento del producto base, que tampoco existe en el flujo de
-  // creación - ver ProductForm.tsx).
+  // Descuento propio de la variante; solo editable en modo edición.
   const [discountEnable, setDiscountEnable] = useState(false);
   const [discountValue, setDiscountValue] = useState("");
 
-  // Modo creación: especificaciones e imágenes viajan juntas con el
-  // formulario, en el mismo POST (igual que ProductForm al crear producto).
+  // Modo creación: especificaciones e imágenes viajan en el mismo POST.
   const [newSpecifications, setNewSpecifications] = useState<ProductSpecification[]>([]);
   const [newImages, setNewImages] = useState<VariantImage[]>([]);
 
-  // Modo edición: la variante ya existe, así que cada acción (agregar
-  // imagen, borrar especificación, marcar principal...) llama a su propio
-  // endpoint de inmediato y refresca el detalle.
+  // Modo edición: cada acción llama a su propio endpoint y refresca el detalle.
   const [variant, setVariant] = useState<VariantDetailResponse | null>(null);
   const [imageActionId, setImageActionId] = useState<string | null>(null);
   const [uploadingImages, setUploadingImages] = useState(false);
 
-  // Modo edición: plantillas marcadas por la empresa pero que todavía no
-  // tienen un valor guardado en el backend (checkbox activado, input
-  // vacío). Solo se llama al endpoint de creación cuando escriben un
-  // valor y salen del campo (ver handleSpecificationValueChange).
+  // Modo edición: plantillas marcadas sin valor guardado aún (checkbox on, input vacío).
   const [pendingSpecTemplateIds, setPendingSpecTemplateIds] = useState<Set<string>>(new Set());
   const [specActionTemplateId, setSpecActionTemplateId] = useState<string | null>(null);
 
@@ -121,8 +111,7 @@ export default function VariantModal({
     onClose();
   };
 
-  // Carga colores y especificaciones del catálogo del producto siempre que
-  // el modal se abre, y el detalle real de la variante si es edición.
+  // Carga colores/especificaciones del catálogo al abrir, y el detalle de la variante si es edición.
   useEffect(() => {
     if (!isOpen) return;
 
@@ -150,8 +139,7 @@ export default function VariantModal({
 
           setVariant(detail);
           setName(detail.name);
-          // detail.price / detail.discount_value ya llegan como string
-          // (Decimal serializado) - se usan tal cual, sin pasar por Number().
+          // detail.price / detail.discount_value llegan como string (Decimal); se usan tal cual.
           setPrice(detail.price);
           setStock(String(detail.stock));
           setColorId(detail.color?.id ?? "");
@@ -246,15 +234,12 @@ export default function VariantModal({
     }
   };
 
-  // Especificaciones ya guardadas en el backend, indexadas por plantilla
-  // (modo edición).
+  // Especificaciones ya guardadas, indexadas por plantilla (modo edición).
   const existingSpecByTemplateId = new Map(
     (variant?.specifications ?? []).map((spec) => [spec.specification_template_id, spec]),
   );
 
-  // Valores mostrados en el checklist: en creación, la lista local; en
-  // edición, lo ya guardado más lo marcado-pero-todavía-sin-valor
-  // (pendiente), para que el checkbox aparezca activado de inmediato.
+  // Valores del checklist: en creación la lista local; en edición lo guardado + lo pendiente.
   const specValues: ProductSpecification[] = isEditMode
     ? [
         ...(variant?.specifications ?? []).map((spec) => ({
@@ -267,13 +252,9 @@ export default function VariantModal({
       ]
     : newSpecifications;
 
-  // Al marcar el checkbox: en creación se agrega localmente (se envía
-  // junto con el resto al crear la variante); en edición solo queda
-  // "pendiente" hasta que la empresa escriba un valor - no existe
-  // specification_template sin valor en el backend.
+  // Al marcar: en creación se agrega localmente; en edición queda "pendiente" hasta que haya valor.
   //
-  // Al desmarcar: en creación se descarta localmente; en edición, si ya
-  // tenía un valor guardado se elimina con el endpoint dedicado.
+  // Al desmarcar: en creación se descarta; en edición, si tenía valor guardado se elimina vía endpoint.
   const handleToggleSpecification = async (templateId: string, checked: boolean) => {
     if (!isEditMode) {
       setNewSpecifications((prev) =>
@@ -314,9 +295,7 @@ export default function VariantModal({
     }
   };
 
-  // Al salir de un campo con un valor no vacío: en creación se guarda
-  // localmente; en edición se crea (si estaba pendiente) o se actualiza
-  // (si ya existía) de inmediato contra el backend.
+  // Al salir del campo con valor: en creación se guarda local; en edición se crea/actualiza contra el backend.
   const handleSpecificationValueChange = async (templateId: string, value: string) => {
     const trimmed = value.trim();
 
@@ -365,8 +344,7 @@ export default function VariantModal({
   const handleSubmit = async () => {
     if (!name.trim() || !colorId || price === "" || stock === "") return;
 
-    // La conversión a número ocurre únicamente aquí, al enviar - nunca
-    // mientras el usuario escribe (ver shared/utils/parseNumericField.ts).
+    // La conversión a número ocurre solo aquí, al enviar.
     const parsedPrice = parseNumericField(price);
     const parsedStock = parseNumericField(stock, { integer: true });
     const parsedDiscount = discountValue === "" ? null : parseNumericField(discountValue);
@@ -397,8 +375,7 @@ export default function VariantModal({
 
     setErrors({});
 
-    // A partir de aquí parsedPrice/parsedStock son números finitos válidos
-    // (ya se validó arriba) - la aserción evita repetir el check de nulidad.
+    // parsedPrice/parsedStock ya validados arriba como números finitos.
     const validPrice = parsedPrice as number;
     const validStock = parsedStock as number;
 
@@ -562,9 +539,7 @@ export default function VariantModal({
               </div>
             </div>
 
-            {/* Descuento: solo disponible al editar, igual que el
-                descuento del producto base (no existe en el flujo de
-                creación). */}
+            {/* Descuento: solo disponible al editar */}
             {isEditMode && (
               <div>
                 <label className="mb-2 flex items-center gap-2 text-sm text-gray-700">

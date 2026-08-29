@@ -15,20 +15,12 @@ class AdvertisementResponse(BaseModel):
 
     description: str | None
 
-    # Imagen para desktop/tablet
     image_url: str
-
-    # Imagen específica para móvil
     mobile_image_url: str | None
 
     button_text: str | None
 
-    # Calculado por el backend cuando target_type no es None (ver
-    # AdvertisementTargeting.py) - el admin ya no lo escribe a mano en
-    # ese caso. Anuncios manuales clásicos (target_type=None, incluye
-    # todos los anteriores a esta funcionalidad) siguen mostrando el
-    # valor que el admin escribió, sin cambios (ver ALCANCE >
-    # compatibilidad con anuncios antiguos).
+    # Con target_type != None lo calcula el backend; con None se usa lo que escribió el admin.
     button_link: str | None
 
     is_active: bool
@@ -37,8 +29,6 @@ class AdvertisementResponse(BaseModel):
 
     created_at: datetime
 
-    # Anuncios dinámicos por reglas (ver ALCANCE). None en los 3
-    # target_* cuando no aplican al target_type elegido.
     target_type: AdvertisementTargetType | None
     target_product_id: UUID | None
     target_catalog_id: UUID | None
@@ -53,12 +43,7 @@ class AdvertisementResponse(BaseModel):
 
 
 class CreateAdvertisementRequest(BaseModel):
-    """
-    Datos del anuncio.
-
-    El anuncio se envía como multipart/form-data porque las imágenes
-    se reciben como UploadFile directamente desde el router.
-    """
+    """multipart/form-data: las imágenes llegan como UploadFile desde el router."""
 
     title: str = Field(
         min_length=2,
@@ -75,9 +60,7 @@ class CreateAdvertisementRequest(BaseModel):
         max_length=50
     )
 
-    # Solo se usa cuando target_type es None (anuncio manual clásico) -
-    # con un target_type distinto, este valor se ignora y el backend
-    # calcula el destino real (ver AdvertisementService.py).
+    # Solo se usa con target_type None; con otro valor lo calcula el backend.
     button_link: str | None = Field(
         default=None,
         max_length=255
@@ -90,9 +73,6 @@ class CreateAdvertisementRequest(BaseModel):
 
     is_active: bool = True
 
-    # =================================================
-    # ANUNCIOS DINÁMICOS POR REGLAS (ver ALCANCE)
-    # =================================================
     target_type: AdvertisementTargetType | None = None
     target_product_id: UUID | None = None
     target_catalog_id: UUID | None = None
@@ -136,14 +116,7 @@ class CreateAdvertisementRequest(BaseModel):
 
 
 class UpdateAdvertisementRequest(BaseModel):
-    """
-    PATCH parcial del anuncio.
-
-    Los campos que no se envían conservan su valor actual.
-
-    Las imágenes se reciben por separado desde el router como UploadFile
-    opcionales.
-    """
+    """PATCH parcial; los campos ausentes conservan su valor."""
 
     title: str | None = Field(
         default=None,
@@ -173,18 +146,10 @@ class UpdateAdvertisementRequest(BaseModel):
 
     is_active: bool | None = None
 
-    # Permite eliminar la imagen móvil actual sin subir una nueva (PATCH
-    # parcial). Si se envía una imagen móvil nueva en el mismo request,
-    # esta bandera se ignora y la nueva imagen reemplaza a la anterior.
+    # Elimina la imagen móvil actual sin subir otra; se ignora si llega una nueva.
     remove_mobile_image: bool = False
 
-    # =================================================
-    # ANUNCIOS DINÁMICOS POR REGLAS (ver ALCANCE)
-    # =================================================
-    # `clear_target` (no `target_type: None`): un PATCH parcial no puede
-    # distinguir "no envié este campo" de "lo quiero limpiar" solo con
-    # Optional - mismo problema que remove_mobile_image de arriba, misma
-    # solución (bandera explícita, ver AdvertisementService.py).
+    # clear_target como bandera explícita: un PATCH parcial no distingue "no enviado" de "limpiar".
     target_type: AdvertisementTargetType | None = None
     clear_target: bool = False
     target_product_id: UUID | None = None

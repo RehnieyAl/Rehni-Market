@@ -50,11 +50,13 @@ export default function UserForm() {
     setLoading(true);
 
     try {
-      await registerUser(form);
+      const res = await registerUser(form);
 
       navigate("/verify-email", {
         state: {
           email: form.email,
+          expiresIn: res?.expires_in,
+          resendAvailableIn: res?.resend_available_in,
         },
       });
     } catch (err) {

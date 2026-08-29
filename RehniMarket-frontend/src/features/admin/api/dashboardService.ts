@@ -24,7 +24,6 @@ export const getRecentAdminActivities = async (): Promise<
   return response.data;
 };
 
-
 export const getRecentAdminUsers =
   async (): Promise<AdminRecentUser[]> => {
     const response = await api.get(

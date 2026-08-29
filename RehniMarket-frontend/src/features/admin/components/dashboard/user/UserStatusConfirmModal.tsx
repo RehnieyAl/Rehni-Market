@@ -31,10 +31,6 @@ export default function UserStatusConfirmModal({
 
       <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-xl">
 
-        {/* =====================================================
-            HEADER
-        ===================================================== */}
-
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
 
           <div>
@@ -62,10 +58,6 @@ export default function UserStatusConfirmModal({
           </button>
 
         </div>
-
-        {/* =====================================================
-            CONTENIDO
-        ===================================================== */}
 
         <div className="px-6 py-6">
 
@@ -105,10 +97,6 @@ export default function UserStatusConfirmModal({
 
           </div>
 
-          {/* =================================================
-              ADVERTENCIA
-          ================================================= */}
-
           {active && (
             <div className="mt-4 flex items-start gap-3 rounded-xl bg-yellow-50 p-4 text-yellow-800">
 
@@ -127,10 +115,6 @@ export default function UserStatusConfirmModal({
           )}
 
         </div>
-
-        {/* =====================================================
-            FOOTER
-        ===================================================== */}
 
         <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-5">
 

@@ -9,19 +9,8 @@ from app.database.Connection import Base
 
 
 class RehniCoinMovement(Base):
-    """
-    Registro de auditoría de la conversión del neto de una liquidación a
-    RehniCoin (ver ALCANCE > Módulo de liquidaciones, Fase 3). Se crea
-    automáticamente al generar cada CompanyPayout (ver PayoutService.py) -
-    NO acredita el Wallet real de nadie (ver ModelWallet.py, que es la
-    billetera con la que los USUARIOS compran); es solo trazabilidad de
-    "cuánto de este giro equivaldría en RehniCoin y a qué tasa", para
-    auditoría, no un saldo gastable.
-
-    `conversion_rate` se guarda por fila (no se relee de PayoutConfig más
-    adelante) para que un cambio futuro de la tasa no altere el valor
-    histórico de conversiones ya registradas.
-    """
+    """Auditoría de la conversión del neto de una liquidación a RehniCoin. No acredita
+    ningún Wallet real. `conversion_rate` se guarda por fila para no alterar históricos."""
 
     __tablename__ = "rehnicoin_movements"
 
@@ -33,8 +22,7 @@ class RehniCoinMovement(Base):
         UUID(as_uuid=True), ForeignKey("company.id"), nullable=False
     )
 
-    # Uno a uno: cada liquidación genera como máximo un movimiento de
-    # conversión (ver CompanyPayout.rehnicoin_movement).
+    # Uno a uno con la liquidación.
     payout_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("company_payouts.id", ondelete="CASCADE"),

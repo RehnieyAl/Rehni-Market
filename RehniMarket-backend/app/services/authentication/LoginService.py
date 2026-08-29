@@ -19,8 +19,7 @@ from app.services.authentication.JWTService import (
 )
 
 from app.services.email.CodeService import (
-    create_code_and_send_service,
-    TypeCode
+    issue_verification_code
 )
 
 from app.repository.UserRepository import (
@@ -44,8 +43,33 @@ def login_service(user: LoginRequest, database: Session) -> LoginResponse:
             api_error(400, ErrorCodes.INVALID_CREDENTIALS, "Correo o contraseña incorrecta.")
             
         if not search_user.verified:
-            create_code_and_send_service(database, search_user.id, search_user.email, code_type=TypeCode.VERIFY_EMAIL)
-            api_error(400, ErrorCodes.EMAIL_NOT_VERIFIED, "Tu correo no ha sido verificado, Se ha enviado un nuevo correo...")
+            # Garantiza que exista un codigo de verificacion activo (solo
+            # genera uno nuevo si no hay o expiro - reintentar el login no
+            # spamea codigos ni reinicia el contador de 5 min). El commit
+            # ES imprescindible: sin el, get_db() cierra la sesion y el
+            # ROLLBACK descarta el codigo recien creado (el correo ya salio)
+            # y el usuario nunca puede verificar.
+            role = search_user.role.name if search_user.role else None
+            company_name = (
+                search_user.company.nameCompany
+                if role == "company" and search_user.company
+                else None
+            )
+
+            code_state = issue_verification_code(
+                database,
+                search_user.id,
+                search_user.email,
+                role=role,
+                company_name=company_name,
+            )
+            database.commit()
+            api_error(
+                400,
+                ErrorCodes.EMAIL_NOT_VERIFIED,
+                "Tu correo no ha sido verificado. Te enviamos un código de verificación a tu correo electrónico.",
+                extra=code_state,
+            )
 
         if not search_user.role:
             api_error(400, ErrorCodes.ROLE_NOT_ASSIGNED, "El usuario no tiene un rol asignado")
@@ -83,4 +107,5 @@ def login_service(user: LoginRequest, database: Session) -> LoginResponse:
 
     except Exception:
         traceback.print_exc()
+        database.rollback()
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")

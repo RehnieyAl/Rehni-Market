@@ -25,7 +25,7 @@ const PRODUCTS_PER_PAGE = 12;
 export default function CompanyProfile() {
   const { companyId } = useParams<{ companyId: string }>();
 
-  // "Reportar empresa" (ver ALCANCE > Reportes, sección 4) - mismo
+  // "Reportar empresa" - mismo
   // ReportModal que "Reportar producto" (ProductDetail.tsx), solo cambia
   // targetType/targetId. Mismo criterio que ahí: solo rol USER reporta,
   // un visitante sin sesión va a login primero.
@@ -147,7 +147,7 @@ export default function CompanyProfile() {
 
   return (
     <div>
-      {/* BANNER */}
+
       <div className="h-40 w-full overflow-hidden bg-gray-100 sm:h-56 lg:h-72">
         <img
           src={company.banner_url || defaultBanner}
@@ -157,7 +157,7 @@ export default function CompanyProfile() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-        {/* LOGO + NOMBRE */}
+
         <div className="-mt-12 flex flex-col items-center sm:-mt-16 sm:flex-row sm:items-end sm:gap-6 lg:-mt-20">
           <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl border-4 border-white bg-white shadow-lg sm:h-32 sm:w-32 lg:h-40 lg:w-40">
             <img
@@ -186,14 +186,12 @@ export default function CompanyProfile() {
           </div>
         </div>
 
-        {/* DESCRIPCIÓN */}
         {company.description && (
           <p className="mt-4 text-center text-gray-600 sm:text-left">
             {company.description}
           </p>
         )}
 
-        {/* REPORTAR EMPRESA */}
         {(role === null || role === "user") && (
           <div className="mt-3 text-center sm:text-left">
             <button
@@ -208,7 +206,6 @@ export default function CompanyProfile() {
           </div>
         )}
 
-        {/* INFORMACIÓN DE LA EMPRESA */}
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:justify-start">
           <InfoPill
             icon={<BadgeCheck size={16} />}
@@ -229,7 +226,6 @@ export default function CompanyProfile() {
           />
         </div>
 
-        {/* PRODUCTOS PUBLICADOS */}
         <section className="mt-12">
           <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
             Productos publicados

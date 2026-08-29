@@ -18,17 +18,8 @@ class OrderStatusEnum(str, PyEnum):
 
 
 class Order(Base):
-    """
-    Un pedido pertenece a UNA sola empresa: el checkout parte el carrito
-    en un pedido por empresa presente en él (ver CheckoutService), para
-    que cada empresa gestione solo lo suyo (ver ALCANCE > Fase 5 -
-    Dashboard Empresa > Pedidos).
-
-    El pago se hace con RehniCoin (billetera simulada, ver ModelWallet.py)
-    en el momento del checkout - por eso el pedido nace en PENDING
-    (pagado, pendiente de que la empresa lo procese), no en un estado
-    "sin pagar": no existe ningun flujo de pago diferido en este sistema.
-    """
+    """Un pedido pertenece a una sola empresa (el checkout parte el carrito por empresa).
+    Nace en PENDING: el pago con RehniCoin ocurre en el checkout, no hay pago diferido."""
 
     __tablename__ = "orders"
 
@@ -36,12 +27,7 @@ class Order(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
 
-    # Numero de referencia amigable ("RM-000001", formateado en
-    # OrderService._to_order_response) - el UUID de `id` nunca se le
-    # muestra al comprador ni a la empresa (ver ALCANCE > Refactor
-    # Pedidos Empresa, punto 5). IDENTITY (no la PK) porque `id` ya es la
-    # clave primaria UUID usada en todas las relaciones/FKs existentes;
-    # esta columna es solo para mostrar un numero secuencial legible.
+    # Referencia legible ("RM-000001"); el UUID de `id` nunca se muestra al usuario.
     order_number: Mapped[int] = mapped_column(
         Integer, Identity(start=1, increment=1), unique=True, nullable=False
     )
@@ -58,15 +44,8 @@ class Order(Base):
         UUID(as_uuid=True), ForeignKey("addresses.id"), nullable=True
     )
 
-    # Snapshot de la dirección de entrega EN EL MOMENTO DEL CHECKOUT (ver
-    # CheckoutService.checkout_service) - mismo criterio que OrderItem
-    # con product_name/unit_price (ver docstring de OrderItem más abajo):
-    # si el usuario edita o elimina la dirección después, el pedido no
-    # debe cambiar retroactivamente (ver ALCANCE > "El pedido debe
-    # conservar estos datos incluso si el usuario modifica la dirección
-    # después"). `address_id` se conserva solo como referencia/trazo, ya
-    # NO se lee en vivo para armar la respuesta del pedido (ver
-    # OrderService._to_order_response).
+    # Snapshot de la dirección al checkout: el pedido no cambia si el usuario la
+    # edita o borra. `address_id` queda solo como trazo, no se lee en vivo.
     delivery_label: Mapped[str | None] = mapped_column(String(60), nullable=True)
     delivery_full_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
     delivery_phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
@@ -102,11 +81,7 @@ class Order(Base):
 
 
 class OrderItem(Base):
-    """
-    Snapshot del producto en el momento de la compra (product_name /
-    unit_price): si la empresa edita el producto despues, el pedido no
-    debe cambiar retroactivamente.
-    """
+    """Snapshot del producto al comprar: el pedido no cambia si la empresa lo edita después."""
 
     __tablename__ = "order_items"
 
@@ -129,18 +104,11 @@ class OrderItem(Base):
     product_name: Mapped[str] = mapped_column(String(150), nullable=False)
     variant_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
 
-    # Precio FINAL (con descuento ya aplicado) - lo que realmente se
-    # cobró (ver CheckoutService._compute_price_fields). No es el precio
-    # base del producto/variante.
+    # Precio final ya con descuento: lo que realmente se cobró.
     unit_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
 
-    # Precio ANTES del descuento, snapshot al momento del checkout (ver
-    # ALCANCE > Detalle de pedido - Descuentos). None cuando el
-    # producto/variante no tenía descuento activo en ese momento (no hay
-    # nada que restar) o en pedidos creados antes de esta columna - en
-    # ambos casos el frontend simplemente no muestra la línea de
-    # descuento, nunca infiere un valor a partir del precio ACTUAL del
-    # producto (podría haber cambiado desde la compra).
+    # Precio antes del descuento, snapshot al checkout. None si no había descuento
+    # activo o en pedidos previos a esta columna.
     original_unit_price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
 
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)

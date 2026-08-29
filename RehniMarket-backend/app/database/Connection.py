@@ -1,8 +1,3 @@
-# este codigo tiene como funcion realizar una conexion 
-# con la base de datos posgrest asi mismo se busca 
-# crear sesiones con sessionmarker y sessionlocal
-# dando acceso a la base de datos con get_db sin poder 
-# agregar comentarios de manera automatica 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from app.Config import config

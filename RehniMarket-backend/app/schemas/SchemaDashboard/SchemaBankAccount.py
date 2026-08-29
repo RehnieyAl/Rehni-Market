@@ -4,10 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-# Mismos 4 valores que BankAccountTypeEnum (ver ModelCompanyBankAccount.py)
-# - Literal acá en vez de importar el Enum de SQLAlchemy directo, mismo
-# criterio que el resto de los schemas de este proyecto (ver
-# UpdateOrderStatusRequest en SchemaOrder.py, que valida contra strings).
+# Mismos 4 valores que BankAccountTypeEnum, como Literal en vez del Enum de SQLAlchemy.
 BankAccountType = Literal["savings", "checking", "nequi", "daviplata"]
 
 

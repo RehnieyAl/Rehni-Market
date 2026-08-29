@@ -28,21 +28,14 @@ def company_dashboard_me_service(user_id,database: Session):
             )
 
     return {
-        # Necesario para que el frontend pueda pedir la reputacion de la
-        # empresa (GET /public/company/{id}/rating, ver ALCANCE >
-        # Calificaciones de empresa) sin otro endpoint aparte - antes esta
-        # respuesta no exponia el id de la empresa en absoluto.
+        # Permite pedir GET /public/company/{id}/rating sin otro endpoint.
         "id": company.id,
         "logo": logo,
         "banner": banner,
         "nameCompany": company.nameCompany,
         "addressCompany": company.addressCompany,
         "description": company.description,
-        # Estado real de verificacion (antes se usaba
-        # company.CompanyCertificate, la ruta del archivo del certificado,
-        # que es truthy desde el registro - el badge "verificada" quedaba
-        # siempre encendido sin importar si un admin lo habia aprobado o
-        # no). Se usa el mismo criterio que LoginService/CompanyService.
+        # is_verified se decide por CompanyCertificateStatus == APPROVED, no por CompanyCertificate.
         "certificate_status": company.CompanyCertificateStatus,
         "is_verified": company.CompanyCertificateStatus == CompanyCertificateEnum.APPROVED,
         "memberAT": user.created_at,
@@ -68,11 +61,8 @@ def company_dashboard_my_profile_service(user_id: str, database: Session):
             None
             )
 
-    # Solo datos PÚBLICOS de la tienda - nombre/correo de la cuenta se
-    # consultan con GET /auth/me (ver MeService.py), no aquí.
+    # Solo datos públicos de la tienda; nombre/correo de la cuenta van por GET /auth/me.
     return {
-        # Ver company_dashboard_me_service: mismo motivo, habilita pedir
-        # GET /public/company/{id}/rating desde "Mi tienda".
         "id": company.id,
         "nameCompany": company.nameCompany,
         "addressCompany": company.addressCompany,
@@ -171,11 +161,7 @@ def company_dashboard_get_my_products(user_id,search,page,limit,database: Sessio
 
         offset = (page - 1) * limit
 
-        # deleted_at IS NULL: el listado normal de "Mis productos" excluye
-        # eliminados (ver ModelProduct.py > Product.deleted_at) - solo
-        # is_active=False no alcanza porque tambien lo usa el toggle
-        # Activo/Inactivo (ver change_product_status_service), que es
-        # reversible y NO debe hacer desaparecer el producto de acá.
+        # deleted_at IS NULL: "Mis productos" excluye eliminados, no solo desactivados.
         query = database.query(Product).filter(
             Product.company_id == company.id,
             Product.deleted_at.is_(None),
@@ -186,11 +172,7 @@ def company_dashboard_get_my_products(user_id,search,page,limit,database: Sessio
 
         total = query.count()
 
-        # Antes no tenia ORDER BY: el orden entre paginas quedaba
-        # indefinido a nivel de PostgreSQL. Se ordena por mas reciente
-        # primero - lo necesita ademas "Productos recientes" en el Inicio
-        # del dashboard de empresa (ver Home.tsx), que reutiliza este mismo
-        # endpoint con limit=10.
+        # Orden por más reciente primero; también lo usa "Productos recientes" del Inicio.
         products = (
             query.order_by(Product.created_at.desc())
             .offset(offset)
@@ -217,19 +199,8 @@ def company_dashboard_get_my_products(user_id,search,page,limit,database: Sessio
                 "price": float(product.price),
                 "stock": product.stock,
                 "image": main_image,
-                # Bug de integracion: antes se enviaba el string "Activo"/
-                # "Inactivo". El frontend (MyProductResponse.is_active y
-                # Products.tsx) siempre trato este campo como boolean, asi
-                # que cualquier string no vacio evaluaba a "true" y el
-                # badge/los toggles de estado nunca reflejaban el estado
-                # real del producto. Se envia el boolean real.
                 "is_active": product.is_active,
-                # None = nunca eliminado (activo o solo desactivado con
-                # el toggle). Con fecha = eliminado por la empresa - ver
-                # ModelProduct.py > Product.deleted_at y
-                # delete_product_service. Permite al dashboard mostrar
-                # "Eliminado" en vez de confundirlo con "Inactivo" (ver
-                # ALCANCE > EMPRESA -> ELIMINAR PRODUCTO, punto 17).
+                # None = nunca eliminado; con fecha = eliminado por la empresa (distinto de "Inactivo").
                 "deleted_at": (
                     product.deleted_at.isoformat()
                     if product.deleted_at
@@ -249,14 +220,7 @@ def company_dashboard_get_my_products(user_id,search,page,limit,database: Sessio
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ==============================
-# ESTADÍSTICAS DE PRODUCTOS
-# ==============================
-# Únicamente datos reales calculados sobre Product (ver ALCANCE > Home >
-# ESTADÍSTICAS): no existen ventas/ingresos/visitas/favoritos/reseñas en
-# el modelo actual, así que no se inventan aquí. Reemplaza al stub vacío
-# `company_dasboard_my_stadistic()` (nunca se llamaba desde ningún router).
-
+# Estadísticas: solo datos calculados sobre Product (no hay ventas/visitas en el modelo).
 def company_dashboard_products_summary_service(user_id, database: Session):
 
     search_user = database.query(Users).filter(Users.id == user_id).first()
@@ -264,9 +228,7 @@ def company_dashboard_products_summary_service(user_id, database: Session):
     if not search_user or not search_user.company:
         raise HTTPException(status_code=404, detail="Empresa no encontrada")
 
-    # Mismo criterio que company_dashboard_get_my_products: un producto
-    # eliminado (deleted_at != NULL) no debe contarse como "desactivado"
-    # (hidden) ni sumar al total de este resumen.
+    # Excluye eliminados: no deben contar como "hidden" ni sumar al total.
     base_query = database.query(Product).filter(
         Product.company_id == search_user.company.id,
         Product.deleted_at.is_(None),

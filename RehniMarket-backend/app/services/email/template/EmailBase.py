@@ -1,45 +1,18 @@
-"""
-Helpers HTML compartidos para correos nuevos (ver ALCANCE > Correos de
-pedidos).
-
-IMPORTANTE: este archivo NO reemplaza ni modifica ninguno de los
-templates existentes (EmailRegisterUser.py, EmailForgotPassword.py,
-EmailRegisterCompany.py, EmailStatusCertificate.py, EmailStatusCompany.py,
-EmailUpdateUserCredentials.py) - esos siguen intactos, construyendo su
-HTML inline exactamente igual que antes, para no arriesgar romperlos.
-
-Lo que hay acá es el MISMO patron visual que ya usan esos 6 archivos
-(verificado linea por linea: fondo #f4f4f4, tarjeta blanca 600px con
-border-radius:18px, header #6D0F2D, caja de contenido #F8F8F8, footer
-#F2F2F2 - ver cualquiera de los templates existentes) extraido a
-funciones reutilizables, para que los 5 correos de pedidos (EmailOrder.py)
-no dupliquen ~90 lineas de boilerplate cada uno. No es una plantilla
-nueva: es el mismo diseño, factorizado.
-"""
+"""Helpers HTML compartidos por los correos de pedidos (EmailOrder.py). Reproducen
+el mismo diseño de marca que los templates existentes, factorizado en funciones."""
 
 from decimal import Decimal
 
 
-# ==============================
-# MONEDA
-# ==============================
-# Mismo criterio que el frontend (ver src/shared/utils/formatPrice.ts):
-# "$" + separador de miles con punto, sin decimales.
+# "$" + separador de miles con punto, sin decimales (igual que formatPrice.ts).
 def format_price(value: Decimal | float | int) -> str:
     amount = int(round(float(value)))
     return f"${amount:,.0f}".replace(",", ".")
 
 
-# ==============================
-# WRAPPER (header + tarjeta + footer)
-# ==============================
 def email_wrapper(subtitle: str, content_html: str, page_title: str | None = None) -> str:
-    """
-    Envuelve `content_html` (lo que va dentro del <td style="padding:45px;">
-    de contenido) con el mismo header/footer de marca que ya usan
-    EmailRegisterUser.py / EmailStatusCertificate.py / etc. `subtitle` es
-    el texto bajo "Rehni Market" en el header (ej. "Pedido recibido").
-    """
+    """Envuelve `content_html` con el header/footer de marca. `subtitle` es el texto
+    bajo "Rehni Market" en el header."""
 
     title = page_title or subtitle
 
@@ -174,9 +147,6 @@ Marketplace para empresas y clientes.
 """
 
 
-# ==============================
-# FIRMA (misma que el resto de correos)
-# ==============================
 def signature_html(closing: str = "Saludos") -> str:
     return f"""
 <p style="
@@ -193,10 +163,6 @@ Equipo Rehni Market
 """
 
 
-# ==============================
-# CAJA DESTACADA (misma que "Estado de la revisión" en
-# EmailStatusCertificate.py / el bloque "Importante" en EmailRegisterUser.py)
-# ==============================
 def info_box(inner_html: str, warning: bool = False) -> str:
     style = (
         "background:#FFF6F8;border-radius:12px;border:1px solid #F2D4DE;"
@@ -226,9 +192,6 @@ color:#555555;
 """
 
 
-# ==============================
-# FILAS ETIQUETA/VALOR (info de pedido, resumen, dirección)
-# ==============================
 def label_value_rows(pairs: list[tuple[str, str]]) -> str:
     rows = "".join(
         f"""
@@ -247,11 +210,6 @@ def label_value_rows(pairs: list[tuple[str, str]]) -> str:
 """
 
 
-# ==============================
-# BOTÓN (no existe ningún CTA todavía en los correos actuales - mismo
-# color/radio que la caja de código de EmailRegisterUser.py, aplicado a
-# un link real por primera vez)
-# ==============================
 def cta_button(text: str, href: str) -> str:
     return f"""
 <table width="100%" cellpadding="0" cellspacing="0" style="margin:35px 0;">
@@ -278,9 +236,6 @@ border-radius:14px;
 """
 
 
-# ==============================
-# TABLA DE PRODUCTOS
-# ==============================
 def product_row_html(
     image_url: str | None,
     name: str,
@@ -300,8 +255,7 @@ style="display:block;border-radius:10px;object-fit:cover;"
 >
 """
     else:
-        # Sin imagen real disponible (ver EmailOrder.py) - placeholder
-        # visual, nunca una URL inventada.
+        # Sin imagen real: placeholder visual, nunca una URL inventada.
         image_html = """
 <table width="48" height="48" cellpadding="0" cellspacing="0" style="background:#F0F0F0;border-radius:10px;">
 <tr><td></td></tr>

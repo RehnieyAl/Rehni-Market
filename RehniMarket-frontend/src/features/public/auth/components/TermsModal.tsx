@@ -1,13 +1,11 @@
 import Modal from "@/shared/components/modal";
 import type { ReactNode } from "react";
 
-
 interface TermsModalProps {
   isOpen: boolean;
   onClose: () => void;
   children: ReactNode;
 }
-
 
 export default function TermsModal({
   isOpen,

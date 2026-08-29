@@ -1,9 +1,5 @@
-"""
-Orquestador del correo de liquidaciones (ver ALCANCE > Módulo de
-liquidaciones, Fase 5): extrae los datos reales de un `CompanyPayout` (ORM,
-con bank_account/company ya cargados, ver CompanyPayoutRepository.py) y
-llama a EmailPayoutProcessed. Mismo criterio que OrderEmailService.py.
-"""
+"""Orquestador del correo de liquidaciones: extrae los datos de un `CompanyPayout` y
+llama a EmailPayoutProcessed."""
 
 from app.models.ModelCompanyPayout import CompanyPayout
 
@@ -29,11 +25,7 @@ def _period_label(payout: CompanyPayout) -> str:
 
 
 def send_payout_processed_email(payout: CompanyPayout) -> None:
-    """
-    Se llama después de marcar `payout.payout_status = PAID` (ver
-    PayoutService.mark_payout_paid_service) - nunca antes, el correo dice
-    literalmente "fue realizada".
-    """
+    """Se llama después de marcar el payout como PAID: el correo dice "fue realizada"."""
 
     bank_account = payout.bank_account
     company = payout.company

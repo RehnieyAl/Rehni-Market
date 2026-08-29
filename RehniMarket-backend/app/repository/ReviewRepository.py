@@ -23,14 +23,7 @@ def get_review_by_id(database: Session, review_id: UUID) -> Review | None:
 
 
 def has_delivered_purchase(database: Session, user_id: UUID, product_id: UUID) -> bool:
-    """
-    "Compra verificada" (ver ALCANCE > sistema de reseñas): el usuario
-    debe tener al menos un pedido PROPIO, con este producto, ya
-    ENTREGADO - no basta con tenerlo en el carrito ni con un pedido
-    todavia en camino. Reutiliza OrderStatusEnum.DELIVERED (mismo estado
-    terminal que usa OrderService.ALLOWED_TRANSITIONS), no se inventa un
-    concepto de "compra verificada" aparte.
-    """
+    """Compra verificada: el usuario tiene al menos un pedido propio DELIVERED con este producto."""
 
     return (
         database.query(OrderItem.id)
@@ -52,11 +45,7 @@ def create_review(database: Session, review: Review) -> Review:
 
 
 def list_product_reviews(database: Session, product_id: UUID, page: int, limit: int):
-    # selectinload(Review.user): sin esto, _to_review_response dispara un
-    # SELECT a `users` por cada reseña de la pagina (N+1) al leer
-    # review.user.fullName/profileImagen - con esto es un unico SELECT
-    # adicional con IN (...) para toda la pagina, sin importar `limit`
-    # (ver ALCANCE > regla 10: optimizar consultas).
+    # selectinload(Review.user): evita el N+1 al leer review.user en _to_review_response.
     query = (
         database.query(Review)
         .options(selectinload(Review.user))
@@ -72,14 +61,7 @@ def list_product_reviews(database: Session, product_id: UUID, page: int, limit: 
 
 
 def get_product_rating_summary(database: Session, product_id: UUID) -> dict[int, int]:
-    """
-    Conteo de reseñas ACTIVAS de un producto agrupado por rating (1-5) -
-    para el detalle público (ver ALCANCE > rediseño detalle de producto,
-    "Opiniones de compradores"). Un solo query agrupado (GROUP BY rating),
-    no un COUNT por estrella - el promedio se deriva de este mismo
-    resultado en el servicio (ver publicService/Products.py), sin otro
-    query aparte.
-    """
+    """Conteo de reseñas activas de un producto agrupado por rating (un solo GROUP BY)."""
 
     rows = (
         database.query(Review.rating, func.count(Review.id))
@@ -94,14 +76,7 @@ def get_product_rating_summary(database: Session, product_id: UUID) -> dict[int,
 def get_products_rating_summary(
     database: Session, product_ids: list[UUID]
 ) -> dict[UUID, tuple[float | None, int]]:
-    """
-    Igual que get_product_rating_summary pero para varios productos a la
-    vez (AVG + COUNT agrupado por product_id, GROUP BY) - la usan las
-    tarjetas de listado publico (ver publicService/Products.py >
-    _to_card_response) para no repetir un query por producto en un loop
-    (N+1) al armar una pagina completa de tarjetas, mismo criterio
-    anti-N+1 que ya usa get_catalogs_service > product_count.
-    """
+    """Como get_product_rating_summary pero para varios productos (AVG + COUNT por product_id)."""
 
     if not product_ids:
         return {}
@@ -120,16 +95,8 @@ def get_products_rating_summary(
 
 
 def get_company_rating(database: Session, company_id: UUID) -> tuple[float | None, int]:
-    """
-    Reputación de empresa = promedio + conteo de TODAS las reseñas
-    ACTIVAS de TODOS los productos de esa empresa (ver ALCANCE >
-    Calificaciones de empresa, reglas 2-4). Un solo query agregado
-    (AVG + COUNT via JOIN a products), no un query por producto - evita
-    N+1 sin importar cuantos productos/reseñas tenga la empresa (ver
-    regla 10). Se apoya en el indice compuesto
-    ix_reviews_product_id_is_active (ver migracion
-    e2b6a4c9f107_add_reviews_table.py).
-    """
+    """Promedio + conteo de todas las reseñas activas de los productos de la empresa
+    (un solo AVG + COUNT vía JOIN a products)."""
 
     average_rating, total_reviews = (
         database.query(func.avg(Review.rating), func.count(Review.id))

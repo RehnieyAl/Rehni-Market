@@ -39,7 +39,7 @@ export default function PayoutsList() {
     }
   }, [page]);
 
-  // Diferido con setTimeout (mismo patrón que Orders.tsx/RehniCoin.tsx):
+  // Diferido con setTimeout:
   // evita hacer setState de forma síncrona dentro del efecto.
   useEffect(() => {
     const timeout = setTimeout(loadPayouts);

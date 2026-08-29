@@ -122,8 +122,11 @@ export function AuthProvider({ children }: Props) {
 
   const register = useCallback(async (data: RegisterUserRequest) => {
     // No hay sesión que iniciar: el backend exige verificar el correo
-    // antes de habilitar login (ver ErrorCode.EMAIL_NOT_VERIFIED).
-    await authService.registerUser(data);
+    // antes de habilitar login (ver ErrorCode.EMAIL_NOT_VERIFIED). Se
+    // devuelve la respuesta (mensaje + contadores expires_in /
+    // resend_available_in) para que RegisterScreen arranque la pantalla
+    // de verificación con los tiempos correctos.
+    return authService.registerUser(data);
   }, []);
 
   const logout = useCallback(async () => {

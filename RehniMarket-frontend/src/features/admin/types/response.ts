@@ -5,7 +5,6 @@ export type CompanyCertificateStatus =
   | "approved"
   | "rejected";
 
-
 export interface AdminCompanyResponse {
   id: string;
   nameCompany: string;
@@ -13,8 +12,7 @@ export interface AdminCompanyResponse {
   CompanyLogo: string | null;
   CompanyCertificate: string;
   CompanyStatus: boolean;
-  // Motivo VIGENTE de suspensión (ver ALCANCE > Suspensión de empresa) -
-  // null mientras CompanyStatus es true.
+  // Motivo de suspensión vigente; null mientras CompanyStatus es true.
   suspensionReason: string | null;
   user_id: string;
   addressCompany: string;
@@ -24,22 +22,18 @@ export interface AdminCompanyResponse {
   created_at: string;
 }
 
-// Respuesta de PATCH /admin/dashboard/company/status/{id} - misma
-// empresa ya actualizada + el resultado del reembolso automático (ver
-// ALCANCE > FEEDBACK ADMIN). 0/"0" cuando se desbloquea, o al suspender
-// una empresa sin pedidos PENDING/PAID/PROCESSING.
+// Respuesta de PATCH .../company/status/{id}: la empresa actualizada + el resultado del reembolso.
+// 0/"0" al desbloquear o al suspender una empresa sin pedidos PENDING/PAID/PROCESSING.
 export interface UpdateCompanyStatusResponse extends AdminCompanyResponse {
   affectedOrdersCount: number;
   totalRefunded: string;
 }
-
 
 export interface AdminCompaniesPaginatedResponse {
   items: AdminCompanyResponse[];
   next_cursor: string | null;
   has_next: boolean;
 }
-
 
 export interface AdminUserResponse {
   id: string;
@@ -52,7 +46,6 @@ export interface AdminUserResponse {
   created_at: string;
 }
 
-
 export interface AdminUsersPaginatedResponse {
   items: AdminUserResponse[];
   next_cursor: string | null;
@@ -60,8 +53,6 @@ export interface AdminUsersPaginatedResponse {
   has_next: boolean;
   has_previous: boolean;
 }
-
-
 
 export interface AdminDashboardStatisticsResponse {
   users: number;
@@ -72,7 +63,6 @@ export interface AdminDashboardStatisticsResponse {
   active_companies: number;
   blocked_companies: number;
 }
-
 
 export type AdminActivityAction =
   | "user_created"
@@ -97,7 +87,6 @@ export interface AdminRecentActivity {
   target_company_id: string | null;
 }
 
-
 export interface AdminRecentUser {
   id: string;
   fullName: string;
@@ -107,7 +96,6 @@ export interface AdminRecentUser {
   created_at: string;
 }
 
-
 export interface AdminCatalogResponse {
   id: string;
   name: string;
@@ -115,18 +103,15 @@ export interface AdminCatalogResponse {
   image_url: string | null;
   display_order: number;
   is_active: boolean;
-  // Productos activos/visibles/con stock válido - calculado en el
-  // backend con un único query agregado (ver ALCANCE > Rendimiento).
+  // Productos activos y con stock válido; calculado en el backend.
   product_count: number;
 }
-
 
 export interface AdminColorResponse {
   id: string;
   name: string;
   hex_color: string;
 }
-
 
 export interface AdminSpecificationResponse {
   id: string;
@@ -136,19 +121,16 @@ export interface AdminSpecificationResponse {
   catalog_id: string;
 }
 
-
 export interface AdminAdvertisementResponse {
   id: string;
   title: string;
   description: string | null;
   // Desktop/tablet
   image_url: string;
-  // Mobile - nullable, el Hero público hace fallback a image_url
+  // Móvil, nullable: el Hero hace fallback a image_url
   mobile_image_url: string | null;
   button_text: string | null;
-  // Calculado por el backend cuando target_type no es null (ver ALCANCE
-  // > Anuncios dinámicos) - solo es editable a mano cuando target_type
-  // es null (anuncio manual clásico).
+  // Lo calcula el backend con target_type != null; editable a mano solo con target_type null.
   button_link: string | null;
   is_active: boolean;
   order: number;

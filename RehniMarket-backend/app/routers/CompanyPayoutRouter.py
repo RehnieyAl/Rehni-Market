@@ -16,10 +16,7 @@ from app.services.PayoutService import (
     get_company_balance_service,
 )
 
-# Liquidaciones y balance del lado empresa (ver ALCANCE > Módulo de
-# liquidaciones, Fase 6). Router delgado - toda la lógica vive en
-# PayoutService.py (mismo servicio que usa el lado admin, ver
-# AdminPayoutRouter.py).
+# Router delgado; la lógica vive en PayoutService.py (compartido con el lado admin).
 router = APIRouter(prefix="/company", tags=["company", "payouts"])
 
 

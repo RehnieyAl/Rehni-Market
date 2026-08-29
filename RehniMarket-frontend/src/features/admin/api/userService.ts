@@ -9,7 +9,6 @@ import type {
   UpdateAdminUserRequest,
 } from "../types/request";
 
-
 export async function getAdminUsers(
   limit: number = 10,
   cursor?: string,
@@ -33,7 +32,6 @@ export async function getAdminUsers(
   return response.data;
 }
 
-
 export async function getAdminUserById(
   userId: string,
 ): Promise<AdminUserResponse> {
@@ -45,9 +43,6 @@ export async function getAdminUserById(
 
   return response.data;
 }
-
-
-
 
 export const updateAdminUser = async (
   userId: string,
@@ -61,9 +56,6 @@ export const updateAdminUser = async (
   return response.data;
 };
 
-
-
-
 export const toggleAdminUserStatus = async (
   userId: string,
 ): Promise<AdminUserResponse> => {
@@ -75,7 +67,6 @@ export const toggleAdminUserStatus = async (
 
   return response.data;
 };
-
 
 export const deleteAdminUser = async (userId: string): Promise<void> => {
   await api.delete(`/admin/dashboard/user/delete/${userId}`);

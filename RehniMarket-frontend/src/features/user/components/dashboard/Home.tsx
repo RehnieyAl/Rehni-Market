@@ -23,12 +23,12 @@ const RECOMMENDED_LIMIT = 4;
 
 // Los pedidos "en curso" son cualquiera que no haya terminado ni se haya
 // cancelado - mismo criterio que count_pending_user_orders en el backend
-// (ver app/repository/OrderRepository.py).
+// .
 const PENDING_STATUSES = new Set(["pending", "paid", "processing", "shipped"]);
 
 export default function Home() {
   const { user } = useAuth();
-  // Mismo estado global que ProductCard.tsx (ver FavoritesProvider.tsx) -
+  // Mismo estado global que ProductCard.tsx -
   // evita un GET /favorites aparte solo para contar cuántos hay.
   const { favoriteIds, loading: favoritesLoading } = useFavorites();
 

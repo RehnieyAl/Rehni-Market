@@ -11,18 +11,11 @@ from app.schemas.SchemaCommerce.SchemaReport import (
 from app.services.commerce.ReportService import create_report_service
 from app.services.NasService import NasService, get_nas_service
 
-# Creación pública (usuario autenticado) de reportes de producto/empresa
-# (ver ALCANCE > Reportes). La gestión (listar/ver detalle/cambiar
-# estado) vive aparte, en AdminReportRouter.py, bajo /admin/reports - no
-# es la misma audiencia ni el mismo nivel de acceso.
+# Creación de reportes por un usuario autenticado; la gestión vive en AdminReportRouter.py.
 router = APIRouter(prefix="/reports", tags=["reports"])
 
 
-# multipart/form-data (no JSON): las evidencias viajan como archivos en
-# el mismo request (ver ALCANCE > Reportes - EVIDENCIAS/IMÁGENES),
-# mismo patrón que create_product/create_advertisement (ver
-# CompanyRouter.py/AdminCompanyRouters.py). `evidences` es opcional -
-# un reporte sin ninguna imagen es igual de válido.
+# multipart/form-data: las evidencias viajan como archivos; `evidences` es opcional.
 @router.post("", response_model=ReportResponse)
 def create_report(
     request: Request,

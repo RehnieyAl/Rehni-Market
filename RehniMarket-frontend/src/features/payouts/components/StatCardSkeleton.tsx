@@ -1,4 +1,4 @@
-// Skeleton de StatCard (ver shared/components/dashboard/StatCard.tsx) -
+// Skeleton de StatCard -
 // mismo padding/radio que el componente real para no saltar de tamaño
 // cuando termina de cargar.
 export default function StatCardSkeleton() {

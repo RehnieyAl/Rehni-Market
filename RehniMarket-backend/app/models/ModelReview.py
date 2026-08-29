@@ -7,32 +7,10 @@ from app.database.Connection import Base
 
 
 class Review(Base):
-    """
-    Reseña de un producto, escrita por un comprador (rol USER) que ya lo
-    recibió (compra verificada - ver
-    ReviewRepository.has_delivered_purchase: exige un OrderItem de este
-    producto en un pedido PROPIO con status DELIVERED, no cualquier
-    compra ni el carrito).
-
-    La EMPRESA no tiene reseñas propias (ver ALCANCE > Calificaciones de
-    empresa, regla 1): no existe ninguna tabla/columna de reseñas en
-    Company. Su reputación se calcula agregando en caliente las reseñas
-    activas de TODOS sus productos (ver
-    publicService/Company.py > get_company_rating_service +
-    ReviewRepository.get_company_rating) - un producto puede cambiar de
-    catálogo/precio/etc. sin afectar esto, porque no se duplica nada.
-
-    Un usuario solo puede reseñar un producto una vez (ver
-    UniqueConstraint uq_review_user_product) - para cambiar de opinión
-    edita su propia reseña (PATCH /reviews/{id}) en vez de crear una
-    segunda.
-
-    is_active es un soft-delete (ver ReviewService.delete_my_review_service):
-    "eliminar" una reseña marca is_active=False en vez de borrar la fila,
-    para no perder el historial y porque el promedio de la empresa/el
-    listado público SOLO deben contar reseñas activas (ver ALCANCE >
-    regla 4).
-    """
+    """Reseña de producto por un comprador con pedido DELIVERED propio (compra verificada).
+    La empresa no tiene reseñas propias: su reputación agrega las reseñas activas de sus
+    productos. Una reseña por user+product. is_active es soft-delete; los promedios y
+    listados públicos solo cuentan reseñas activas."""
 
     __tablename__ = "reviews"
 

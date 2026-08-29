@@ -11,7 +11,11 @@ from app.schemas.schemaAuth.SchemaRegister import (
     CreateUserRequest,
     CreateCompanyRequest
 )
-from app.schemas.schemaAuth.SchemaVerifyEmail import VerifyEmailRequest, ChangeEmailRequestOnlyRegistered
+from app.schemas.schemaAuth.SchemaVerifyEmail import (
+    VerifyEmailRequest,
+    ChangeEmailRequestOnlyRegistered,
+    ResendVerificationCodeRequest,
+)
 from app.schemas.schemaAuth.SchemaLogin import LoginRequest, UpdateMeRequest
 from app.schemas.schemaAuth.SchemaForgotPassword import ForgotPasswordRequest
 from app.schemas.schemaAuth.SchemaResetPassword import ResetPasswordRequest
@@ -22,7 +26,11 @@ from app.services.authentication.RegisterService import (
     register_user_service,
     register_company_service
 )
-from app.services.authentication.VerifyEmailService import verify_email_service, change_email_service
+from app.services.authentication.VerifyEmailService import (
+    verify_email_service,
+    change_email_service,
+    resend_verification_code_service,
+)
 from app.services.authentication.LoginService import login_service
 from app.services.authentication.ForgotPasswordService import forgot_password_service
 from app.services.authentication.ResetPasswordService import reset_password_service
@@ -44,10 +52,7 @@ router = APIRouter(
 
 @router.post("/register-user")
 def registerUser(user: CreateUserRequest, database: Session = Depends(get_db)):
-    register_user_service(user, database)
-    return {
-        "message": "Usuario registrado correctamente, se ha enviado un código de verificación a tu correo electrónico para verificar tu cuenta.",
-    }
+    return register_user_service(user, database)
 
 @router.post("/register-company")
 def registerCompany(
@@ -72,8 +77,13 @@ def verify_email(code: VerifyEmailRequest, database: Session = Depends(get_db)):
 
 @router.post("/change-email")
 def change_email(changeEmail: ChangeEmailRequestOnlyRegistered, database: Session = Depends(get_db)):
-    
+
     return change_email_service(changeEmail, database)
+
+@router.post("/resend-verification-code")
+def resend_verification_code(data: ResendVerificationCodeRequest, database: Session = Depends(get_db)):
+
+    return resend_verification_code_service(data, database)
 
 @router.post("/login-user")
 def login_user(user: LoginRequest, database: Session = Depends(get_db)):

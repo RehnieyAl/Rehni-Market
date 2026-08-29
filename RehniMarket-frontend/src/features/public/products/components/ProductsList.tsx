@@ -18,11 +18,8 @@ const SORT_OPTIONS = [
   { value: "discount", label: "Mayor descuento" },
 ] as const;
 
-// Lista compacta de páginas con "..." para huecos grandes (ver ALCANCE >
-// rediseño visual Products, paginación real): siempre ancla 1, 2, 3 al
-// inicio y las últimas 2 al final, más el entorno inmediato de la página
-// actual - puramente de presentación sobre `page`/`totalPages`, que ya
-// existían.
+// Lista compacta de páginas con "…": ancla 1-3 al inicio, las 2 últimas al final
+// y el entorno de la página actual.
 function buildPageList(current: number, total: number): (number | "ellipsis")[] {
   const anchors = new Set(
     [1, 2, 3, total - 1, total, current - 1, current, current + 1].filter(
@@ -44,15 +41,9 @@ function buildPageList(current: number, total: number): (number | "ellipsis")[] 
   return result;
 }
 
-// Catálogo público con filtros reales (ver ALCANCE > catálogo público):
-// Categoría, Precio, Descuento, Disponibilidad y Ordenamiento, todos
-// resueltos por GET /public/products (ver
-// app/services/publicService/Products.py > list_public_products_service).
-// El estado de los filtros vive en la URL (searchParams), no en state
-// aparte - así un link como "/products?catalog=<id>" (ver
-// features/public/categories/components/CategoryCard.tsx) o
-// "/products?search=<q>" (ver navbar.tsx) llega ya filtrado, y los
-// filtros son compartibles/recargables.
+// Catálogo público con filtros resueltos por GET /public/products.
+// El estado de los filtros vive en la URL (searchParams): links como
+// "/products?catalog=<id>" llegan ya filtrados y son compartibles.
 export default function ProductsList() {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -62,31 +53,18 @@ export default function ProductsList() {
   const maxPriceParam = searchParams.get("maxPrice") ?? "";
   const discountOnly = searchParams.get("discount") === "1";
   const inStockOnly = searchParams.get("inStock") === "1";
-  // Alimentados por los anuncios dinámicos por reglas (ver ALCANCE >
-  // Anuncios dinámicos: PROMOTION/BLACK_FRIDAY/CYBER_DAYS/LIQUIDATION/
-  // NEW_RELEASE) - no tienen controles propios en el sidebar (ver
-  // ALCANCE > "no modificar diseño actual"), solo se honran cuando
-  // llegan en la URL (ej. desde el botón de un anuncio).
+  // Alimentados por los anuncios dinámicos; sin control propio en el sidebar, solo se honran desde la URL.
   const minDiscountParam = searchParams.get("minDiscount");
   const maxStockParam = searchParams.get("maxStock");
   const daysParam = searchParams.get("days");
   const sort = searchParams.get("sort") ?? "";
   const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
 
-  // Buffer local para los inputs de precio: se debouncean antes de
-  // reflejarse en la URL (y disparar el fetch) para no hacer un request
-  // por cada tecla (mismo criterio que el buscador de Products.tsx en el
-  // dashboard de empresa).
+  // Buffer local para los inputs de precio; se debouncean antes de escribir a la URL.
   const [minPriceInput, setMinPriceInput] = useState(minPriceParam);
   const [maxPriceInput, setMaxPriceInput] = useState(maxPriceParam);
 
-  // Buscador "dentro de la categoría" (ver ALCANCE > rediseño visual
-  // Products): solo se muestra cuando hay una categoría seleccionada (ver
-  // JSX abajo) y escribe al mismo param `search` que ya usa el buscador
-  // global del navbar - no es un filtro nuevo en el backend, es
-  // search+catalog combinados, que /public/products ya resuelve con AND
-  // (ver list_public_products_service). Mismo patrón de buffer+debounce
-  // (400ms) que minPriceInput/maxPriceInput.
+  // Buscador "dentro de la categoría": escribe al mismo param `search` (search+catalog con AND).
   const [categorySearchInput, setCategorySearchInput] = useState(search);
 
   const [catalogs, setCatalogs] = useState<PublicCatalog[]>([]);
@@ -96,10 +74,8 @@ export default function ProductsList() {
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
 
-  // Actualiza uno o varios filtros en la URL de una sola vez. Cambiar
-  // cualquier filtro vuelve a la página 1 (salvo que el propio cambio sea
-  // de página, ver handlePageChange) - un filtro nuevo casi nunca tiene
-  // suficientes resultados para seguir en la página en la que ibas.
+  // Actualiza filtros en la URL; cualquier cambio de filtro vuelve a la página 1.
+
   const updateParams = (changes: Record<string, string | null>, resetPage = true) => {
     const next = new URLSearchParams(searchParams);
 
@@ -118,11 +94,8 @@ export default function ProductsList() {
     setSearchParams(next);
   };
 
-  // Cambiar de categoría vacía la búsqueda "dentro de la categoría" (ver
-  // ALCANCE > rediseño visual Products): si no, al elegir otra categoría
-  // quedaría un texto de búsqueda de la categoría anterior aplicado a la
-  // nueva sin que el campo (que se re-monta con el nombre de la nueva
-  // categoría) lo deje ver hasta que el usuario mire con atención.
+  // Cambiar de categoría limpia la búsqueda "dentro de la categoría".
+
   const handleCatalogChange = (nextCatalog: string) => {
     updateParams({ catalog: nextCatalog || null, search: null });
     setCategorySearchInput("");
@@ -148,8 +121,8 @@ export default function ProductsList() {
     !!daysParam ||
     !!sort;
 
-  // Catálogos reales para el filtro de categoría (ver ALCANCE > "No
-  // utilizar datos hardcodeados").
+  // Catálogos reales para el filtro de categoría.
+
   useEffect(() => {
     let cancelled = false;
 
@@ -164,11 +137,8 @@ export default function ProductsList() {
     };
   }, []);
 
-  // Sincroniza los inputs de precio si el filtro cambia desde afuera (ej.
-  // "Limpiar filtros" o un link externo con ?minPrice=) - diferido con
-  // setTimeout (mismo patrón usado en el resto del dashboard, ver
-  // Orders.tsx) para no hacer setState de forma síncrona dentro del
-  // efecto.
+  // Sincroniza los inputs de precio si el filtro cambia desde afuera ("Limpiar filtros", link externo).
+
   useEffect(() => {
     const timeout = setTimeout(() => {
       setMinPriceInput(minPriceParam);
@@ -178,8 +148,8 @@ export default function ProductsList() {
     return () => clearTimeout(timeout);
   }, [minPriceParam, maxPriceParam]);
 
-  // Debounce: los inputs de precio solo escriben a la URL 400ms después
-  // de que el usuario deja de escribir.
+  // Debounce 400ms de los inputs de precio antes de escribir a la URL.
+
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (minPriceInput === minPriceParam && maxPriceInput === maxPriceParam) return;
@@ -191,17 +161,16 @@ export default function ProductsList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [minPriceInput, maxPriceInput]);
 
-  // Sincroniza el buscador "dentro de la categoría" si `search` cambia
-  // desde afuera (ej. "Limpiar todo").
+  // Sincroniza el buscador de categoría si `search` cambia desde afuera.
+
   useEffect(() => {
     const timeout = setTimeout(() => setCategorySearchInput(search));
 
     return () => clearTimeout(timeout);
   }, [search]);
 
-  // Debounce del buscador de categoría (mismo criterio que el precio,
-  // 400ms) - solo escribe a la URL mientras haya una categoría
-  // seleccionada, que es la única situación en la que el campo existe.
+  // Debounce 400ms del buscador de categoría; solo activo con una categoría seleccionada.
+
   useEffect(() => {
     if (!catalog) return;
 
@@ -215,8 +184,8 @@ export default function ProductsList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categorySearchInput, catalog]);
 
-  // El fetch real: única fuente de verdad son los filtros ya reflejados
-  // en la URL (no los buffers locales de precio).
+  // El fetch real: la fuente de verdad son los filtros de la URL, no los buffers locales.
+
   useEffect(() => {
     let cancelled = false;
 
@@ -273,9 +242,8 @@ export default function ProductsList() {
     page,
   ]);
 
-  // Categoría seleccionada (ver ALCANCE > "Página detalle de categoría"):
-  // se deriva de la misma lista de catálogos ya cargada para el filtro de
-  // arriba, sin pedirla de nuevo.
+  // Categoría seleccionada, derivada de la lista de catálogos ya cargada.
+
   const selectedCatalog = catalog ? catalogs.find((c) => c.id === catalog) : undefined;
 
   const rangeStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
@@ -283,14 +251,7 @@ export default function ProductsList() {
   const pageList = buildPageList(page, totalPages);
 
   return (
-    // Mismo contenedor que Home/Categorías/Footer/navbar (ver ALCANCE >
-    // rediseño visual Products, referencia design/products-reference.png):
-    // max-w-[clamp(1280px,90vw,1600px)] en vez de max-w-7xl fijo.
     <section className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-2 py-6 sm:px-4 sm:py-8 lg:px-8">
-      {/* HEADER: solo título + cantidad de resultados (ver ALCANCE >
-          rediseño visual Products) - el buscador vive únicamente en el
-          navbar (ver navbar.tsx), acá no hay buscador/orden/vista
-          duplicados. */}
       {selectedCatalog && !search ? (
         <div className="mb-5">
           <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
@@ -314,7 +275,7 @@ export default function ProductsList() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-[280px_1fr] lg:gap-8">
-        {/* FILTROS */}
+
         <aside className="h-fit rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -334,7 +295,7 @@ export default function ProductsList() {
           </div>
 
           <div className="divide-y divide-gray-100">
-            {/* CATEGORÍA */}
+
             <div className="pb-4">
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
                 Categoría
@@ -353,12 +314,6 @@ export default function ProductsList() {
                 ))}
               </select>
 
-              {/* Buscador acotado a la categoría elegida (ver ALCANCE >
-                  rediseño visual Products, comportamiento nuevo del
-                  filtro de categoría): solo existe mientras haya una
-                  categoría seleccionada, filtra en conjunto con ella
-                  (search + catalog, ambos ya soportados por
-                  /public/products). */}
               {selectedCatalog && (
                 <div className="mt-3">
                   <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
@@ -391,7 +346,6 @@ export default function ProductsList() {
               )}
             </div>
 
-            {/* PRECIO */}
             <div className="py-4">
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
                 Precio mínimo y máximo
@@ -422,7 +376,6 @@ export default function ProductsList() {
               </div>
             </div>
 
-            {/* DESCUENTO + DISPONIBILIDAD */}
             <div className="space-y-3 py-4">
               <label className="flex cursor-pointer items-center gap-2.5 text-sm font-medium text-gray-700">
                 <input
@@ -445,7 +398,6 @@ export default function ProductsList() {
               </label>
             </div>
 
-            {/* ORDENAMIENTO */}
             <div className="pt-4">
               <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400">
                 Ordenar por
@@ -466,7 +418,6 @@ export default function ProductsList() {
           </div>
         </aside>
 
-        {/* PRODUCTOS */}
         <div>
           {loading ? (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
@@ -484,20 +435,12 @@ export default function ProductsList() {
             </div>
           ) : (
             <>
-              {/* Grid: mobile 1 col, tablet 2, desktop 4 (ver ALCANCE >
-                  rediseño visual Products, referencia
-                  design/products-reference.png). */}
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
                 {products.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>
 
-              {/* Paginación real: 10 por página, "Mostrando X-Y de Z",
-                  Anterior | números | ... | Siguiente. Cambiar de página
-                  solo toca el param `page` (ver handlePageChange) - los
-                  demás filtros y la búsqueda quedan intactos en la URL, y
-                  el scroll al inicio ya estaba resuelto ahí mismo. */}
               <div className="mt-8 flex flex-col items-center gap-3">
                 <p className="text-sm text-gray-500">
                   Mostrando {rangeStart}-{rangeEnd} de {total} productos

@@ -14,30 +14,19 @@ import type { Review, ReviewEligibility } from "../types/response";
 import type { PublicRatingDistribution } from "@/features/public/products/types/response";
 
 const PAGE_SIZE = 10;
-// Cuántas reseñas se muestran por defecto en el panel derecho antes de
-// que el usuario pida ver todas (ver ALCANCE > rediseño detalle de
-// producto, botón "Ver todas las opiniones") - misma página ya cargada
-// (page=1, PAGE_SIZE=10), solo se recorta la vista, no se pide de nuevo.
+// Cuántas reseñas se muestran antes de "Ver todas": recorta la vista de la página 1 ya cargada.
 const COMPACT_COUNT = 3;
 
 interface ReviewsSectionProps {
   productId: string;
-  // Resumen (promedio/total/distribución) ya calculado por el backend
-  // junto con el detalle del producto (ver ProductDetail.tsx > product.
-  // average_rating/review_count/rating_distribution) - se reutiliza acá
-  // en vez de recalcularlo con la página de reseñas ya cargada, que solo
-  // trae 10 a la vez y daría un promedio incompleto.
+  // Resumen (promedio/total/distribución) ya calculado por el backend; se reutiliza tal cual.
   averageRating: number | null;
   reviewCount: number;
   distribution: PublicRatingDistribution;
 }
 
-// Sección "Opiniones de compradores" del detalle público de producto (ver
-// ALCANCE > rediseño detalle de producto, requisito 5): panel izquierdo
-// (resumen real) + panel derecho (comentarios recientes, con
-// GET /public/products/{id}/reviews, sin auth) + formulario de escritura,
-// mostrado solo cuando el backend confirma elegibilidad (compra entregada
-// y sin reseña previa - ver ReviewEligibility).
+// Sección "Opiniones de compradores": resumen + comentarios recientes + formulario
+// (solo si el backend confirma elegibilidad: compra entregada, sin reseña previa).
 export default function ReviewsSection({
   productId,
   averageRating,
@@ -53,9 +42,7 @@ export default function ReviewsSection({
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
 
-  // "Ver todas las opiniones": arranca compacto (COMPACT_COUNT, sin
-  // paginación visible) y se expande a la lista completa + paginación al
-  // hacer click - sin volver a pedir la página 1, ya está cargada.
+  // "Ver todas": arranca compacto (COMPACT_COUNT) y se expande a lista completa + paginación, sin re-fetch.
   const [expanded, setExpanded] = useState(false);
 
   const [eligibility, setEligibility] = useState<ReviewEligibility | null>(null);
@@ -129,20 +116,18 @@ export default function ReviewsSection({
     }
   };
 
-  // En vista compacta (sin expandir), la paginación real no aplica -
-  // siempre son los primeros COMPACT_COUNT de la página 1.
+  // En vista compacta la paginación no aplica: siempre los primeros COMPACT_COUNT de la página 1.
   const visibleReviews = expanded ? reviews : reviews.slice(0, COMPACT_COUNT);
 
   return (
     <div id="opiniones" className="grid gap-6 lg:grid-cols-[280px_1fr]">
-      {/* PANEL IZQUIERDO */}
+
       <ProductReviewsSummary
         averageRating={averageRating}
         reviewCount={reviewCount}
         distribution={distribution}
       />
 
-      {/* PANEL DERECHO */}
       <div>
         <div className="mb-4">
           {eligibility?.can_review ? (

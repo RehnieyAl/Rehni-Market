@@ -11,25 +11,8 @@ interface Props {
   children: ReactNode;
 }
 
-// Diagnóstico (ver ALCANCE > favoritos no persistentes): el backend ya
-// guarda/borra correctamente (FavoriteService.py hace commit real) - lo
-// que faltaba era que el frontend nunca consultaba GET /favorites al
-// cargar, así que ProductCard siempre nacía con un useState(false) propio
-// sin importar el estado real. Este provider centraliza esa consulta UNA
-// sola vez (mismo patrón que CartProvider.tsx con /cart: solo pide
-// GET /favorites cuando hay sesión de comprador) y expone el resultado
-// para que cualquier componente (ProductCard, el tab "Favoritos" del
-// dashboard) lea y mute el mismo estado - no un useState aislado por
-// componente.
-//
-// Solo se guardan los IDs de producto favoritados (no la lista completa
-// con imagen/precio/nombre, ver features/favorites/types/response.ts):
-// es lo único que necesita el corazón de ProductCard/ProductDetail para
-// saber "¿esto ya es favorito?". La vista "Favoritos" del dashboard sigue
-// pidiendo su propia lista completa (ya lo hacía bien, no tenía el bug),
-// pero ahora borra a través de este mismo toggleFavorite en vez de llamar
-// a removeFavorite por su cuenta, para no tener dos caminos distintos
-// mutando el mismo recurso.
+// Centraliza GET /favorites una vez (solo con sesión de comprador) y expone los IDs favoritados
+// para que ProductCard/ProductDetail/el tab "Favoritos" compartan el mismo estado y el mismo toggle.
 export function FavoritesProvider({ children }: Props) {
   const { role } = useAuth();
 
@@ -53,10 +36,7 @@ export function FavoritesProvider({ children }: Props) {
     }
   }, [role]);
 
-  // Misma duplicación deliberada que CartProvider.tsx > loadCart: llamar acá
-  // directamente a refreshFavorites (referencia externa memoizada con
-  // useCallback) dispara react-hooks/set-state-in-effect - una función
-  // definida e invocada en el cuerpo del propio efecto sí cumple la regla.
+  // Función definida e invocada dentro del efecto para no disparar react-hooks/set-state-in-effect.
   useEffect(() => {
     const loadFavorites = async () => {
       if (role !== "user") {

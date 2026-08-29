@@ -7,12 +7,7 @@ from pydantic import BaseModel, Field, model_validator
 
 
 class GeneratePayoutRequest(BaseModel):
-    """
-    Body de POST /admin/payouts/generate (ver AdminPayoutRouter.py) - único
-    endpoint que crea liquidaciones nuevas, exclusivo admin/owner (ver
-    ALCANCE > Módulo de liquidaciones, gap de "generar" no cubierto por el
-    listado original de endpoints).
-    """
+    """Body de POST /admin/payouts/generate; único endpoint que crea liquidaciones."""
 
     companyId: UUID
     periodStart: date
@@ -27,16 +22,8 @@ class GeneratePayoutRequest(BaseModel):
 
 
 class PayoutBankAccountSummary(BaseModel):
-    """
-    Cuenta bancaria asociada a una liquidación (ver
-    PayoutService._to_bank_account_summary). `accountNumber` viene
-    completo a propósito: quien procesa el pago (admin/owner) lo necesita
-    para hacer la transferencia real, y la empresa ya puede verlo completo
-    de todas formas en GET /company/bank-accounts (es su propia cuenta).
-    `lastFourDigits` se mantiene para vistas compactas y para
-    EmailPayoutProcessed, que sí solo muestra los últimos 4 dígitos por
-    ser un correo (canal externo, ver EmailPayout.py).
-    """
+    """`accountNumber` va completo: admin/owner lo necesita para la transferencia.
+    `lastFourDigits` es para vistas compactas y correos (canal externo)."""
 
     bankName: str
     accountType: str
@@ -74,13 +61,7 @@ class CompanyPayoutResponse(BaseModel):
 
 
 class PayoutPreviewResponse(BaseModel):
-    """
-    GET /admin/payouts/preview (ver AdminPayoutRouter.py) - misma
-    validación/cálculo que POST /admin/payouts/generate
-    (PayoutService._resolve_payout_preview), sin persistir nada. No tiene
-    `id`/`payoutStatus`/`createdAt`: todavía no existe ninguna liquidación,
-    es solo la proyección de lo que se generaría con estos parámetros.
-    """
+    """Proyección de lo que generaría POST /admin/payouts/generate, sin persistir nada."""
 
     companyId: UUID
     companyName: str
@@ -97,14 +78,7 @@ class PayoutPreviewResponse(BaseModel):
 
 
 class PayoutAvailablePeriodResponse(BaseModel):
-    """
-    GET /admin/payouts/available-periods (ver AdminPayoutRouter.py) - un
-    mes calendario en el que la empresa tiene ventas DELIVERED y que
-    TODAVÍA no tiene una liquidación generada (ver
-    PayoutService.list_available_payout_periods_service). Reemplaza al
-    selector de mes libre del frontend: el admin ya no puede elegir un
-    periodo sin ventas o ya liquidado.
-    """
+    """Un mes con ventas DELIVERED de la empresa y sin liquidación generada aún."""
 
     periodStart: date
     periodEnd: date
@@ -119,17 +93,9 @@ class CompanyPayoutsPaginatedResponse(BaseModel):
 
 
 class CompanyBalanceResponse(BaseModel):
-    """
-    GET /company/balance (ver ALCANCE > Fase 6). Definiciones (ver
-    PayoutService.get_company_balance_service):
-    - grossSalesAccumulated / commissionAccumulated: suma histórica de
-      TODAS las liquidaciones ya generadas para la empresa (lifetime).
-    - netBalance: suma de netAmount de las liquidaciones que TODAVÍA no
-      están en PAID - lo que la empresa tiene pendiente de recibir.
-    - nextPayoutDate: proyección informativa (último día del mes en
-      curso) - no hay un job programado que genere liquidaciones
-      automáticamente en este sistema, es solo el corte mensual esperado.
-    """
+    """- grossSalesAccumulated / commissionAccumulated: suma histórica de todas las liquidaciones.
+    - netBalance: suma de netAmount de las liquidaciones aún no PAID.
+    - nextPayoutDate: proyección informativa (último día del mes), no hay job automático."""
 
     grossSalesAccumulated: Decimal
     commissionAccumulated: Decimal

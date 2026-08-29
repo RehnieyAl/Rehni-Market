@@ -1,16 +1,6 @@
-"""
-Orquestador de correos de pedidos (ver ALCANCE > Correos de pedidos):
-extrae los datos reales del `Order` (ORM) y llama a la función de
-EmailOrder.py que corresponda. Centraliza el mapeo estado -> correo en un
-solo lugar para no repetirlo en CheckoutService.py y en los 2 puntos de
-OrderService.py donde cambia el estado (empresa y comprador).
-
-Mismo criterio de integración que el resto de correos existentes (ver
-CompanyService.py > update_certificate_status_service): se llama directo,
-sin try/except - send_email ya nunca revienta el flujo que lo llama (ver
-EmailService.py), así que un error de SMTP nunca puede tumbar un
-checkout/cambio de estado que ya se guardó correctamente.
-"""
+"""Orquestador de correos de pedidos: extrae los datos del `Order` y llama a la función
+de EmailOrder.py que corresponda. Se llama directo, sin try/except: send_email nunca
+revienta el flujo que lo llama."""
 
 from decimal import Decimal
 
@@ -28,10 +18,7 @@ from app.services.email.template.EmailOrder import (
     EmailOrderCancelled,
 )
 
-# Mismas etiquetas que ORDER_STATUS_LABEL en el frontend (ver
-# features/orders/utils/orderStatus.ts) - una sola fuente de verdad de
-# texto en español por estado, del lado del backend, para no repetirla en
-# cada función de EmailOrder.py.
+# Etiquetas en español por estado, alineadas con ORDER_STATUS_LABEL del frontend.
 STATUS_LABELS = {
     OrderStatusEnum.PENDING: "Pendiente",
     OrderStatusEnum.PAID: "Pagado",
@@ -43,24 +30,17 @@ STATUS_LABELS = {
 
 
 def _format_date(value) -> str:
-    # dd/mm/aaaa hh:mm, sin depender del locale del sistema (no siempre
-    # está el paquete es_CO.UTF-8 instalado en el contenedor) - simple e
-    # inequívoco para un correo transaccional.
+    # dd/mm/aaaa hh:mm sin depender del locale del sistema.
     return value.strftime("%d/%m/%Y %H:%M") if value else ""
 
 
 def _reference(order: Order) -> str:
-    # Nunca se expone order.id (UUID) al comprador - ver ALCANCE >
-    # REFERENCIA DE PEDIDO. Mismo formato que
-    # OrderService._to_order_response.
+    # Nunca se expone order.id (UUID) al comprador.
     return f"RM-{order.order_number:06d}"
 
 
 def _build_address(order: Order) -> dict | None:
-    # Snapshot guardado en el pedido (ver ModelOrder.py > Order.delivery_*
-    # y ALCANCE > "el pedido debe conservar estos datos incluso si el
-    # usuario modifica la dirección después") - NUNCA order.address en
-    # vivo, mismo criterio que OrderService._to_order_response.
+    # Snapshot guardado en el pedido, nunca order.address en vivo.
     if not order.delivery_address:
         return None
 
@@ -80,10 +60,7 @@ def _build_items(order: Order) -> list[dict]:
         image_url = None
         product = item.product
 
-        # El producto pudo cambiar/perder su imagen desde la compra -
-        # esto lee la imagen ACTUAL, no una guardada en el pedido
-        # (OrderItem no la snapshotea, ver ModelOrder.py). Se omite sin
-        # inventar una URL si no hay imagen o el producto ya no existe.
+        # Lee la imagen actual del producto (OrderItem no la snapshotea); se omite si no hay.
         if product:
             main_image = next((img for img in product.images if img.is_main), None)
 
@@ -128,17 +105,8 @@ def send_order_status_email(
     refunded_amount: Decimal | None = None,
     company_name: str | None = None,
 ) -> None:
-    """
-    Se llama después de cambiar `order.status` (empresa: ver
-    OrderService.update_company_order_status_service - cubre
-    PROCESSING/SHIPPED/DELIVERED/CANCELLED; comprador: ver
-    OrderService.cancel_my_order_service - CANCELLED; suspensión de
-    empresa: ver OrderService.cancel_and_refund_company_orders_for_
-    suspension, único caso que además pasa `company_name`). PENDING no
-    pasa por acá (correo propio en send_order_created_email) y PAID nunca
-    se asigna en este sistema (ver ModelOrder.py > Order) - ningún otro
-    estado dispara un correo.
-    """
+    """Se llama tras cambiar `order.status`. Solo PROCESSING/SHIPPED/DELIVERED/CANCELLED
+    disparan correo; `company_name` solo lo pasa el flujo de suspensión de empresa."""
 
     reference = _reference(order)
     status_label = STATUS_LABELS.get(order.status, order.status.value)
@@ -174,10 +142,6 @@ def send_order_status_email(
             delivered_at_label=_format_date(order.updated_at),
             items=items,
             total=order.total,
-            # Preparado para integrarse con el módulo de reseñas (ver
-            # ALCANCE > PEDIDO ENTREGADO): apunta a "Mis pedidos", desde
-            # donde el comprador llega a cada producto entregado y
-            # reseñarlo (ver features/public/reviews/components/ReviewsSection.tsx).
             rate_products_url=f"{config.URL_FRONTEND}/user/dashboard?tab=orders",
         )
 

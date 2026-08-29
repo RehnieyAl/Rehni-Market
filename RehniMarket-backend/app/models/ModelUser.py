@@ -103,10 +103,6 @@ class Users(Base):
         back_populates="target_user",
     )
 
-    # =========================================================
-    # COMPRAS (rol USER - ver ALCANCE > Restricciones de compra)
-    # =========================================================
-
     cart: Mapped["Cart | None"] = relationship(
         "Cart",
         back_populates="user",

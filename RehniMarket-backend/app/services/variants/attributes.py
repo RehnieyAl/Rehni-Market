@@ -1,10 +1,5 @@
-"""
-Consultas de atributos de catalogo (sistema generico - ver
-ModelCatalogAttribute.py).
-
-No contiene reglas de negocio de variantes: solo "que ejes / que specs
-tiene esta categoria" y helpers de serializacion legible.
-"""
+"""Consultas de atributos de catálogo y helpers de serialización legible.
+No contiene reglas de negocio de variantes (ver resolver.py)."""
 
 from __future__ import annotations
 
@@ -17,12 +12,8 @@ from app.models.ModelCatalogAttribute import CatalogAttribute, CatalogAttributeO
 
 
 def variant_attribute_pairs(variant) -> list[dict]:
-    """
-    [{"name": "Color", "value": "Verde"}, {"name": "Talla", "value": "40"}]
-    a partir de las VariantOption de la variante, ordenado por eje.
-    Usado para mostrar la variante de forma legible (carrito) y para el
-    snapshot congelado del pedido (OrderItem.attributes_snapshot).
-    """
+    """[{"name": "Color", "value": "Verde"}, ...] a partir de las VariantOption, ordenado por eje.
+    Para mostrar la variante legible (carrito) y el snapshot del pedido."""
 
     links = sorted(
         variant.options,
@@ -71,14 +62,8 @@ def get_attribute(database: Session, attribute_id) -> CatalogAttribute | None:
 
 
 def validate_spec_values(database: Session, catalog_id, items) -> list[tuple]:
-    """
-    Valida una lista de {attributeId, value} contra los atributos
-    role="spec" del catalogo. Devuelve [(CatalogAttribute, value), ...].
-
-    Reglas (equivalen a las viejas de _validate_specifications_belong_to_
-    catalog): cada atributo existe, es role="spec", pertenece al catalogo,
-    tiene valor, y no se repite.
-    """
+    """Valida una lista de {attributeId, value} contra los atributos role="spec" del catálogo
+    (existe, es spec, del catálogo, con valor, sin repetir). Devuelve [(CatalogAttribute, value), ...]."""
 
     seen: set = set()
     resolved: list[tuple] = []

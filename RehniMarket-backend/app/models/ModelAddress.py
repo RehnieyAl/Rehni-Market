@@ -7,16 +7,8 @@ from app.database.Connection import Base
 
 
 class Address(Base):
-    """
-    Direcciones de envío del comprador (ver ALCANCE > Modal de
-    direcciones + compra obligatoria con dirección).
-
-    `label`/`full_name`/`additional_instructions` son nullable a nivel de
-    BD (para no romper filas existentes al agregar estas columnas por
-    migración) pero se exigen en la creación a nivel de Pydantic (ver
-    SchemaAddress.py > CreateAddressRequest) - toda dirección NUEVA
-    siempre los trae.
-    """
+    """`label`/`full_name`/`additional_instructions` son nullable en BD (filas
+    previas a estas columnas) pero obligatorios al crear vía Pydantic."""
 
     __tablename__ = "addresses"
 
@@ -28,14 +20,9 @@ class Address(Base):
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
     )
 
-    # Nombre de referencia de la dirección (ej. "Casa", "Oficina") - para
-    # que el usuario identifique cuál es cuál en el modal de selección
-    # (ver AddressSelectionModal.tsx).
     label: Mapped[str | None] = mapped_column(String(60), nullable=True)
 
-    # Nombre completo de quien recibe el pedido en esta dirección - no
-    # necesariamente el titular de la cuenta (ver ALCANCE > snapshot de
-    # pedido).
+    # Quien recibe el pedido, no necesariamente el titular de la cuenta.
     full_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
 
     country: Mapped[str] = mapped_column(String(60), nullable=False)

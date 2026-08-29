@@ -1,10 +1,5 @@
-"""
-CRUD de atributos de catalogo y sus opciones (Admin/Owner).
-
-Evolucion de SpecificationService + colorsService: unifica ambos bajo
-`CatalogAttribute` (`role="spec"` / `role="variant"`). Los dos servicios
-viejos siguen existiendo durante la transicion.
-"""
+"""CRUD de atributos de catálogo y sus opciones (Admin/Owner). Unifica
+SpecificationService + colorsService bajo CatalogAttribute (role="spec"/"variant")."""
 
 from __future__ import annotations
 
@@ -96,10 +91,6 @@ def _option_in_use(database: Session, option_id) -> bool:
         is not None
     )
 
-
-# ==========================================================================
-# ATRIBUTOS
-# ==========================================================================
 
 def list_catalog_attributes_service(database: Session, catalog_id):
     _get_catalog(database, catalog_id)
@@ -232,10 +223,6 @@ def delete_catalog_attribute_service(database: Session, attribute_id):
         database.rollback()
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, str(e))
 
-
-# ==========================================================================
-# OPCIONES
-# ==========================================================================
 
 def add_attribute_option_service(
     database: Session, attribute_id, data: CreateAttributeOptionRequest

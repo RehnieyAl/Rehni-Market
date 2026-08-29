@@ -15,20 +15,14 @@ export async function getPublicProductDetail(
   return data;
 }
 
-// Reutiliza el endpoint público de catálogos (ya usado por el dashboard
-// company/admin bajo otro service) para poblar el filtro de categoría del
-// listado público de productos y la página pública Categorías (ver
-// features/public/categories).
+// Endpoint público de catálogos, para el filtro de categoría y la página Categorías.
 export async function getCatalogs(): Promise<PublicCatalog[]> {
   const { data } = await api.get<PublicCatalog[]>("/public/catalogs");
 
   return data;
 }
 
-// Catálogo público completo con filtros reales (Categoría, Precio,
-// Descuento, Disponibilidad, Ordenamiento - ver ALCANCE > catálogo
-// público). Reemplaza al workaround anterior que reutilizaba
-// /products/daily y filtraba en el cliente (ver ProductsList.tsx).
+// Catálogo público con filtros (categoría, precio, descuento, disponibilidad, orden).
 export async function getPublicProducts(
   filters: PublicProductsFilters = {},
 ): Promise<PublicProductsPaginated> {

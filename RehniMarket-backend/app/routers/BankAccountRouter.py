@@ -17,9 +17,7 @@ from app.services.DashboardService.company.BankAccountService import (
     delete_bank_account_service,
 )
 
-# Cuentas bancarias de la empresa (ver ALCANCE > Módulo de liquidaciones,
-# Fase 1). Mismo patrón que AddressRouter.py: router delgado, toda la
-# lógica vive en BankAccountService.py.
+# Router delgado; la lógica vive en BankAccountService.py.
 router = APIRouter(prefix="/company/bank-accounts", tags=["company", "bank-accounts"])
 
 

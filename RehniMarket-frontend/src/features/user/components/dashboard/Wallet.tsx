@@ -17,14 +17,8 @@ import type { WalletTransaction } from "@/features/wallet/types/response";
 
 const PAGE_SIZE = 10;
 
-// Vista "RehniCoins" del dashboard de comprador (ver
-// dashboardNavigation.tsx > user, id "wallet"). Reutiliza el mismo
-// GET /wallet/me y GET /wallet/transactions que ya consume
-// features/user/components/dashboard/Home.tsx para el resumen rápido -
-// acá se muestran completos (saldo + historial paginado), no solo el
-// último dato. NO llama a POST /wallet/recharge (exclusivo admin/owner,
-// ver WalletRouter.py) - "Recargar RehniCoins" abre
-// RechargeRequestModal.tsx, que solo prepara un mensaje de WhatsApp.
+// Vista "RehniCoins" del comprador: saldo + historial paginado (GET /wallet/me + /wallet/transactions).
+// No recarga saldo: "Recargar" abre RechargeRequestModal (mensaje de WhatsApp).
 export default function Wallet() {
   const { user } = useAuth();
 
@@ -81,7 +75,6 @@ export default function Wallet() {
         Consulta tu saldo y tus movimientos. 1 RehniCoin equivale a 1 COP.
       </p>
 
-      {/* SALDO */}
       <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-start">
         <StatCard
           title="Saldo disponible"
@@ -101,7 +94,6 @@ export default function Wallet() {
         </button>
       </div>
 
-      {/* MOVIMIENTOS */}
       <div className="mt-8">
         <h2 className="mb-4 font-semibold text-gray-900">Movimientos</h2>
 

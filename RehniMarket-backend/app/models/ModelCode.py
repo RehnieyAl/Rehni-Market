@@ -1,8 +1,3 @@
-# este codigo busca definir una tabla llamda event_codes
-# la cual busca almacenar los codigos de verificacion y recuperaciones de contraseña,
-# ademas de esto genera ids automaticamente, registra fechas de creacion,
-# agrega tiempo de expiracion, relaciona cada codigo con un usuario por llave foranea
-# y permite acceder al usuario relacionado con ORM
 from sqlalchemy import String, Enum, ForeignKey, DateTime, Index
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime, timedelta

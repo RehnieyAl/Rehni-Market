@@ -34,15 +34,7 @@ def get_company_order(database: Session, order_id: UUID, company_id: UUID) -> Or
 def list_company_orders_by_statuses(
     database: Session, company_id: UUID, statuses: set[OrderStatusEnum]
 ) -> list[Order]:
-    """
-    Pedidos de una empresa en alguno de `statuses` - usado por la
-    suspensión de empresa (ver OrderService.
-    cancel_and_refund_company_orders_for_suspension) para encontrar
-    únicamente PENDING/PAID/PROCESSING, la relación real es Order.
-    company_id (columna directa, ver ModelOrder.py > Order - el pedido ya
-    sabe a qué empresa pertenece desde el checkout, no hace falta pasar
-    por OrderItem/Product para deducirlo).
-    """
+    """Pedidos de una empresa en alguno de `statuses` (Order.company_id es columna directa)."""
 
     return (
         database.query(Order)
@@ -73,13 +65,8 @@ def list_company_orders(
     statuses: list | None = None,
     search: str | None = None,
 ):
-    """
-    `statuses` ya viene convertido a OrderStatusEnum (ver
-    OrderService.list_company_orders_service) - varios valores a la vez
-    para las pestañas del dashboard de empresa. `search` filtra por
-    referencia (order_number), correo o nombre del comprador (join con
-    Users, ver ALCANCE > Refactor Pedidos Empresa, punto 6).
-    """
+    """`statuses` ya viene como OrderStatusEnum. `search` filtra por referencia
+    (order_number), correo o nombre del comprador."""
 
     query = database.query(Order).filter(Order.company_id == company_id)
 
@@ -96,9 +83,7 @@ def list_company_orders(
             Users.fullName.ilike(f"%{normalized}%"),
         ]
 
-        # Referencia amigable "RM-000001" (ver OrderService >
-        # _to_order_response): se acepta con o sin el prefijo "RM-" y con
-        # o sin los ceros a la izquierda (ej. "RM-000001", "000001", "1").
+        # Acepta la referencia con o sin prefijo "RM-" y sin ceros a la izquierda.
         reference_digits = normalized.upper()
         if reference_digits.startswith("RM-"):
             reference_digits = reference_digits[3:]
@@ -107,9 +92,6 @@ def list_company_orders(
         if reference_digits.isdigit():
             conditions.append(Order.order_number == int(reference_digits))
         elif normalized.isdigit():
-            # El caso "0" puro (order_number nunca es 0, el IDENTITY
-            # empieza en 1) - se deja pasar sin romper, simplemente no
-            # matchea nada.
             conditions.append(Order.order_number == int(normalized))
 
         query = query.filter(or_(*conditions))
@@ -126,11 +108,7 @@ def list_company_orders(
 def count_company_orders_by_status(
     database: Session, company_id: UUID
 ) -> dict[OrderStatusEnum, int]:
-    """
-    Un solo query agrupado (en vez de un .count() por estado, ver
-    OrderService.get_company_order_status_counts_service) para armar los
-    contadores de las pestañas de "Pedidos" en el dashboard de empresa.
-    """
+    """Un solo query agrupado para los contadores de pestañas de "Pedidos"."""
 
     rows = (
         database.query(Order.status, func.count(Order.id))
@@ -145,29 +123,10 @@ def count_company_orders_by_status(
 def sum_valid_company_sales(
     database: Session, company_id: UUID, period_start, period_end
 ) -> Decimal:
-    """
-    Suma de Order.total de ventas VÁLIDAS de una empresa dentro de un
-    periodo, para el módulo de liquidaciones (ver PayoutService.py).
+    """Suma de Order.total de ventas DELIVERED de una empresa en un periodo.
+    Se filtra por created_at: no hay un delivered_at en el modelo."""
 
-    "Válida" = DELIVERED únicamente (ver ALCANCE > Módulo de liquidaciones,
-    Fase "Reglas de negocio": solo cuentan pedidos completados/entregados/
-    finalizados). Este sistema no tiene un estado "rechazado" ni
-    "reembolsado" propio (ver ModelOrder.py > OrderStatusEnum) - CANCELLED
-    ya cubre esa exclusión, y el resto de estados (PENDING/PAID/PROCESSING/
-    SHIPPED) todavía no son una venta finalizada, así que tampoco cuentan.
-    Mismo criterio que OrderStatusCountsResponse.completed, que ya trata
-    DELIVERED como "completado" (ver OrderService.py).
-
-    Se filtra por `created_at` (fecha del pedido): no existe un
-    `delivered_at` separado en el modelo, así que el periodo de la
-    liquidación se ancla a cuándo se hizo el pedido, no a cuándo pasó a
-    DELIVERED.
-    """
-
-    # period_end es INCLUSIVO (ej. 2026-01-01 a 2026-01-31 debe contar todo
-    # el 31) pero Order.created_at es un timestamp - comparar con
-    # `< period_end` (medianoche) dejaría fuera todo ese último día. Se
-    # compara contra el inicio del día SIGUIENTE en su lugar.
+    # period_end es inclusivo; se compara contra el inicio del día siguiente.
     period_end_exclusive = period_end + timedelta(days=1)
 
     total = (
@@ -185,14 +144,7 @@ def sum_valid_company_sales(
 
 
 def list_delivered_sale_months(database: Session, company_id: UUID) -> list[date]:
-    """
-    Primer día de cada mes calendario en el que la empresa tiene al menos
-    un pedido DELIVERED (ver ALCANCE > selector "Mes a liquidar" -
-    PayoutService.list_available_payout_periods_service). Mismo criterio
-    de "venta válida" que sum_valid_company_sales (DELIVERED únicamente,
-    por created_at) - un query agrupado por mes en vez de que el frontend
-    adivine qué meses probar.
-    """
+    """Primer día de cada mes con al menos un pedido DELIVERED de la empresa."""
 
     month_expr = func.date_trunc("month", Order.created_at)
 

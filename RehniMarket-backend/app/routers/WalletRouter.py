@@ -42,11 +42,7 @@ def get_my_transactions(
 def recharge_wallet(
     request: Request, data: RechargeWalletRequest, database: Session = Depends(get_db)
 ):
-    # /wallet/recharge no esta en ROLES_PERMISSIONS_ROUTERS["user"] (ver
-    # RolePermissions.py), asi que un USER ya recibe 403 antes de llegar
-    # aqui. ADMIN/OWNER si tienen bypass total del middleware
-    # (FULL_ACCESS_ROLES), por eso se revalida explicitamente aca - mismo
-    # patron que las capacidades exclusivas de OWNER en UserService.py.
+    # Exclusivo ADMIN/OWNER; se revalida el rol aquí porque tienen bypass del middleware.
     if request.state.role not in ("admin", "owner"):
         api_error(
             403,

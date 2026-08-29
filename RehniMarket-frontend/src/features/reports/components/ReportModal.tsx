@@ -9,25 +9,18 @@ import type { ReportTargetType } from "../types/response";
 interface ReportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // Único componente de creación de reportes, reutilizado tanto para
-  // "Reportar producto" (ProductDetail.tsx) como para "Reportar empresa"
-  // (CompanyProfile.tsx) - ver ALCANCE > Reportes, sección 14 ("no crear
-  // dos modales"). La única diferencia real entre ambos casos es
-  // targetType/targetId; el resto del formulario es idéntico.
+  // Único componente de creación de reportes ("Reportar producto"/"Reportar empresa");
+  // solo cambian targetType/targetId.
   targetType: ReportTargetType;
   targetId: string;
-  // Nombre visible del producto/empresa, solo para el encabezado del
-  // modal ("Reportar: X") - no se envía al backend.
+  // Nombre visible para el encabezado ("Reportar: X"); no se envía al backend.
   targetLabel: string;
 }
 
 const REASON_MAX_LENGTH = 150;
 const DESCRIPTION_MAX_LENGTH = 1000;
 
-// Mismo límite/tipos que valida el backend (ver ALCANCE > Reportes,
-// sección 5/6 y ReportService.py > MAX_EVIDENCE_IMAGES/
-// ALLOWED_EVIDENCE_CONTENT_TYPES) - se repite acá solo para dar
-// feedback inmediato, la validación real vive en el backend.
+// Mismo límite/tipos que el backend; se repite acá solo para feedback inmediato.
 const MAX_EVIDENCE_IMAGES = 5;
 const MAX_EVIDENCE_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_EVIDENCE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -54,11 +47,7 @@ export default function ReportModal({
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Los previews son object URLs (URL.createObjectURL) - solo existen en
-  // memoria del navegador, nunca se suben a ningún lado hasta enviar el
-  // reporte (ver ALCANCE > Reportes, sección 7: "eliminar una
-  // previsualización NO debe eliminar archivos del servidor"). Se
-  // revocan al desmontar para no filtrar memoria.
+  // Los previews son object URLs en memoria; nada se sube hasta enviar. Se revocan al desmontar.
   useEffect(() => {
     return () => {
       evidences.forEach((evidence) => URL.revokeObjectURL(evidence.previewUrl));

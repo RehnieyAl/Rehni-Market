@@ -10,15 +10,8 @@ interface ProductTabsProps {
   reviewCount: number;
 }
 
-// Pestañas Descripción / Especificaciones / Opiniones (ver ALCANCE >
-// rediseño detalle de producto, requisito 6 y referencia
-// design/products-detail-reference.png). Descripción y Especificaciones
-// alternan contenido acá mismo (mismo patrón de tabs con línea inferior
-// activa que STATUS_TABS en Orders.tsx, adaptado a subrayado en vez de
-// píldoras). "Opiniones" no oculta/muestra nada acá: en la referencia esa
-// sección ya se ve siempre, debajo de este bloque (ver
-// ReviewsSection.tsx) - la pestaña solo hace scroll hasta ahí, evitando
-// duplicar el panel de reseñas dentro de un tab y otra vez abajo.
+// Pestañas Descripción / Especificaciones / Opiniones. "Opiniones" solo hace scroll a ReviewsSection,
+// que se renderiza siempre debajo de este bloque.
 export default function ProductTabs({
   description,
   specifications,

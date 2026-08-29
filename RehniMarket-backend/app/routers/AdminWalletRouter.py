@@ -17,13 +17,7 @@ from app.services.commerce.WalletService import (
     list_recharge_history_service,
 )
 
-# Modulo RehniCoin del panel de administracion (ver ALCANCE > MODULO
-# REHNICOIN) - exclusivo ADMIN/OWNER. No esta en
-# ROLES_PERMISSIONS_ROUTERS["company"|"user"] (ver RolePermissions.py),
-# asi que esos roles ya reciben 403 antes de llegar aqui; ADMIN/OWNER
-# tienen bypass total via FULL_ACCESS_ROLES, por eso se revalida el rol
-# explicitamente en cada endpoint (mismo patron que /wallet/recharge en
-# WalletRouter.py).
+# Exclusivo ADMIN/OWNER; el rol se revalida en cada endpoint (tienen bypass del middleware).
 router = APIRouter(prefix="/admin/wallet", tags=["admin", "wallet"])
 
 

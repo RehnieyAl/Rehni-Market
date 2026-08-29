@@ -72,9 +72,6 @@ router = APIRouter(
     tags=["company"]
 )
 
-# ==============================
-# ROUTERS DASHBOARD
-# ==============================
 
 @router.get("/dashboard/me")
 def dashboard(request: Request,database: Session = Depends(get_db)):
@@ -88,11 +85,11 @@ def dashboard(request: Request,database: Session = Depends(get_db)):
 
 @router.get("/dashboard/my-profile")
 def get_info_company(request:Request, database: Session =Depends(get_db)):
-    #Request del middleware
+    # Request del middleware
     user_id = request.state.user_id
     return company_dashboard_my_profile_service(user_id, database)
 
-# patch solo permite actualizar una o varias informacion, es opcional por el usuario.
+# PATCH parcial.
 @router.patch("/dashboard/upgrade-my-profile")
 def upgrade_info_company_profile(request: Request, upgrade_profile: UpdateInformationCompanyRequest,database: Session = Depends(get_db)):
     user_id = request.state.user_id
@@ -122,14 +119,7 @@ def create_product(
     request: Request,
     nameProduct: str = Form(...),
     catalogId: str = Form(...),
-    # ge=0 rechaza tanto negativos como NaN (NaN >= 0 es False en
-    # IEEE754) - mismo patron que UpdateProductRequest.priceProduct /
-    # CreateVariantRequest.price (ver SchemaProduct.py / SchemaVariant.py).
-    # Este endpoint es el unico que recibia estos campos como Form(...)
-    # sueltos, sin ninguna cota, lo que permitia que un "NaN" enviado por
-    # error desde el frontend se guardara sin validar y rompiera la
-    # serializacion JSON de una respuesta posterior (Starlette usa
-    # allow_nan=False).
+    # ge=0 rechaza negativos y NaN (NaN >= 0 es False en IEEE754).
     priceProduct: float = Form(..., ge=0),
     stockProduct: int = Form(..., ge=0),
     descripcionProduct: str = Form(...),
@@ -156,7 +146,6 @@ def create_product(
         database=database
     )
 
-# Para atraer productos de la empresa
 @router.get("/dashboard/get-my-products")
 def get_my_product( 
     request: Request,
@@ -226,8 +215,6 @@ def upgrade_my_product(
     )
 
 
-
-
 @router.patch("/dashboard/change-status-my-product/{product_id}")
 def change_status_my_product(
     request: Request,
@@ -255,12 +242,7 @@ def delete_my_product(request: Request,product_id: UUID, database: Session = Dep
     )
 
 
-# ==============================
-# ROUTERS VARIANTES
-# ==============================
-# Ownership (user_id -> company -> product -> variant) se valida siempre
-# dentro del service, nunca aqui - el router solo pasa el user_id del
-# request al service (ver app/services/DashboardService/company/Variants.py).
+# El ownership (user -> company -> product -> variant) se valida en el service, no aquí.
 
 @router.post("/dashboard/products/{product_id}/variants", response_model=VariantDetailResponse)
 def create_variant(
@@ -350,10 +332,6 @@ def delete_variant(
         database=database,
     )
 
-
-# ------------------------------
-# Imágenes de variante
-# ------------------------------
 
 @router.get(
     "/dashboard/products/{product_id}/variants/{variant_id}/images",
@@ -445,10 +423,6 @@ def set_main_variant_image(
     )
 
 
-# ------------------------------
-# Especificaciones de variante
-# ------------------------------
-
 @router.get(
     "/dashboard/products/{product_id}/variants/{variant_id}/specifications",
     response_model=list[VariantSpecificationResponse],
@@ -537,20 +511,14 @@ def delete_variant_specification(
     )
 
 
-# ==============================
-# ROUTERS PEDIDOS (Fase 5 - ver ALCANCE)
-# ==============================
-# Pedidos recibidos por la empresa. El lado comprador vive en
-# OrderRouter.py (/orders) - ambos reutilizan el mismo OrderService.
+# Pedidos recibidos por la empresa; el lado comprador vive en OrderRouter.py.
 
 @router.get("/dashboard/orders", response_model=OrdersPaginatedResponse)
 def get_company_orders(
     request: Request,
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=50),
-    # Repetible (?status=pending&status=paid) - las pestañas del
-    # dashboard de empresa agrupan varios estados a la vez (ver
-    # Orders.tsx > STATUS_TABS).
+    # Repetible (?status=pending&status=paid): las pestañas agrupan varios estados.
     status: list[str] | None = Query(None),
     search: str | None = Query(None),
     database: Session = Depends(get_db),

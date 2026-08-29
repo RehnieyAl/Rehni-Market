@@ -13,11 +13,7 @@ export default function Topbar({
   description,
   roleName,
 }: TopbarProps) {
-  // Reutiliza el perfil ya cargado en AuthContext (antes este componente
-  // hacía su propio GET /auth/me por separado, duplicando la misma
-  // llamada) - así también se actualiza automáticamente cuando
-  // "Configuración de cuenta" llama a refreshProfile() tras editar el
-  // nombre o la foto de perfil.
+  // Reutiliza el perfil de AuthContext; se actualiza cuando "Configuración de cuenta" llama a refreshProfile().
   const { user } = useAuth();
 
   return (

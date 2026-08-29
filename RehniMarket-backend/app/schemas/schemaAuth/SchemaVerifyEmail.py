@@ -6,3 +6,6 @@ class VerifyEmailRequest(BaseModel):
 class ChangeEmailRequestOnlyRegistered(BaseModel):
     old_email: EmailStr
     new_email: EmailStr
+
+class ResendVerificationCodeRequest(BaseModel):
+    email: EmailStr

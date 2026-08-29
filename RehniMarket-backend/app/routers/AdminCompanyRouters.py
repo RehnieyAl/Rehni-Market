@@ -17,10 +17,6 @@ from uuid import UUID
 from app.services.NasService import NasService, get_nas_service
 
 
-# =========================================================
-# SERVICES - COLORS
-# =========================================================
-
 from app.services.DashboardService.admin.colorsService import (
     get_colors_service,
     create_color_service,
@@ -28,10 +24,6 @@ from app.services.DashboardService.admin.colorsService import (
     delete_color_service,
 )
 
-
-# =========================================================
-# SERVICES - CATALOG
-# =========================================================
 
 from app.services.DashboardService.admin.CatalogService import (
     get_catalogs_service,
@@ -42,10 +34,6 @@ from app.services.DashboardService.admin.CatalogService import (
 )
 
 
-# =========================================================
-# SERVICES - SPECIFICATIONS
-# =========================================================
-
 from app.services.DashboardService.admin.SpecificationService import (
     get_specifications_service,
     create_specification_service,
@@ -54,10 +42,6 @@ from app.services.DashboardService.admin.SpecificationService import (
 )
 
 
-# =========================================================
-# SERVICES - COMPANY
-# =========================================================
-
 from app.services.DashboardService.admin.CompanyService import (
     get_all_companies_service,
     get_admin_company_service,
@@ -65,10 +49,6 @@ from app.services.DashboardService.admin.CompanyService import (
     update_company_status_service,
 )
 
-
-# =========================================================
-# SERVICES - ADVERTISEMENTS
-# =========================================================
 
 from app.services.DashboardService.admin.AdvertisementService import (
     get_advertisements_service,
@@ -80,10 +60,6 @@ from app.services.DashboardService.admin.AdvertisementService import (
 )
 
 
-# =========================================================
-# SCHEMAS - COMPANY
-# =========================================================
-
 from app.schemas.SchemaDashboard.admin.company import (
     UpdateCertificateStatusRequest,
     UpdateCompanyStatusRequest,
@@ -91,10 +67,6 @@ from app.schemas.SchemaDashboard.admin.company import (
     AdminCompaniesPaginatedResponse,
 )
 
-
-# =========================================================
-# SCHEMAS - CATALOG
-# =========================================================
 
 from app.schemas.SchemaDashboard.SchemaCatalog import (
     CreateCatalogRequest,
@@ -107,19 +79,11 @@ from app.schemas.SchemaDashboard.SchemaCatalog import (
 )
 
 
-# =========================================================
-# SCHEMAS - COLOR
-# =========================================================
-
 from app.schemas.SchemaDashboard.SchemaColor import (
     CreateColorRequest,
     UpdateColorRequest,
 )
 
-
-# =========================================================
-# SCHEMAS - ADVERTISEMENTS
-# =========================================================
 
 from app.schemas.SchemaDashboard.SchemaAdvertisement import (
     CreateAdvertisementRequest,
@@ -129,19 +93,10 @@ from app.schemas.SchemaDashboard.SchemaAdvertisement import (
 )
 
 
-# =========================================================
-# ROUTER PRINCIPAL
-# =========================================================
-
 router = APIRouter(
     prefix="/admin",
     tags=["admin"],
 )
-
-
-# =========================================================
-# COMPANIES
-# =========================================================
 
 
 @router.get(
@@ -169,11 +124,6 @@ def get_company(
     )
 
 
-# =========================================================
-# GET COMPANY BY ID
-# =========================================================
-
-
 @router.get(
     "/dashboard/get-company/{company_id}"
 )
@@ -186,11 +136,6 @@ def get_admin_company(
         company_id=company_id,
         database=database,
     )
-
-
-# =========================================================
-# UPDATE CERTIFICATE STATUS
-# =========================================================
 
 
 @router.patch(
@@ -213,11 +158,6 @@ def update_certificate_status(
     )
 
 
-# =========================================================
-# UPDATE COMPANY STATUS
-# =========================================================
-
-
 @router.patch(
     "/dashboard/company/status/{company_id}",
     response_model=UpdateCompanyStatusResponse,
@@ -238,11 +178,6 @@ def update_company_status(
         admin_id=admin_id,
         reason=data.reason,
     )
-
-
-# =========================================================
-# COLORS
-# =========================================================
 
 
 @router.get(
@@ -301,11 +236,6 @@ def delete_color(
     )
 
 
-# =========================================================
-# CATALOGS
-# =========================================================
-
-
 @router.get(
     "/dashboard/get-catalogs",
     response_model=list[CatalogResponse],
@@ -325,8 +255,7 @@ def get_catalogs(
 )
 def create_catalog(
     data: CreateCatalogRequest = Depends(CreateCatalogRequest.as_form),
-    # Igual que create_advertisement (ver AdvertisementRouter): opcional,
-    # una categoría puede crearse sin imagen y agregársela después.
+    # Opcional: una categoría puede crearse sin imagen y agregársela después.
     image: UploadFile | None = File(None),
     nas: NasService = Depends(get_nas_service),
     database: Session = Depends(get_db),
@@ -394,11 +323,6 @@ def delete_catalog(
     )
 
 
-# =========================================================
-# SPECIFICATIONS (por catalogo)
-# =========================================================
-
-
 @router.get(
     "/dashboard/get-specifications/{catalog_id}",
     response_model=list[SpecificationResponse],
@@ -460,7 +384,6 @@ def delete_specification(
         database=database,
         specification_id=specification_id,
     )
-
 
 
 @router.get(
@@ -581,6 +504,5 @@ def delete_advertisement(
         advertisement_id=advertisement_id,
         nas=nas,
     )
-
 
 

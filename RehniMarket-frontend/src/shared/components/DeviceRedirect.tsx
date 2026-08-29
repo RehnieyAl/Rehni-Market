@@ -29,7 +29,6 @@ export default function MobileRedirect() {
           descarga nuestra aplicación oficial.
         </p>
 
-
         {isAndroid && (
           <a
             href={apkLink}
@@ -41,7 +40,6 @@ export default function MobileRedirect() {
             Descargar APK
           </a>
         )}
-
 
         {isIOS && (
           <div className="mt-8 rounded-2xl bg-gray-100 p-5 text-gray-600">
@@ -55,7 +53,6 @@ export default function MobileRedirect() {
           </div>
         )}
 
-
         {!isAndroid && !isIOS && (
           <div className="mt-8 rounded-2xl bg-gray-100 p-5 text-gray-600">
             <p>
@@ -63,7 +60,6 @@ export default function MobileRedirect() {
             </p>
           </div>
         )}
-
 
         <button
           onClick={continueWeb}

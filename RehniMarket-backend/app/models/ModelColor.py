@@ -21,7 +21,7 @@ class ColorVariant(Base):
     )
 
     hex_color: Mapped[str] = mapped_column(
-        String(7),   # #FF0000
+        String(7),
         nullable=False
     )
 
@@ -31,8 +31,7 @@ class ColorVariant(Base):
         cascade="all"
     )
 
-    # Productos que tienen este color como color PRINCIPAL (independiente
-    # de las variantes que lo usen, ver ProductVariant.color).
+    # Productos que usan este color como principal.
     products = relationship(
         "Product",
         back_populates="main_color",

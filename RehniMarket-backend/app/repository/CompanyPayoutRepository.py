@@ -8,9 +8,7 @@ from app.models.ModelCompanyPayout import CompanyPayout, PayoutStatusEnum
 
 
 def _with_relations(query):
-    # bank_account + rehnicoin_movement + company se necesitan siempre
-    # para armar CompanyPayoutResponse (ver PayoutService._to_response) -
-    # un solo joinedload evita el N+1 típico de listar liquidaciones.
+    # joinedload de bank_account/rehnicoin_movement/company: evita el N+1 al armar CompanyPayoutResponse.
     return query.options(
         joinedload(CompanyPayout.bank_account),
         joinedload(CompanyPayout.rehnicoin_movement),
@@ -84,11 +82,7 @@ def create_payout(database: Session, payout: CompanyPayout) -> CompanyPayout:
 
 
 def sum_company_payouts(database: Session, company_id: UUID) -> tuple[Decimal, Decimal]:
-    """
-    (gross_sales, commission_amount) acumulados de TODAS las liquidaciones
-    ya generadas para la empresa (lifetime) - ver
-    PayoutService.get_company_balance_service.
-    """
+    """(gross_sales, commission_amount) acumulados de todas las liquidaciones de la empresa."""
 
     row = (
         database.query(
@@ -103,11 +97,7 @@ def sum_company_payouts(database: Session, company_id: UUID) -> tuple[Decimal, D
 
 
 def sum_pending_net_amount(database: Session, company_id: UUID) -> Decimal:
-    """
-    Suma de net_amount de liquidaciones que todavía NO están en PAID - lo
-    que la empresa tiene pendiente de recibir (ver
-    PayoutService.get_company_balance_service).
-    """
+    """Suma de net_amount de las liquidaciones aún no PAID (pendiente de recibir)."""
 
     total = (
         database.query(func.coalesce(func.sum(CompanyPayout.net_amount), 0))

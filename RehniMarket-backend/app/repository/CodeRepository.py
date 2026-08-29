@@ -4,12 +4,12 @@ from sqlalchemy.orm import Session
 from app.models.ModelCode import Codes, TypeCode
 
 
-def create_code(database: Session,user_id: UUID,code: str,code_type: TypeCode,expires_at: datetime) -> Codes:
+def create_code(database: Session,user_id: UUID,code: str,code_type: TypeCode,expires_at: datetime,created_at: datetime | None = None) -> Codes:
     new_code = Codes(
         code=code,
         type=code_type,
         user_id=user_id,
-        created_at=datetime.utcnow(),
+        created_at=created_at or datetime.utcnow(),
         expires_at=expires_at
     )
 
@@ -19,8 +19,16 @@ def create_code(database: Session,user_id: UUID,code: str,code_type: TypeCode,ex
     return new_code
 
 def get_code(database: Session,user_id: UUID,code_type: TypeCode) -> Codes | None:
-
-    return database.query(Codes).filter(Codes.user_id == user_id,Codes.type == code_type).first()
+    # created_at DESC: normalmente solo hay una fila por usuario+tipo
+    # (create_code_service borra la anterior antes de insertar), pero si
+    # por lo que sea quedara mas de una, siempre gana la mas reciente -
+    # nunca un codigo viejo.
+    return (
+        database.query(Codes)
+        .filter(Codes.user_id == user_id, Codes.type == code_type)
+        .order_by(Codes.created_at.desc())
+        .first()
+    )
 
 
 def delete_code(database: Session,code: Codes) -> None:

@@ -9,14 +9,7 @@ interface ProductGalleryProps {
   onSelect: (url: string) => void;
 }
 
-// Galería del detalle de producto (ver ALCANCE > rediseño detalle de
-// producto, referencia design/product-detail-reference.png): imagen
-// principal grande + miniaturas. En desktop las miniaturas van en una
-// columna vertical A LA IZQUIERDA de la imagen principal (mismo orden que
-// la referencia); en mobile/tablet, al no haber espacio horizontal para
-// una columna angosta, pasan a una fila debajo de la imagen principal
-// (mismo patrón ya usado en Home/ProductCard: nunca se sacrifica
-// usabilidad táctil por copiar el layout desktop 1:1).
+// Galería del detalle: imagen principal + miniaturas (columna a la izquierda en desktop, fila debajo en mobile).
 export default function ProductGallery({
   images,
   productName,

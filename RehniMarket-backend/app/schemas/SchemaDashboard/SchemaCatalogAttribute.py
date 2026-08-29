@@ -1,9 +1,4 @@
-"""
-Gestion de atributos de catalogo por Admin/Owner (sistema generico de
-variantes - ver ModelCatalogAttribute.py). El Admin define, por
-categoria, que atributos existen, si son eje de variante o especificacion,
-y sus valores permitidos. La empresa solo selecciona.
-"""
+"""Schemas de gestión de atributos de catálogo (Admin/Owner). Ver ModelCatalogAttribute.py."""
 
 from uuid import UUID
 

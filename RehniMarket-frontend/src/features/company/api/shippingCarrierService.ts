@@ -1,7 +1,7 @@
 import { api } from "@/api/Client";
 import type { ShippingCarrierResponse } from "../types/response";
 
-// Transportadoras activas (ver ALCANCE > Transportadoras) - mismo patrón
+// Transportadoras activas - mismo patrón
 // que getCatalogs() (catalogService.ts): ruta pública, la Empresa no
 // tiene un endpoint autenticado propio para leer este catálogo global
 // administrado por Admin/Owner.

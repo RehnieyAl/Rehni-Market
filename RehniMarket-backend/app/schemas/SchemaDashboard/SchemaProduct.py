@@ -52,17 +52,13 @@ class ProductDetailResponse(BaseModel):
     descripcion: str
     is_active: bool
     created_at: datetime
-    # None = nunca eliminado (activo o solo desactivado con el toggle,
-    # ver ModelProduct.py > Product.deleted_at). Con fecha = eliminado
-    # por la empresa - así el dashboard puede distinguir "Inactivo" de
-    # "Eliminado" en vez de tratarlos como el mismo estado.
+    # None = nunca eliminado; con fecha = eliminado por la empresa (distinto de "Inactivo").
     deleted_at: datetime | None = None
 
     catalog_id: UUID
     catalog_name: str
 
-    # Color principal del producto (independiente del color de cada
-    # variante). Puede no tener ninguno asignado.
+    # Independiente del color de las variantes; puede no tener ninguno.
     main_color_id: UUID | None
     main_color: ProductColorResponse | None
 
@@ -71,44 +67,23 @@ class ProductDetailResponse(BaseModel):
 
 
 class UpdateProductRequest(BaseModel):
-    """
-    PATCH parcial: todos los campos son opcionales. Un campo ausente
-    (None) significa "no tocar" - no se pierde lo que ya existia.
-
-    No incluye is_active (ya tiene su propio endpoint dedicado,
-    change-status-my-product, para no duplicar el mismo campo por dos
-    caminos distintos) ni has_variants (bandera interna, no la gestiona
-    la empresa directamente).
-
-    Las imagenes (imagesProduct / imagesToDeleted) viajan aparte, como
-    parametros de archivo del router - no pueden ir dentro de un schema
-    de Form.
-    """
+    """PATCH parcial: campo ausente (None) = "no tocar". is_active y has_variants
+    no van acá. Las imágenes viajan aparte como parámetros de archivo del router."""
 
     nameProduct: str | None = Field(default=None, min_length=2, max_length=100)
     catalogId: str | None = None
     priceProduct: float | None = Field(default=None, ge=0)
     discountEnable: bool | None = None
-    # Porcentaje de descuento (0-100), no un monto absoluto en pesos - ver
-    # _compute_price_fields en app/services/publicService/Products.py.
+    # Porcentaje de descuento (0-100), no un monto absoluto.
     discountValue: float | None = Field(default=None, ge=0, le=100)
     stockProduct: int | None = Field(default=None, ge=0)
     descripcionProduct: str | None = Field(default=None, min_length=1)
-    # mainColorId ausente -> no tocar el color principal.
-    # mainColorId con un id -> asignar ese color.
-    # clearMainColor=True -> quitar el color principal (dejarlo en null).
-    # (Un mainColorId="" NO sirve para "limpiar": FastAPI resuelve un
-    # campo Form vacio como si no se hubiera enviado para tipos
-    # Optional[str], asi que necesita su propia bandera explicita.)
+    # clearMainColor como bandera aparte: un Form vacío no sirve para "limpiar".
     mainColorId: str | None = None
     clearMainColor: bool = False
-    # Mismo formato que en creacion: string JSON con
-    # [{specificationTemplateId, value}, ...]
+    # JSON: [{specificationTemplateId, value}, ...]
     technicalSpecProduct: str | None = None
-    # Id de una imagen YA EXISTENTE del producto que debe pasar a ser la
-    # principal (is_main=True), sin necesidad de borrarla y volver a
-    # subirla. Ausente -> no tocar cual imagen es la principal (salvo el
-    # ajuste automatico si la que era principal se elimino).
+    # Id de una imagen ya existente que pasa a ser la principal.
     mainImageId: str | None = None
 
     @classmethod

@@ -3,18 +3,12 @@ from pydantic import BaseModel, field_validator
 
 
 class UpdateInformationCompanyRequest(BaseModel):
-    """
-    Solo información PÚBLICA de la tienda (perfil público de empresa - ver
-    "Mi tienda" en el dashboard). El nombre del responsable de la cuenta y
-    el correo de acceso son datos de la CUENTA, no de la empresa - se
-    editan desde "Configuración de cuenta" (PATCH /auth/me), común a
-    cualquier rol, no aquí (ver ALCANCE > "no crear lógica duplicada").
-    """
+    """Solo información pública de la tienda. El nombre y el correo de la cuenta
+    se editan desde PATCH /auth/me, no aquí."""
 
     nameCompany: Optional[str] = None
     tellCompany: Optional[str] = None
     addressCompany: Optional[str] = None
-    # Descripcion publica de la empresa (perfil publico > "Descripcion").
     description: Optional[str] = None
 
     @field_validator("description")

@@ -15,13 +15,9 @@ class OrderItemResponse(BaseModel):
     variantId: UUID | None
     productName: str
     variantName: str | None
-    # Precio FINAL (con descuento ya aplicado) - lo que realmente se pagó.
+    # Precio final ya con descuento.
     unitPrice: Decimal
-    # Precio ANTES del descuento, snapshot del momento de la compra (ver
-    # ModelOrder.py > OrderItem.original_unit_price). None cuando no
-    # había descuento activo en ese momento, o en pedidos de antes de
-    # que existiera esta columna - en ambos casos NO hay descuento que
-    # mostrar, nunca se infiere a partir del precio actual del producto.
+    # Precio antes del descuento, snapshot al comprar. None si no había descuento.
     originalUnitPrice: Decimal | None = None
     quantity: int
     subtotal: Decimal
@@ -30,15 +26,7 @@ class OrderItemResponse(BaseModel):
 
 
 class OrderAddressResponse(BaseModel):
-    """
-    Snapshot de la dirección de entrega GUARDADO EN EL PEDIDO (ver
-    ModelOrder.py > Order.delivery_* y ALCANCE > "el pedido debe
-    conservar estos datos incluso si el usuario modifica la dirección
-    después") - no se lee desde Address en vivo. No es AddressResponse
-    completo (SchemaAddress.py): aquí no hace falta id/isDefault/
-    createdAt/country/postalCode, solo lo que la empresa necesita para
-    enviar el pedido (ver ALCANCE > Detalle pedido empresa).
-    """
+    """Snapshot de la dirección guardado en el pedido; no se lee de Address en vivo."""
 
     label: str | None
     fullName: str
@@ -50,8 +38,7 @@ class OrderAddressResponse(BaseModel):
 
 class OrderResponse(BaseModel):
     id: UUID
-    # Numero de referencia amigable ("RM-000001") - el frontend nunca
-    # debe mostrar `id` (UUID) al usuario (ver ALCANCE > punto 5).
+    # Referencia legible ("RM-000001"); el frontend nunca muestra `id` al usuario.
     reference: str
     status: str
     companyId: UUID
@@ -62,15 +49,11 @@ class OrderResponse(BaseModel):
     createdAt: datetime
     items: list[OrderItemResponse]
 
-    # Resumen liviano para listados (evita repetir todos los items) - el
-    # primer producto representa al pedido en la tarjeta/tabla.
+    # Resumen liviano para listados.
     firstItemName: str | None = None
     totalItems: int = 0
 
-    # Datos del comprador (ver ALCANCE > Refactor Pedidos Empresa, puntos
-    # 4 y 7) - se reutiliza el mismo OrderResponse tanto para el lado
-    # comprador (ve sus propios datos) como para el lado empresa (ve los
-    # datos de quien le compro), para no duplicar el schema.
+    # El mismo schema sirve para el lado comprador y el lado empresa.
     buyerName: str
     buyerEmail: str
     buyerPhoto: str | None = None
@@ -91,10 +74,7 @@ class UpdateOrderStatusRequest(BaseModel):
 
 
 class CheckoutSummaryResponse(BaseModel):
-    """
-    Resumen de checkout (ver ALCANCE > Fase 2): uno por empresa presente
-    en el carrito, mas los totales agregados.
-    """
+    """Un OrderResponse por empresa presente en el carrito, más los totales agregados."""
 
     orders: list[OrderResponse]
     subtotal: Decimal
@@ -104,14 +84,7 @@ class CheckoutSummaryResponse(BaseModel):
 
 
 class OrderStatusCountsResponse(BaseModel):
-    """
-    Conteos para las pestañas de "Pedidos" en el dashboard de empresa
-    (ver ALCANCE > Refactor Pedidos Empresa - pantalla única con
-    filtros). Ya vienen agrupados por pestaña (no por OrderStatusEnum
-    crudo) para que el frontend no tenga que conocer el mapeo
-    pestaña -> estados: `inProgress` = PROCESSING + SHIPPED, `completed`
-    = DELIVERED. `all` es el total sin filtrar.
-    """
+    """Conteos por pestaña: inProgress = PROCESSING + SHIPPED, completed = DELIVERED."""
 
     all: int
     pending: int

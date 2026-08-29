@@ -5,13 +5,7 @@ interface ProductRatingBadgeProps {
   reviewCount: number;
 }
 
-// Calificación promedio + total de opiniones, junto al nombre del
-// producto (ver ALCANCE > rediseño detalle de producto, requisito 2).
-// Reutiliza StarRating (mismo componente que el listado de reseñas y el
-// formulario) - datos reales del backend (product.average_rating/
-// review_count, ya calculados en publicService/Products.py), nunca
-// quemados. Si todavía no hay reseñas, no se muestra un promedio "0.0"
-// con 0 opiniones - simplemente no hay nada que mostrar todavía.
+// Calificación promedio + total de opiniones. Si no hay reseñas, no se muestra nada (nunca "0.0").
 export default function ProductRatingBadge({
   averageRating,
   reviewCount,

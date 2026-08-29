@@ -60,10 +60,7 @@ export default function Products() {
     }
   }, [page, search]);
 
-  // Conteos reales sobre toda la tabla de productos de la empresa (no
-  // solo la página actual) - mismo endpoint que ya usa el Inicio del
-  // dashboard (ver Home.tsx). Se recarga cada vez que una acción puede
-  // cambiar los conteos (crear, editar, activar/desactivar, eliminar).
+  // Conteos sobre toda la tabla de productos; se recargan tras cada acción que pueda cambiarlos.
   const loadSummary = useCallback(async () => {
     try {
       setSummaryLoading(true);
@@ -87,10 +84,7 @@ export default function Products() {
   }, [loadProducts]);
 
   useEffect(() => {
-    // Carga inicial de las estadísticas (no reutiliza `loadSummary`
-    // directamente como dependencia del efecto para no disparar un
-    // setState síncrono desde el cuerpo del efecto - `loadSummary` sigue
-    // disponible aparte para las acciones que cambian los conteos).
+    // Carga inicial de las estadísticas; no usa `loadSummary` como dependencia para evitar setState síncrono.
     let cancelled = false;
 
     const loadInitialSummary = async () => {
@@ -118,8 +112,7 @@ export default function Products() {
     };
   }, []);
 
-  // Crear/editar un producto también puede cambiar los conteos (activo,
-  // agotado por stock, etc.) - se refrescan ambos juntos.
+  // Crear/editar un producto puede cambiar los conteos; se refrescan ambos juntos.
   const handleProductSaved = () => {
     loadProducts();
     loadSummary();
@@ -163,12 +156,8 @@ export default function Products() {
 
       await deleteMyProduct(confirmDeleteId);
 
-      // Eliminación lógica (ver delete_product_service en el backend): el
-      // producto pasa a is_active=false + deleted_at=ahora, no se borra
-      // la fila. Se saca de la lista en memoria para el feedback
-      // inmediato - al recargar aparecerá con el badge "Eliminado" (ver
-      // más abajo, distinto de "Inactivo") en vez de desaparecer del
-      // todo.
+      // Eliminación lógica (is_active=false + deleted_at). Se saca de la lista en memoria;
+      // al recargar aparece con el badge "Eliminado".
       setProducts((prev) =>
         prev.filter((product) => product.id !== confirmDeleteId),
       );
@@ -322,13 +311,6 @@ export default function Products() {
                   </div>
 
                   <div className="flex gap-2">
-                    {/* Un producto eliminado ya no puede activarse ni
-                        volver a "eliminarse" (ver backend >
-                        change_product_status_service/
-                        delete_product_service, ambos rechazan con 404
-                        cuando deleted_at != NULL) - se ocultan estos dos
-                        botones en vez de dejarlos fallar con un error
-                        genérico al hacer click. */}
                     {!product.deleted_at && (
                       <button
                         onClick={() =>

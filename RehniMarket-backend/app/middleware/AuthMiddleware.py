@@ -4,7 +4,6 @@ from starlette.responses import JSONResponse
 from app.services.authentication.JWTService import verify_token
 
 from app.core.ErrorCodes import ErrorCodes
-from app.core.Exceptions import api_error
 
 from app.middleware.PublicRoutes import (
     PUBLIC_ROUTES,
@@ -34,13 +33,11 @@ async def auth_middleware(request: Request, call_next):
     ):
         return await call_next(request)
 
-    # /public/products/{product_id} (detalle publico). "/public/products/daily"
-    # ya coincidio arriba por igualdad exacta y nunca llega aqui.
+    # /public/products/{product_id} (detalle público).
     if path.startswith(PUBLIC_PRODUCT_DETAIL_PREFIX):
         return await call_next(request)
 
-    # /public/company/{company_id} y /public/company/{company_id}/products
-    # (perfil publico de empresa).
+    # /public/company/{company_id}[/products] (perfil público de empresa).
     if path.startswith(PUBLIC_COMPANY_PROFILE_PREFIX):
         return await call_next(request)
 
@@ -163,14 +160,8 @@ async def auth_middleware(request: Request, call_next):
                     },
                 )
 
-            # El bloqueo de una EMPRESA vive en Company.CompanyStatus, no en
-            # Users.isActive (ver ModelCompany.py / update_company_status).
-            # Sin este chequeo, una empresa bloqueada podia seguir usando
-            # cualquier endpoint protegido con un access token emitido antes
-            # del bloqueo: el JWT sigue siendo criptograficamente valido, y
-            # nada volvia a consultar el estado real de la empresa en cada
-            # request (ver AUDITORIA de bloqueo de cuentas). Mismo codigo/
-            # mensaje que ya usa login_service para este mismo caso.
+            # El bloqueo de una empresa vive en Company.CompanyStatus (no en Users.isActive);
+            # se revalida en cada request porque el JWT sigue siendo válido tras el bloqueo.
             if role == "company" and user.company and not user.company.CompanyStatus:
                 return JSONResponse(
                     status_code=403,

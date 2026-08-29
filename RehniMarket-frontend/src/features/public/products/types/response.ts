@@ -1,19 +1,15 @@
 import type { PublicProductCard } from "@/features/public/home/types/response";
 
-// Espejo de CatalogResponse (backend > app/schemas/SchemaPublic.py),
-// reutilizado para el filtro de categoría del listado público y para la
-// página pública Categorías (ver features/public/categories).
+// Espejo de CatalogResponse; usado por el filtro de categoría y la página Categorías.
 export interface PublicCatalog {
   id: string;
   name: string;
-  // Datos reales calculados en el backend (get_catalogs_service), no
-  // hardcodeados en el frontend.
+  // Calculado en el backend, no hardcodeado.
   product_count: number;
   image_url: string | null;
 }
 
-// Espejo de PublicProductsPaginatedResponse (backend > SchemaPublic.py) -
-// catálogo público completo con filtros (GET /public/products).
+// Espejo de PublicProductsPaginatedResponse: catálogo público con filtros (GET /public/products).
 export interface PublicProductsPaginated {
   page: number;
   limit: number;
@@ -22,8 +18,7 @@ export interface PublicProductsPaginated {
   products: PublicProductCard[];
 }
 
-// Filtros soportados por GET /public/products (ver
-// app/routers/publicRouters.py). Todos opcionales.
+// Filtros de GET /public/products; todos opcionales.
 export interface PublicProductsFilters {
   search?: string;
   catalogId?: string;
@@ -31,9 +26,7 @@ export interface PublicProductsFilters {
   maxPrice?: number;
   discount?: boolean;
   inStock?: boolean;
-  // Alimentados por los anuncios dinámicos por reglas (ver ALCANCE >
-  // Anuncios dinámicos) además de por la propia URL de /products - mismos
-  // parámetros reales que ya lee ProductsList.tsx.
+  // Alimentados por los anuncios dinámicos y por la URL de /products.
   minDiscount?: number;
   maxStock?: number;
   days?: number;
@@ -74,9 +67,7 @@ export interface PublicProductVariant {
   specifications: PublicProductSpecification[];
 }
 
-// Conteo real de reseñas activas por puntaje (ver ALCANCE > rediseño
-// detalle de producto, panel "Opiniones de compradores" - espejo de
-// PublicRatingDistributionResponse en SchemaPublic.py).
+// Conteo de reseñas activas por puntaje.
 export interface PublicRatingDistribution {
   five: number;
   four: number;
@@ -90,12 +81,10 @@ export interface PublicProductDetail {
   name: string;
   descripcion: string;
   catalog_name: string;
-  // Id real del catálogo - se usa para pedir "Productos relacionados"
-  // (GET /public/products?catalog=, ver RelatedProducts.tsx).
+  // Id del catálogo, para pedir "Productos relacionados".
   catalog_id: string;
   company_name: string;
-  // Datos minimos de la empresa para el bloque "Vendido por" (ver
-  // ProductDetail.tsx > "Ver perfil de empresa").
+  // Datos mínimos de la empresa para el bloque "Vendido por".
   company_id: string;
   company_logo: string | null;
   company_is_verified: boolean;
@@ -105,8 +94,7 @@ export interface PublicProductDetail {
   discount_percentage: number | null;
   final_price: string;
   stock: number;
-  // Resumen real de reseñas (ver ReviewsSection.tsx) - average_rating es
-  // null cuando review_count es 0, nunca 0 falso.
+  // average_rating es null cuando review_count es 0, nunca 0.
   average_rating: number | null;
   review_count: number;
   rating_distribution: PublicRatingDistribution;

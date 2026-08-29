@@ -14,11 +14,7 @@ interface CategoriesFilterBarProps {
   onSortChange: (value: CategorySort) => void;
 }
 
-// Barra de filtros sobre el grid (ver ALCANCE > rediseño Categorías):
-// buscador por nombre + dropdown de categoría (con los nombres reales que
-// devuelve el backend, no una lista fija) + ordenamiento. Todo se aplica
-// en el cliente (ver CategoriesGrid.tsx) - son pocas categorías, no hace
-// falta un endpoint aparte para esto.
+// Barra de filtros sobre el grid: buscador + dropdown de categoría + orden, todo en el cliente.
 export default function CategoriesFilterBar({
   search,
   onSearchChange,

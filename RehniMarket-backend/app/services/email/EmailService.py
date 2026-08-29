@@ -1,5 +1,4 @@
-# Este servicio email se encarga de enviar correos electrónicos
-# utilizando la cuenta de Gmail configurada en las variables de entorno.
+# Envía correos con la cuenta de Gmail configurada en las variables de entorno.
 import traceback
 
 import smtplib

@@ -1,8 +1,4 @@
-// Skeleton de una fila de liquidación (ver ALCANCE > requisitos UI:
-// Skeletons) - mismo lenguaje visual que ProductCardSkeleton (public
-// storefront): rounded-2xl, border-gray-200, animate-pulse. No existía un
-// skeleton de dashboard hasta este módulo (Orders.tsx/RehniCoin.tsx solo
-// mostraban texto "Cargando...").
+// Skeleton de una fila de liquidación.
 export default function PayoutRowSkeleton() {
   return (
     <div className="flex animate-pulse flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white p-5">

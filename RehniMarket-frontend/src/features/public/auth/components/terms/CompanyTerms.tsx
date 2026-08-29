@@ -8,7 +8,6 @@ export default function CompanyTerms() {
         y condiciones comerciales.
       </p>
 
-
       <h3 className="text-lg font-semibold">
         1. Registro empresarial
       </h3>
@@ -17,7 +16,6 @@ export default function CompanyTerms() {
         La empresa debe proporcionar información real, documentos
         válidos y datos necesarios para la validación.
       </p>
-
 
       <h3 className="text-lg font-semibold">
         2. Publicación de productos
@@ -28,7 +26,6 @@ export default function CompanyTerms() {
         incluyendo nombre, descripción, precio, stock e imágenes.
       </p>
 
-
       <h3 className="text-lg font-semibold">
         3. Responsabilidad comercial
       </h3>
@@ -38,7 +35,6 @@ export default function CompanyTerms() {
         clientes y gestionar correctamente sus pedidos.
       </p>
 
-
       <h3 className="text-lg font-semibold">
         4. Documentación empresarial
       </h3>
@@ -47,7 +43,6 @@ export default function CompanyTerms() {
         La empresa autoriza la validación de documentos necesarios
         para operar dentro de RehniMarket.
       </p>
-
 
       <h3 className="text-lg font-semibold">
         5. Aceptación

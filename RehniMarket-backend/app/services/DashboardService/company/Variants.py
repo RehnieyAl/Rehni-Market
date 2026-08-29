@@ -27,13 +27,7 @@ from app.schemas.SchemaDashboard.SchemaVariant import (
 from app.services.NasService import build_media_url
 
 
-# ==============================
-# HELPERS DE OWNERSHIP
-# ==============================
-# Validan siempre la cadena completa user_id -> company -> product ->
-# variant (ver ALCANCE > OWNERSHIP). Una empresa jamas puede tocar un
-# producto o variante de otra empresa.
-
+# Helpers de ownership: validan la cadena user_id -> company -> product -> variant.
 def _resolve_owned_product(user_id, product_id, database: Session):
 
     company = repo.get_company_by_user_id(database, user_id)
@@ -60,10 +54,6 @@ def _resolve_owned_variant(user_id, product_id, variant_id, database: Session):
 
     return company, product, variant
 
-
-# ==============================
-# SERIALIZACION
-# ==============================
 
 def _to_variant_response(variant: ProductVariant) -> VariantResponse:
 
@@ -117,10 +107,6 @@ def _to_variant_detail_response(variant: ProductVariant) -> VariantDetailRespons
     return VariantDetailResponse(**base.model_dump(), images=images, specifications=specifications)
 
 
-# ==============================
-# VARIANTES
-# ==============================
-
 def list_variants_service(user_id, product_id, database: Session) -> list[VariantResponse]:
 
     _, product = _resolve_owned_product(user_id, product_id, database)
@@ -173,16 +159,8 @@ def create_variant_service(
 
         database.add(new_variant)
 
-        # BUG: `Product.has_variants` es la bandera que
-        # `_has_visible_stock` (ver publicService/Products.py) usa para
-        # decidir si la disponibilidad se evalua con el stock del
-        # producto base o con el de sus variantes. Nunca se escribia
-        # aca, asi que quedaba en False para siempre (default del
-        # modelo) aunque el producto ya tuviera variantes reales - un
-        # producto con stock base 0 y variantes con stock terminaba
-        # oculto en busqueda/categorias/productos del dia porque el
-        # filtro seguia mirando Product.stock. Se corrige aca, en el
-        # unico lugar donde nace la primera variante de un producto.
+        # has_variants controla si la disponibilidad pública se evalúa por variante o
+        # por Product.stock (ver _has_visible_stock). Se marca aquí, al nacer la primera variante.
         product.has_variants = True
 
         database.flush()
@@ -213,9 +191,7 @@ def create_variant_service(
                         "Especificación no encontrada",
                     )
 
-                # La especificacion debe pertenecer al catalogo del
-                # producto - una empresa no puede usar una especificacion
-                # de otro catalogo (ver ALCANCE > punto 4).
+                # La especificación debe pertenecer al catálogo del producto.
                 if str(template.catalog_id) != str(product.catalog_id):
                     api_error(
                         409,
@@ -299,12 +275,7 @@ def update_variant_service(
             variant.discount_value = data.discountValue
 
         if (data.discountEnable is not None or data.discountValue is not None) and variant.discount_enable:
-            # Misma regla que update_product_service (ver
-            # app/services/DashboardService/company/Products.py): un
-            # descuento "activado" con porcentaje 0 queda invisible para el
-            # comprador (_compute_price_fields lo trata como sin
-            # descuento), asi que se rechaza al guardar en vez de guardarlo
-            # en silencio.
+            # Un descuento activado con porcentaje 0 sería invisible para el comprador: se rechaza al guardar.
             if not variant.discount_value or variant.discount_value <= 0:
                 api_error(
                     400,
@@ -337,10 +308,7 @@ def delete_variant_service(user_id, product_id, variant_id, database: Session):
         database.delete(variant)
         database.flush()
 
-        # Contraparte de create_variant_service: si esta era la ultima
-        # variante del producto, `has_variants` debe volver a False -
-        # si no, _has_visible_stock() seguiria evaluando disponibilidad
-        # por variantes (ya inexistentes) en vez de por Product.stock.
+        # Si era la última variante, has_variants vuelve a False.
         if not repo.list_variants_by_product(database, product.id):
             product.has_variants = False
 
@@ -359,10 +327,6 @@ def delete_variant_service(user_id, product_id, variant_id, database: Session):
         database.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-
-# ==============================
-# IMÁGENES
-# ==============================
 
 def list_variant_images_service(user_id, product_id, variant_id, database: Session) -> list[VariantImageResponse]:
 
@@ -393,9 +357,7 @@ def upload_variant_images_service(
         if not imagesVariant:
             api_error(400, ErrorCodes.INVALID_FILE, "Debe enviar al menos una imagen")
 
-        # Si la variante ya tiene una imagen principal, las nuevas entran
-        # como secundarias. Si no tiene ninguna, la primera imagen nueva se
-        # promueve automaticamente (mismo criterio que create-product).
+        # Si ya hay principal, las nuevas entran como secundarias; si no, se promueve la primera.
         has_main_already = any(image.is_main for image in variant.images)
 
         for index, file in enumerate(imagesVariant):
@@ -446,9 +408,7 @@ def delete_variant_image_service(
         database.delete(image)
         database.flush()
 
-        # Si la imagen eliminada era la principal, promovemos otra que
-        # quede - una variante nunca debe quedar sin principal si aun tiene
-        # imagenes (mismo criterio que update-my-product).
+        # Si la eliminada era la principal, se promueve otra que quede.
         if was_main:
             remaining_images = repo.list_variant_images(database, variant.id)
 
@@ -485,8 +445,7 @@ def set_main_variant_image_service(
         if not image:
             api_error(404, ErrorCodes.VARIANT_IMAGE_NOT_FOUND, "Imagen no encontrada")
 
-        # Una variante solo puede tener una imagen principal: se desmarca
-        # la anterior antes de asignar la nueva (ver ALCANCE > IMAGENES).
+        # Solo una imagen principal: se desmarca la anterior antes de asignar la nueva.
         repo.clear_main_image(database, variant.id)
         image.is_main = True
 
@@ -503,10 +462,6 @@ def set_main_variant_image_service(
         database.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-
-# ==============================
-# ESPECIFICACIONES
-# ==============================
 
 def list_variant_specifications_service(
     user_id, product_id, variant_id, database: Session
@@ -544,8 +499,7 @@ def create_variant_specification_service(
                 "Especificación no encontrada",
             )
 
-        # Misma regla que en la creacion de variante: la especificacion
-        # debe pertenecer al catalogo del producto.
+        # La especificación debe pertenecer al catálogo del producto.
         if str(template.catalog_id) != str(product.catalog_id):
             api_error(
                 409,

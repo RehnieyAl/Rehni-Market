@@ -9,6 +9,13 @@ import axios from "axios";
 export interface ApiErrorDetail {
   code?: string;
   message?: string;
+  // Campos extra que algunos errores adjuntan al detalle (ver
+  // app/core/Exceptions.py > api_error `extra`): segundos que faltan para
+  // reenviar el codigo (429 RESEND_COOLDOWN_ACTIVE) y estado de los
+  // contadores en el 400 EMAIL_NOT_VERIFIED del login.
+  retry_after?: number;
+  expires_in?: number;
+  resend_available_in?: number;
 }
 
 export function getApiErrorDetail(error: unknown): ApiErrorDetail | undefined {
