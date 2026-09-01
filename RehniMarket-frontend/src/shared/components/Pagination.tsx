@@ -8,7 +8,6 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-// Paginación reutilizable: anterior/siguiente + números + "…". No se renderiza con una sola página.
 export default function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
   if (totalPages <= 1) return null;
 

@@ -9,18 +9,14 @@ import type { ReportTargetType } from "../types/response";
 interface ReportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // Único componente de creación de reportes ("Reportar producto"/"Reportar empresa");
-  // solo cambian targetType/targetId.
   targetType: ReportTargetType;
   targetId: string;
-  // Nombre visible para el encabezado ("Reportar: X"); no se envía al backend.
   targetLabel: string;
 }
 
 const REASON_MAX_LENGTH = 150;
 const DESCRIPTION_MAX_LENGTH = 1000;
 
-// Mismo límite/tipos que el backend; se repite acá solo para feedback inmediato.
 const MAX_EVIDENCE_IMAGES = 5;
 const MAX_EVIDENCE_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_EVIDENCE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -47,12 +43,10 @@ export default function ReportModal({
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Los previews son object URLs en memoria; nada se sube hasta enviar. Se revocan al desmontar.
   useEffect(() => {
     return () => {
       evidences.forEach((evidence) => URL.revokeObjectURL(evidence.previewUrl));
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!isOpen) {
@@ -109,7 +103,6 @@ export default function ReportModal({
       setEvidences((prev) => [...prev, ...accepted]);
     }
 
-    // Permite volver a seleccionar el mismo archivo si se quitó antes.
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }

@@ -16,7 +16,6 @@ interface CategoriesFilterBarProps {
   onSortChange: (value: CategorySort) => void;
 }
 
-// Barra de filtros sobre el grid: buscador + dropdown de categoría + orden, todo en el cliente.
 export default function CategoriesFilterBar({
   search,
   onSearchChange,

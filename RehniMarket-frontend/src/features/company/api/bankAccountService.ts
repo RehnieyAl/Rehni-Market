@@ -2,8 +2,6 @@ import { api } from "@/api/Client";
 
 import type { BankAccount, BankAccountType } from "@/features/payouts/types/response";
 
-// CRUD de cuentas bancarias de la empresa contra /company/bank-accounts. El admin nunca las muta, solo las lee.
-
 export interface BankAccountFormPayload {
   accountHolder: string;
   documentNumber: string;

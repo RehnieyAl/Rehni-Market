@@ -1,4 +1,3 @@
-
 from fastapi import (
     APIRouter,
     Request,
@@ -255,7 +254,6 @@ def get_catalogs(
 )
 def create_catalog(
     data: CreateCatalogRequest = Depends(CreateCatalogRequest.as_form),
-    # Opcional: una categoría puede crearse sin imagen y agregársela después.
     image: UploadFile | None = File(None),
     nas: NasService = Depends(get_nas_service),
     database: Session = Depends(get_db),
@@ -421,10 +419,8 @@ def create_advertisement(
         CreateAdvertisementRequest.as_form
     ),
 
-    # Imagen obligatoria para escritorio
     image: UploadFile = File(...),
 
-    # Imagen opcional para móvil
     mobile_image: UploadFile | None = File(None),
 
     nas: NasService = Depends(get_nas_service),
@@ -451,10 +447,8 @@ def update_advertisement(
         UpdateAdvertisementRequest.as_form
     ),
 
-    # Nueva imagen desktop opcional
     image: UploadFile | None = File(None),
 
-    # Nueva imagen móvil opcional
     mobile_image: UploadFile | None = File(None),
 
     nas: NasService = Depends(get_nas_service),
@@ -504,5 +498,3 @@ def delete_advertisement(
         advertisement_id=advertisement_id,
         nas=nas,
     )
-
-

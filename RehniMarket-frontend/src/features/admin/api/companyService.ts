@@ -58,9 +58,6 @@ export async function updateCertificateStatus(
 export async function updateCompanyStatus(
   companyId: string,
   status: boolean,
-  // Obligatorio del lado del backend solo al SUSPENDER (status=false,
-  // ver ALCANCE > Suspensión de empresa) - opcional acá para no romper
-  // el desbloqueo, que nunca lo envía.
   reason?: string,
 ): Promise<UpdateCompanyStatusResponse> {
   const response = await api.patch<UpdateCompanyStatusResponse>(

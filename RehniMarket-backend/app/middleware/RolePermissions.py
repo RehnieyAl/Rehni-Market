@@ -1,5 +1,3 @@
-# Roles con bypass total en auth_middleware. OWNER hereda el acceso de ADMIN;
-# sus capacidades exclusivas se protegen a nivel de servicio.
 FULL_ACCESS_ROLES = {"admin", "owner"}
 
 ROLES_PERMISSIONS_ROUTERS = {
@@ -23,7 +21,6 @@ ROLES_PERMISSIONS_ROUTERS = {
         "/auth/me",
     ],
 
-    # OWNER esta en FULL_ACCESS_ROLES; esta lista nunca se evalua para el.
     "owner": [
         "/admin/dashboard/statistics",
         "/admin/dashboard/recent-activities",
@@ -56,17 +53,15 @@ ROLES_PERMISSIONS_ROUTERS = {
         "/company/dashboard/change-status-my-product/",
         "/company/dashboard/delete-my-product/",
         "/company/dashboard/update-my-product/",
-        # Cubre todo el CRUD de variantes (comparten este prefijo).
         "/company/dashboard/products/",
         "/company/dashboard/orders",
+        "/company/dashboard/shipping-carriers",
         "/company/bank-accounts",
         "/company/payouts",
         "/company/balance",
         "/auth/me",
     ],
 
-    # Solo USER puede comprar; se revalida el rol en cada servicio.
-    # "/wallet/recharge" no va aca: es exclusivo de ADMIN/OWNER.
     "user": [
         "/auth/me",
         "/cart",

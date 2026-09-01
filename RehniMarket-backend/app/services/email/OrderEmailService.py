@@ -18,7 +18,6 @@ from app.services.email.template.EmailOrder import (
     EmailOrderCancelled,
 )
 
-# Etiquetas en español por estado, alineadas con ORDER_STATUS_LABEL del frontend.
 STATUS_LABELS = {
     OrderStatusEnum.PENDING: "Pendiente",
     OrderStatusEnum.PAID: "Pagado",
@@ -30,17 +29,14 @@ STATUS_LABELS = {
 
 
 def _format_date(value) -> str:
-    # dd/mm/aaaa hh:mm sin depender del locale del sistema.
     return value.strftime("%d/%m/%Y %H:%M") if value else ""
 
 
 def _reference(order: Order) -> str:
-    # Nunca se expone order.id (UUID) al comprador.
     return f"RM-{order.order_number:06d}"
 
 
 def _build_address(order: Order) -> dict | None:
-    # Snapshot guardado en el pedido, nunca order.address en vivo.
     if not order.delivery_address:
         return None
 
@@ -60,7 +56,6 @@ def _build_items(order: Order) -> list[dict]:
         image_url = None
         product = item.product
 
-        # Lee la imagen actual del producto (OrderItem no la snapshotea); se omite si no hay.
         if product:
             main_image = next((img for img in product.images if img.is_main), None)
 

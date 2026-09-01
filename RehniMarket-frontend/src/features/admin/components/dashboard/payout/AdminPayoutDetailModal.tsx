@@ -16,12 +16,9 @@ interface AdminPayoutDetailModalProps {
   payoutId: string | null;
   isOpen: boolean;
   onClose: () => void;
-  // Se llama tras marcar como pagada, para que la lista/tabs detrás se
-  // refresquen.
   onPaid: () => void;
 }
 
-// Detalle de liquidación (admin): reutiliza PayoutDetailModal y agrega la acción "marcar como pagada".
 export default function AdminPayoutDetailModal({
   payoutId,
   isOpen,

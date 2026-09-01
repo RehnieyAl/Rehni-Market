@@ -1,4 +1,3 @@
-// Estados del certificado de la empresa (espejo de CompanyCertificateEnum).
 export type CompanyCertificateStatus = "pending" | "approved" | "rejected";
 
 export interface DashboardHomeResponse {
@@ -13,7 +12,6 @@ export interface DashboardHomeResponse {
   memberAT: string;
 }
 
-// Solo datos calculados sobre los productos; no hay ventas/ingresos/visitas.
 export interface ProductsSummaryResponse {
   total: number;
   active: number;
@@ -21,13 +19,15 @@ export interface ProductsSummaryResponse {
   out_of_stock: number;
 }
 
-// Solo información pública de la tienda; el nombre/correo de la cuenta van por GET /auth/me.
 export interface CompanyProfileResponse {
   id: string;
   nameCompany: string;
   addressCompany: string;
   description: string | null;
-  tellCompany: string;
+  CompanyNIT: string;
+  CompanyNITDV: string;
+  CompanyStatus: boolean;
+  suspensionReason: string | null;
   memberAT: string;
   logo?: string;
   banner?: string;
@@ -47,7 +47,6 @@ export interface MyProductResponse {
   stock: number;
   image: string | null;
   is_active: boolean;
-  // null = nunca eliminado; con fecha = eliminado por la empresa (distinto de "Inactivo").
   deleted_at: string | null;
 }
 
@@ -65,11 +64,10 @@ export interface ProductAttributePair {
   value: string;
 }
 
-// Identidad + especificaciones del producto padre. Precio, stock, descuento e
-// imágenes son de la variante y no se editan aquí.
 export interface ProductDetailResponse {
   id: string;
   name: string;
+  applies_tax: boolean;
   has_variants: boolean;
   descripcion: string;
   is_active: boolean;
@@ -104,18 +102,15 @@ export interface VariantResponse {
   id: string;
   name: string;
   sku: string | null;
-  // Pydantic serializa Decimal como string en JSON.
   price: string;
   stock: number;
   combo_key: string | null;
   deleted_at: string | null;
-  // Descuento propio de la variante.
   discount_enable: boolean;
   discount_value: string;
   discount_type: string | null;
   discount_starts_at: string | null;
   discount_ends_at: string | null;
-  // Precio efectivo resuelto por el backend (variante → producto → normal).
   effective_price: string;
   discount_percentage: number | null;
   discount_source: string | null;
@@ -129,7 +124,6 @@ export interface VariantDetailResponse extends VariantResponse {
   attribute_values: VariantAttributeValuePair[];
 }
 
-// POST /company/dashboard/products/{pid}/variants/generate
 export interface GeneratedCombination {
   options: VariantOptionPair[];
   combo_key: string;

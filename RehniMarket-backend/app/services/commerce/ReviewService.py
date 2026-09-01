@@ -167,7 +167,6 @@ def delete_my_review_service(user_id: UUID, role: str, review_id: UUID, database
         if review.user_id != user_id:
             api_error(403, ErrorCodes.FORBIDDEN, "No puedes eliminar la reseña de otro usuario.")
 
-        # Soft-delete: se desactiva, no se borra. Promedios y listados solo cuentan activas.
         review.is_active = False
 
         database.commit()

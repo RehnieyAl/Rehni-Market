@@ -5,7 +5,6 @@ import type {
   WalletRechargeHistoryPaginated,
 } from "@/features/wallet/types/response";
 
-// Módulo RehniCoin del panel admin. Identifica al usuario por email (no por userId como rechargeWallet).
 export async function rechargeWalletByEmail(
   email: string,
   amount: number,

@@ -17,7 +17,6 @@ const PAGE_SIZE = 10;
 
 type TabId = "all" | PayoutStatus;
 
-// Los 4 valores de PayoutStatusEnum + "Todos"; hoy solo se producen "pending"/"paid".
 const STATUS_TABS: { id: TabId; label: string }[] = [
   { id: "all", label: "Todas" },
   { id: "pending", label: "Pendientes" },
@@ -26,7 +25,6 @@ const STATUS_TABS: { id: TabId; label: string }[] = [
   { id: "failed", label: "Fallidas" },
 ];
 
-// Panel "Liquidaciones" del admin: listar, filtrar, ver detalle, generar y marcar como pagada.
 export default function AdminPayouts() {
   const [activeTab, setActiveTab] = useState<TabId>("all");
   const [page, setPage] = useState(1);
@@ -57,7 +55,6 @@ export default function AdminPayouts() {
     }
   }, [page, activeTab]);
 
-  // Diferido con setTimeout para no hacer setState síncrono dentro del efecto.
   useEffect(() => {
     const timeout = setTimeout(loadPayouts);
     return () => clearTimeout(timeout);

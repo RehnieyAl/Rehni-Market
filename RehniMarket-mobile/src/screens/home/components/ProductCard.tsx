@@ -1,39 +1,41 @@
-import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-import { formatPrice } from "@/utils/formatPrice";
-import { colors, fontSize, fontWeight, radii, spacing } from "@/theme";
+import { PriceBlock } from "@/components/product/PriceBlock";
+import { Rating } from "@/components/ui/Rating";
+import { useFavorites } from "@/features/favorites/hooks/useFavorites";
+import { useRequireUser } from "@/features/auth/hooks/useRequireUser";
+import { getApiErrorMessage } from "@/api/apiError";
+import { colors, fontSize, fontWeight, radii, shadows, spacing } from "@/theme";
 import type { PublicProductCard } from "@/types/product";
 
 interface Props {
   product: PublicProductCard;
 }
 
-// Componente reutilizable (ver Fase Home > PRODUCT CARD): no depende de
-// nada exclusivo de Home, así que Categorías/Búsqueda/Favoritos (fases
-// futuras) lo importan tal cual desde acá. Campos reales de
-// PublicProductCard - nada inventado.
-//
-// El corazón de favoritos es ESTADO LOCAL TEMPORAL: todavía no existe
-// FavoritesProvider (llega en su propia fase) - no hay nada real que
-// togglear. El botón de carrito, por la misma razón (no hay CartProvider
-// todavía), navega al detalle en vez de agregar - ver Fase Home > REGLA
-// IMPORTANTE, "no pasar todavía a carrito completo".
 export function ProductCard({ product }: Props) {
   const router = useRouter();
-  const [isFavorite, setIsFavorite] = useState(false);
+  const requireUser = useRequireUser();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
-  const outOfStock = product.stock <= 0;
+  const favorite = isFavorite(product.id);
 
-  const goToDetail = () => {
-    router.push({ pathname: "/(user)/product/[id]", params: { id: product.id } });
+  const handleToggleFavorite = () => {
+    if (!requireUser()) return;
+    toggleFavorite(product.id).catch((error) =>
+      Alert.alert("No se pudo actualizar", getApiErrorMessage(error, "Intenta de nuevo.")),
+    );
   };
 
   return (
-    <Pressable style={styles.container} onPress={goToDetail}>
+    <Pressable
+      style={styles.container}
+      onPress={() =>
+        router.push({ pathname: "/(user)/product/[id]", params: { id: product.id } })
+      }
+    >
       <View style={styles.imageWrapper}>
         {product.image ? (
           <Image source={{ uri: product.image }} style={styles.image} contentFit="contain" />
@@ -47,24 +49,16 @@ export function ProductCard({ product }: Props) {
           </View>
         )}
 
-        {outOfStock && (
-          <View style={styles.stockBadge}>
-            <Text style={styles.stockText}>Agotado</Text>
-          </View>
-        )}
-
         <Pressable
           style={styles.favoriteButton}
+          onPress={handleToggleFavorite}
           hitSlop={8}
-          onPress={(event) => {
-            event.stopPropagation();
-            setIsFavorite((prev) => !prev);
-          }}
+          accessibilityLabel={favorite ? "Quitar de favoritos" : "Agregar a favoritos"}
         >
           <Ionicons
-            name={isFavorite ? "heart" : "heart-outline"}
-            size={15}
-            color={isFavorite ? colors.primary : colors.textSecondary}
+            name={favorite ? "heart" : "heart-outline"}
+            size={16}
+            color={favorite ? colors.primary : colors.textSecondary}
           />
         </Pressable>
       </View>
@@ -74,28 +68,15 @@ export function ProductCard({ product }: Props) {
           {product.name}
         </Text>
 
-        <View style={styles.priceRow}>
-          <View style={styles.priceGroup}>
-            <Text style={styles.price}>
-              {formatPrice(product.discount_enabled ? product.final_price : product.price)}
-            </Text>
+        <PriceBlock
+          price={product.price}
+          finalPrice={product.final_price}
+          discountEnabled={product.discount_enabled}
+          discountPercentage={product.discount_percentage}
+          showBadge={false}
+        />
 
-            {product.discount_enabled && (
-              <Text style={styles.originalPrice}>{formatPrice(product.price)}</Text>
-            )}
-          </View>
-
-          <Pressable
-            style={styles.cartButton}
-            hitSlop={8}
-            onPress={(event) => {
-              event.stopPropagation();
-              goToDetail();
-            }}
-          >
-            <Ionicons name="cart-outline" size={14} color={colors.textOnPrimary} />
-          </Pressable>
-        </View>
+        <Rating value={product.average_rating} count={product.review_count} />
       </View>
     </Pressable>
   );
@@ -103,12 +84,12 @@ export function ProductCard({ product }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radii.md,
+    borderRadius: radii.lg,
     backgroundColor: colors.surface,
     overflow: "hidden",
+    ...shadows.card,
   },
   imageWrapper: {
     aspectRatio: 1,
@@ -125,8 +106,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: spacing.xs,
     top: spacing.xs,
-    backgroundColor: colors.primary,
-    borderRadius: radii.full,
+    backgroundColor: colors.success,
+    borderRadius: radii.sm,
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
@@ -135,65 +116,26 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.bold,
     color: colors.textOnPrimary,
   },
-  stockBadge: {
-    position: "absolute",
-    left: spacing.xs,
-    bottom: spacing.xs,
-    backgroundColor: colors.textMuted,
-    borderRadius: radii.full,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  stockText: {
-    fontSize: 10,
-    fontWeight: fontWeight.semibold,
-    color: colors.textOnPrimary,
-  },
   favoriteButton: {
     position: "absolute",
     right: spacing.xs,
     top: spacing.xs,
-    width: 26,
-    height: 26,
+    width: 28,
+    height: 28,
     borderRadius: radii.full,
     backgroundColor: colors.background,
     alignItems: "center",
     justifyContent: "center",
+    ...shadows.card,
   },
   info: {
     padding: spacing.sm,
-    gap: 4,
+    gap: spacing.xs,
   },
   name: {
     fontSize: fontSize.sm,
     fontWeight: fontWeight.medium,
     color: colors.textPrimary,
     minHeight: 34,
-  },
-  priceRow: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-  },
-  priceGroup: {
-    flex: 1,
-  },
-  price: {
-    fontSize: fontSize.base,
-    fontWeight: fontWeight.bold,
-    color: colors.primary,
-  },
-  originalPrice: {
-    fontSize: 11,
-    color: colors.textMuted,
-    textDecorationLine: "line-through",
-  },
-  cartButton: {
-    width: 26,
-    height: 26,
-    borderRadius: radii.full,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
   },
 });

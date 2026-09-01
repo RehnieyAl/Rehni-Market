@@ -1,4 +1,3 @@
-
 import axios from "axios";
 import { getAccessToken } from "./session";
 import { setupAuthInterceptor } from "./setupAuthInterceptor";
@@ -20,8 +19,6 @@ api.interceptors.request.use(
   },
 );
 
-// El orden importa: setupAuthInterceptor va antes del manejo genérico de errores para que un
-// 401 resuelto por el refresh no dispare la alerta global. Solo un 401 no recuperable llega a handleApiError.
 setupAuthInterceptor(api);
 
 api.interceptors.response.use(
@@ -31,4 +28,3 @@ api.interceptors.response.use(
     return Promise.reject(error);
   },
 );
-

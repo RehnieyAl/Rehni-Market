@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { Save, X } from "lucide-react";
 import axios from "axios";
 
 import { createAddress } from "../api/addressService";
 import { useAlert } from "@/shared/components/alert/useAlert";
+import { Button, Input, Textarea } from "@/shared/components/ui";
 
 import type { Address } from "../types/response";
 
@@ -18,14 +20,11 @@ const EMPTY_FORM = {
 };
 
 interface AddressFormProps {
-  // Se llama con la dirección recién creada; cada consumidor reacciona distinto.
   onSaved: (address: Address) => void;
   onCancel: () => void;
   hasExistingAddresses: boolean;
 }
 
-// Formulario "Nueva dirección", reutilizado en el checkout y en el dashboard.
-// `country` no es un campo (solo Colombia): se envía fijo, pero el backend lo exige.
 export default function AddressForm({ onSaved, onCancel, hasExistingAddresses }: AddressFormProps) {
   const { showAlert } = useAlert();
 
@@ -61,7 +60,6 @@ export default function AddressForm({ onSaved, onCancel, hasExistingAddresses }:
         address: form.address.trim(),
         phone: form.phone.trim(),
         additionalInstructions: form.additionalInstructions.trim() || undefined,
-        // La primera dirección ya queda predeterminada en el backend; este checkbox solo importa a partir de la segunda.
         isDefault: form.isDefault,
       });
 
@@ -83,49 +81,52 @@ export default function AddressForm({ onSaved, onCancel, hasExistingAddresses }:
   return (
     <div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field
+        <Input
           label="Nombre de referencia"
           placeholder="Casa, Oficina, Apartamento..."
           value={form.label}
-          onChange={(v) => handleChange("label", v)}
+          onChange={(e) => handleChange("label", e.target.value)}
         />
 
-        <Field
+        <Input
           label="Nombre completo"
           value={form.fullName}
-          onChange={(v) => handleChange("fullName", v)}
+          onChange={(e) => handleChange("fullName", e.target.value)}
         />
 
-        <Field label="Teléfono" value={form.phone} onChange={(v) => handleChange("phone", v)} />
+        <Input
+          label="Teléfono"
+          value={form.phone}
+          onChange={(e) => handleChange("phone", e.target.value)}
+        />
 
-        <Field
+        <Input
           label="Dirección"
           value={form.address}
-          onChange={(v) => handleChange("address", v)}
+          onChange={(e) => handleChange("address", e.target.value)}
         />
 
-        <Field label="Ciudad" value={form.city} onChange={(v) => handleChange("city", v)} />
+        <Input
+          label="Ciudad"
+          value={form.city}
+          onChange={(e) => handleChange("city", e.target.value)}
+        />
 
-        <Field
+        <Input
           label="Departamento"
           value={form.department}
-          onChange={(v) => handleChange("department", v)}
+          onChange={(e) => handleChange("department", e.target.value)}
         />
 
-        <div className="sm:col-span-2">
-          <label className="mb-1.5 block text-sm text-gray-700">
-            Indicaciones adicionales (opcional)
-          </label>
-
-          <textarea
-            value={form.additionalInstructions}
-            onChange={(e) => handleChange("additionalInstructions", e.target.value)}
-            placeholder="Ej. Apartamento 302, portería azul..."
-            rows={2}
-            maxLength={255}
-            className="w-full resize-none rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-red-500"
-          />
-        </div>
+        <Textarea
+          className="sm:col-span-2"
+          label="Indicaciones adicionales (opcional)"
+          value={form.additionalInstructions}
+          onChange={(e) => handleChange("additionalInstructions", e.target.value)}
+          placeholder="Ej. Apartamento 302, portería azul..."
+          rows={2}
+          maxLength={255}
+        />
       </div>
 
       {hasExistingAddresses && (
@@ -134,53 +135,25 @@ export default function AddressForm({ onSaved, onCancel, hasExistingAddresses }:
             type="checkbox"
             checked={form.isDefault}
             onChange={(e) => handleChange("isDefault", e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 accent-red-700"
+            className="h-4 w-4 rounded border-gray-300 accent-primary"
           />
           Dirección principal
         </label>
       )}
 
-      <div className="mt-6 flex gap-3">
-        <button
-          onClick={onCancel}
-          className="rounded-xl border px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
+      <div className="mt-6 flex justify-end gap-3">
+        <Button variant="outline" leadingIcon={<X size={16} />} onClick={onCancel}>
           Cancelar
-        </button>
+        </Button>
 
-        <button
+        <Button
+          loading={saving}
+          leadingIcon={<Save size={16} />}
           onClick={handleSubmit}
-          disabled={saving}
-          className="rounded-xl bg-red-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-50"
         >
-          {saving ? "Guardando..." : "Guardar dirección"}
-        </button>
+          {saving ? "Guardando…" : "Guardar dirección"}
+        </Button>
       </div>
-    </div>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-}) {
-  return (
-    <div>
-      <label className="mb-1.5 block text-sm text-gray-700">{label}</label>
-
-      <input
-        value={value}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-red-500"
-      />
     </div>
   );
 }

@@ -230,7 +230,6 @@ def generate_company_payout_service(
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
-# Periodos disponibles: solo meses con ventas DELIVERED sin liquidación generada.
 def list_available_payout_periods_service(
     company_id: UUID, database: Session
 ) -> list[PayoutAvailablePeriodResponse]:
@@ -243,7 +242,6 @@ def list_available_payout_periods_service(
     for month_start in month_starts:
         period_start, period_end = _month_period(month_start)
 
-        # Ya liquidado para ese periodo exacto (cualquier estado): no se vuelve a ofrecer.
         if repo.get_payout_by_period(database, company.id, period_start, period_end):
             continue
 
@@ -252,7 +250,6 @@ def list_available_payout_periods_service(
     return periods
 
 
-# Vista previa: mismas validaciones/cálculo que generar, solo lectura.
 def get_payout_preview_service(
     company_id: UUID, period_start: date, period_end: date, database: Session
 ) -> PayoutPreviewResponse:
@@ -289,7 +286,6 @@ def mark_payout_paid_service(payout_id: UUID, database: Session) -> CompanyPayou
 
         payout = repo.get_payout_by_id(database, payout.id)
 
-        # Correo al pasar a PAID; send_email nunca revienta el flujo que lo llama.
         send_payout_processed_email(payout)
 
         return _to_response(payout)

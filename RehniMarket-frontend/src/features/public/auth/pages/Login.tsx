@@ -7,6 +7,10 @@ import { loginUser } from "@/features/public/auth/api/authService";
 import { useAuth } from "@/features/public/auth/context/useAuth";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 import { consumePostLoginRedirect } from "@/api/session";
+import {
+  isPathAllowedForRole,
+  resolveRoleHome,
+} from "@/features/public/auth/roleAccess";
 import AuthLayout from "@/features/public/auth/components/AuthLayout";
 import { Button, Input } from "@/shared/components/ui";
 
@@ -34,17 +38,16 @@ export default function Login() {
     try {
       const res = await loginUser(form);
 
-      login(res);
+      await login(res);
 
-      // Vuelve al destino guardado antes del redirect (carrito, checkout, dashboard…),
-      // o a inicio si se entró directo a /login. Ver api/session.ts.
-      const redirectTo = consumePostLoginRedirect();
+      const requestedPath = consumePostLoginRedirect();
+      const target =
+        requestedPath && isPathAllowedForRole(requestedPath, res.role)
+          ? requestedPath
+          : resolveRoleHome(res.role);
 
-      navigate(redirectTo || "/", { replace: true });
+      navigate(target, { replace: true });
     } catch (err) {
-      // Credenciales inválidas, empresa pendiente/suspendida, etc. las muestra el
-      // sistema global de alertas (api/Client.ts > handleApiError). Aquí solo se
-      // maneja EMAIL_NOT_VERIFIED, que además necesita redirigir.
       if (axios.isAxiosError(err)) {
         const errorResponse = err.response?.data?.detail;
 

@@ -28,8 +28,6 @@ const SIZES: Record<ButtonSize, string> = {
   lg: "h-12 px-6 text-base",
 };
 
-// Cadena de clases del botón, para reutilizar el mismo lenguaje visual en
-// <Link>/<a> sin duplicar estilos.
 export function buttonClasses(
   opts: { variant?: ButtonVariant; size?: ButtonSize; className?: string } = {},
 ): string {

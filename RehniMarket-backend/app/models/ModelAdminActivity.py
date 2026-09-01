@@ -68,7 +68,6 @@ class AdminActivity(Base):
         nullable=True,
     )
 
-    # Motivo en texto libre (admin/owner). Campo general del log; hoy solo lo llena COMPANY_BLOCKED.
     reason: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
@@ -97,4 +96,3 @@ class AdminActivity(Base):
         foreign_keys=[target_company_id],
         back_populates="target_activities",
     )
-

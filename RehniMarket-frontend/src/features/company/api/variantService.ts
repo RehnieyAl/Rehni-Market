@@ -52,7 +52,6 @@ export async function deleteVariant(productId: string, variantId: string) {
   return data;
 }
 
-// El backend genera el producto cartesiano; el frontend nunca lo calcula.
 export async function generateCombinations(
   productId: string,
   attributeIds: string[],

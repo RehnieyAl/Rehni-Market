@@ -5,15 +5,12 @@ import ConfirmModal from "@/shared/components/ConfirmModal";
 interface UserStatusConfirmModalProps {
   isOpen: boolean;
   userName: string;
-  // true = la cuenta está activa y se va a bloquear.
   active: boolean;
   loading: boolean;
   onConfirm: () => void;
   onClose: () => void;
 }
 
-// Bloquear / desbloquear un usuario. Es un ConfirmModal con el tono y los
-// textos según la acción; no tiene forma propia.
 export default function UserStatusConfirmModal({
   isOpen,
   userName,

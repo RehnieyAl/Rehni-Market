@@ -10,9 +10,6 @@ interface Props {
   description: string;
 }
 
-// Placeholder mínimo compartido por las pestañas que todavía no tienen
-// lógica real (Categorías/Favoritos/Carrito - ver fase de navegación).
-// Cada una se reemplaza entera en su propia fase, esto no es la UI final.
 export function PlaceholderScreen({ icon, title, description }: Props) {
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>

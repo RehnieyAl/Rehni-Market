@@ -20,8 +20,9 @@ import type { SidebarItem } from "../components/dashboard/Sidebar";
 
 export type UserRole = "admin" | "company" | "user" | "owner";
 
-// Navegación base del panel de administración. OWNER la reutiliza completa y suma sus opciones exclusivas.
-const adminNavigation: SidebarItem[] = [
+export const OWNER_ONLY_NAV_IDS: string[] = ["payouts"];
+
+const adminSharedNavigation: SidebarItem[] = [
   {
     id: "home",
     text: "Inicio",
@@ -53,9 +54,9 @@ const adminNavigation: SidebarItem[] = [
     icon: <BarChart3 size={22} />,
   },
   {
-    id: "payouts",
-    text: "Liquidaciones",
-    icon: <Receipt size={22} />,
+    id: "carriers",
+    text: "Transportadoras",
+    icon: <Truck size={22} />,
   },
   {
     id: "wallet",
@@ -69,13 +70,22 @@ const adminNavigation: SidebarItem[] = [
   },
 ];
 
-// Opciones exclusivas de OWNER. Hoy vacío: la gestión de administradores vive dentro de la vista "Usuarios".
-const ownerExclusiveNavigation: SidebarItem[] = [];
+const ownerExclusiveNavigation: SidebarItem[] = [
+  {
+    id: "payouts",
+    text: "Liquidaciones",
+    icon: <Receipt size={22} />,
+  },
+];
+
+const ownerNavigation: SidebarItem[] = adminSharedNavigation.flatMap((item) =>
+  item.id === "wallet" ? [...ownerExclusiveNavigation, item] : [item],
+);
 
 export const dashboardNavigation: Record<UserRole, SidebarItem[]> = {
-  admin: adminNavigation,
+  admin: adminSharedNavigation,
 
-  owner: [...adminNavigation, ...ownerExclusiveNavigation],
+  owner: ownerNavigation,
 
   company: [
     {

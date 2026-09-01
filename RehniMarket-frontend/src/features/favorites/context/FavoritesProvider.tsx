@@ -11,10 +11,9 @@ interface Props {
   children: ReactNode;
 }
 
-// Centraliza GET /favorites una vez (solo con sesión de comprador) y expone los IDs favoritados
-// para que ProductCard/ProductDetail/el tab "Favoritos" compartan el mismo estado y el mismo toggle.
 export function FavoritesProvider({ children }: Props) {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
+  const identity = user?.email ?? null;
 
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -36,7 +35,6 @@ export function FavoritesProvider({ children }: Props) {
     }
   }, [role]);
 
-  // Función definida e invocada dentro del efecto para no disparar react-hooks/set-state-in-effect.
   useEffect(() => {
     const loadFavorites = async () => {
       if (role !== "user") {
@@ -56,7 +54,7 @@ export function FavoritesProvider({ children }: Props) {
     };
 
     loadFavorites();
-  }, [role]);
+  }, [role, identity]);
 
   const isFavorite = useCallback((productId: string) => favoriteIds.has(productId), [favoriteIds]);
 

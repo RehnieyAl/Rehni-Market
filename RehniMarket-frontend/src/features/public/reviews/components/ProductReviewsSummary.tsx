@@ -18,7 +18,6 @@ const STARS: { key: keyof PublicRatingDistribution; label: number }[] = [
   { key: "one", label: 1 },
 ];
 
-// Panel izquierdo de "Opiniones": promedio + distribución + total, con los datos ya calculados por el backend.
 export default function ProductReviewsSummary({
   averageRating,
   reviewCount,

@@ -36,13 +36,16 @@ def refresh_token_service(data: RefreshRequest,database: Session):
         if not user:
             api_error(404,ErrorCodes.USER_NOT_FOUND,"Usuario no encontrado.")
 
-        # Una cuenta bloqueada no recupera sesión por un refresh token previo al bloqueo:
-        # mismos chequeos y códigos que login_service.
         if not user.isActive:
             api_error(403,ErrorCodes.USER_BLOCKED,"Tu cuenta se encuentra bloqueada. Contacta con un administrador.")
 
         if user.role and user.role.name == "company" and user.company and not user.company.CompanyStatus:
-            api_error(403,ErrorCodes.COMPANY_SUSPENDED,"Tu empresa se encuentra suspendida.")
+            api_error(
+                403,
+                ErrorCodes.COMPANY_SUSPENDED,
+                "Tu empresa se encuentra suspendida.",
+                extra={"reason": user.company.suspension_reason} if user.company.suspension_reason else None,
+            )
 
         new_access_token = create_access_token(
             user_id=str(user.id),

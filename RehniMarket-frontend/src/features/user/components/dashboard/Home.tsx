@@ -23,15 +23,10 @@ import type { Order } from "@/features/orders/types/response";
 
 const RECOMMENDED_LIMIT = 4;
 
-// Los pedidos "en curso" son cualquiera que no haya terminado ni se haya
-// cancelado - mismo criterio que count_pending_user_orders en el backend
-// .
 const PENDING_STATUSES = new Set(["pending", "paid", "processing", "shipped"]);
 
 export default function Home() {
   const { user } = useAuth();
-  // Mismo estado global que ProductCard.tsx -
-  // evita un GET /favorites aparte solo para contar cuántos hay.
   const { favoriteIds, loading: favoritesLoading } = useFavorites();
 
   const [products, setProducts] = useState<PublicProductCard[]>([]);
@@ -82,7 +77,6 @@ export default function Home() {
 
   return (
     <>
-      {/* Bienvenida */}
       <div>
         <h1 className="flex items-center gap-2 text-2xl font-bold text-gray-900">
           Hola,{" "}
@@ -94,7 +88,6 @@ export default function Home() {
         </p>
       </div>
 
-      {/* Resumen rápido */}
       <section className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-3">
         <StatCard
           title="Pedidos pendientes"
@@ -118,7 +111,6 @@ export default function Home() {
         />
       </section>
 
-      {/* Último pedido */}
       <section className="mt-8">
         <h2 className="text-lg font-semibold text-gray-900">
           Último pedido
@@ -161,7 +153,6 @@ export default function Home() {
         )}
       </section>
 
-      {/* Recomendados para ti */}
       <section className="mt-8">
         <h2 className="text-lg font-semibold text-gray-900">
           Recomendados para ti

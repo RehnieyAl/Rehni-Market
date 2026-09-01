@@ -29,7 +29,6 @@ const STYLES: Record<AlertType, { wrap: string; icon: ReactNode }> = {
   },
 };
 
-// Toast global. Único patrón de alertas del sistema (ver AlertProvider).
 export default function AlertMessage({ type, message, onClose }: AlertMessageProps) {
   const style = STYLES[type];
 

@@ -12,9 +12,6 @@ import type { PublicCatalog } from "../types/response";
 
 const PAGE_SIZE = 12;
 
-// Catálogo público con filtros resueltos por GET /public/products.
-// El estado de los filtros vive en la URL (searchParams): links como
-// "/products?catalog=<id>" llegan ya filtrados y son compartibles.
 export default function ProductsList() {
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -24,18 +21,15 @@ export default function ProductsList() {
   const maxPriceParam = searchParams.get("maxPrice") ?? "";
   const discountOnly = searchParams.get("discount") === "1";
   const inStockOnly = searchParams.get("inStock") === "1";
-  // Alimentados por los anuncios dinámicos; sin control propio en el sidebar, solo se honran desde la URL.
   const minDiscountParam = searchParams.get("minDiscount");
   const maxStockParam = searchParams.get("maxStock");
   const daysParam = searchParams.get("days");
   const sort = searchParams.get("sort") ?? "";
   const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1);
 
-  // Buffer local para los inputs de precio; se debouncean antes de escribir a la URL.
   const [minPriceInput, setMinPriceInput] = useState(minPriceParam);
   const [maxPriceInput, setMaxPriceInput] = useState(maxPriceParam);
 
-  // Buscador "dentro de la categoría": escribe al mismo param `search` (search+catalog con AND).
   const [categorySearchInput, setCategorySearchInput] = useState(search);
 
   const [catalogs, setCatalogs] = useState<PublicCatalog[]>([]);
@@ -45,8 +39,6 @@ export default function ProductsList() {
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-
-  // Actualiza filtros en la URL; cualquier cambio de filtro vuelve a la página 1.
 
   const updateParams = (changes: Record<string, string | null>, resetPage = true) => {
     const next = new URLSearchParams(searchParams);
@@ -66,8 +58,6 @@ export default function ProductsList() {
     setSearchParams(next);
   };
 
-  // Cambiar de categoría limpia la búsqueda "dentro de la categoría".
-
   const handleCatalogChange = (nextCatalog: string) => {
     updateParams({ catalog: nextCatalog || null, search: null });
     setCategorySearchInput("");
@@ -82,7 +72,6 @@ export default function ProductsList() {
     setSearchParams(search && !catalog ? { search } : {});
   };
 
-  // Filtros que el usuario controla desde el panel (para el contador del botón móvil).
   const activeFilterCount = [
     !!catalog,
     !!minPriceParam,
@@ -94,8 +83,6 @@ export default function ProductsList() {
 
   const hasActiveFilters =
     activeFilterCount > 0 || !!minDiscountParam || !!maxStockParam || !!daysParam;
-
-  // Catálogos reales para el filtro de categoría.
 
   useEffect(() => {
     let cancelled = false;
@@ -111,8 +98,6 @@ export default function ProductsList() {
     };
   }, []);
 
-  // Sincroniza los inputs de precio si el filtro cambia desde afuera ("Limpiar filtros", link externo).
-
   useEffect(() => {
     const timeout = setTimeout(() => {
       setMinPriceInput(minPriceParam);
@@ -122,8 +107,6 @@ export default function ProductsList() {
     return () => clearTimeout(timeout);
   }, [minPriceParam, maxPriceParam]);
 
-  // Debounce 400ms de los inputs de precio antes de escribir a la URL.
-
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (minPriceInput === minPriceParam && maxPriceInput === maxPriceParam) return;
@@ -132,18 +115,13 @@ export default function ProductsList() {
     }, 400);
 
     return () => clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [minPriceInput, maxPriceInput]);
-
-  // Sincroniza el buscador de categoría si `search` cambia desde afuera.
 
   useEffect(() => {
     const timeout = setTimeout(() => setCategorySearchInput(search));
 
     return () => clearTimeout(timeout);
   }, [search]);
-
-  // Debounce 400ms del buscador de categoría; solo activo con una categoría seleccionada.
 
   useEffect(() => {
     if (!catalog) return;
@@ -155,10 +133,7 @@ export default function ProductsList() {
     }, 400);
 
     return () => clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categorySearchInput, catalog]);
-
-  // El fetch real: la fuente de verdad son los filtros de la URL, no los buffers locales.
 
   useEffect(() => {
     let cancelled = false;
@@ -216,8 +191,6 @@ export default function ProductsList() {
     page,
   ]);
 
-  // Categoría seleccionada, derivada de la lista de catálogos ya cargada.
-
   const selectedCatalog = catalog ? catalogs.find((c) => c.id === catalog) : undefined;
 
 
@@ -257,7 +230,6 @@ export default function ProductsList() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[264px_1fr] lg:gap-8">
-        {/* Panel de filtros — escritorio */}
         <aside className="hidden h-fit rounded-card border border-gray-200 bg-white p-5 shadow-card lg:block">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -280,7 +252,6 @@ export default function ProductsList() {
         </aside>
 
         <div>
-          {/* Barra de filtros — móvil / tablet */}
           <div className="mb-4 lg:hidden">
             <Button
               variant="outline"
@@ -311,7 +282,6 @@ export default function ProductsList() {
         </div>
       </div>
 
-      {/* Filtros — drawer móvil (reutiliza Modal: Esc, scroll-lock, foco) */}
       <Modal
         isOpen={filtersOpen}
         onClose={() => setFiltersOpen(false)}

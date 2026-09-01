@@ -2,7 +2,6 @@ import type { BadgeTone } from "@/shared/components/ui";
 
 import type { BankAccountType, PayoutStatus } from "../types/response";
 
-// Única fuente de verdad de la etiqueta/tono de cada estado de liquidación (empresa + admin).
 export const PAYOUT_STATUS_LABEL: Record<PayoutStatus, string> = {
   pending: "Pendiente",
   processing: "Procesando",

@@ -8,7 +8,6 @@ export interface CatalogAttributeOption {
   position: number;
 }
 
-// Espejo de PublicCatalogAttribute (GET /public/catalogs/{id}/attributes).
 export interface CatalogAttribute {
   id: string;
   name: string;
@@ -23,7 +22,6 @@ export interface CatalogAttributes {
   variant_attributes: CatalogAttribute[];
 }
 
-// Valor asignado a un atributo, para producto o para variante.
 export interface AttributeValueInput {
   attributeId: string;
   value: string;

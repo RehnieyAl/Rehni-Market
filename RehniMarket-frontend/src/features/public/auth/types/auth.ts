@@ -1,14 +1,18 @@
 export type Role = "admin" | "company" | "user" | "owner";
 
+export type AuthStatus = "loading" | "authenticated" | "unauthenticated";
+
 export interface AuthUser {
   email: string;
   name: string;
   role: Role;
-  // Foto de la cuenta, común a cualquier rol. null si no subió ninguna.
+  tell: string;
   profileImagen: string | null;
 }
 
 export interface AuthContextType {
+
+  status: AuthStatus;
 
   accessToken: string | null;
 
@@ -22,10 +26,9 @@ export interface AuthContextType {
     access_token: string;
     refresh_token: string;
     role: Role;
-  }): void;
+  }): Promise<void>;
 
   logout(): void;
 
-  // Vuelve a pedir GET /auth/me y actualiza `user`; se llama tras editar la cuenta.
   refreshProfile(): Promise<void>;
 }

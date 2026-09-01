@@ -6,7 +6,6 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 class RechargeWalletRequest(BaseModel):
-    # Recarga la billetera de otro usuario; solo admin/owner.
     userId: UUID
     amount: Decimal = Field(gt=0)
     description: str | None = Field(default=None, max_length=255)

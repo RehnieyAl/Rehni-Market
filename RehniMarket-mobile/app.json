@@ -1,6 +1,10 @@
 {
   "name": "RehniMarket",
-  "slug": "RehniMarket-mobile",
+  "slug": "RehniMarket",
+  "orientation": "default",
+  "ios": {
+    "supportsTablet": true
+  },
   "plugins": [
     "expo-secure-store",
     "expo-font"

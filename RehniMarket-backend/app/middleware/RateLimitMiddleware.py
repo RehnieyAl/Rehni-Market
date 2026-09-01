@@ -5,10 +5,11 @@ from fastapi import Request
 from starlette.responses import JSONResponse
 
 from app.core.ErrorCodes import ErrorCodes
+from app.Config import config
 
 
-REQUEST_LIMIT = 100
-TIME_WINDOW = 60
+REQUEST_LIMIT = config.REQUEST_LIMIT
+TIME_WINDOW = config.TIME_WINDOW
 
 requests = defaultdict(list)
 

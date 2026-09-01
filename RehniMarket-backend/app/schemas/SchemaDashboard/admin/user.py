@@ -26,7 +26,6 @@ class AdminUsersPaginatedResponse(BaseModel):
 
 class UpdateAdminUserRequest(BaseModel):
     email: EmailStr | None = None
-    # "owner" solo puede asignarlo otro owner; validado en el servicio.
     role: Literal["user", "admin", "owner"] | None = None
 
 

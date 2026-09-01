@@ -89,7 +89,7 @@ def _resolve_product_attributes(database: Session, items, catalog_id):
     return resolved
 
 
-def create_product_service(user_id,nameProduct,catalogId,priceProduct,stockProduct,descripcionProduct,technicalSpecProduct,imagesProduct,nas,database: Session,mainColorId=None):
+def create_product_service(user_id,nameProduct,catalogId,priceProduct,stockProduct,descripcionProduct,technicalSpecProduct,imagesProduct,nas,database: Session,mainColorId=None,appliesTax=True):
     try:
         user = (database.query(Users).filter(Users.id == user_id).first())
 
@@ -126,6 +126,7 @@ def create_product_service(user_id,nameProduct,catalogId,priceProduct,stockProdu
             price=priceProduct,
             stock=stockProduct,
             descripcion=descripcionProduct,
+            applies_tax=bool(appliesTax),
             company_id=company.id,
             catalog_id=catalog.id,
             main_color_id=main_color.id if main_color else None
@@ -229,6 +230,7 @@ def get_product_detail_service(user_id, product_id, database: Session) -> Produc
         discount_type=product.discount_type,
         discount_starts_at=product.discount_starts_at,
         discount_ends_at=product.discount_ends_at,
+        applies_tax=product.applies_tax,
         stock=product.stock,
         has_variants=product.has_variants,
         descripcion=product.descripcion,
@@ -310,13 +312,15 @@ def update_product_service(
             product.discount_value = data.discountValue
 
         if (data.discountEnable is not None or data.discountValue is not None) and product.discount_enable:
-            # Un descuento activado con valor 0 sería invisible para el comprador: se rechaza al guardar.
             if not product.discount_value or product.discount_value <= 0:
                 api_error(
                     400,
                     ErrorCodes.VALIDATION_ERROR,
                     "Para activar el descuento, el porcentaje de descuento debe ser mayor a 0.",
                 )
+
+        if data.appliesTax is not None:
+            product.applies_tax = data.appliesTax
 
         if data.stockProduct is not None:
             product.stock = data.stockProduct
@@ -355,7 +359,6 @@ def update_product_service(
             database.flush()
 
         if data.mainImageId is not None:
-            # Marca una imagen ya existente como principal sin volver a subirla.
             new_main_image = (
                 database.query(ProductImage)
                 .filter(
@@ -375,7 +378,6 @@ def update_product_service(
             new_main_image.is_main = True
 
         elif imagesToDeleted or imagesProduct:
-            # Si el producto quedó sin imagen principal, se promueve la primera que quede.
             remaining_images = (
                 database.query(ProductImage)
                 .filter(ProductImage.product_id == product.id)
@@ -473,8 +475,6 @@ def delete_product_service(user_id,product_id,database: Session):
 
         product = (database.query(Product).filter(Product.id == product_id,Product.company_id == search_user.company.id).first())
 
-        # Idempotente: un producto ya eliminado se trata como "no encontrado".
-        # Un producto solo desactivado (deleted_at=NULL) sí puede eliminarse.
         if not product or product.deleted_at is not None:
             api_error(404, ErrorCodes.PRODUCT_NOT_FOUND, "Producto no encontrado")
 

@@ -14,7 +14,6 @@ import AuthLayout from "@/features/public/auth/components/AuthLayout";
 import OtpInput from "@/features/public/auth/components/OtpInput";
 import { Button, Input } from "@/shared/components/ui";
 
-// mm:ss a partir de una cantidad de segundos (>= 0).
 function formatCountdown(totalSeconds: number): string {
   const safe = Math.max(0, Math.floor(totalSeconds));
   const minutes = Math.floor(safe / 60);
@@ -23,9 +22,6 @@ function formatCountdown(totalSeconds: number): string {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-// segundos -> timestamp absoluto (ms). Trabajar con un "momento objetivo"
-// y no con un contador decreciente en estado evita que el tiempo se
-// "congele" si la pestaña queda en segundo plano.
 function toDeadline(seconds: number | undefined | null): number | null {
   return typeof seconds === "number" && Number.isFinite(seconds)
     ? Date.now() + seconds * 1000
@@ -54,23 +50,16 @@ export default function VerifyEmail() {
   const [resending, setResending] = useState(false);
 
   const [code, setCode] = useState(["", "", "", "", "", ""]);
-  // Bump para devolver el foco a la primera casilla tras reenviar / cambiar correo.
   const [focusKey, setFocusKey] = useState(0);
 
-  // CONTADOR 1: expiración del código (5 min). null = no sabemos el estado
-  // todavía (p. ej. se llegó a esta pantalla sin pasar por login/registro)
-  // -> se muestra sin contador y con el reenvío disponible.
   const [codeDeadline, setCodeDeadline] = useState<number | null>(() =>
     toDeadline(navState.expiresIn),
   );
 
-  // CONTADOR 2: cooldown de reenvío (60 s). Siempre hay uno; si no vino
-  // nada, arranca ya disponible.
   const [resendDeadline, setResendDeadline] = useState<number>(() =>
     toDeadline(navState.resendAvailableIn) ?? Date.now(),
   );
 
-  // Tick de 1 s solo para re-renderizar los contadores.
   const [nowTs, setNowTs] = useState(() => Date.now());
 
   useEffect(() => {
@@ -130,9 +119,6 @@ export default function VerifyEmail() {
       if (axios.isAxiosError(err)) {
         const error = err.response?.data?.detail;
 
-        // El backend es la única fuente de verdad de la expiración: si
-        // dice que expiró, se refleja aunque el contador local aún no
-        // hubiera llegado a 0.
         if (error?.code === ErrorCode.CODE_EXPIRED) {
           setCodeDeadline(Date.now());
         }
@@ -173,8 +159,6 @@ export default function VerifyEmail() {
       if (axios.isAxiosError(err)) {
         const detail = err.response?.data?.detail;
 
-        // El backend manda el cooldown real -> sincronizamos el contador
-        // con `retry_after` (el mensaje ya lo muestra la alerta global).
         if (
           detail?.code === ErrorCode.RESEND_COOLDOWN_ACTIVE &&
           typeof detail.retry_after === "number"
@@ -299,7 +283,6 @@ export default function VerifyEmail() {
           ariaLabel="Código de verificación"
         />
 
-        {/* CONTADOR 1 — vigencia del código */}
         {codeExpired ? (
           <div className="flex items-start gap-2.5 rounded-control border border-danger/30 bg-danger-bg p-3 text-sm text-danger">
             <AlertCircle size={18} className="mt-0.5 shrink-0" />
@@ -331,7 +314,6 @@ export default function VerifyEmail() {
         </Button>
       </form>
 
-      {/* CONTADOR 2 — cooldown de reenvío (separado del contador 1) */}
       <div className="mt-6 border-t border-gray-100 pt-5 text-center">
         <p className="text-sm text-gray-500">¿No recibiste el código?</p>
 

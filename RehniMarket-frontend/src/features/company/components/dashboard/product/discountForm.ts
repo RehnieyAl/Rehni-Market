@@ -16,7 +16,6 @@ interface DiscountSource {
   discount_ends_at: string | null;
 }
 
-// ISO (UTC) → valor de un <input type="datetime-local"> en hora local.
 function isoToLocalInput(iso: string | null): string {
   if (!iso) return "";
   const date = new Date(iso);

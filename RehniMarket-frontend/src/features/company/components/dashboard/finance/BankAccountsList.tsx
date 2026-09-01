@@ -13,7 +13,6 @@ import { useAlert } from "@/shared/components/alert/useAlert";
 
 import type { BankAccount } from "@/features/payouts/types/response";
 
-// Cuentas bancarias de la empresa. En la lista el número va enmascarado (últimos 4 dígitos); completo solo en el formulario.
 export default function BankAccountsList() {
   const { showAlert } = useAlert();
 
@@ -38,7 +37,6 @@ export default function BankAccountsList() {
     }
   };
 
-  // Diferido con setTimeout para no hacer setState síncrono dentro del efecto.
   useEffect(() => {
     const timeout = setTimeout(loadAccounts);
     return () => clearTimeout(timeout);

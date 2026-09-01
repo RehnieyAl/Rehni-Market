@@ -11,13 +11,11 @@ import type {
   ResendVerificationCodeRequest,
   ResetPasswordRequest,
   TokenResponse,
+  UpdateMeRequest,
   VerificationCodeState,
   VerifyEmailRequest,
 } from "@/types/auth";
 
-// Mismos endpoints exactos que RehniMarket-frontend/src/features/public/
-// auth/api/authService.ts (solo la porción de comprador - se deja afuera
-// registerCompany, exclusivo del rol company/owner).
 export async function registerUser(data: RegisterUserRequest): Promise<RegisterUserResponse> {
   const res = await api.post<RegisterUserResponse>("/auth/register-user", data);
   return res.data;
@@ -38,8 +36,6 @@ export async function changeEmail(
   return res.data;
 }
 
-// Boton "Reenviar codigo". El backend aplica el cooldown de 60 s (responde
-// 429 RESEND_COOLDOWN_ACTIVE con `retry_after`) e invalida el codigo anterior.
 export async function resendVerificationCode(
   data: ResendVerificationCodeRequest,
 ): Promise<MessageResponse & VerificationCodeState> {
@@ -67,5 +63,10 @@ export async function resetPassword(data: ResetPasswordRequest): Promise<Message
 
 export async function getProfile(): Promise<MeResponse> {
   const res = await api.get<MeResponse>("/auth/me");
+  return res.data;
+}
+
+export async function updateMe(data: UpdateMeRequest): Promise<MeResponse> {
+  const res = await api.patch<MeResponse>("/auth/me", data);
   return res.data;
 }

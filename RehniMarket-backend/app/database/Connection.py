@@ -5,7 +5,7 @@ from app.Config import config
 engine = create_engine(
     config.URL_DATABASE,
     pool_pre_ping=True,
-    echo=False ## True para activar logs - False para desactivar Logs
+    echo=False
 )
 
 SessionLocal = sessionmaker(

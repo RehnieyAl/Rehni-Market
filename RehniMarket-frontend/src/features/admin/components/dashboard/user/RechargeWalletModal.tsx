@@ -13,8 +13,6 @@ interface RechargeWalletModalProps {
   onSuccess?: () => void;
 }
 
-// RehniCoin: recarga de saldo exclusiva de ADMIN/OWNER (el backend lo
-// vuelve a validar
 export default function RechargeWalletModal({
   isOpen,
   userId,

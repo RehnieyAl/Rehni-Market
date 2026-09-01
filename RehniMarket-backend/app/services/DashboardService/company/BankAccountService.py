@@ -33,7 +33,6 @@ def _get_company_for_user(database: Session, user_id: UUID) -> Company:
 
 
 def _to_response(bank_account: CompanyBankAccount) -> BankAccountResponse:
-    # Mapeo a mano: modelo snake_case, schema camelCase.
     return BankAccountResponse(
         id=bank_account.id,
         accountHolder=bank_account.account_holder,
@@ -63,7 +62,6 @@ def create_bank_account_service(
     try:
         existing = repo.list_bank_accounts(database, company.id)
 
-        # La primera cuenta queda predeterminada automáticamente.
         is_default = data.isDefault or len(existing) == 0
 
         if is_default:
@@ -126,7 +124,6 @@ def update_bank_account_service(
             repo.clear_default(database, company.id)
             bank_account.is_default = True
         elif data.isDefault is False and bank_account.is_default:
-            # No se permite desmarcar la única predeterminada: siempre debe haber una.
             pass
 
         database.commit()
@@ -167,7 +164,6 @@ def delete_bank_account_service(
         repo.delete_bank_account(database, bank_account)
         database.flush()
 
-        # Si se eliminó la predeterminada y quedan otras, se promueve la más reciente.
         if was_default:
             remaining = repo.list_bank_accounts(database, company.id)
 

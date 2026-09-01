@@ -1,9 +1,28 @@
-import { X, MapPin, FileText, CalendarDays, Eye, Check, Ban } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+  MapPin,
+  FileText,
+  CalendarDays,
+  Eye,
+  Check,
+  Ban,
+  Building2,
+  UserRound,
+  Mail,
+  Phone,
+  Shield,
+  IdCard,
+} from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
 
-import { ErrorState, Spinner } from "@/shared/components/ui";
+import { Badge, Button, ErrorState, Modal, Skeleton, Spinner } from "@/shared/components/ui";
+import type { BadgeTone } from "@/shared/components/ui";
 import { getAdminCompany, updateCertificateStatus } from "@/features/admin/api/companyService";
-import type { AdminCompanyResponse } from "@/features/admin/types/response";
+import { getAdminUserById } from "@/features/admin/api/userService";
+import type {
+  AdminCompanyResponse,
+  AdminUserResponse,
+  CompanyCertificateStatus,
+} from "@/features/admin/types/response";
 import CertificateModal from "./CertificateModal";
 
 interface CompanyDetailModalProps {
@@ -13,17 +32,77 @@ interface CompanyDetailModalProps {
   onCompanyUpdated?: (company: AdminCompanyResponse) => void;
 }
 
-export default function CompanyDetailModal({ companyId, isOpen, onClose, onCompanyUpdated }: CompanyDetailModalProps) {
+const ROLE_LABEL: Record<string, string> = {
+  user: "Usuario",
+  admin: "Administrador",
+  company: "Empresa",
+  owner: "Propietario",
+};
+
+const CERT_TONE: Record<CompanyCertificateStatus, BadgeTone> = {
+  approved: "success",
+  rejected: "danger",
+  pending: "warning",
+};
+
+function certLabel(status: CompanyCertificateStatus): string {
+  if (status === "approved") return "Aprobado";
+  if (status === "rejected") return "Rechazado";
+  return "Pendiente";
+}
+
+export default function CompanyDetailModal({
+  companyId,
+  isOpen,
+  onClose,
+  onCompanyUpdated,
+}: CompanyDetailModalProps) {
   const [company, setCompany] = useState<AdminCompanyResponse | null>(null);
+  const [representative, setRepresentative] = useState<AdminUserResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
   const [certificateOpen, setCertificateOpen] = useState(false);
   const [updatingCertificate, setUpdatingCertificate] = useState(false);
 
+  useEffect(() => {
+    if (!isOpen || !companyId) return;
+
+    const load = async () => {
+      try {
+        setLoading(true);
+        setFailed(false);
+        setRepresentative(null);
+        setCertificateOpen(false);
+
+        const detail = await getAdminCompany(companyId);
+        setCompany(detail);
+
+        try {
+          const rep = await getAdminUserById(detail.user_id);
+          setRepresentative(rep);
+        } catch (repError) {
+          console.error("Error cargando el representante de la empresa:", repError);
+        }
+      } catch (error) {
+        console.error("Error cargando empresa:", error);
+        setFailed(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, [isOpen, companyId, reloadKey]);
+
   const handleCertificateStatus = async (status: "approved" | "rejected") => {
     if (!company) return;
+
     try {
       setUpdatingCertificate(true);
       await updateCertificateStatus(company.id, status);
+
       const updatedCompany: AdminCompanyResponse = {
         ...company,
         CompanyCertificateStatus: status,
@@ -37,132 +116,262 @@ export default function CompanyDetailModal({ companyId, isOpen, onClose, onCompa
     }
   };
 
-  useEffect(() => {
-    if (!isOpen || !companyId) return;
-    const loadCompany = async () => {
-      try {
-        setLoading(true);
-        const response = await getAdminCompany(companyId);
-        setCompany(response);
-      } catch (error) {
-        console.error("Error cargando empresa:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadCompany();
-  }, [isOpen, companyId]);
-
-  if (!isOpen) return null;
-
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-        <div className="flex max-h-[95vh] w-full max-w-5xl flex-col overflow-hidden rounded-card bg-white shadow-2xl">
-          <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-5">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Detalle de empresa</h2>
-              <p className="mt-1 text-sm text-gray-500">Información de la empresa registrada.</p>
+      <Modal
+        isOpen={isOpen && !certificateOpen}
+        onClose={onClose}
+        size="xl"
+        title="Detalle de empresa"
+        description="Información de la empresa y de su representante."
+        footer={
+          <Button variant="outline" onClick={onClose}>
+            Cerrar
+          </Button>
+        }
+      >
+        {loading && (
+          <div className="flex items-center justify-center gap-2 p-12 text-sm text-gray-500">
+            <Spinner /> Cargando empresa…
+          </div>
+        )}
+
+        {!loading && failed && (
+          <ErrorState
+            variant="plain"
+            title="No pudimos cargar la información de la empresa"
+            description="Intenta de nuevo en unos momentos."
+            onRetry={() => setReloadKey((k) => k + 1)}
+          />
+        )}
+
+        {!loading && !failed && company && (
+          <div className="space-y-6">
+            <div className="overflow-hidden rounded-card border border-gray-200">
+              <div className="relative h-40 w-full bg-gray-100 sm:h-52">
+                {company.CompanyBanner ? (
+                  <img
+                    src={company.CompanyBanner}
+                    alt={`Banner de ${company.nameCompany}`}
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">
+                    Sin banner
+                  </div>
+                )}
+
+                <div className="absolute -bottom-10 left-5 sm:left-6">
+                  {company.CompanyLogo ? (
+                    <img
+                      src={company.CompanyLogo}
+                      alt={company.nameCompany}
+                      className="h-24 w-24 rounded-card border-4 border-white bg-white object-cover shadow-card"
+                      onError={(e) => {
+                        e.currentTarget.style.visibility = "hidden";
+                      }}
+                    />
+                  ) : (
+                    <div className="flex h-24 w-24 items-center justify-center rounded-card border-4 border-white bg-brand-50 text-3xl font-bold text-primary shadow-card">
+                      {company.nameCompany.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 px-5 pb-5 pt-14 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                <div className="min-w-0">
+                  <h3 className="truncate text-xl font-bold text-gray-900">
+                    {company.nameCompany}
+                  </h3>
+                  <p className="mt-0.5 text-sm text-gray-500">
+                    NIT: {company.CompanyNIT}-{company.CompanyNITDV}
+                  </p>
+                </div>
+
+                <Badge tone={company.CompanyStatus ? "success" : "danger"} dot>
+                  {company.CompanyStatus ? "Activa" : "Suspendida"}
+                </Badge>
+              </div>
             </div>
-            <button type="button" onClick={onClose} className="rounded-xl p-2 text-gray-500 transition hover:bg-gray-100">
-              <X size={22} />
-            </button>
-          </div>
-          <div className="overflow-y-auto">
-            {loading && (
-              <div className="flex items-center justify-center gap-2 p-12 text-sm text-gray-500">
-                <Spinner /> Cargando empresa...
+
+            <section>
+              <SectionHeader icon={<Building2 size={18} />} title="Información de la empresa" />
+
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <Field icon={<Building2 size={18} />} label="Nombre de la empresa">
+                  {company.nameCompany}
+                </Field>
+
+                <Field icon={<IdCard size={18} />} label="NIT">
+                  {company.CompanyNIT}-{company.CompanyNITDV}
+                </Field>
+
+                <Field icon={<MapPin size={18} />} label="Dirección">
+                  {company.addressCompany || "No registrada"}
+                </Field>
+
+                <Field icon={<Shield size={18} />} label="Estado">
+                  <Badge tone={company.CompanyStatus ? "success" : "danger"} dot>
+                    {company.CompanyStatus ? "Activa" : "Suspendida"}
+                  </Badge>
+                </Field>
+
+                <Field icon={<FileText size={18} />} label="Estado del certificado">
+                  <Badge tone={CERT_TONE[company.CompanyCertificateStatus]}>
+                    {certLabel(company.CompanyCertificateStatus)}
+                  </Badge>
+                </Field>
+
+                <Field icon={<CalendarDays size={18} />} label="Fecha de registro">
+                  {new Date(company.created_at).toLocaleDateString("es-CO")}
+                </Field>
+
+                {company.CompanyStatus === false && company.suspensionReason && (
+                  <div className="sm:col-span-2">
+                    <Field icon={<Ban size={18} />} label="Motivo de suspensión">
+                      {company.suspensionReason}
+                    </Field>
+                  </div>
+                )}
               </div>
-            )}
-            {!loading && company && (
-              <div className="p-6">
-                <div className="overflow-hidden rounded-card border border-gray-200">
-                  <div className="relative h-52 w-full bg-gray-100">
-                    {company.CompanyBanner ? (
-                      <img src={company.CompanyBanner} alt={`Banner de ${company.nameCompany}`} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-400">Sin banner</div>
-                    )}
-                    <div className="absolute bottom-0 left-6 translate-y-1/2">
-                      {company.CompanyLogo ? (
-                        <img src={company.CompanyLogo} alt={company.nameCompany} className="h-28 w-28 rounded-card border-4 border-white bg-white object-cover shadow-lg" />
-                      ) : (
-                        <div className="flex h-28 w-28 items-center justify-center rounded-card border-4 border-white bg-gray-100 text-4xl font-bold text-gray-500 shadow-lg">
-                          {company.nameCompany.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
+
+              <div className="mt-4 rounded-card border border-gray-200 p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <h4 className="font-semibold text-gray-900">Certificado empresarial</h4>
+                    <p className="mt-1 text-sm text-gray-500">
+                      {company.CompanyCertificate
+                        ? "Certificado disponible para visualizar."
+                        : "La empresa no tiene certificado cargado."}
+                    </p>
                   </div>
-                  <div className="px-6 pb-6 pt-20">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <h3 className="text-2xl font-bold text-gray-900">{company.nameCompany}</h3>
-                        <p className="mt-1 text-gray-500">NIT: {company.CompanyNIT}-{company.CompanyNITDV}</p>
-                      </div>
-                      <CompanyStatus active={company.CompanyStatus} />
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-                  <InfoCard icon={<MapPin size={20} />} title="Dirección" value={company.addressCompany || "No registrada"} />
-                  <InfoCard icon={<FileText size={20} />} title="Estado del certificado" value={getCertificateStatus(company.CompanyCertificateStatus)} />
-                  <InfoCard icon={<CalendarDays size={20} />} title="Fecha de registro" value={new Date(company.created_at).toLocaleDateString("es-CO")} />
-                  <InfoCard icon={<FileText size={20} />} title="NIT" value={`${company.CompanyNIT}-${company.CompanyNITDV}`} />
-                  {/* Bloquear/suspender la empresa vive en el listado
-                      (Companies.tsx), no acá - se removió el duplicado. Se
-                      conserva el motivo como información de solo lectura. */}
-                  {company.CompanyStatus === false && company.suspensionReason && (
-                    <InfoCard icon={<FileText size={20} />} title="Motivo de suspensión" value={company.suspensionReason} />
+
+                  {company.CompanyCertificate && (
+                    <Button
+                      size="sm"
+                      leadingIcon={<Eye size={16} />}
+                      onClick={() => setCertificateOpen(true)}
+                    >
+                      Ver certificado
+                    </Button>
                   )}
                 </div>
-                <div className="mt-6 rounded-card border border-gray-200 p-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">Certificado empresarial</h3>
-                      <p className="mt-1 text-sm text-gray-500">
-                        {company.CompanyCertificate ? "Certificado disponible para visualizar." : "La empresa no tiene certificado cargado."}
-                      </p>
-                    </div>
-                    {company.CompanyCertificate && (
-                      <button type="button" onClick={() => setCertificateOpen(true)} className="flex shrink-0 items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-hover">
-                        <Eye size={18} />
-                        Ver certificado
-                      </button>
-                    )}
-                  </div>
-                  <div className="mt-4">
-                    <CertificateStatus status={company.CompanyCertificateStatus} />
-                  </div>
-                  {company.CompanyCertificate && company.CompanyCertificateStatus === "pending" && (
+
+                {company.CompanyCertificate &&
+                  company.CompanyCertificateStatus === "pending" && (
                     <div className="mt-5 border-t border-gray-200 pt-5">
-                      <h4 className="font-semibold text-gray-900">Revisión del certificado</h4>
-                      <p className="mt-1 text-sm text-gray-500">Revisa el documento antes de tomar una decisión.</p>
+                      <h5 className="font-semibold text-gray-900">Revisión del certificado</h5>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Revisa el documento antes de tomar una decisión.
+                      </p>
+
                       <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                        <button type="button" disabled={updatingCertificate} onClick={() => handleCertificateStatus("approved")} className="flex items-center justify-center gap-2 rounded-xl bg-success px-5 py-2.5 text-sm font-medium text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">
-                          <Check size={18} />
+                        <Button
+                          leadingIcon={<Check size={18} />}
+                          loading={updatingCertificate}
+                          disabled={updatingCertificate}
+                          onClick={() => handleCertificateStatus("approved")}
+                        >
                           {updatingCertificate ? "Actualizando…" : "Aprobar certificado"}
-                        </button>
-                        <button type="button" disabled={updatingCertificate} onClick={() => handleCertificateStatus("rejected")} className="flex items-center justify-center gap-2 rounded-xl bg-danger px-5 py-2.5 text-sm font-medium text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50">
-                          <Ban size={18} />
+                        </Button>
+
+                        <Button
+                          variant="danger"
+                          leadingIcon={<Ban size={18} />}
+                          disabled={updatingCertificate}
+                          onClick={() => handleCertificateStatus("rejected")}
+                        >
                           {updatingCertificate ? "Actualizando…" : "No aprobar"}
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   )}
-                </div>
               </div>
-            )}
-            {!loading && !company && (
-              <ErrorState variant="plain" title="No pudimos cargar la información de la empresa" />
-            )}
+            </section>
+
+            <section className="border-t border-gray-200 pt-6">
+              <SectionHeader icon={<UserRound size={18} />} title="Representante" />
+
+              {representative ? (
+                <>
+                  <div className="mt-4 flex items-center gap-4 rounded-card border border-gray-200 p-5">
+                    {representative.profileImagen ? (
+                      <img
+                        src={representative.profileImagen}
+                        alt={representative.fullName}
+                        className="h-16 w-16 shrink-0 rounded-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.visibility = "hidden";
+                        }}
+                      />
+                    ) : (
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xl font-bold text-primary">
+                        {representative.fullName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+
+                    <div className="min-w-0">
+                      <p className="truncate text-lg font-bold text-gray-900">
+                        {representative.fullName}
+                      </p>
+                      <p className="truncate text-sm text-gray-500">{representative.email}</p>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <Badge tone={representative.isActive ? "success" : "danger"} dot>
+                          {representative.isActive ? "Cuenta activa" : "Cuenta bloqueada"}
+                        </Badge>
+                        <Badge tone="brand">
+                          {ROLE_LABEL[representative.role] ?? representative.role}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <Field icon={<UserRound size={18} />} label="Nombre completo">
+                      {representative.fullName}
+                    </Field>
+
+                    <Field icon={<Mail size={18} />} label="Correo">
+                      {representative.email}
+                    </Field>
+
+                    <Field icon={<Phone size={18} />} label="Teléfono">
+                      {representative.tell || "No registrado"}
+                    </Field>
+
+                    <Field icon={<Shield size={18} />} label="Estado de la cuenta">
+                      <Badge tone={representative.isActive ? "success" : "danger"} dot>
+                        {representative.isActive ? "Activo" : "Bloqueado"}
+                      </Badge>
+                    </Field>
+
+                    <Field icon={<Shield size={18} />} label="Rol">
+                      <Badge tone="brand">
+                        {ROLE_LABEL[representative.role] ?? representative.role}
+                      </Badge>
+                    </Field>
+
+                    <Field icon={<CalendarDays size={18} />} label="Cuenta creada">
+                      {new Date(representative.created_at).toLocaleDateString("es-CO")}
+                    </Field>
+                  </div>
+                </>
+              ) : (
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <Skeleton key={index} className="h-20 rounded-card" />
+                  ))}
+                </div>
+              )}
+            </section>
           </div>
-          <div className="flex shrink-0 justify-end border-t border-gray-200 px-6 py-5">
-            <button type="button" onClick={onClose} className="rounded-xl border border-gray-300 px-5 py-2 transition hover:bg-gray-100">
-              Cerrar
-            </button>
-          </div>
-        </div>
-      </div>
+        )}
+      </Modal>
+
       {company?.CompanyCertificate && (
         <CertificateModal
           certificateUrl={company.CompanyCertificate}
@@ -175,36 +384,33 @@ export default function CompanyDetailModal({ companyId, isOpen, onClose, onCompa
   );
 }
 
-function InfoCard({ icon, title, value }: { icon: React.ReactNode; title: string; value: string }) {
+function SectionHeader({ icon, title }: { icon: ReactNode; title: string }) {
   return (
-    <div className="rounded-card border border-gray-200 p-5">
-      <div className="flex items-center gap-2 text-gray-500">
+    <div className="flex items-center gap-3">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-brand-50 text-primary">
         {icon}
-        <span className="text-sm">{title}</span>
-      </div>
-      <p className="mt-3 font-semibold text-gray-900">{value}</p>
+      </span>
+      <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
     </div>
   );
 }
 
-function CompanyStatus({ active }: { active: boolean }) {
+function Field({
+  icon,
+  label,
+  children,
+}: {
+  icon?: ReactNode;
+  label: string;
+  children: ReactNode;
+}) {
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-medium ${active ? "bg-success-bg text-success" : "bg-gray-100 text-gray-600"}`}>
-      {active ? "Activa" : "Inactiva"}
-    </span>
+    <div className="rounded-card border border-gray-200 p-4">
+      <div className="flex items-center gap-2 text-gray-500">
+        {icon}
+        <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
+      </div>
+      <div className="mt-2 text-sm font-semibold text-gray-900">{children}</div>
+    </div>
   );
-}
-
-function CertificateStatus({ status }: { status: AdminCompanyResponse["CompanyCertificateStatus"] }) {
-  return (
-    <span className={`rounded-full px-3 py-1 text-xs font-medium ${status === "approved" ? "bg-success-bg text-success" : status === "rejected" ? "bg-danger-bg text-danger" : "bg-warning-bg text-warning"}`}>
-      {getCertificateStatus(status)}
-    </span>
-  );
-}
-
-function getCertificateStatus(status: AdminCompanyResponse["CompanyCertificateStatus"]) {
-  if (status === "approved") return "Aprobado";
-  if (status === "rejected") return "Rechazado";
-  return "Pendiente";
 }

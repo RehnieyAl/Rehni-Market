@@ -32,14 +32,12 @@ class Catalog(Base):
     )
 
 
-    # object_name en NAS, no URL absoluta.
     image_url: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True
     )
 
 
-    # Orden en el catálogo público (ASC), no alfabético.
     display_order: Mapped[int] = mapped_column(
         Integer,
         default=0,

@@ -5,7 +5,6 @@ import { deriveVariantAxes } from "../utils/variantAxes";
 
 interface VariantAttributePickerProps {
   variants: PublicProductVariant[];
-  // { [attributeName]: value }
   selected: Record<string, string>;
   onChange: (attributeName: string, value: string) => void;
 }
@@ -19,10 +18,6 @@ export default function VariantAttributePicker({
 
   if (axes.length === 0) return null;
 
-  // Disponibilidad jerárquica: una opción del eje N está habilitada si existe alguna
-  // variante viva con stock que tenga ese valor y sea compatible con los ejes
-  // ANTERIORES ya elegidos (< N). Los ejes posteriores no cuentan porque se limpian
-  // al cambiar este eje; así cambiar un eje anterior nunca bloquea el selector.
   const isAvailable = (axisName: string, value: string): boolean => {
     const axisIndex = axes.findIndex((axis) => axis.name === axisName);
     const priorSelections = axes

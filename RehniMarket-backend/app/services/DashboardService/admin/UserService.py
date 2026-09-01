@@ -1,4 +1,3 @@
-
 from sqlalchemy.orm import Session
 from uuid import UUID
 
@@ -43,8 +42,6 @@ from app.services.NasService import build_media_url
 
 
 def _profile_image_url(user) -> str | None:
-    # profileImagen se guarda como object_name; el frontend necesita la URL de /media/proxy
-    # (mismo criterio que MeService._to_me_profile_response), no la ruta interna.
     return (
         build_media_url(f"uploads/{user.profileImagen}")
         if user.profileImagen
@@ -155,7 +152,6 @@ def update_admin_user_service(
             "Usuario no encontrado.",
         )
 
-    # Las cuentas owner solo pueden ser gestionadas por otro owner.
     if user.role and user.role.name == "owner" and acting_role != "owner":
         return api_error(
             403,
@@ -208,7 +204,6 @@ def update_admin_user_service(
                 "Una empresa no puede cambiar de rol.",
             )
 
-        # Solo un owner puede asignar (o quitar) el rol owner.
         if new_role == "owner" and acting_role != "owner":
             return api_error(
                 403,
@@ -284,7 +279,6 @@ def toggle_admin_user_status_service(
             "Usuario no encontrado.",
         )
 
-    # Las cuentas owner solo pueden ser bloqueadas/desbloqueadas por otro owner.
     if user.role and user.role.name == "owner" and acting_role != "owner":
         return api_error(
             403,
@@ -350,8 +344,6 @@ def delete_admin_user_service(
             "Usuario no encontrado.",
         )
 
-    # Las cuentas owner no pueden eliminarse desde esta operación (ni
-    # siquiera por otro owner) en esta etapa.
     if user.role and user.role.name == "owner":
         return api_error(
             403,
@@ -359,8 +351,6 @@ def delete_admin_user_service(
             "No se puede eliminar la cuenta de un Owner.",
         )
 
-    # Un admin no puede eliminar la cuenta de otro administrador; un owner
-    # sí puede, porque gestionar cuentas admin es una capacidad exclusiva de OWNER.
     if user.role and user.role.name == "admin" and acting_role != "owner":
         return api_error(
             403,

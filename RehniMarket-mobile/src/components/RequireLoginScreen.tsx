@@ -12,12 +12,6 @@ interface Props {
   message: string;
 }
 
-// Pantalla de acceso reutilizable para cualquier tab exclusivo de
-// comprador (Carrito/Favoritos/Perfil - ver Fase Acceso Público > CART
-// TAB / PROFILE TAB / FAVORITOS): un visitante ve esto en vez de un
-// crash, una pantalla vacía, o el placeholder de "próxima fase" (que
-// asumía sesión). Misma silueta que PlaceholderScreen, pero con una
-// acción real ("Iniciar sesión") en vez de un mensaje sin salida.
 export function RequireLoginScreen({ icon, title, message }: Props) {
   const router = useRouter();
 

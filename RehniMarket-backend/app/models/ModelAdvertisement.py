@@ -32,19 +32,16 @@ class Advertisement(Base):
         default=uuid.uuid4
     )
 
-    # Escritorio/tablet. Recomendado: 1920x600 px.
     image_url: Mapped[str] = mapped_column(
         String(255),
         nullable=False
     )
 
-    # Móvil. Recomendado: 1080x1000 px.
     mobile_image_url: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True
     )
 
-    # Con target_type != None lo calcula el backend; con None se usa tal cual lo escribió el admin.
     button_link: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True
@@ -67,32 +64,25 @@ class Advertisement(Base):
         default=datetime.utcnow
     )
 
-    # Anuncios dinámicos por reglas. Todas nullable: un anuncio manual no usa ninguna.
     target_type: Mapped[AdvertisementTargetType | None] = mapped_column(
         Enum(AdvertisementTargetType, name="advertisementtargettype"),
         nullable=True,
     )
 
-    # PRODUCT
     target_product_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("products.id", ondelete="SET NULL"), nullable=True
     )
 
-    # CATEGORY
     target_catalog_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("catalog.id", ondelete="SET NULL"), nullable=True
     )
 
-    # COMPANY
     target_company_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("company.id", ondelete="SET NULL"), nullable=True
     )
 
-    # PROMOTION / BLACK_FRIDAY / CYBER_DAYS / LIQUIDATION - % mínimo de descuento.
     minimum_discount: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    # LIQUIDATION - stock máximo. Combinable con minimum_discount o solo.
     maximum_stock: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    # NEW_RELEASE - productos creados en los últimos N días.
     max_age_days: Mapped[int | None] = mapped_column(Integer, nullable=True)

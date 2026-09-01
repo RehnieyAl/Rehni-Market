@@ -1,33 +1,26 @@
-import { useState } from "react";
-import { Dimensions, FlatList, StyleSheet, View } from "react-native";
+import { useRef, useState } from "react";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 
-import { colors, radii, spacing } from "@/theme";
+import { colors, fontSize, fontWeight, radii, spacing } from "@/theme";
 import type { PublicProductImage } from "@/types/product";
 
 interface Props {
   images: PublicProductImage[];
   productName: string;
+  width: number;
 }
 
-const HORIZONTAL_PADDING = spacing.lg;
-const GALLERY_WIDTH = Dimensions.get("window").width - HORIZONTAL_PADDING * 2;
-// Mismo alto base que RehniMarket-frontend/src/features/public/products/
-// components/ProductGallery.tsx (h-[320px] en mobile) - ahí crece por
-// breakpoint (sm:380/lg:560), acá no hace falta: es el único tamaño de
-// pantalla que existe en la app.
-const GALLERY_HEIGHT = 320;
+const MAX_THUMBS = 4;
+const THUMB_SIZE = 56;
 
-// Espejo funcional de ProductGallery.tsx de la web (imagen principal +
-// miniaturas), pero como swipe horizontal + dots en vez de columna de
-// miniaturas: references/ux-user.png (panel de detalle de producto) muestra
-// exactamente eso - una imagen grande con puntos de paginación debajo, sin
-// tira de miniaturas -, mismo patrón que ya usa BannerCarousel.tsx en Home.
-// Ordena main image primero (is_main), igual que selectedImage en la web.
-export function ProductGallery({ images, productName }: Props) {
+export function ProductGallery({ images, productName, width }: Props) {
   const [index, setIndex] = useState(0);
+  const listRef = useRef<FlatList<PublicProductImage>>(null);
+
+  const size = Math.max(1, Math.round(width));
 
   const orderedImages =
     images.length > 1
@@ -35,28 +28,42 @@ export function ProductGallery({ images, productName }: Props) {
       : images;
 
   const handleScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    setIndex(Math.round(event.nativeEvent.contentOffset.x / GALLERY_WIDTH));
+    setIndex(Math.round(event.nativeEvent.contentOffset.x / size));
+  };
+
+  const goTo = (target: number) => {
+    listRef.current?.scrollToIndex({ index: target, animated: true });
+    setIndex(target);
   };
 
   if (orderedImages.length === 0) {
     return (
-      <View style={[styles.frame, styles.empty]}>
-        <Ionicons name="image-outline" size={48} color={colors.textMuted} />
+      <View style={[styles.frame, styles.emptyFrame, { width: size }]}>
+        <Ionicons name="image-outline" size={40} color={colors.textMuted} />
+        <Text style={styles.emptyText}>Sin imagen</Text>
       </View>
     );
   }
 
+  const hasOverflow = orderedImages.length > MAX_THUMBS;
+  const visibleThumbs = hasOverflow
+    ? orderedImages.slice(0, MAX_THUMBS - 1)
+    : orderedImages.slice(0, MAX_THUMBS);
+  const overflowCount = orderedImages.length - (MAX_THUMBS - 1);
+
   return (
-    <View>
+    <View style={{ width: size }}>
       <FlatList
+        ref={listRef}
         data={orderedImages}
         keyExtractor={(image) => image.id}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={handleScrollEnd}
+        getItemLayout={(_, i) => ({ length: size, offset: size * i, index: i })}
         renderItem={({ item }) => (
-          <View style={styles.frame}>
+          <View style={[styles.frame, { width: size, height: size }]}>
             <Image
               source={{ uri: item.url }}
               style={styles.image}
@@ -69,10 +76,27 @@ export function ProductGallery({ images, productName }: Props) {
       />
 
       {orderedImages.length > 1 && (
-        <View style={styles.dots}>
-          {orderedImages.map((image, dotIndex) => (
-            <View key={image.id} style={[styles.dot, dotIndex === index && styles.dotActive]} />
+        <View style={styles.thumbs}>
+          {visibleThumbs.map((image, thumbIndex) => (
+            <Pressable
+              key={image.id}
+              onPress={() => goTo(thumbIndex)}
+              style={[styles.thumb, thumbIndex === index && styles.thumbActive]}
+              accessibilityLabel={`Ver imagen ${thumbIndex + 1}`}
+            >
+              <Image source={{ uri: image.url }} style={styles.image} contentFit="cover" />
+            </Pressable>
           ))}
+
+          {hasOverflow && (
+            <Pressable
+              onPress={() => goTo(MAX_THUMBS - 1)}
+              style={[styles.thumb, styles.thumbMore]}
+              accessibilityLabel={`Ver las otras ${overflowCount} imágenes`}
+            >
+              <Text style={styles.thumbMoreText}>+{overflowCount}</Text>
+            </Pressable>
+          )}
         </View>
       )}
     </View>
@@ -81,8 +105,6 @@ export function ProductGallery({ images, productName }: Props) {
 
 const styles = StyleSheet.create({
   frame: {
-    width: GALLERY_WIDTH,
-    height: GALLERY_HEIGHT,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.border,
@@ -91,27 +113,44 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: spacing.lg,
   },
-  empty: {
-    width: GALLERY_WIDTH,
+  emptyFrame: {
+    height: 200,
+    gap: spacing.sm,
+  },
+  emptyText: {
+    fontSize: fontSize.sm,
+    color: colors.textMuted,
   },
   image: {
     width: "100%",
     height: "100%",
   },
-  dots: {
+  thumbs: {
     marginTop: spacing.sm,
     flexDirection: "row",
+    gap: spacing.sm,
+  },
+  thumb: {
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+    overflow: "hidden",
+    alignItems: "center",
     justifyContent: "center",
-    gap: 6,
   },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: radii.full,
-    backgroundColor: colors.border,
+  thumbActive: {
+    borderColor: colors.primary,
+    borderWidth: 2,
   },
-  dotActive: {
-    width: 18,
-    backgroundColor: colors.primary,
+  thumbMore: {
+    backgroundColor: colors.primaryMuted,
+  },
+  thumbMoreText: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
+    color: colors.primary,
   },
 });

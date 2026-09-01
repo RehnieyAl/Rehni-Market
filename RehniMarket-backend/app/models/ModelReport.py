@@ -40,7 +40,6 @@ class Report(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
 
-    # Siempre de la sesión autenticada, nunca de un campo enviado por el frontend.
     reporter_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
     )

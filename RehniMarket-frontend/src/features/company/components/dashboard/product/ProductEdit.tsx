@@ -45,6 +45,7 @@ export default function EditProductModal({
   const [nameProduct, setNameProduct] = useState("");
   const [catalogId, setCatalogId] = useState("");
   const [descripcionProduct, setDescripcionProduct] = useState("");
+  const [appliesTax, setAppliesTax] = useState(true);
 
   useEffect(() => {
     if (!isOpen || !productId) return;
@@ -70,6 +71,7 @@ export default function EditProductModal({
         setNameProduct(detail.name);
         setCatalogId(detail.catalog_id);
         setDescripcionProduct(detail.descripcion);
+        setAppliesTax(detail.applies_tax);
 
         setAttributeValues(
           detail.attributes.map((pair) => ({
@@ -157,6 +159,7 @@ export default function EditProductModal({
       if (descripcionProduct !== product.descripcion) {
         patch.descripcionProduct = descripcionProduct;
       }
+      if (appliesTax !== product.applies_tax) patch.appliesTax = appliesTax;
       if (catalogId !== product.catalog_id || attributesChanged(product)) {
         patch.productAttributes = attributeValues.filter((item) => item.value.trim() !== "");
       }
@@ -240,6 +243,22 @@ export default function EditProductModal({
                         className="w-full resize-none rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-brand-600"
                       />
                     </div>
+
+                    <label className="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={appliesTax}
+                        onChange={(e) => setAppliesTax(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600/20"
+                      />
+                      <span className="text-sm text-gray-700">
+                        Este producto aplica IVA (19%)
+                        <span className="mt-0.5 block text-xs text-gray-500">
+                          Si lo activas, el comprador verá el IVA en el detalle y se sumará
+                          al pagar.
+                        </span>
+                      </span>
+                    </label>
                   </div>
                 </div>
 

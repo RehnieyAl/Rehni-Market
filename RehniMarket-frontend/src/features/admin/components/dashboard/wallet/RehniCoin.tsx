@@ -11,7 +11,6 @@ import type { WalletRechargeHistoryItem } from "@/features/wallet/types/response
 
 const EMPTY_FORM = { email: "", amount: "", description: "" };
 
-// Módulo RehniCoin, exclusivo ADMIN/OWNER; el backend revalida el rol en cada endpoint.
 export default function RehniCoin() {
   const { showAlert } = useAlert();
 
@@ -71,7 +70,6 @@ export default function RehniCoin() {
 
       setForm(EMPTY_FORM);
 
-      // Volver a la página 1: la recarga recién hecha queda primera (orden por fecha desc).
       if (page === 1) {
         await loadHistory(1);
       } else {
@@ -80,7 +78,6 @@ export default function RehniCoin() {
     } catch (error) {
       console.error("Error recargando RehniCoin:", error);
 
-      // Mensaje real de la API vía AlertMessage, nunca alert()/confirm().
       const message = axios.isAxiosError(error)
         ? error.response?.data?.detail?.message
         : undefined;

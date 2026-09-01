@@ -1,12 +1,8 @@
-# Este router se encarga de manejar las rutas relacionadas 
-# con la autenticación de usuarios, incluyendo registro, inicio de sesión,
-# verificación de correo electrónico, recuperación de contraseña y cierre de sesión.
 from fastapi import APIRouter,Depends, UploadFile, File, Request
 
 from sqlalchemy.orm import Session
 from app.database.Connection import get_db
 
-#Schemas
 from app.schemas.schemaAuth.SchemaRegister import (
     CreateUserRequest,
     CreateCompanyRequest
@@ -21,7 +17,6 @@ from app.schemas.schemaAuth.SchemaForgotPassword import ForgotPasswordRequest
 from app.schemas.schemaAuth.SchemaResetPassword import ResetPasswordRequest
 from app.schemas.schemaAuth.SchemaToken import RefreshRequest
 
-#Servicios
 from app.services.authentication.RegisterService import (
     register_user_service,
     register_company_service
@@ -40,8 +35,6 @@ from app.services.authentication.MeService import (
     update_me_profile_service,
     update_me_photo_service,
 )
-
-#Servicio de minio (Nasservice)
 
 from app.services.NasService import NasService, get_nas_service
 
@@ -116,14 +109,6 @@ def get_me(request: Request, database: Session = Depends(get_db)):
     )
 
 
-# ==============================
-# CONFIGURACIÓN DE CUENTA (común a cualquier rol)
-# ==============================
-# Nombre/correo/foto de perfil pertenecen a la CUENTA autenticada, no a
-# ningún módulo específico de rol - por eso viven bajo /auth, no bajo
-# /company/dashboard, /admin/dashboard, etc. (ver ALCANCE > "Configuración
-# de cuenta" es común a user/company/admin/owner).
-
 @router.patch("/me")
 def update_me(request: Request, data: UpdateMeRequest, database: Session = Depends(get_db)):
 
@@ -148,5 +133,3 @@ def update_me_photo(
         nas=nas,
         database=database,
     )
-
-

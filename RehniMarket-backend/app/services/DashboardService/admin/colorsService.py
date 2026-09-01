@@ -103,8 +103,6 @@ def delete_color_service(
             detail="No puedes eliminar un color que está siendo utilizado por productos."
         )
 
-    # Un color también puede ser el principal de un producto (Product.main_color_id):
-    # sin este chequeo, borrarlo daría un 500 por FK en vez de un 409 claro.
     if len(color.products) > 0:
         raise HTTPException(
             status_code=409,

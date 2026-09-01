@@ -7,7 +7,6 @@ from uuid import UUID
 from app.models.ModelAdvertisement import AdvertisementTargetType
 
 
-# Tipos que comparten el mecanismo de umbral mínimo de descuento.
 _DISCOUNT_THRESHOLD_TYPES = {
     AdvertisementTargetType.PROMOTION,
     AdvertisementTargetType.BLACK_FRIDAY,
@@ -39,11 +38,9 @@ def resolve_advertisement_destination(
         return f"/company/{target_company_id}" if target_company_id else None
 
     if target_type in _DISCOUNT_THRESHOLD_TYPES:
-        # Filtro por discount_value >= minimum_discount.
         return f"/products?minDiscount={minimum_discount}" if minimum_discount else None
 
     if target_type == AdvertisementTargetType.LIQUIDATION:
-        # minimum_discount y/o maximum_stock.
         params = []
 
         if minimum_discount:

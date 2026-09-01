@@ -1,19 +1,19 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { getProfile } from "@/features/public/auth/api/authService";
+import { clearTokens, clearAuthArtifacts } from "@/api/session";
 
 import { AuthContext } from "./AuthContext";
 
 import type {
   AuthContextType,
+  AuthStatus,
   AuthUser,
+  Role,
 } from "@/features/public/auth/types/auth";
 
-import type {
-  TokenResponse,
-  Role,
-} from "@/features/public/auth/types/response";
+import type { TokenResponse } from "@/features/public/auth/types/response";
 
 interface Props {
   children: ReactNode;
@@ -29,104 +29,97 @@ export function AuthProvider({ children }: Props) {
     localStorage.getItem("refreshToken")
   );
 
-  const [role, setRole] = useState<Role | null>(() => {
-    const storedRole = localStorage.getItem("role");
-
-    if (
-      storedRole === "admin" ||
-      storedRole === "company" ||
-      storedRole === "user" ||
-      storedRole === "owner"
-    ) {
-      return storedRole;
-    }
-
-    return null;
-  });
-
+  const [role, setRole] = useState<Role | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
 
-  useEffect(() => {
-    const loadProfile = async () => {
+  const [status, setStatus] = useState<AuthStatus>(() =>
+    localStorage.getItem("accessToken") ? "loading" : "unauthenticated"
+  );
 
+  const sessionRef = useRef(0);
+
+  useEffect(() => {
+    const session = ++sessionRef.current;
+
+    const resolveSession = async () => {
       if (!accessToken) {
         setUser(null);
         setRole(null);
+        setStatus("unauthenticated");
         return;
       }
 
-      try {
-        const profile = await getProfile();
+      setStatus("loading");
 
+      const profile = await getProfile().catch(() => null);
+
+      if (session !== sessionRef.current) return;
+
+      if (profile) {
         setUser(profile);
         setRole(profile.role);
-
-      } catch (error) {
-        console.error("Error cargando el perfil:", error);
+        setStatus("authenticated");
+        return;
       }
 
-    };
-
-    loadProfile();
-
-  }, [accessToken]);
-
-  // Vuelve a pedir GET /auth/me bajo demanda (tras editar la cuenta), sin recargar la página.
-  const refreshProfile = useCallback(async () => {
-    if (!accessToken) {
+      clearTokens();
+      setAccessToken(null);
+      setRefreshToken(null);
       setUser(null);
       setRole(null);
-      return;
-    }
+      setStatus("unauthenticated");
+    };
 
-    try {
-      const profile = await getProfile();
+    resolveSession();
 
-      setUser(profile);
-      setRole(profile.role);
-
-    } catch (error) {
-      console.error("Error cargando el perfil:", error);
-    }
+    return () => {
+      sessionRef.current += 1;
+    };
   }, [accessToken]);
 
-  const login = (data: TokenResponse) => {
+  const refreshProfile = useCallback(async () => {
+    if (!accessToken) return;
+
+    const session = sessionRef.current;
+    const profile = await getProfile().catch(() => null);
+
+    if (!profile || session !== sessionRef.current) return;
+
+    setUser(profile);
+    setRole(profile.role);
+    setStatus("authenticated");
+  }, [accessToken]);
+
+  const login = useCallback(async (data: TokenResponse) => {
+    sessionRef.current += 1;
+
+    setUser(null);
+    setRole(data.role);
+    setStatus("loading");
+
+    localStorage.setItem("accessToken", data.access_token);
+    localStorage.setItem("refreshToken", data.refresh_token);
+    localStorage.removeItem("role");
 
     setAccessToken(data.access_token);
     setRefreshToken(data.refresh_token);
-    setRole(data.role);
+  }, []);
 
-    localStorage.setItem(
-      "accessToken",
-      data.access_token
-    );
-
-    localStorage.setItem(
-      "refreshToken",
-      data.refresh_token
-    );
-
-    localStorage.setItem(
-      "role",
-      data.role
-    );
-
-  };
-
-  const logout = () => {
+  const logout = useCallback(() => {
+    sessionRef.current += 1;
 
     setAccessToken(null);
     setRefreshToken(null);
     setRole(null);
     setUser(null);
+    setStatus("unauthenticated");
 
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("role");
-
-  };
+    clearTokens();
+    clearAuthArtifacts();
+  }, []);
 
   const value: AuthContextType = {
+    status,
     accessToken,
     refreshToken,
     role,

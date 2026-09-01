@@ -22,7 +22,6 @@ class Address(Base):
 
     label: Mapped[str | None] = mapped_column(String(60), nullable=True)
 
-    # Quien recibe el pedido, no necesariamente el titular de la cuenta.
     full_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
 
     country: Mapped[str] = mapped_column(String(60), nullable=False)

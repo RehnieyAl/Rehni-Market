@@ -1,4 +1,3 @@
-# Envía correos con la cuenta de Gmail configurada en las variables de entorno.
 import traceback
 
 import smtplib
@@ -30,4 +29,3 @@ def send_email(to_email: str, subject: str, body: str):
         error = f"error al enviar correo a {to_email}, problema de bloqueo de red"
         print(error)
         traceback.print_exc()
-

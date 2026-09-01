@@ -10,7 +10,6 @@ interface CompanyRatingBadgeProps {
   className?: string;
 }
 
-// Único componente de reputación de empresa; consume GET /public/company/{id}/rating en los 3 lugares donde se usa.
 export default function CompanyRatingBadge({ companyId, className = "" }: CompanyRatingBadgeProps) {
   const [rating, setRating] = useState<CompanyRating | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,7 +37,6 @@ export default function CompanyRatingBadge({ companyId, className = "" }: Compan
     );
   }
 
-  // "Sin calificaciones todavía" cuando no hay reseñas; nunca "0.0 estrellas".
   if (!rating || rating.total_reviews === 0 || rating.average_rating === null) {
     return (
       <span className={`inline-flex items-center gap-1.5 text-sm text-gray-500 ${className}`}>

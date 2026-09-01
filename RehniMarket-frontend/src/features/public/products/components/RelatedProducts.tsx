@@ -9,8 +9,6 @@ import { getPublicProducts } from "../api/productsService";
 import type { PublicProductCard } from "@/features/public/home/types/response";
 
 const MAX_RELATED = 8;
-// Se piden MAX_RELATED + 1 por si el producto actual viene en su propio catálogo (se filtra después).
-// Misma categoría (catalog_id), vía GET /public/products.
 const FETCH_LIMIT = MAX_RELATED + 1;
 
 interface RelatedProductsProps {
@@ -56,7 +54,6 @@ export default function RelatedProducts({ catalogId, excludeProductId }: Related
     scrollRef.current?.scrollBy({ left: direction * 320, behavior: "smooth" });
   };
 
-  // Sin otros productos en el catálogo: se omite la sección entera.
   if (!loading && products.length === 0) {
     return null;
   }

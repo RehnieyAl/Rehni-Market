@@ -13,10 +13,6 @@ import type { CompanyPayout } from "@/features/payouts/types/response";
 
 const PAGE_SIZE = 10;
 
-// Historial de liquidaciones de la empresa (ver ALCANCE > Módulo de
-// liquidaciones, Fase 6) - solo lectura, GET /company/payouts +
-// GET /company/payouts/{id}. La empresa nunca genera ni marca como pagada
-// su propia liquidación (eso es exclusivo admin).
 export default function PayoutsList() {
   const [payouts, setPayouts] = useState<CompanyPayout[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,8 +35,6 @@ export default function PayoutsList() {
     }
   }, [page]);
 
-  // Diferido con setTimeout:
-  // evita hacer setState de forma síncrona dentro del efecto.
   useEffect(() => {
     const timeout = setTimeout(loadPayouts);
     return () => clearTimeout(timeout);

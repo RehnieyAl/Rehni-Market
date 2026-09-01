@@ -7,10 +7,6 @@ import { BANK_ACCOUNT_TYPE_LABEL } from "@/features/payouts/utils/payoutStatus";
 
 import type { PayoutPreview } from "@/features/payouts/types/response";
 
-// Vista previa financiera dentro de GeneratePayoutModal (ver ALCANCE >
-// mejora "vista previa"): mismos 3 montos + cuenta destino que ya
-// muestra PayoutDetailModal.tsx para una liquidación YA generada - acá
-// es la proyección de lo que se generaría, antes de confirmar.
 export default function PayoutPreviewCard({ preview }: { preview: PayoutPreview }) {
   return (
     <div className="space-y-4 rounded-card border border-gray-200 bg-gray-50 p-4">

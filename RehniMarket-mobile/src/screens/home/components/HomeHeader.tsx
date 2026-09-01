@@ -2,31 +2,15 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
+import { useCart } from "@/features/cart/hooks/useCart";
 import { colors, fontSize, fontWeight, spacing } from "@/theme";
 
-// Header compacto de Home (ver references/ux-user.png): menú + logo/
-// wordmark a la izquierda, notificaciones + carrito a la derecha.
-//
-// - El ícono de menú no abre nada todavía: la web no tiene un drawer
-//   equivalente (su navbar es una lista de links, no un menú lateral) y
-//   esta fase es solo Home, no navegación adicional - queda decorativo
-//   hasta que haga falta.
-// - El de notificaciones tampoco: no existe ningún endpoint/feature de
-//   notificaciones en el backend ni en la web (se verificó, no hay
-//   notificationService en ningún lado) - se muestra por fidelidad visual
-//   con la referencia, sin inventar un badge con datos falsos.
-// - El carrito SÍ navega (al tab real) pero todavía sin badge de
-//   cantidad: no hay CartProvider hasta la fase de Carrito, y no se va a
-//   mostrar un número inventado mientras tanto.
 export function HomeHeader() {
   const router = useRouter();
+  const { totalItems } = useCart();
 
   return (
     <View style={styles.container}>
-      <Pressable hitSlop={8}>
-        <Ionicons name="menu-outline" size={24} color={colors.textPrimary} />
-      </Pressable>
-
       <View style={styles.brand}>
         <Image
           source={require("../../../../assets/images/logo.png")}
@@ -36,15 +20,15 @@ export function HomeHeader() {
         <Text style={styles.wordmark}>RehniMarket</Text>
       </View>
 
-      <View style={styles.actions}>
-        <Pressable hitSlop={8}>
-          <Ionicons name="notifications-outline" size={22} color={colors.textPrimary} />
-        </Pressable>
+      <Pressable hitSlop={8} onPress={() => router.push("/(user)/(tabs)/cart")}>
+        <Ionicons name="cart-outline" size={24} color={colors.textPrimary} />
 
-        <Pressable hitSlop={8} onPress={() => router.push("/(user)/(tabs)/cart")}>
-          <Ionicons name="cart-outline" size={22} color={colors.textPrimary} />
-        </Pressable>
-      </View>
+        {totalItems > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{totalItems > 99 ? "99+" : totalItems}</Text>
+          </View>
+        )}
+      </Pressable>
     </View>
   );
 }
@@ -67,13 +51,25 @@ const styles = StyleSheet.create({
     height: 28,
   },
   wordmark: {
-    fontSize: fontSize.base,
+    fontSize: fontSize.lg,
     fontWeight: fontWeight.bold,
     color: colors.textPrimary,
   },
-  actions: {
-    flexDirection: "row",
+  badge: {
+    position: "absolute",
+    top: -6,
+    right: -8,
+    minWidth: 16,
+    height: 16,
+    paddingHorizontal: 3,
+    borderRadius: 8,
+    backgroundColor: colors.primary,
     alignItems: "center",
-    gap: spacing.md,
+    justifyContent: "center",
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: fontWeight.bold,
+    color: colors.textOnPrimary,
   },
 });

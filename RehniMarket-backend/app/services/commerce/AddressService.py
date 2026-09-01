@@ -28,7 +28,6 @@ def _require_buyer(role: str):
 
 
 def _to_address_response(address: Address) -> AddressResponse:
-    # Mapeo a mano: modelo snake_case, schema camelCase.
     return AddressResponse(
         id=address.id,
         label=address.label,
@@ -61,7 +60,6 @@ def create_address_service(
     try:
         existing = repo.list_addresses(database, user_id)
 
-        # La primera dirección queda predeterminada automáticamente.
         is_default = data.isDefault or len(existing) == 0
 
         if is_default:
@@ -171,7 +169,6 @@ def delete_address_service(
         repo.delete_address(database, address)
         database.flush()
 
-        # Si se eliminó la predeterminada y quedan otras, se promueve la más reciente.
         if was_default:
             remaining = repo.list_addresses(database, user_id)
 

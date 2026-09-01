@@ -8,7 +8,6 @@ from app.models.ModelCompanyPayout import CompanyPayout, PayoutStatusEnum
 
 
 def _with_relations(query):
-    # joinedload de bank_account/rehnicoin_movement/company: evita el N+1 al armar CompanyPayoutResponse.
     return query.options(
         joinedload(CompanyPayout.bank_account),
         joinedload(CompanyPayout.rehnicoin_movement),

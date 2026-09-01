@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field
 class CreateReviewRequest(BaseModel):
     productId: UUID
     rating: int = Field(ge=1, le=5)
-    # Opcional: una reseña de solo estrellas es válida.
     comment: str | None = Field(default=None, max_length=1000)
 
 

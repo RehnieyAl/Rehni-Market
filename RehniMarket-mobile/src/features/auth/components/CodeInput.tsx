@@ -11,11 +11,6 @@ interface Props {
   disabled?: boolean;
 }
 
-// Portado de los inputs de 6 dígitos de VerifyEmail.tsx/ResetPassword.tsx
-// en la web (mismo patrón: un dígito por casilla, auto-avanza al
-// escribir, retrocede con backspace en casilla vacía) - se usa igual en
-// verify-email y reset-password acá, por eso vive en features/auth/
-// components/ y no dentro de una sola pantalla.
 export function CodeInput({ length = 6, value, onChange, disabled = false }: Props) {
   const inputs = useRef<(TextInput | null)[]>([]);
 

@@ -31,7 +31,6 @@ class ColorVariant(Base):
         cascade="all"
     )
 
-    # Productos que usan este color como principal.
     products = relationship(
         "Product",
         back_populates="main_color",

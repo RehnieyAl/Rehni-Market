@@ -1,8 +1,14 @@
 venv
+.venv
 __pycache__
 *.pyc
 .env
 .git
+.pytest_cache
+backups
+*.dump
+*.tar.gz
+*.sha256
 pruebaHtmlbasic/loginempresa.html
 pruebaHtmlbasic/empresaregistro.html
 

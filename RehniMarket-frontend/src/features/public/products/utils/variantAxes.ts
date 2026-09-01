@@ -6,7 +6,6 @@ export interface VariantAxis {
   values: { value: string; hex: string | null }[];
 }
 
-// Deriva los ejes de las opciones de las variantes: no asume Color/Talla ni ningún atributo concreto.
 export function deriveVariantAxes(variants: PublicProductVariant[]): VariantAxis[] {
   const order: string[] = [];
   const byName = new Map<string, Map<string, string | null>>();
@@ -33,17 +32,12 @@ export function deriveVariantAxes(variants: PublicProductVariant[]): VariantAxis
   });
 }
 
-// Primera variante viva del producto, en el orden natural en que llega del backend
-// (`product_variants` no tiene columna de orden; el detalle público ya las entrega
-// filtradas a las vivas). Solo se usa para la imagen inicial / representación visual:
-// NO es la variante seleccionada por el usuario (`activeVariant`).
 export function firstLiveVariant(
   variants: PublicProductVariant[],
 ): PublicProductVariant | null {
   return variants[0] ?? null;
 }
 
-// Variante viva cuya combinación de opciones coincide exactamente con `selected` (todos los ejes elegidos).
 export function resolveVariant(
   variants: PublicProductVariant[],
   axes: VariantAxis[],

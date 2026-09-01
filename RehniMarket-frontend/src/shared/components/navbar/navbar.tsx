@@ -81,7 +81,6 @@ export default function Navbar() {
   const mobileSearchRef = useRef<HTMLDivElement>(null);
   const productsCacheRef = useRef<PublicProductCard[] | null>(null);
 
-  // Cierra el dropdown al hacer click fuera de los buscadores (desktop/mobile).
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -99,7 +98,6 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Menú móvil: cerrar con Esc y bloquear el scroll de fondo mientras está abierto.
   useEffect(() => {
     if (!open) return;
 
@@ -117,7 +115,6 @@ export default function Navbar() {
     };
   }, [open]);
 
-  // Búsqueda en vivo (debounced); limpiar el campo cierra el dropdown desde handleSearchChange.
   useEffect(() => {
     const query = search.trim().toLowerCase();
 
@@ -164,7 +161,6 @@ export default function Navbar() {
   const handleSearchChange = (value: string) => {
     setSearch(value);
 
-    // Limpiar la búsqueda cierra el dropdown de inmediato.
     if (!value.trim()) {
       setShowDropdown(false);
       setSearchResults([]);
@@ -221,10 +217,6 @@ export default function Navbar() {
                   {product.name}
                 </p>
 
-                {/* TODO(backend): PublicProductCardResponse no expone
-                    categoría (catalog_name) en la tarjeta de producto - se
-                    muestra la empresa en su lugar hasta que ese campo
-                    exista (ver app/schemas/SchemaPublic.py). */}
                 <p className="truncate text-xs text-gray-500">
                   {product.company_name}
                 </p>

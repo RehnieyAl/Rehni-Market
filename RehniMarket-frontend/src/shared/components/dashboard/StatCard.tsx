@@ -9,9 +9,7 @@ interface StatCardProps {
   value: string;
   subtitle?: string;
   icon?: ReactNode;
-  // Color del recuadro del icono. Solo estético; por defecto la marca.
   tone?: StatTone;
-  // "md" = KPI destacado; "sm" = celda de una grilla densa de métricas.
   size?: "sm" | "md";
   className?: string;
 }
@@ -25,7 +23,6 @@ const ICON_TONES: Record<StatTone, string> = {
   neutral: "bg-gray-100 text-gray-600",
 };
 
-// Tarjeta de métrica del panel. Una sola estructura para usuario / empresa / admin / owner.
 export default function StatCard({
   title,
   value,

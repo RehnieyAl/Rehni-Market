@@ -1,27 +1,23 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import type { StyleProp, ViewStyle } from "react-native";
 import { Image } from "expo-image";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
-import { colors, fontSize, fontWeight, radii } from "@/theme";
+import { colors, fontSize, fontWeight, radii, spacing } from "@/theme";
 import type { PublicCatalog } from "@/types/catalog";
 
 interface Props {
   category: PublicCatalog;
+  style?: StyleProp<ViewStyle>;
 }
 
-// Espejo funcional de RehniMarket-frontend/src/features/public/
-// categories/components/CategoryCard.tsx: imagen real (image_url, con
-// placeholder si es null) + nombre + cantidad de productos (dato real del
-// backend, no calculado acá). Layout compacto vertical en vez de la
-// tarjeta ancha de la web - así entra en el scroll horizontal que pide
-// references/ux-user.png (ver CategorySection.tsx).
-export function CategoryCard({ category }: Props) {
+export function CategoryCard({ category, style }: Props) {
   const router = useRouter();
 
   return (
     <Pressable
-      style={styles.container}
+      style={[styles.container, style]}
       onPress={() =>
         router.push({
           pathname: "/(user)/products",
@@ -31,11 +27,7 @@ export function CategoryCard({ category }: Props) {
     >
       <View style={styles.imageWrapper}>
         {category.image_url ? (
-          <Image
-            source={{ uri: category.image_url }}
-            style={styles.image}
-            contentFit="cover"
-          />
+          <Image source={{ uri: category.image_url }} style={styles.image} contentFit="cover" />
         ) : (
           <Ionicons name="image-outline" size={22} color={colors.textMuted} />
         )}
@@ -52,11 +44,8 @@ export function CategoryCard({ category }: Props) {
   );
 }
 
-const CARD_WIDTH = 84;
-
 const styles = StyleSheet.create({
   container: {
-    width: CARD_WIDTH,
     alignItems: "center",
     gap: 4,
   },
@@ -85,3 +74,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
+
+export const CATEGORY_CARD_MIN_WIDTH = 84;
+export const CATEGORY_CARD_GAP = spacing.md;

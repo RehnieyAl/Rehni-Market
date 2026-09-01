@@ -1,12 +1,8 @@
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { RequireLoginScreen } from "@/components/RequireLoginScreen";
-import { PlaceholderScreen } from "@/components/PlaceholderScreen";
+import { CartScreen } from "@/screens/cart/CartScreen";
 
-// (user) ya es público (ver Fase Acceso Público > (user)/_layout.tsx) -
-// este tab puede recibir visitantes, así que resuelve su propio gate acá
-// en vez de asumir sesión. `isUser` ya implica autenticado (ver
-// AuthContext.tsx), no hace falta comprobar `isAuthenticated` aparte.
-export default function CartScreen() {
+export default function CartRoute() {
   const { isUser } = useAuth();
 
   if (!isUser) {
@@ -19,13 +15,5 @@ export default function CartScreen() {
     );
   }
 
-  // PLACEHOLDER - carrito real (GET /cart + CartProvider) llega en su
-  // propia fase.
-  return (
-    <PlaceholderScreen
-      icon="cart-outline"
-      title="Carrito"
-      description="Tu carrito va a aparecer acá cuando agregues productos."
-    />
-  );
+  return <CartScreen />;
 }

@@ -7,7 +7,6 @@ interface TopbarProps {
   title: string;
   description: string;
   roleName: string;
-  // Abre el drawer de navegación en móvil/tablet.
   onMenuClick: () => void;
 }
 

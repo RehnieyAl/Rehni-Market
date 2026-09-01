@@ -8,13 +8,10 @@ interface OtpInputProps {
   onChange: (next: string[]) => void;
   length?: number;
   disabled?: boolean;
-  // Al cambiar este número, el foco vuelve a la primera casilla (tras reenviar el código).
   autoFocusKey?: number;
   ariaLabel?: string;
 }
 
-// Entrada de código de un dígito por casilla, con avance/retroceso de foco y
-// pegado. Presentacional: el valor y su forma (string[]) los gobierna quien lo usa.
 export default function OtpInput({
   value,
   onChange,

@@ -2,8 +2,11 @@ import { api } from "@/api/Client";
 
 import type { Order, OrdersPaginated, OrderStatusCounts } from "@/features/orders/types/response";
 
-// Pedidos recibidos por la empresa (el lado comprador vive en features/orders).
-// `statuses` se arma con URLSearchParams a mano: FastAPI espera ?status=a&status=b, no el status[]= de axios.
+export interface ActiveShippingCarrier {
+  id: string;
+  name: string;
+}
+
 export async function getCompanyOrders(
   page = 1,
   limit = 10,
@@ -39,6 +42,23 @@ export async function getCompanyOrderDetail(orderId: string): Promise<Order> {
 export async function updateCompanyOrderStatus(orderId: string, status: string): Promise<Order> {
   const { data } = await api.patch<Order>(`/company/dashboard/orders/${orderId}/status`, {
     status,
+  });
+  return data;
+}
+
+export async function getActiveShippingCarriers(): Promise<ActiveShippingCarrier[]> {
+  const { data } = await api.get<ActiveShippingCarrier[]>("/company/dashboard/shipping-carriers");
+  return data;
+}
+
+export async function updateCompanyOrderShipping(
+  orderId: string,
+  shippingCarrierId: string,
+  trackingNumber: string,
+): Promise<Order> {
+  const { data } = await api.patch<Order>(`/company/dashboard/orders/${orderId}/shipping`, {
+    shippingCarrierId,
+    trackingNumber,
   });
   return data;
 }

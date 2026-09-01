@@ -36,7 +36,6 @@ class Company(Base):
         nullable=False,
     )
 
-    # Nullable: empresas anteriores a este campo no tienen valor.
     description: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
@@ -79,8 +78,6 @@ class Company(Base):
         nullable=False,
     )
 
-    # Motivo de la suspensión vigente; se limpia al desbloquear. El historial
-    # completo vive en AdminActivity.reason.
     suspension_reason: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
@@ -122,4 +119,3 @@ class Company(Base):
     payouts: Mapped[list["CompanyPayout"]] = relationship(
         "CompanyPayout", back_populates="company"
     )
-

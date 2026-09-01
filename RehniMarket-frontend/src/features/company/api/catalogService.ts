@@ -7,7 +7,6 @@ export async function getCatalogs() {
   return data;
 }
 
-// Atributos configurados de una categoría (role product vs variant), fuente única del formulario.
 export async function getCatalogAttributes(catalogId: string): Promise<CatalogAttributes> {
   const { data } = await api.get<CatalogAttributes>(
     `/public/catalogs/${catalogId}/attributes`,

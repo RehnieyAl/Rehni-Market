@@ -26,9 +26,6 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    # Tipos originales (ver 29fe206320ce_add_tables): title String(150) NOT NULL,
-    # description Text NULL, button_text String(50) NULL. title se restaura con
-    # server_default="" para no romper si la tabla ya tiene filas; luego se quita.
     op.add_column(
         "advertisements",
         sa.Column("title", sa.String(length=150), nullable=False, server_default=""),

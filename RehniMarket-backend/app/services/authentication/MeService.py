@@ -12,7 +12,6 @@ from uuid import UUID
 
 
 def _to_me_profile_response(user) -> MeProfileResponse:
-    # profileImagen se guarda como object_name.
     profile_image_url = (
         build_media_url(f"uploads/{user.profileImagen}")
         if user.profileImagen
@@ -23,6 +22,7 @@ def _to_me_profile_response(user) -> MeProfileResponse:
         email=user.email,
         name=user.fullName,
         role=user.role.name,
+        tell=user.tell,
         profileImagen=profile_image_url,
     )
 
@@ -71,6 +71,9 @@ def update_me_profile_service(
         if data.fullName is not None:
             user.fullName = data.fullName
 
+        if data.tell is not None:
+            user.tell = data.tell
+
         database.commit()
         database.refresh(user)
 
@@ -86,7 +89,6 @@ def update_me_profile_service(
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
-# Foto de la cuenta (no el logo/banner de la empresa). Disponible para cualquier rol.
 def update_me_photo_service(
     user_id: UUID,
     photo: UploadFile,

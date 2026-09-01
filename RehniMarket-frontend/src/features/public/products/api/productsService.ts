@@ -16,7 +16,6 @@ export async function getPublicProductDetail(
   return data;
 }
 
-// Atributos configurados de una categoría (product vs variant), fuente única de la UI.
 export async function getCatalogAttributes(
   catalogId: string,
 ): Promise<PublicCatalogAttributes> {
@@ -27,14 +26,12 @@ export async function getCatalogAttributes(
   return data;
 }
 
-// Endpoint público de catálogos, para el filtro de categoría y la página Categorías.
 export async function getCatalogs(): Promise<PublicCatalog[]> {
   const { data } = await api.get<PublicCatalog[]>("/public/catalogs");
 
   return data;
 }
 
-// Catálogo público con filtros (categoría, precio, descuento, disponibilidad, orden).
 export async function getPublicProducts(
   filters: PublicProductsFilters = {},
 ): Promise<PublicProductsPaginated> {
@@ -58,8 +55,6 @@ export async function getPublicProducts(
   return data;
 }
 
-// Productos realmente en oferta (descuento vigente en una variante viva con stock,
-// o descuento del producto padre). Paginado, misma card que el catálogo.
 export async function getPublicOffers(
   page = 1,
   limit = 24,
@@ -71,7 +66,6 @@ export async function getPublicOffers(
   return data;
 }
 
-// "Novedades": productos publicados recientemente (Product.created_at), más nuevos primero.
 export async function getPublicNewProducts(
   page = 1,
   limit = 24,

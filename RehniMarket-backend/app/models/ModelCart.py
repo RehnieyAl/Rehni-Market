@@ -34,7 +34,6 @@ class CartItem(Base):
     __tablename__ = "cart_items"
 
     __table_args__ = (
-        # Mismo producto+variante no se repite: agregarlo de nuevo suma cantidad.
         UniqueConstraint(
             "cart_id", "product_id", "variant_id", name="uq_cart_item_product_variant"
         ),
@@ -52,7 +51,6 @@ class CartItem(Base):
         UUID(as_uuid=True), ForeignKey("products.id"), nullable=False
     )
 
-    # Nullable: un producto sin variantes se agrega sin variant_id.
     variant_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("product_variants.id"), nullable=True
     )

@@ -1,7 +1,3 @@
-// Misma silueta que la página real para no
-// mostrar una pantalla vacía mientras carga: galería con miniaturas
-// verticales + info, tabs, opiniones (2 columnas) y productos
-// relacionados.
 export default function ProductDetailSkeleton() {
   return (
     <div className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] animate-pulse px-2 py-6 sm:px-4 sm:py-8 lg:px-8">

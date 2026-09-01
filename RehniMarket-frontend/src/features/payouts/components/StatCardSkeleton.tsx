@@ -1,6 +1,3 @@
-// Skeleton de StatCard -
-// mismo padding/radio que el componente real para no saltar de tamaño
-// cuando termina de cargar.
 export default function StatCardSkeleton() {
   return (
     <div className="animate-pulse rounded-card border border-gray-200 bg-white p-5 shadow-card">

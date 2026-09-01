@@ -20,7 +20,6 @@ export default function CertificateModal({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
       <div className="flex h-[95vh] w-full max-w-6xl flex-col overflow-hidden rounded-card bg-white shadow-2xl">
-        {/* Header */}
         <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4">
           <div>
             <h2 className="text-lg font-bold text-gray-900">
@@ -33,7 +32,6 @@ export default function CertificateModal({
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Abrir en pestaña */}
             <a
               href={certificateUrl}
               target="_blank"
@@ -44,7 +42,6 @@ export default function CertificateModal({
               Abrir
             </a>
 
-            {/* Cerrar */}
             <button
               type="button"
               onClick={onClose}

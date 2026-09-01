@@ -14,10 +14,6 @@ export async function getPublicCompanyProfile(
   return data;
 }
 
-// Endpoint reutilizable de reputación de empresa (ver ALCANCE >
-// Calificaciones de empresa, regla 9) - mismo endpoint consumido desde
-// Dashboard Empresa, Mi tienda y el perfil
-// público de empresa.
 export async function getCompanyRating(companyId: string): Promise<CompanyRating> {
   const { data } = await api.get<CompanyRating>(`/public/company/${companyId}/rating`);
 

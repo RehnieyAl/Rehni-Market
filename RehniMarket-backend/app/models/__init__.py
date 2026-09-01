@@ -1,5 +1,3 @@
-# Importa todos los modelos para registrarlos en el mapper de SQLAlchemy.
-
 from .ModelCompany import Company
 from .ModelCode import Codes
 from .ModelRefreshToken import RefreshToken
@@ -30,3 +28,4 @@ from .ModelCompanyBankAccount import CompanyBankAccount, BankAccountTypeEnum
 from .ModelCompanyPayout import CompanyPayout, PayoutStatusEnum
 from .ModelRehniCoinMovement import RehniCoinMovement
 from .ModelReport import Report, ReportTargetType, ReportStatus, ReportEvidence
+from .ModelShippingCarrier import ShippingCarrier

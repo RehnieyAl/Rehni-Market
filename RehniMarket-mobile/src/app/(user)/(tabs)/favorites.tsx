@@ -1,10 +1,8 @@
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { RequireLoginScreen } from "@/components/RequireLoginScreen";
-import { PlaceholderScreen } from "@/components/PlaceholderScreen";
+import { FavoritesScreen } from "@/screens/favorites/FavoritesScreen";
 
-// Mismo criterio que cart.tsx (ver Fase Acceso Público > FAVORITOS): el
-// tab es accesible para visitantes, pero su contenido requiere cuenta.
-export default function FavoritesScreen() {
+export default function FavoritesRoute() {
   const { isUser } = useAuth();
 
   if (!isUser) {
@@ -17,13 +15,5 @@ export default function FavoritesScreen() {
     );
   }
 
-  // PLACEHOLDER - listado real de favoritos (GET /favorites) llega en su
-  // propia fase.
-  return (
-    <PlaceholderScreen
-      icon="heart-outline"
-      title="Favoritos"
-      description="Acá vas a ver los productos que guardes para más tarde."
-    />
-  );
+  return <FavoritesScreen />;
 }

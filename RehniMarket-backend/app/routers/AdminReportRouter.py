@@ -16,7 +16,6 @@ from app.services.DashboardService.admin.ReportService import (
     update_report_status_service,
 )
 
-# Gestión de reportes; solo ADMIN/OWNER.
 router = APIRouter(prefix="/admin/reports", tags=["admin", "reports"])
 
 

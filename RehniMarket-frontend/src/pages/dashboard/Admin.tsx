@@ -2,7 +2,10 @@ import { useSearchParams } from "react-router-dom";
 
 import DashboardLayout from "@/shared/components/dashboard/DashboardLayout";
 
-import { dashboardNavigation } from "@/shared/config/dashboardNavigation";
+import {
+  dashboardNavigation,
+  OWNER_ONLY_NAV_IDS,
+} from "@/shared/config/dashboardNavigation";
 import { useRole } from "@/hooks/useRole";
 
 import Home from "@/features/admin/components/dashboard/Home";
@@ -13,12 +16,9 @@ import Advertisements from "@/features/admin/components/dashboard/advertisement/
 import AdminPayouts from "@/features/admin/components/dashboard/payout/AdminPayouts";
 import RehniCoin from "@/features/admin/components/dashboard/wallet/RehniCoin";
 import Reports from "@/features/admin/components/dashboard/report/Reports";
+import ShippingCarriers from "@/features/admin/components/dashboard/shipping/ShippingCarriers";
 import AccountSettings from "@/features/public/auth/components/AccountSettings";
 
-// Mismo patrón que pages/user/Dashboard.tsx: la pestaña activa se deriva
-// de la URL (?tab=...) en vez de un useState aparte, para poder
-// deep-linkear una sección puntual sin crear
-// ninguna ruta nueva - el click del sidebar solo actualiza la URL.
 const VALID_TABS = [
   "home",
   "companies",
@@ -26,6 +26,7 @@ const VALID_TABS = [
   "products",
   "hero",
   "reports",
+  "carriers",
   "payouts",
   "wallet",
   "account",
@@ -36,7 +37,10 @@ export default function Admin() {
   const { isOwner } = useRole();
 
   const tab = searchParams.get("tab");
-  const view = tab && VALID_TABS.includes(tab) ? tab : "home";
+  const requestedView = tab && VALID_TABS.includes(tab) ? tab : "home";
+
+  const view =
+    !isOwner && OWNER_ONLY_NAV_IDS.includes(requestedView) ? "home" : requestedView;
 
   const handleViewChange = (id: string) => {
     setSearchParams(id === "home" ? {} : { tab: id });
@@ -49,7 +53,8 @@ export default function Admin() {
     products: <CatalogManagement />,
     hero: <Advertisements />,
     reports: <Reports />,
-    payouts: <AdminPayouts />,
+    carriers: <ShippingCarriers />,
+    payouts: isOwner ? <AdminPayouts /> : null,
     wallet: <RehniCoin />,
     account: <AccountSettings />,
   };

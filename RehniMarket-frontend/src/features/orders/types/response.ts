@@ -1,4 +1,3 @@
-// Espejo de OrderStatusEnum; en la API viaja el .value (minúsculas).
 export type OrderStatus =
   | "pending"
   | "paid"
@@ -13,18 +12,13 @@ export interface OrderItem {
   variantId: string | null;
   productName: string;
   variantName: string | null;
-  // Combinación comprada, congelada al checkout ({"Color": "Negro", "Talla": "40"}).
-  // null en pedidos anteriores a la nueva arquitectura.
   attributes: Record<string, string> | null;
-  // Precio final ya con descuento: lo que se pagó.
   unitPrice: string;
-  // Precio antes del descuento, snapshot al comprar. null si no había descuento.
   originalUnitPrice: string | null;
   quantity: number;
   subtotal: string;
 }
 
-// Snapshot de la dirección guardado en el pedido; no cambia si el comprador la edita después.
 export interface OrderAddress {
   label: string | null;
   fullName: string;
@@ -34,9 +28,14 @@ export interface OrderAddress {
   phone: string;
 }
 
+export interface OrderShippingCarrier {
+  id: string;
+  name: string;
+  trackingUrl: string;
+}
+
 export interface Order {
   id: string;
-  // Referencia legible ("RM-000001"); usar esto, no `id`, en cualquier vista.
   reference: string;
   status: OrderStatus;
   companyId: string;
@@ -53,6 +52,9 @@ export interface Order {
   buyerPhoto: string | null;
   buyerPhone: string | null;
   deliveryAddress: OrderAddress | null;
+
+  shippingCarrier: OrderShippingCarrier | null;
+  trackingNumber: string | null;
 }
 
 export interface OrdersPaginated {
@@ -63,7 +65,6 @@ export interface OrdersPaginated {
   total_pages: number;
 }
 
-// Contadores para las pestañas de "Pedidos", ya agrupados por pestaña.
 export interface OrderStatusCounts {
   all: number;
   pending: number;

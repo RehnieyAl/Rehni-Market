@@ -1,4 +1,3 @@
-// Lista compacta de páginas con "…": ancla 1-3 al inicio, las 2 últimas al final y el entorno de la actual.
 export function buildPageList(current: number, total: number): (number | "ellipsis")[] {
   const anchors = new Set(
     [1, 2, 3, total - 1, total, current - 1, current, current + 1].filter(

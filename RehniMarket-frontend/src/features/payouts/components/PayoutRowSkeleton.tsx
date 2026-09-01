@@ -1,4 +1,3 @@
-// Skeleton de una fila de liquidación.
 export default function PayoutRowSkeleton() {
   return (
     <div className="flex animate-pulse flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 bg-white p-5">

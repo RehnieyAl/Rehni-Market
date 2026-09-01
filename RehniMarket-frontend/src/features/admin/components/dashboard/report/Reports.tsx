@@ -13,7 +13,6 @@ import ReportDetailModal from "./ReportDetailModal";
 
 import type { ReportListItem } from "@/features/reports/types/response";
 
-// Gestión de reportes. Mismo patrón de listado que Companies.tsx: búsqueda + filtros + tabla + paginación + modal de detalle.
 export default function Reports() {
   const [reports, setReports] = useState<ReportListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,8 +59,6 @@ export default function Reports() {
     }
   };
 
-  // Solo carga inicial; los cambios de filtro/búsqueda recargan desde su propio handler.
-  // Función definida dentro del efecto para no disparar react-hooks/set-state-in-effect.
   useEffect(() => {
     const loadInitialReports = async () => {
       try {
@@ -110,7 +107,6 @@ export default function Reports() {
   };
 
   const handleReportResolved = () => {
-    // Tras resolver/rechazar, se recarga la página: el reporte pudo salir del filtro de estado.
     loadReports(page, search, typeFilter, statusFilter);
   };
 

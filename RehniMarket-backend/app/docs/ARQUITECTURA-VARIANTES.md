@@ -99,18 +99,26 @@ Product  ── attribute_values ──► ProductAttributeValue  (atributos rol
 
 ## Migraciones
 
-Cadena Alembic actual (HEAD = `cb6d38ee0bd`):
+Cadena Alembic actual (HEAD = `a1b2c3d4e5f6`) — 10 revisiones lineales:
 
 | Revisión | Qué hace |
 |---|---|
 | `29fe206320ce` | esquema base (incluye `color_variants`, `specification_templates`, `product_specifications`, `variant_specifications`, `product_variants.color_id`, `products.main_color_id`) |
-| `d72ef7fa597e` | placeholder (sin cambios de esquema) |
+| `d72ef7fa597e` | `products` (ajustes de tabla) |
 | `048871b47f63` | tablas `catalog_attributes`, `catalog_attribute_options` |
 | `a90540bebea` | `product_variants`: `sku`, `combo_key`, `deleted_at`, campos de descuento; `products`: campos de descuento; tablas `variant_options`, `product_attribute_values`, `variant_attribute_values`; índices únicos parciales de combinación y sku |
 | `b6f8fd31fbe` | backfill: `color_variants` + `product_variants.color_id` → atributo "Color" (role="variant") + `variant_options` + `combo_key`; `specification_templates` + `product_specifications` → atributos (role="product") + `product_attribute_values` |
 | `cb6d38ee0bd` | `order_items.attributes_snapshot` (JSONB) |
+| `d4e5f6a7b8c9` | anuncios pierden los campos de texto (título, descripción, texto de botón) |
+| `e7a1c9d24b30` | tabla `shipping_carriers` + campos de envío en `orders` |
+| `f2b7c4e91a05` | `products.applies_tax` (IVA por producto) |
+| `a1b2c3d4e5f6` | **HEAD** — extensiones `pg_trgm` / `unaccent`, función `rehni_search_norm`, índice GIN de búsqueda difusa |
 
 Todas reversibles. Los datos existentes se preservan.
+
+> **Nota:** las tres primeras filas de la sección "Migraciones" de este documento
+> reflejaban el estado hasta el Incremento 4 (HEAD `cb6d38ee0bd`). La cadena se
+> amplió después con `d4e5f6a7b8c9` … `a1b2c3d4e5f6`.
 
 ## Legacy (todavía presente)
 

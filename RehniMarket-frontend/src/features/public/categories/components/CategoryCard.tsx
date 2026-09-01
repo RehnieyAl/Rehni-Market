@@ -7,7 +7,6 @@ interface CategoryCardProps {
   category: PublicCatalog;
 }
 
-// Tarjeta de categoría: imagen (con placeholder si es null) + nombre + conteo. Navega al catálogo filtrado por `?catalog=`.
 export default function CategoryCard({ category }: CategoryCardProps) {
   return (
     <Link

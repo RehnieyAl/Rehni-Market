@@ -8,8 +8,6 @@ interface AdvertisementPreviewModalProps {
   onClose: () => void;
 }
 
-// Vista previa de cómo se ve el anuncio en el Hero del Home público (ver
-// Hero.tsx en features/public/home). Solo lectura.
 export default function AdvertisementPreviewModal({
   isOpen,
   advertisement,
@@ -25,7 +23,6 @@ export default function AdvertisementPreviewModal({
       size="lg"
     >
       <div className="relative aspect-[16/7] w-full overflow-hidden rounded-card bg-gray-100">
-        {/* Misma art direction que el Hero: la imagen móvil solo por debajo de 768px. */}
         <picture>
           {advertisement.mobile_image_url && (
             <source

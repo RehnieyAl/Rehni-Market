@@ -28,7 +28,6 @@ def get_public_company_profile_service(
 
     company = get_company_by_id(database, company_id)
 
-    # Empresa suspendida: responde igual que "no existe", para no revelar el estado de la cuenta.
     if not company or not company.CompanyStatus:
         api_error(404, ErrorCodes.COMPANY_NOT_FOUND, "Empresa no encontrada.")
 
@@ -37,7 +36,6 @@ def get_public_company_profile_service(
         and company.CompanyStatus
     )
 
-    # CompanyLogo/CompanyBanner se guardan como object_name.
     logo_url = (
         build_media_url(f"uploads/{company.CompanyLogo}")
         if company.CompanyLogo
@@ -50,7 +48,6 @@ def get_public_company_profile_service(
         else None
     )
 
-    # Mismo criterio de visibilidad por stock que el listado, para que el contador coincida.
     total_products = (
         database.query(Product)
         .filter(
@@ -101,7 +98,6 @@ def get_public_company_products_service(
 
     company = get_company_by_id(database, company_id)
 
-    # Una empresa suspendida responde igual que una que no existe.
     if not company or not company.CompanyStatus:
         api_error(404, ErrorCodes.COMPANY_NOT_FOUND, "Empresa no encontrada.")
 

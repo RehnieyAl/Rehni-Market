@@ -29,14 +29,12 @@ def company_dashboard_me_service(user_id,database: Session):
             )
 
     return {
-        # Permite pedir GET /public/company/{id}/rating sin otro endpoint.
         "id": company.id,
         "logo": logo,
         "banner": banner,
         "nameCompany": company.nameCompany,
         "addressCompany": company.addressCompany,
         "description": company.description,
-        # is_verified se decide por CompanyCertificateStatus == APPROVED, no por CompanyCertificate.
         "certificate_status": company.CompanyCertificateStatus,
         "is_verified": company.CompanyCertificateStatus == CompanyCertificateEnum.APPROVED,
         "memberAT": user.created_at,
@@ -62,13 +60,15 @@ def company_dashboard_my_profile_service(user_id: str, database: Session):
             None
             )
 
-    # Solo datos públicos de la tienda; nombre/correo de la cuenta van por GET /auth/me.
     return {
         "id": company.id,
         "nameCompany": company.nameCompany,
         "addressCompany": company.addressCompany,
         "description": company.description,
-        "tellCompany": user.tell,
+        "CompanyNIT": company.CompanyNIT,
+        "CompanyNITDV": company.CompanyNITDV,
+        "CompanyStatus": company.CompanyStatus,
+        "suspensionReason": company.suspension_reason,
         "memberAT": user.created_at,
         "logo": logo,
         "banner": banner,
@@ -87,9 +87,6 @@ def company_dashboard_upgrade_my_profile_service(user_id: str, CompanyRequest:Up
         if CompanyRequest.nameCompany is not None:
             company.nameCompany = CompanyRequest.nameCompany
 
-        if CompanyRequest.tellCompany is not None:
-            user.tell = CompanyRequest.tellCompany
-
         if CompanyRequest.addressCompany is not None:
             company.addressCompany = CompanyRequest.addressCompany
 
@@ -97,7 +94,6 @@ def company_dashboard_upgrade_my_profile_service(user_id: str, CompanyRequest:Up
             company.description = CompanyRequest.description
 
         database.commit()
-        database.refresh(user)
         database.refresh(company)
 
     except HTTPException:
@@ -141,9 +137,6 @@ def company_dasboard_upgrade_my_photo_and_banner_profile(
     database.commit()
     database.refresh(company)
 
-    # Mismas URLs que devuelven el resto de endpoints (GET /company/me, perfil público…):
-    # la ruta de /media/proxy, NO una URL presigned con el host interno `minio:9000`
-    # que el navegador no puede resolver.
     return {
         "success": True,
         "logo": build_media_url(f"uploads/{company.CompanyLogo}") if company.CompanyLogo else None,
@@ -165,7 +158,6 @@ def company_dashboard_get_my_products(user_id,search,page,limit,database: Sessio
 
         offset = (page - 1) * limit
 
-        # deleted_at IS NULL: "Mis productos" excluye eliminados, no solo desactivados.
         query = database.query(Product).filter(
             Product.company_id == company.id,
             Product.deleted_at.is_(None),
@@ -176,7 +168,6 @@ def company_dashboard_get_my_products(user_id,search,page,limit,database: Sessio
 
         total = query.count()
 
-        # Orden por más reciente primero; también lo usa "Productos recientes" del Inicio.
         products = (
             query.order_by(Product.created_at.desc())
             .offset(offset)
@@ -196,10 +187,8 @@ def company_dashboard_get_my_products(user_id,search,page,limit,database: Sessio
                 "category": product.catalog.name if product.catalog else None,
                 "price": float(product.price),
                 "stock": product.stock,
-                # Imagen inicial = primera variante viva con imágenes (ver services/variants/images.py).
                 "image": product_display_image_url(product),
                 "is_active": product.is_active,
-                # None = nunca eliminado; con fecha = eliminado por la empresa (distinto de "Inactivo").
                 "deleted_at": (
                     product.deleted_at.isoformat()
                     if product.deleted_at
@@ -219,7 +208,6 @@ def company_dashboard_get_my_products(user_id,search,page,limit,database: Sessio
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Estadísticas: solo datos calculados sobre Product (no hay ventas/visitas en el modelo).
 def company_dashboard_products_summary_service(user_id, database: Session):
 
     search_user = database.query(Users).filter(Users.id == user_id).first()
@@ -227,7 +215,6 @@ def company_dashboard_products_summary_service(user_id, database: Session):
     if not search_user or not search_user.company:
         raise HTTPException(status_code=404, detail="Empresa no encontrada")
 
-    # Excluye eliminados: no deben contar como "hidden" ni sumar al total.
     base_query = database.query(Product).filter(
         Product.company_id == search_user.company.id,
         Product.deleted_at.is_(None),

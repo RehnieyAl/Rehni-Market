@@ -15,16 +15,11 @@ import type { PublicProductCard } from "../types/response";
 
 interface ProductCardProps {
   product: PublicProductCard;
-  // "carousel" añade una sombra base para que la tarjeta se despegue del fondo
-  // cuando va suelta en un scroll horizontal (Home).
   variant?: "grid" | "carousel";
 }
 
-// Tarjeta única de producto para catálogo, Ofertas, Novedades, relacionados y
-// carruseles del Home. Genérica: no asume talla/color ni ningún atributo — la
-// tarjeta solo muestra imagen, empresa, nombre, calificación y precio.
 export default function ProductCard({ product, variant = "grid" }: ProductCardProps) {
-  const { role } = useAuth();
+  const { role, status } = useAuth();
   const { addItem } = useCart();
   const { isFavorite, toggleFavorite } = useFavorites();
   const redirectToLogin = useRedirectToLogin();
@@ -33,8 +28,6 @@ export default function ProductCard({ product, variant = "grid" }: ProductCardPr
   const [savingFavorite, setSavingFavorite] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
 
-  // Favoritos y carrito son acciones de comprador; un visitante (role === null)
-  // también las intenta y acaba en /login. company/admin/owner no las ven.
   const isBuyerAction = role === null || role === "user";
   const isFav = isFavorite(product.id);
   const hasRating = product.review_count > 0 && product.average_rating !== null;
@@ -46,6 +39,7 @@ export default function ProductCard({ product, variant = "grid" }: ProductCardPr
     event.stopPropagation();
 
     if (savingFavorite) return;
+    if (status === "loading") return;
     if (role === null) return redirectToLogin();
     if (role !== "user") return;
 
@@ -64,6 +58,7 @@ export default function ProductCard({ product, variant = "grid" }: ProductCardPr
     event.stopPropagation();
 
     if (addingToCart) return;
+    if (status === "loading") return;
     if (role === null) return redirectToLogin();
     if (role !== "user") return;
 
@@ -92,12 +87,8 @@ export default function ProductCard({ product, variant = "grid" }: ProductCardPr
         variant === "carousel" && "shadow-card",
       )}
     >
-      {/* Imagen — cuadrada y `object-contain` para que sirva a cualquier categoría
-          (calzado, tecnología, hogar…) sin recortes raros. pb-[100%] en vez de
-          aspect-ratio: dentro de un flex-column Chromium resuelve mal la
-          proporción; el padding porcentual es fiable en cualquier contenedor. */}
-      <div className="relative w-full shrink-0 bg-white pb-[100%]">
-        <div className="absolute inset-0 p-3.5">
+      <div className="relative w-full shrink-0 bg-white pb-[75%]">
+        <div className="absolute inset-0 p-3">
           {product.image ? (
             <img
               src={product.image}
@@ -132,10 +123,10 @@ export default function ProductCard({ product, variant = "grid" }: ProductCardPr
         )}
       </div>
 
-      <div className="flex flex-1 flex-col px-3.5 pb-3.5 pt-3">
+      <div className="flex flex-1 flex-col px-3.5 pb-3 pt-2.5">
         <p className="truncate text-xs text-gray-500">{product.company_name}</p>
 
-        <h3 className="mt-0.5 line-clamp-2 min-h-[2.5rem] text-sm font-semibold text-gray-900">
+        <h3 className="mt-0.5 line-clamp-2 min-h-[2.25rem] text-sm font-semibold leading-snug text-gray-900">
           {product.name}
         </h3>
 
@@ -149,7 +140,7 @@ export default function ProductCard({ product, variant = "grid" }: ProductCardPr
           </div>
         )}
 
-        <div className="mt-auto flex items-end justify-between gap-2 pt-3">
+        <div className="mt-auto flex items-end justify-between gap-2 pt-2">
           <div className="min-w-0">
             {hasDiscount ? (
               <>

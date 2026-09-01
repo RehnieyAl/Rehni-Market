@@ -1,4 +1,3 @@
-
 from sqlalchemy.orm import Session
 
 import base64
@@ -178,8 +177,6 @@ def get_all_companies_service(
             .decode()
         )
 
-    # Serializar aquí (no dejar que FastAPI lea el ORM crudo): los campos de imagen
-    # deben salir como URL de /media/proxy, no como object_name interno.
     items = [
         AdminCompanyDetailResponse(
             id=company.id,
@@ -285,7 +282,6 @@ def update_certificate_status_service(
             )
 
         else:
-            # pending no envía correo ni registra actividad.
             action = None
 
         if action is not None:
@@ -329,7 +325,6 @@ def update_company_status_service(
 
     try:
 
-        # ORM crudo: hace falta el CompanyStatus anterior para saber si es una suspensión nueva.
         company = get_company_by_id_orm(
             database=database,
             company_id=company_id,
@@ -345,11 +340,8 @@ def update_company_status_service(
 
         was_active = company.CompanyStatus
 
-        # Suspensión "nueva" solo al pasar true -> false; repetirla sobre una empresa
-        # ya suspendida no procesa nada de nuevo.
         is_new_suspension = was_active and not status
 
-        # Motivo obligatorio solo al suspender de verdad, no al desbloquear.
         if is_new_suspension and not (reason and reason.strip()):
 
             api_error(
@@ -404,7 +396,6 @@ def update_company_status_service(
                 AdminActivityAction.COMPANY_BLOCKED
             )
 
-        # register_admin_activity hace el commit que cubre bloqueo + cancelaciones + reembolsos.
         register_admin_activity(
             database=database,
             admin_id=admin_id,
@@ -417,7 +408,6 @@ def update_company_status_service(
 
         database.refresh(company)
 
-        # Correos best-effort tras el commit: un fallo de SMTP no debe deshacer nada.
         for order in refunded_orders:
             database.refresh(order)
 
@@ -451,4 +441,3 @@ def update_company_status_service(
         database.rollback()
 
         raise
-

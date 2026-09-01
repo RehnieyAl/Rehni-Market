@@ -2,12 +2,10 @@ import Skeleton from "./Skeleton";
 
 interface TableSkeletonProps {
   rows?: number;
-  // Anchos relativos de cada celda; su longitud define el nº de columnas.
   columns?: string[];
   className?: string;
 }
 
-// Filas de carga para una tabla o lista tabular. Compone el primitivo Skeleton.
 export default function TableSkeleton({
   rows = 5,
   columns = ["30%", "22%", "18%", "16%", "10%"],

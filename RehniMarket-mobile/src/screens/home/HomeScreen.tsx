@@ -1,39 +1,58 @@
+import { useCallback } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 
+import { getDailyProducts } from "@/api/homeService";
+import { getPublicNewProducts, getPublicOffers } from "@/api/productsService";
 import { HomeHeader } from "./components/HomeHeader";
 import { SearchBar } from "./components/SearchBar";
 import { BannerCarousel } from "./components/BannerCarousel";
 import { CategorySection } from "./components/CategorySection";
-import { ProductSection } from "./components/ProductSection";
+import { HomeProductSection } from "./components/HomeProductSection";
+import { useResponsive } from "@/hooks/useResponsive";
 import { colors, spacing } from "@/theme";
 
-// Home real de RehniMarket Mobile (ver references/ux-user.png + informe
-// de análisis del Home web). Header fijo arriba (no scrollea, ver Fase
-// Home > BOTTOM NAVIGATION - "Home debe ocupar únicamente el contenido
-// superior"), el resto en un único ScrollView. Cada sección
-// (BannerCarousel/CategorySection/ProductSection) pide sus propios datos
-// de forma independiente - mismo criterio que Hero/CategoriesSection/
-// DailyProducts en la web: si una falla, no bloquea a las demás.
-//
-// Secciones deliberadamente NO incluidas (ver Fase Home > OBJETIVO):
-// "Ofertas exclusivas" y "Vendedores destacados" no existen ni en
-// references/ux-user.png ni en el Home web real.
 export function HomeScreen() {
+  const router = useRouter();
+  const { contentMaxWidth, isLandscape } = useResponsive();
+
+  const fetchDaily = useCallback(() => getDailyProducts(6), []);
+  const fetchOffers = useCallback(() => getPublicOffers(1, 6).then((r) => r.products), []);
+  const fetchNew = useCallback(() => getPublicNewProducts(1, 6).then((r) => r.products), []);
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+    <SafeAreaView
+      style={styles.safeArea}
+      edges={isLandscape ? ["top", "left", "right"] : ["top"]}
+    >
       <HomeHeader />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
-        <SearchBar />
-        <BannerCarousel />
-        <CategorySection />
-        <ProductSection />
+        <View style={[styles.content, { maxWidth: contentMaxWidth }]}>
+          <SearchBar />
+          <BannerCarousel />
+          <CategorySection />
 
-        <View style={styles.bottomSpacer} />
+          <HomeProductSection
+            title="Productos destacados"
+            fetcher={fetchDaily}
+            onSeeAll={() => router.push("/(user)/products")}
+          />
+          <HomeProductSection
+            title="Ofertas especiales"
+            fetcher={fetchOffers}
+            onSeeAll={() => router.push("/(user)/offers")}
+          />
+          <HomeProductSection
+            title="Novedades"
+            fetcher={fetchNew}
+            onSeeAll={() => router.push("/(user)/new")}
+          />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -45,10 +64,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
-    gap: spacing.md,
+    alignItems: "center",
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxl,
   },
-  bottomSpacer: {
-    height: spacing.xl,
+  content: {
+    width: "100%",
+    gap: spacing.xl,
+    paddingHorizontal: spacing.lg,
   },
 });

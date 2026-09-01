@@ -9,9 +9,6 @@ interface CollectionViewProps {
   fetchPage: (page: number, limit: number) => Promise<PublicProductsPaginated>;
 }
 
-// Cáscara común de un apartado público de productos (Ofertas, Novedades):
-// encabezado + colección paginada. La regla de negocio de qué se lista vive en
-// `fetchPage` (y su endpoint del backend), no aquí.
 export default function CollectionView({
   title,
   subtitle,

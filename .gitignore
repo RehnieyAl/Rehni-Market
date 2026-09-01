@@ -1,4 +1,12 @@
-# Claude
 .claude/
 claude*
 CLAUDE.md
+/backups/
+*.dump
+*.dump.toc.txt
+*.sql
+*.sql.gz
+*.tar.gz
+*.sha256
+*.gpg
+.env

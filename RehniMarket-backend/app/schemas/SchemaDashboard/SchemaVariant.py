@@ -93,7 +93,6 @@ class UpdateVariantRequest(BaseModel):
 
 
 class GenerateCombinationsRequest(BaseModel):
-    # Vacío = todos los ejes de variante activos del catálogo.
     attribute_ids: list[UUID] = []
 
 

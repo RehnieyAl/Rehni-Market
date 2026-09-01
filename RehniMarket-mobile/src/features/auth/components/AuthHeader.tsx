@@ -8,12 +8,6 @@ interface Props {
   showBack?: boolean;
 }
 
-// Flecha de volver de las pantallas de auth que se navegan "hacia
-// adentro" (p. ej. Register desde Login). El logo/wordmark de RehniMarket
-// se sacó de acá a propósito - el branding en estos formularios se
-// mantiene con el color de marca en botones/estados, no con el logo (ver
-// corrección visual de Auth: el logo queda reservado para Home/ícono de
-// app/splash).
 export function AuthHeader({ showBack = true }: Props) {
   const router = useRouter();
 

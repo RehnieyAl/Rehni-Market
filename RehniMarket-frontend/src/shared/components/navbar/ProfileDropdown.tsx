@@ -1,4 +1,3 @@
-
 import {
   cloneElement,
   useEffect,
@@ -15,11 +14,9 @@ import { dashboardNavigation } from "@/shared/config/dashboardNavigation";
 import type { SidebarItem } from "@/shared/components/dashboard/Sidebar";
 import type { Role } from "@/features/public/auth/types/auth";
 
-// Qué ids de dashboardNavigation se muestran en este dropdown por rol. Labels/iconos se heredan por id.
-// admin/owner: gestión core + cuenta. company: las 6 pestañas. user: todas menos "addresses" (van en el checkout).
-const ADMIN_DROPDOWN_CONFIG = {
+const ADMIN_DROPDOWN_BASE = {
   basePath: "/admin/dashboard",
-  navIds: ["home", "companies", "users", "products", "payouts"],
+  navIds: ["home", "companies", "users", "products"],
   settingsId: "account",
 };
 
@@ -27,9 +24,12 @@ const DROPDOWN_CONFIG: Record<
   Role,
   { basePath: string; navIds: string[]; settingsId: string }
 > = {
-  admin: ADMIN_DROPDOWN_CONFIG,
+  admin: ADMIN_DROPDOWN_BASE,
 
-  owner: ADMIN_DROPDOWN_CONFIG,
+  owner: {
+    ...ADMIN_DROPDOWN_BASE,
+    navIds: [...ADMIN_DROPDOWN_BASE.navIds, "payouts"],
+  },
 
   company: {
     basePath: "/company/dashboard",
@@ -44,7 +44,6 @@ const DROPDOWN_CONFIG: Record<
   },
 };
 
-// Mismo mecanismo que las páginas de dashboard: query param ?tab=, con "home" como caso especial.
 const buildTabPath = (basePath: string, tabId: string) =>
   tabId === "home" ? basePath : `${basePath}?tab=${tabId}`;
 
@@ -100,7 +99,7 @@ export default function ProfileDropdown() {
   const handleLogout = () => {
     setOpen(false);
     logout();
-    navigate("/");
+    navigate("/", { replace: true });
   };
 
   const displayName =
@@ -190,11 +189,6 @@ export default function ProfileDropdown() {
             </div>
           </div>
 
-          {/* =================================================
-              NAVEGACIÓN (pestañas del dashboard real, ver
-              DROPDOWN_CONFIG más arriba)
-          ================================================= */}
-
           <div className="p-2">
 
             {navItems.map((item) => (
@@ -214,10 +208,6 @@ export default function ProfileDropdown() {
                 </span>
               </Link>
             ))}
-
-            {/* =================================================
-                CONFIGURACIÓN (separada de la navegación)
-            ================================================= */}
 
             {settingsItem && (
               <>
@@ -239,10 +229,6 @@ export default function ProfileDropdown() {
                 </Link>
               </>
             )}
-
-            {/* =================================================
-                CERRAR SESIÓN (separado de configuración)
-            ================================================= */}
 
             <div className="my-2 h-px bg-gray-100" />
 

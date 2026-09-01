@@ -23,6 +23,7 @@ const emptyProduct = (): CreateProductRequest => ({
   nameProduct: "",
   catalogId: "",
   descripcionProduct: "",
+  appliesTax: true,
   productAttributes: [],
 });
 
@@ -180,6 +181,24 @@ export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModal
                   className="w-full rounded-lg bg-white border border-gray-300 px-4 py-3 text-gray-900 resize-none outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
                 />
               </div>
+
+              <label className="flex items-start gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                <input
+                  type="checkbox"
+                  checked={product.appliesTax}
+                  onChange={(e) =>
+                    setProduct({ ...product, appliesTax: e.target.checked })
+                  }
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600/20"
+                />
+                <span className="text-sm text-gray-700">
+                  Este producto aplica IVA (19%)
+                  <span className="mt-0.5 block text-xs text-gray-500">
+                    Si lo activas, el comprador verá el IVA en el detalle y se sumará al
+                    pagar. Si no aplica, déjalo sin marcar.
+                  </span>
+                </span>
+              </label>
             </div>
           </section>
 

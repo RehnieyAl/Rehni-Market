@@ -33,11 +33,9 @@ async def auth_middleware(request: Request, call_next):
     ):
         return await call_next(request)
 
-    # /public/products/{product_id} (detalle público).
     if path.startswith(PUBLIC_PRODUCT_DETAIL_PREFIX):
         return await call_next(request)
 
-    # /public/company/{company_id}[/products] (perfil público de empresa).
     if path.startswith(PUBLIC_COMPANY_PROFILE_PREFIX):
         return await call_next(request)
 
@@ -117,9 +115,9 @@ async def auth_middleware(request: Request, call_next):
             )
 
         user_id = payload.get("sub")
-        role = payload.get("role")
+        token_role = payload.get("role")
 
-        if not user_id or not role:
+        if not user_id or not token_role:
             return JSONResponse(
                 status_code=401,
                 content={
@@ -160,17 +158,31 @@ async def auth_middleware(request: Request, call_next):
                     },
                 )
 
-            # El bloqueo de una empresa vive en Company.CompanyStatus (no en Users.isActive);
-            # se revalida en cada request porque el JWT sigue siendo válido tras el bloqueo.
-            if role == "company" and user.company and not user.company.CompanyStatus:
+            role = user.role.name if user.role else None
+
+            if not role:
                 return JSONResponse(
                     status_code=403,
                     content={
                         "detail": {
-                            "code": ErrorCodes.COMPANY_SUSPENDED,
-                            "message": "Tu empresa se encuentra suspendida.",
+                            "code": ErrorCodes.FORBIDDEN,
+                            "message": "Rol inválido",
                         }
                     },
+                )
+
+            if role == "company" and user.company and not user.company.CompanyStatus:
+                suspended_detail = {
+                    "code": ErrorCodes.COMPANY_SUSPENDED,
+                    "message": "Tu empresa se encuentra suspendida.",
+                }
+
+                if user.company.suspension_reason:
+                    suspended_detail["reason"] = user.company.suspension_reason
+
+                return JSONResponse(
+                    status_code=403,
+                    content={"detail": suspended_detail},
                 )
 
             if role not in ROLES_PERMISSIONS_ROUTERS:

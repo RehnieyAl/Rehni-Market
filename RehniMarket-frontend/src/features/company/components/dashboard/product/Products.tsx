@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useState } from "react";
 import {
   Plus,
@@ -63,7 +62,6 @@ export default function Products() {
     }
   }, [page, search]);
 
-  // Conteos sobre toda la tabla de productos; se recargan tras cada acción que pueda cambiarlos.
   const loadSummary = useCallback(async () => {
     try {
       setSummaryLoading(true);
@@ -87,7 +85,6 @@ export default function Products() {
   }, [loadProducts]);
 
   useEffect(() => {
-    // Carga inicial de las estadísticas; no usa `loadSummary` como dependencia para evitar setState síncrono.
     let cancelled = false;
 
     const loadInitialSummary = async () => {
@@ -115,13 +112,11 @@ export default function Products() {
     };
   }, []);
 
-  // Crear/editar un producto puede cambiar los conteos; se refrescan ambos juntos.
   const handleProductSaved = () => {
     loadProducts();
     loadSummary();
   };
 
-  // Tras crear el producto padre se abre su edición para definir las variantes.
   const handleProductCreated = (productId: string) => {
     loadProducts();
     loadSummary();
@@ -167,8 +162,6 @@ export default function Products() {
 
       await deleteMyProduct(confirmDeleteId);
 
-      // Eliminación lógica (is_active=false + deleted_at). Se saca de la lista en memoria;
-      // al recargar aparece con el badge "Eliminado".
       setProducts((prev) =>
         prev.filter((product) => product.id !== confirmDeleteId),
       );
@@ -265,7 +258,6 @@ export default function Products() {
                   className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 p-5 shadow-card transition hover:shadow-pop"
                 >
                   <div className="flex min-w-0 items-center gap-5">
-                    {/* Imagen inicial = primera variante viva (la resuelve el backend). */}
                     {product.image ? (
                       <img
                         src={product.image}
@@ -426,4 +418,3 @@ export default function Products() {
     </>
   );
 }
-

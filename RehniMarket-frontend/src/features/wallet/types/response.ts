@@ -18,16 +18,12 @@ export interface WalletTransactionsPaginated {
   total_pages: number;
 }
 
-// Respuesta de POST /admin/wallet/recharge (recarga exclusiva
-// ADMIN/OWNER, identificada por email
 export interface RechargeByEmailResult {
   balance: string;
   userName: string;
   userEmail: string;
 }
 
-// Una fila del historial de recargas administrativas (ver
-// SchemaWallet.py > WalletRechargeHistoryItemResponse).
 export interface WalletRechargeHistoryItem {
   id: string;
   createdAt: string;

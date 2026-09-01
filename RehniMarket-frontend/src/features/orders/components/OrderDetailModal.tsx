@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { Mail, MapPin, Phone } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Mail, MapPin, Phone, Store } from "lucide-react";
 import axios from "axios";
 
 import OrderTimeline from "./OrderTimeline";
+import OrderShippingInfo from "./OrderShippingInfo";
 import ConfirmModal from "@/shared/components/ConfirmModal";
 import { Badge, Modal, Button, Spinner } from "@/shared/components/ui";
 import { getMyOrderDetail, cancelMyOrder } from "@/features/orders/api/orderService";
@@ -19,11 +21,9 @@ interface OrderDetailModalProps {
   orderId: string | null;
   isOpen: boolean;
   onClose: () => void;
-  // Se llama tras cancelar para refrescar la lista de atrás.
   onCancelled?: () => void;
 }
 
-// Detalle del pedido para el comprador: solo lectura + cancelar + timeline (sin cambio de estado manual).
 export default function OrderDetailModal({
   orderId,
   isOpen,
@@ -66,7 +66,6 @@ export default function OrderDetailModal({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, orderId]);
 
   const handleCancel = async () => {
@@ -92,7 +91,6 @@ export default function OrderDetailModal({
     }
   };
 
-  // Descuento total del pedido, calculado acá; solo cuenta ítems con originalUnitPrice.
   const totalDiscount = order
     ? order.items.reduce((sum, item) => {
         if (!item.originalUnitPrice) return sum;
@@ -114,7 +112,7 @@ export default function OrderDetailModal({
           order && CANCELLABLE_STATUSES.has(order.status) ? (
             <Button
               variant="outline"
-              className="border-red-200 text-danger hover:bg-danger-bg"
+              className="border-danger/40 text-danger hover:bg-danger-bg"
               loading={cancelling}
               onClick={() => setConfirmCancelOpen(true)}
             >
@@ -125,7 +123,7 @@ export default function OrderDetailModal({
       >
         {loading || !order ? (
           <div className="flex items-center justify-center gap-2 py-10 text-sm text-gray-500">
-            <Spinner /> Cargando pedido...
+            <Spinner /> Cargando pedido…
           </div>
         ) : (
           <div className="space-y-6">
@@ -140,7 +138,7 @@ export default function OrderDetailModal({
 
               <OrderTimeline status={order.status} />
 
-              <section className="rounded-card border bg-gray-50 p-4">
+              <section className="rounded-card bg-gray-50 p-4">
                 <div className="flex items-start gap-4">
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-lg font-bold text-white">
                     {order.buyerPhoto ? (
@@ -188,9 +186,20 @@ export default function OrderDetailModal({
               </section>
 
               <section>
-                <h3 className="mb-3 font-semibold text-gray-900">Productos</h3>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="font-semibold text-gray-900">Productos</h3>
 
-                <div className="divide-y divide-gray-100 rounded-card border">
+                  <Link
+                    to={`/company/${order.companyId}`}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-2 hover:underline"
+                    aria-label={`Ver la tienda de ${order.companyName}`}
+                  >
+                    <Store size={14} />
+                    {order.companyName} · Ver tienda
+                  </Link>
+                </div>
+
+                <div className="divide-y divide-gray-100 overflow-hidden rounded-card border border-gray-200">
                   {order.items.map((item) => {
                     const combo = formatAttributePairs(item.attributes) || item.variantName;
 
@@ -225,6 +234,14 @@ export default function OrderDetailModal({
                 </div>
               </section>
 
+              <section>
+                <h3 className="mb-3 font-semibold text-gray-900">Envío</h3>
+                <OrderShippingInfo
+                  carrier={order.shippingCarrier}
+                  trackingNumber={order.trackingNumber}
+                />
+              </section>
+
               <section className="space-y-1.5 border-t border-gray-100 pt-4 text-sm">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal</span>
@@ -240,7 +257,9 @@ export default function OrderDetailModal({
 
                 <div className="flex justify-between text-gray-600">
                   <span>IVA</span>
-                  <span>{formatPrice(order.tax)}</span>
+                  <span>
+                    {Number(order.tax) > 0 ? formatPrice(order.tax) : "No aplica"}
+                  </span>
                 </div>
 
                 <div className="flex justify-between text-base font-semibold text-gray-900">

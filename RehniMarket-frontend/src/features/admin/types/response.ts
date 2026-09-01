@@ -12,7 +12,6 @@ export interface AdminCompanyResponse {
   CompanyLogo: string | null;
   CompanyCertificate: string;
   CompanyStatus: boolean;
-  // Motivo de suspensión vigente; null mientras CompanyStatus es true.
   suspensionReason: string | null;
   user_id: string;
   addressCompany: string;
@@ -22,8 +21,6 @@ export interface AdminCompanyResponse {
   created_at: string;
 }
 
-// Respuesta de PATCH .../company/status/{id}: la empresa actualizada + el resultado del reembolso.
-// 0/"0" al desbloquear o al suspender una empresa sin pedidos PENDING/PAID/PROCESSING.
 export interface UpdateCompanyStatusResponse extends AdminCompanyResponse {
   affectedOrdersCount: number;
   totalRefunded: string;
@@ -43,6 +40,14 @@ export interface AdminUserResponse {
   profileImagen: string | null;
   role: string;
   isActive: boolean;
+  created_at: string;
+}
+
+export interface ShippingCarrier {
+  id: string;
+  name: string;
+  tracking_url: string;
+  is_active: boolean;
   created_at: string;
 }
 
@@ -103,7 +108,6 @@ export interface AdminCatalogResponse {
   image_url: string | null;
   display_order: number;
   is_active: boolean;
-  // Productos activos y con stock válido; calculado en el backend.
   product_count: number;
 }
 
@@ -129,14 +133,10 @@ export interface AdminCatalogAttributeResponse {
   options: AdminCatalogAttributeOption[];
 }
 
-// Banner visual: solo imágenes + navegación/targeting, sin texto.
 export interface AdminAdvertisementResponse {
   id: string;
-  // Desktop/tablet
   image_url: string;
-  // Móvil, nullable: el Hero hace fallback a image_url
   mobile_image_url: string | null;
-  // Lo calcula el backend con target_type != null; editable a mano solo con target_type null.
   button_link: string | null;
   is_active: boolean;
   order: number;
@@ -150,4 +150,3 @@ export interface AdminAdvertisementResponse {
   maximum_stock: number | null;
   max_age_days: number | null;
 }
-

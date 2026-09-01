@@ -1,5 +1,3 @@
-# Este router se encarga de manejar las rutas relacionadas 
-# con la salud del sistema,
 from fastapi import APIRouter
 from app.utils.TestDatabase import db_test
 from app.utils.CheckNetwork import check_internet_connection

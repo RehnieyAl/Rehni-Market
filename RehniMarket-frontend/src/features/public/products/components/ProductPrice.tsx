@@ -7,10 +7,6 @@ interface ProductPriceProps {
   finalPrice: string;
 }
 
-// Precio + descuento. El backend ya entrega el precio final y el
-// porcentaje calculados
-// - nunca se recalcula aquí. Sin descuento: solo el precio, sin tachado ni
-// "0% descuento".
 export default function ProductPrice({
   price,
   discountEnabled,

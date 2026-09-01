@@ -33,7 +33,6 @@ class CompanyPayout(Base):
     period_start: Mapped[date] = mapped_column(Date, nullable=False)
     period_end: Mapped[date] = mapped_column(Date, nullable=False)
 
-    # Suma de Order.total de pedidos DELIVERED de la empresa en el periodo.
     gross_sales: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
 
     commission_percentage: Mapped[Decimal] = mapped_column(Numeric(5, 4), nullable=False)
@@ -44,8 +43,6 @@ class CompanyPayout(Base):
         Enum(PayoutStatusEnum), nullable=False, default=PayoutStatusEnum.PENDING
     )
 
-    # Cuenta destino, fijada al generar la liquidación. RESTRICT: una cuenta
-    # referenciada por una liquidación no se puede borrar.
     bank_account_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("company_bank_accounts.id", ondelete="RESTRICT"),
@@ -69,7 +66,6 @@ class CompanyPayout(Base):
     )
 
     __table_args__ = (
-        # Idempotencia: una liquidación por periodo exacto y empresa.
         UniqueConstraint(
             "company_id", "period_start", "period_end", name="uq_payout_company_period"
         ),

@@ -48,9 +48,6 @@ interface ConfirmModalProps {
   onClose: () => void;
 }
 
-// Confirmación de acciones críticas. Construida sobre el Modal base.
-// `message` acepta ReactNode: las variantes con contenido extra (motivo de
-// suspensión, datos bancarios, avisos) lo pasan aquí.
 export default function ConfirmModal({
   isOpen,
   title,

@@ -35,8 +35,6 @@ interface CatalogFiltersProps {
 
 const SECTION_LABEL = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400";
 
-// Controles de filtrado del catálogo. Presentacional: una sola fuente de verdad,
-// usada tanto por el panel de escritorio como por el drawer móvil.
 export default function CatalogFilters({
   catalogs,
   catalog,

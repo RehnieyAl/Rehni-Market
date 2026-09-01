@@ -1,4 +1,3 @@
-
 import {
   Mail,
   Phone,
@@ -49,7 +48,6 @@ export default function UserDetailModal({
   isOpen,
   onClose,
 }: UserDetailModalProps) {
-  // Solo lectura: el backend es quien realmente hace cumplir estas reglas.
   const { isOwner } = useRole();
 
   const [user, setUser] = useState<AdminUserResponse | null>(null);
@@ -166,7 +164,6 @@ export default function UserDetailModal({
 
   const canEditRole = user?.role !== "company";
 
-  // Una cuenta owner solo puede editarse (correo o rol) por otro owner.
   const canEdit = !(user?.role === "owner" && !isOwner);
 
   return (
@@ -276,7 +273,6 @@ export default function UserDetailModal({
                         value: "admin",
                         label: "Administrador",
                       },
-                      // Solo un owner puede asignar el rol owner.
                       ...(isOwner
                         ? [
                             {
@@ -326,8 +322,6 @@ export default function UserDetailModal({
                 </div>
               )}
 
-              {/* CAMBIO USUARIO → ADMIN */}
-
               {isEditing &&
                 user.role === "user" &&
                 editRole === "admin" && (
@@ -353,8 +347,6 @@ export default function UserDetailModal({
                     </div>
                   </div>
                 )}
-
-              {/* CAMBIO ADMIN → USUARIO */}
 
               {isEditing &&
                 user.role === "admin" &&
@@ -587,4 +579,3 @@ function UserStatus({ active }: { active: boolean }) {
     </span>
   );
 }
-

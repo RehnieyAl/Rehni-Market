@@ -1,7 +1,8 @@
 import { StyleSheet, Text, View } from "react-native";
 
-import { formatPrice } from "@/utils/formatPrice";
-import { colors, fontSize, fontWeight, radii, spacing } from "@/theme";
+import { PriceBlock } from "@/components/product/PriceBlock";
+import { Rating } from "@/components/ui/Rating";
+import { colors, fontSize, fontWeight, spacing } from "@/theme";
 
 interface Props {
   catalogName: string;
@@ -10,15 +11,10 @@ interface Props {
   discountEnabled: boolean;
   discountPercentage: number | null;
   finalPrice: string;
+  averageRating: number | null;
+  reviewCount: number;
 }
 
-// Espejo de la cabecera de RehniMarket-frontend/src/features/public/
-// products/components/ProductDetail.tsx + ProductPrice.tsx: categoría
-// (eyebrow) + nombre + precio con descuento. Rating/reseñas NO se
-// muestran todavía a propósito (ver Fase Product Detail > NO IMPLEMENTAR
-// TODAVÍA) aunque el backend ya los devuelva. `price`/`discountPercentage`/
-// `finalPrice` llegan ya resueltos por el screen (producto base o
-// variante activa, según corresponda - ver ProductDetailScreen.tsx).
 export function ProductInfo({
   catalogName,
   name,
@@ -26,26 +22,26 @@ export function ProductInfo({
   discountEnabled,
   discountPercentage,
   finalPrice,
+  averageRating,
+  reviewCount,
 }: Props) {
   return (
     <View style={styles.container}>
       <Text style={styles.eyebrow}>{catalogName}</Text>
       <Text style={styles.name}>{name}</Text>
 
-      {discountEnabled ? (
-        <View style={styles.priceRow}>
-          <Text style={styles.originalPrice}>{formatPrice(price)}</Text>
-          <Text style={styles.price}>{formatPrice(finalPrice)}</Text>
+      <Rating value={averageRating} count={reviewCount} size="md" />
 
-          {discountPercentage !== null && (
-            <View style={styles.discountBadge}>
-              <Text style={styles.discountText}>-{discountPercentage}%</Text>
-            </View>
-          )}
-        </View>
-      ) : (
-        <Text style={styles.price}>{formatPrice(price)}</Text>
-      )}
+      <View style={styles.price}>
+        <PriceBlock
+          price={price}
+          finalPrice={finalPrice}
+          discountEnabled={discountEnabled}
+          discountPercentage={discountPercentage}
+          size="xl"
+          tone="brand"
+        />
+      </View>
     </View>
   );
 }
@@ -66,32 +62,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.bold,
     color: colors.textPrimary,
   },
-  priceRow: {
-    marginTop: spacing.xs,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
   price: {
-    fontSize: fontSize.xxl,
-    fontWeight: fontWeight.bold,
-    color: colors.textPrimary,
-  },
-  originalPrice: {
-    fontSize: fontSize.base,
-    color: colors.textMuted,
-    textDecorationLine: "line-through",
-  },
-  discountBadge: {
-    backgroundColor: colors.primaryMuted,
-    borderRadius: radii.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-  },
-  discountText: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.semibold,
-    color: colors.primary,
+    marginTop: spacing.xs,
   },
 });

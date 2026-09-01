@@ -17,7 +17,6 @@ from app.services.commerce.WalletService import (
     list_recharge_history_service,
 )
 
-# Exclusivo ADMIN/OWNER; el rol se revalida en cada endpoint (tienen bypass del middleware).
 router = APIRouter(prefix="/admin/wallet", tags=["admin", "wallet"])
 
 

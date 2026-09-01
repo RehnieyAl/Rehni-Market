@@ -17,7 +17,6 @@ def get_company_by_id(database: Session, company_id: UUID) -> Company | None:
 
 
 def get_company_by_user_id(database: Session, user_id: UUID) -> Company | None:
-    # Resuelve la empresa del usuario autenticado sin depender del ORM de Users en el llamador.
     return (database.query(Company).filter(Company.user_id == user_id).first())
 
 

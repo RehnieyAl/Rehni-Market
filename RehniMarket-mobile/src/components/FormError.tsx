@@ -6,11 +6,6 @@ interface Props {
   message: string | null;
 }
 
-// Banner inline de error de formulario. Equivalente mínimo del toast
-// global `showAlert("error", ...)` de la web (AlertProvider/useAlert) -
-// todavía no existe un toast global en la app móvil, así que cada
-// pantalla muestra su propio error acá mismo, arriba del formulario, en
-// vez de dejar el fallo silencioso (ver Fase 3 > VALIDACIONES).
 export function FormError({ message }: Props) {
   if (!message) return null;
 

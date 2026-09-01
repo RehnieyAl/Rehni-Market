@@ -50,18 +50,17 @@ class ProductDetailResponse(BaseModel):
     discount_type: str | None = None
     discount_starts_at: datetime | None = None
     discount_ends_at: datetime | None = None
+    applies_tax: bool
     stock: int
     has_variants: bool
     descripcion: str
     is_active: bool
     created_at: datetime
-    # None = nunca eliminado; con fecha = eliminado por la empresa (distinto de "Inactivo").
     deleted_at: datetime | None = None
 
     catalog_id: UUID
     catalog_name: str
 
-    # Independiente del color de las variantes; puede no tener ninguno.
     main_color_id: UUID | None
     main_color: ProductColorResponse | None
 
@@ -77,16 +76,13 @@ class UpdateProductRequest(BaseModel):
     catalogId: str | None = None
     priceProduct: float | None = Field(default=None, ge=0)
     discountEnable: bool | None = None
-    # Porcentaje de descuento (0-100), no un monto absoluto.
     discountValue: float | None = Field(default=None, ge=0, le=100)
+    appliesTax: bool | None = None
     stockProduct: int | None = Field(default=None, ge=0)
     descripcionProduct: str | None = Field(default=None, min_length=1)
-    # clearMainColor como bandera aparte: un Form vacío no sirve para "limpiar".
     mainColorId: str | None = None
     clearMainColor: bool = False
-    # JSON: [{attributeId, value}, ...] contra atributos role="product" del catálogo.
     technicalSpecProduct: str | None = None
-    # Id de una imagen ya existente que pasa a ser la principal.
     mainImageId: str | None = None
 
     @classmethod
@@ -97,6 +93,7 @@ class UpdateProductRequest(BaseModel):
         priceProduct: Annotated[float | None, Form()] = None,
         discountEnable: Annotated[bool | None, Form()] = None,
         discountValue: Annotated[float | None, Form()] = None,
+        appliesTax: Annotated[bool | None, Form()] = None,
         stockProduct: Annotated[int | None, Form()] = None,
         descripcionProduct: Annotated[str | None, Form()] = None,
         mainColorId: Annotated[str | None, Form()] = None,
@@ -110,6 +107,7 @@ class UpdateProductRequest(BaseModel):
             priceProduct=priceProduct,
             discountEnable=discountEnable,
             discountValue=discountValue,
+            appliesTax=appliesTax,
             stockProduct=stockProduct,
             descripcionProduct=descripcionProduct,
             mainColorId=mainColorId,

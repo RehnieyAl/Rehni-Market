@@ -51,7 +51,6 @@ def list_favorites_service(user_id: UUID, role: str, database: Session) -> list[
                 product=FavoriteProductResponse(
                     id=product.id,
                     name=product.name,
-                    # Misma imagen inicial que el catálogo (primera variante viva).
                     image=product_display_image_url(product),
                     companyName=product.company.nameCompany,
                     price=card_price.base_price,

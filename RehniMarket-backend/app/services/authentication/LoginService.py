@@ -43,12 +43,6 @@ def login_service(user: LoginRequest, database: Session) -> LoginResponse:
             api_error(400, ErrorCodes.INVALID_CREDENTIALS, "Correo o contraseña incorrecta.")
             
         if not search_user.verified:
-            # Garantiza que exista un codigo de verificacion activo (solo
-            # genera uno nuevo si no hay o expiro - reintentar el login no
-            # spamea codigos ni reinicia el contador de 5 min). El commit
-            # ES imprescindible: sin el, get_db() cierra la sesion y el
-            # ROLLBACK descarta el codigo recien creado (el correo ya salio)
-            # y el usuario nunca puede verificar.
             role = search_user.role.name if search_user.role else None
             company_name = (
                 search_user.company.nameCompany
@@ -85,7 +79,12 @@ def login_service(user: LoginRequest, database: Session) -> LoginResponse:
                 api_error(403, ErrorCodes.COMPANY_REJECTED, "Tu empresa ha sido rechazada")
 
             if company.CompanyStatus == False:
-                api_error(403, ErrorCodes.COMPANY_SUSPENDED, "Tu empresa se encuentra suspendida.")
+                api_error(
+                    403,
+                    ErrorCodes.COMPANY_SUSPENDED,
+                    "Tu empresa se encuentra suspendida.",
+                    extra={"reason": company.suspension_reason} if company.suspension_reason else None,
+                )
 
         access_token = create_access_token(
             user_id=str(search_user.id),

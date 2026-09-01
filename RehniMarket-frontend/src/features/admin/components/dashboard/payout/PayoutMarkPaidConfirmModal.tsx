@@ -14,8 +14,6 @@ interface PayoutMarkPaidConfirmModalProps {
   onClose: () => void;
 }
 
-// Confirmación antes de PATCH /admin/payouts/{id}/pay. Dispara un correo a la
-// empresa y no se puede deshacer. ConfirmModal con los datos bancarios embebidos.
 export default function PayoutMarkPaidConfirmModal({
   isOpen,
   companyName,

@@ -13,8 +13,6 @@ interface ProductTabsProps {
   reviewCount: number;
 }
 
-// Pestañas Descripción / Especificaciones / Opiniones. "Opiniones" solo hace scroll a ReviewsSection,
-// que se renderiza siempre debajo de este bloque.
 export default function ProductTabs({
   description,
   attributes,

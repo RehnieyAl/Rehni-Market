@@ -21,13 +21,11 @@ import { FormError } from "@/components/FormError";
 import { ErrorCode } from "@/types/ErrorCode";
 import { colors, fontSize, fontWeight, radii, spacing } from "@/theme";
 
-// mm:ss a partir de segundos (>= 0).
 function formatCountdown(totalSeconds: number): string {
   const safe = Math.max(0, Math.floor(totalSeconds));
   return `${String(Math.floor(safe / 60)).padStart(2, "0")}:${String(safe % 60).padStart(2, "0")}`;
 }
 
-// param string ("300") -> timestamp absoluto (ms) o null.
 function toDeadline(seconds: string | number | undefined | null): number | null {
   const n = typeof seconds === "string" ? Number(seconds) : seconds;
   return typeof n === "number" && Number.isFinite(n) && n >= 0
@@ -35,12 +33,6 @@ function toDeadline(seconds: string | number | undefined | null): number | null 
     : null;
 }
 
-// Portado de RehniMarket-frontend/src/features/public/auth/pages/
-// VerifyEmail.tsx: mismos endpoints (POST /auth/verify-email-user,
-// /auth/change-email y /auth/resend-verification-code), dos contadores
-// independientes (expiracion del codigo 5 min / cooldown de reenvio 60 s)
-// y el mismo flujo de "el correo es incorrecto". La expiracion real la
-// valida el backend - el contador de aca es solo informativo.
 export default function VerifyEmailScreen() {
   const router = useRouter();
   const {
@@ -65,11 +57,9 @@ export default function VerifyEmailScreen() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  // CONTADOR 1: expiracion del codigo (null = estado desconocido).
   const [codeDeadline, setCodeDeadline] = useState<number | null>(() =>
     toDeadline(expiresIn),
   );
-  // CONTADOR 2: cooldown de reenvio (siempre hay uno).
   const [resendDeadline, setResendDeadline] = useState<number>(
     () => toDeadline(resendAvailableIn) ?? Date.now(),
   );
@@ -255,7 +245,6 @@ export default function VerifyEmailScreen() {
 
               <CodeInput value={code} onChange={setCode} disabled={codeExpired} />
 
-              {/* CONTADOR 1 - expiracion del codigo */}
               {codeSecondsLeft !== null && !codeExpired && (
                 <Text style={styles.countdown}>
                   Código válido durante{" "}
@@ -282,7 +271,6 @@ export default function VerifyEmailScreen() {
               />
             </View>
 
-            {/* CONTADOR 2 - cooldown de reenvio (separado del contador 1) */}
             <View style={styles.resendSection}>
               <Text style={styles.footerText}>¿No recibiste el código?</Text>
 

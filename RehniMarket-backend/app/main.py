@@ -1,4 +1,3 @@
-# Punto de entrada de la app FastAPI: configura routers y middlewares.
 from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
 from pydantic import ValidationError
@@ -27,6 +26,7 @@ from app.routers import CompanyPayoutRouter
 from app.routers import AdminPayoutRouter
 from app.routers import ReportRouter
 from app.routers import AdminReportRouter
+from app.routers import ShippingCarrierRouter
 import app.models
 from app.middleware.AuthMiddleware import auth_middleware
 from app.middleware.RateLimitMiddleware import rate_limit_middleware
@@ -40,8 +40,6 @@ from app.Config import config
 
 @asynccontextmanager
 async def lifespan(app):
-    # El bucket de MinIO se prepara aquí (en el arranque), no al importar
-    # NasService: importar no debe hacer I/O de red.
     ensure_bucket()
 
     db = SessionLocal()
@@ -53,7 +51,12 @@ async def lifespan(app):
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan,
+    title="RehniMarket API",
+    version="2.4.0",
+    description="API REST del marketplace RehniMarket. Documentación técnica: docs/MANUAL_TECNICO_REHNIMARKET.md",
+)
 
 
 @app.exception_handler(ValidationError)
@@ -73,7 +76,10 @@ async def pydantic_validation_exception_handler(request: Request, exc: Validatio
 
 
 app.middleware("http")(auth_middleware)
-#app.middleware("http")(rate_limit_middleware)
+
+if config.RATE_LIMIT_ENABLED:
+    app.middleware("http")(rate_limit_middleware)
+
 setup_cors(app)
 
 
@@ -92,6 +98,7 @@ app.include_router(AdminUserRouters.router)
 app.include_router(AdminWalletRouter.router)
 app.include_router(AdminPayoutRouter.router)
 app.include_router(AdminReportRouter.router)
+app.include_router(ShippingCarrierRouter.router)
 
 
 app.include_router(CartRouter.router)
@@ -106,5 +113,3 @@ app.include_router(ReportRouter.router)
 
 app.include_router(BankAccountRouter.router)
 app.include_router(CompanyPayoutRouter.router)
-
-

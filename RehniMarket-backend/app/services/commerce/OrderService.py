@@ -11,6 +11,7 @@ from app.core.Exceptions import api_error
 from app.models.ModelCompany import Company
 from app.models.ModelOrder import Order, OrderStatusEnum
 from app.models.ModelProduct import Product
+from app.models.ModelShippingCarrier import ShippingCarrier
 from app.models.ModelUser import Users
 from app.models.ModelVariant import ProductVariant
 
@@ -23,6 +24,8 @@ from app.schemas.SchemaCommerce.SchemaOrder import (
     OrderAddressResponse,
     OrdersPaginatedResponse,
     OrderStatusCountsResponse,
+    OrderShippingCarrierResponse,
+    SetOrderShippingRequest,
 )
 
 from app.services.NasService import build_media_url
@@ -30,7 +33,6 @@ from app.services.commerce.WalletService import refund_wallet
 from app.services.email.OrderEmailService import send_order_status_email
 
 
-# Transiciones de estado permitidas; ningún salto fuera de este grafo.
 ALLOWED_TRANSITIONS: dict[OrderStatusEnum, set[OrderStatusEnum]] = {
     OrderStatusEnum.PENDING: {OrderStatusEnum.PROCESSING, OrderStatusEnum.CANCELLED},
     OrderStatusEnum.PAID: {OrderStatusEnum.PROCESSING, OrderStatusEnum.CANCELLED},
@@ -42,13 +44,33 @@ ALLOWED_TRANSITIONS: dict[OrderStatusEnum, set[OrderStatusEnum]] = {
 
 CANCELLABLE_STATUSES = {OrderStatusEnum.PENDING, OrderStatusEnum.PAID}
 
-# Estados que se cancelan y reembolsan al suspender la empresa.
-# SHIPPED/DELIVERED/CANCELLED quedan fuera a propósito.
 REFUNDABLE_ON_SUSPENSION_STATUSES = {
     OrderStatusEnum.PENDING,
     OrderStatusEnum.PAID,
     OrderStatusEnum.PROCESSING,
 }
+
+
+def _restore_stock_for_order(database: Session, order: Order) -> None:
+    for item in order.items:
+        if item.variant_id:
+            variant = (
+                database.query(ProductVariant)
+                .filter(ProductVariant.id == item.variant_id)
+                .first()
+            )
+
+            if variant:
+                variant.stock += item.quantity
+        else:
+            product = (
+                database.query(Product)
+                .filter(Product.id == item.product_id)
+                .first()
+            )
+
+            if product:
+                product.stock += item.quantity
 
 
 def _to_order_response(order: Order) -> OrderResponse:
@@ -70,12 +92,10 @@ def _to_order_response(order: Order) -> OrderResponse:
 
     buyer = order.user
 
-    # profileImagen se guarda como object_name.
     buyer_photo = (
         build_media_url(f"uploads/{buyer.profileImagen}") if buyer.profileImagen else None
     )
 
-    # Snapshot del pedido, nunca la dirección en vivo. Pedidos previos sin snapshot van sin dirección.
     delivery_address = (
         OrderAddressResponse(
             label=order.delivery_label,
@@ -89,8 +109,17 @@ def _to_order_response(order: Order) -> OrderResponse:
         else None
     )
 
-    # Teléfono de la dirección si existe, si no el del usuario.
     buyer_phone = order.delivery_phone or buyer.tell
+
+    shipping_carrier = (
+        OrderShippingCarrierResponse(
+            id=order.shipping_carrier.id,
+            name=order.shipping_carrier.name,
+            trackingUrl=order.shipping_carrier.tracking_url,
+        )
+        if order.shipping_carrier
+        else None
+    )
 
     return OrderResponse(
         id=order.id,
@@ -110,6 +139,8 @@ def _to_order_response(order: Order) -> OrderResponse:
         buyerPhoto=buyer_photo,
         buyerPhone=buyer_phone,
         deliveryAddress=delivery_address,
+        shippingCarrier=shipping_carrier,
+        trackingNumber=order.tracking_number,
     )
 
 
@@ -156,6 +187,13 @@ def cancel_my_order_service(
         if not order:
             api_error(404, ErrorCodes.ORDER_NOT_FOUND, "Pedido no encontrado.")
 
+        if order.status == OrderStatusEnum.CANCELLED:
+            api_error(
+                409,
+                ErrorCodes.ORDER_ALREADY_CANCELLED,
+                "Este pedido ya fue cancelado y reembolsado.",
+            )
+
         if order.status not in CANCELLABLE_STATUSES:
             api_error(
                 409,
@@ -163,13 +201,35 @@ def cancel_my_order_service(
                 "Este pedido ya está en preparación y no se puede cancelar.",
             )
 
+        refunded_amount = Decimal("0")
+
+        if (
+            order.total > Decimal("0")
+            and not wallet_repo.has_order_been_refunded(database, order.id)
+        ):
+            refund_wallet(
+                database,
+                order.user_id,
+                order.total,
+                description=(
+                    f"Reembolso por cancelación del pedido RM-{order.order_number:06d}."
+                ),
+                order_id=order.id,
+            )
+            refunded_amount = order.total
+
+        _restore_stock_for_order(database, order)
+
         order.status = OrderStatusEnum.CANCELLED
 
         database.commit()
         database.refresh(order)
 
-        # Correo "Pedido cancelado". Sin reembolso de RehniCoin en este flujo.
-        send_order_status_email(order)
+        send_order_status_email(
+            order,
+            reason="Cancelación solicitada por el comprador.",
+            refunded_amount=refunded_amount if refunded_amount > Decimal("0") else None,
+        )
 
         return _to_order_response(order)
 
@@ -205,7 +265,6 @@ def list_company_orders_service(
 
     company = _resolve_company(database, user_id)
 
-    # Strings crudos -> OrderStatusEnum aquí; los valores inválidos se ignoran.
     valid_statuses: list[OrderStatusEnum] | None = None
 
     if statuses:
@@ -294,8 +353,58 @@ def update_company_order_status_service(
         database.commit()
         database.refresh(order)
 
-        # Correo de cambio de estado; no hace nada para targets fuera de PROCESSING/SHIPPED/DELIVERED/CANCELLED.
         send_order_status_email(order)
+
+        return _to_order_response(order)
+
+    except HTTPException:
+        database.rollback()
+        raise
+
+    except Exception:
+        database.rollback()
+        traceback.print_exc()
+        api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
+
+
+def set_company_order_shipping_service(
+    user_id: UUID,
+    order_id: UUID,
+    data: SetOrderShippingRequest,
+    database: Session,
+) -> OrderResponse:
+    """La empresa asigna transportadora + guía a uno de SUS pedidos. No cambia el
+    estado del pedido: solo completa la información de envío del estado SHIPPED."""
+
+    company = _resolve_company(database, user_id)
+
+    try:
+        order = repo.get_company_order(database, order_id, company.id)
+
+        if not order:
+            api_error(404, ErrorCodes.ORDER_NOT_FOUND, "Pedido no encontrado.")
+
+        carrier = database.get(ShippingCarrier, data.shippingCarrierId)
+
+        if not carrier:
+            api_error(
+                404,
+                ErrorCodes.SHIPPING_CARRIER_NOT_FOUND,
+                "Transportadora no encontrada.",
+            )
+
+        if not carrier.is_active and order.shipping_carrier_id != carrier.id:
+            api_error(
+                409,
+                ErrorCodes.SHIPPING_CARRIER_INACTIVE,
+                "La transportadora seleccionada está inactiva.",
+            )
+
+        order.shipping_carrier_id = carrier.id
+        order.tracking_number = data.trackingNumber
+
+        database.commit()
+        database.refresh(order)
 
         return _to_order_response(order)
 
@@ -324,8 +433,6 @@ def cancel_and_refund_company_orders_for_suspension(
     refunded_orders: list[Order] = []
 
     for order in orders:
-        # Idempotencia: se verifica el ledger de RehniCoin (has_order_been_refunded),
-        # no order.status, para no reembolsar dos veces.
         if wallet_repo.has_order_been_refunded(database, order.id):
             continue
 
@@ -342,26 +449,7 @@ def cancel_and_refund_company_orders_for_suspension(
 
         order.status = OrderStatusEnum.CANCELLED
 
-        # Devolver stock por la misma relación que descontó el checkout: variante o producto base.
-        for item in order.items:
-            if item.variant_id:
-                variant = (
-                    database.query(ProductVariant)
-                    .filter(ProductVariant.id == item.variant_id)
-                    .first()
-                )
-
-                if variant:
-                    variant.stock += item.quantity
-            else:
-                product = (
-                    database.query(Product)
-                    .filter(Product.id == item.product_id)
-                    .first()
-                )
-
-                if product:
-                    product.stock += item.quantity
+        _restore_stock_for_order(database, order)
 
         refunded_orders.append(order)
 

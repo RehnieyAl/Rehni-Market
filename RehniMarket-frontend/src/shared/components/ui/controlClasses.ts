@@ -4,7 +4,6 @@ const CONTROL_BASE =
   "h-11 w-full rounded-control border bg-white text-sm text-gray-900 outline-none transition " +
   "placeholder:text-gray-400 focus:ring-2 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400";
 
-// Clases del control de formulario según estado. Compartido por Input, Select y Textarea.
 export function controlClasses(invalid?: boolean): string {
   return cn(
     CONTROL_BASE,

@@ -19,7 +19,6 @@ class AdminCompanyDetailResponse(BaseModel):
     CompanyCertificateStatus: str
     CompanyStatus: bool
 
-    # Motivo de suspensión vigente; None mientras CompanyStatus=True.
     suspensionReason: str | None = None
 
     addressCompany: str
@@ -38,7 +37,6 @@ class UpdateCertificateStatusRequest(BaseModel):
 class UpdateCompanyStatusRequest(BaseModel):
     status: bool
 
-    # Obligatorio solo al suspender (status=False); la validación real está en el servicio.
     reason: str | None = None
 
 
@@ -48,4 +46,3 @@ class UpdateCompanyStatusResponse(AdminCompanyDetailResponse):
 
     affectedOrdersCount: int
     totalRefunded: Decimal
-

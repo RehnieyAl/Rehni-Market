@@ -11,11 +11,9 @@ import type { Address } from "../types/response";
 interface AddressSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // Se llama con la dirección elegida al presionar "Continuar".
   onSelect: (address: Address) => void;
 }
 
-// Se abre cuando el usuario intenta comprar sin dirección seleccionada. Maneja su propio listado.
 export default function AddressSelectionModal({
   isOpen,
   onClose,
@@ -39,7 +37,6 @@ export default function AddressSelectionModal({
       const defaultAddress = data.find((a) => a.isDefault) ?? data[0];
       setSelectedId(defaultAddress?.id ?? null);
 
-      // Sin direcciones: entra directo al formulario.
       setShowForm(data.length === 0);
     } catch (error) {
       console.error("Error cargando direcciones:", error);
@@ -54,12 +51,10 @@ export default function AddressSelectionModal({
 
     const timeout = setTimeout(loadAddresses);
     return () => clearTimeout(timeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const handleSaved = (created: Address) => {
     setAddresses((prev) => [created, ...prev]);
-    // Selecciona la nueva dirección, cierra el formulario y mantiene abierto el modal principal.
     setSelectedId(created.id);
     setShowForm(false);
   };
@@ -115,9 +110,9 @@ export default function AddressSelectionModal({
               {addresses.map((address) => (
                 <label
                   key={address.id}
-                  className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 text-sm transition ${
+                  className={`flex cursor-pointer items-start gap-3 rounded-control border p-4 text-sm transition ${
                     selectedId === address.id
-                      ? "border-red-700 bg-red-50"
+                      ? "border-primary bg-brand-50"
                       : "border-gray-200 hover:bg-gray-50"
                   }`}
                 >
@@ -126,14 +121,14 @@ export default function AddressSelectionModal({
                     name="address"
                     checked={selectedId === address.id}
                     onChange={() => setSelectedId(address.id)}
-                    className="mt-1 accent-red-700"
+                    className="mt-1 accent-primary"
                   />
 
                   <span>
                     <span className="block font-medium text-gray-900">
                       {address.label ?? "Dirección"}
                       {address.isDefault && (
-                        <span className="ml-2 text-xs font-normal text-red-700">
+                        <span className="ml-2 text-xs font-normal text-primary">
                           (predeterminada)
                         </span>
                       )}

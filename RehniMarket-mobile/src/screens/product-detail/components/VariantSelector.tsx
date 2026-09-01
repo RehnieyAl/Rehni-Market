@@ -1,73 +1,107 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { deriveVariantAxes, isOptionAvailable } from "@/utils/variantAxes";
 import { colors, fontSize, fontWeight, radii, spacing } from "@/theme";
-
-export interface ColorOption {
-  key: string;
-  hex: string;
-  name: string;
-  outOfStock: boolean;
-}
+import type { PublicProductVariant } from "@/types/product";
 
 interface Props {
-  options: ColorOption[];
-  selectedKey: string | null;
-  selectedName: string | null;
-  onSelect: (key: string) => void;
+  variants: PublicProductVariant[];
+  selected: Record<string, string>;
+  onChange: (attributeName: string, value: string) => void;
 }
 
-// Espejo exacto de la sección "Color" de RehniMarket-frontend/src/
-// features/public/products/components/ProductDetail.tsx: NO asume
-// nombres de atributo genéricos ("talla"/"capacidad"/etc.) porque el
-// backend real solo modela variantes por COLOR (ver
-// PublicProductVariantResponse.color, CreateVariantRequest exige
-// exactamente un color por variante) - no hay otro tipo de atributo que
-// portar. `options` ya incluye el color base del producto (si tiene) +
-// cada variante con color, agotadas incluidas (ver Fase Product Detail >
-// STOCK - REGLA CRÍTICA, "el stock del producto principal NO debe ocultar
-// variantes disponibles"): se muestran igual, deshabilitadas con opacidad
-// reducida, en vez de desaparecer de la lista.
-export function VariantSelector({ options, selectedKey, selectedName, onSelect }: Props) {
-  if (options.length === 0) return null;
+export function VariantSelector({ variants, selected, onChange }: Props) {
+  const axes = deriveVariantAxes(variants);
+
+  if (axes.length === 0) return null;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Color{selectedName ? `: ${selectedName}` : ""}</Text>
+      {axes.map((axis) => {
+        const chosen = selected[axis.name];
 
-      <View style={styles.row}>
-        {options.map((option) => {
-          const isSelected = option.key === selectedKey;
+        return (
+          <View key={axis.name} style={styles.axis}>
+            <Text style={styles.axisTitle}>
+              {axis.name}
+              {chosen ? `: ${chosen}` : ""}
+            </Text>
 
-          return (
-            <Pressable
-              key={option.key}
-              disabled={option.outOfStock}
-              onPress={() => onSelect(option.key)}
-              hitSlop={4}
-              style={[
-                styles.swatch,
-                { backgroundColor: option.hex },
-                isSelected && styles.swatchSelected,
-                option.outOfStock && styles.swatchDisabled,
-              ]}
-            />
-          );
-        })}
-      </View>
+            <View style={styles.values}>
+              {axis.values.map(({ value, hex }) => {
+                const available = isOptionAvailable(
+                  variants,
+                  axes,
+                  selected,
+                  axis.name,
+                  value,
+                );
+                const isSelected = chosen === value;
+
+                if (axis.isColor) {
+                  return (
+                    <Pressable
+                      key={value}
+                      disabled={!available}
+                      onPress={() => onChange(axis.name, value)}
+                      hitSlop={4}
+                      accessibilityLabel={
+                        available ? value : `${value} (no disponible con la selección actual)`
+                      }
+                      style={[
+                        styles.swatch,
+                        { backgroundColor: hex ?? "#E5E7EB" },
+                        isSelected && styles.swatchSelected,
+                        !available && styles.optionDisabled,
+                      ]}
+                    />
+                  );
+                }
+
+                return (
+                  <Pressable
+                    key={value}
+                    disabled={!available}
+                    onPress={() => onChange(axis.name, value)}
+                    style={[
+                      styles.chip,
+                      isSelected && styles.chipSelected,
+                      !available && styles.optionDisabled,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.chipText,
+                        isSelected && styles.chipTextSelected,
+                        !available && styles.chipTextDisabled,
+                      ]}
+                    >
+                      {value}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        );
+      })}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    gap: spacing.lg,
+  },
+  axis: {
     gap: spacing.sm,
   },
-  title: {
+  axisTitle: {
     fontSize: fontSize.sm,
     fontWeight: fontWeight.semibold,
     color: colors.textPrimary,
   },
-  row: {
+  values: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm,
@@ -77,12 +111,35 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: radii.full,
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: colors.borderStrong,
   },
   swatchSelected: {
     borderColor: colors.primary,
   },
-  swatchDisabled: {
-    opacity: 0.35,
+  chip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.borderStrong,
+  },
+  chipSelected: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+  },
+  chipText: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.medium,
+    color: colors.textPrimary,
+  },
+  chipTextSelected: {
+    color: colors.textOnPrimary,
+  },
+  chipTextDisabled: {
+    color: colors.textMuted,
+    textDecorationLine: "line-through",
+  },
+  optionDisabled: {
+    opacity: 0.4,
   },
 });

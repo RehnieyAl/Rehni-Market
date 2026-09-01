@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
   Activity,
@@ -49,10 +48,8 @@ export default function Home({ onNavigate }: HomeProps) {
   const [recentUsersLoading, setRecentUsersLoading] =
     useState(true);
 
-  // Muestra "—" en las tarjetas cuando falla la carga; el aviso lo da showAlert.
   const [statsFailed, setStatsFailed] = useState(false);
 
-  // Solo para refrescar los tiempos relativos; nunca se llama Date.now() en el render.
   const [currentTime, setCurrentTime] =
     useState<number | null>(null);
 
@@ -80,7 +77,6 @@ export default function Home({ onNavigate }: HomeProps) {
     };
 
     loadStatistics();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -129,7 +125,6 @@ export default function Home({ onNavigate }: HomeProps) {
     loadRecentUsers();
   }, []);
 
-  // Refresca el texto de tiempo relativo cada 30s sin consultar el backend.
   useEffect(() => {
     const interval = window.setInterval(() => {
       setCurrentTime(Date.now());
@@ -518,7 +513,6 @@ function formatRelativeTime(
 ): string {
   let normalizedDate = dateString;
 
-  // Fechas sin timezone (formatos antiguos) se tratan como UTC.
   if (
     !dateString.endsWith("Z") &&
     !dateString.includes("+") &&
@@ -638,4 +632,3 @@ function formatRelativeTime(
       : "días"
   }`;
 }
-

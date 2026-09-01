@@ -12,7 +12,6 @@ import {
 } from "./session";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 
-// Una cuenta bloqueada/suspendida no debe recuperar sesión vía refresh, ni mostrarse como "sesión expirada".
 const ACCOUNT_BLOCKED_CODES: string[] = [
   ErrorCode.USER_BLOCKED,
   ErrorCode.COMPANY_SUSPENDED,

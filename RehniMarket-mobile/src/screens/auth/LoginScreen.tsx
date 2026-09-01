@@ -20,19 +20,6 @@ import { FormError } from "@/components/FormError";
 import { ErrorCode } from "@/types/ErrorCode";
 import { colors, fontSize, fontWeight, radii, spacing } from "@/theme";
 
-// Portado de RehniMarket-frontend/src/features/public/auth/pages/
-// Login.tsx: mismo endpoint (vía useAuth().login → POST /auth/login-user),
-// mismo caso especial EMAIL_NOT_VERIFIED (redirige a verify-email con el
-// correo precargado en vez de mostrar el error genérico). El resto de
-// errores (credenciales inválidas, cuenta bloqueada ya resuelta por el
-// interceptor, etc.) se muestra en el banner de arriba - la web los deja
-// al toast global, acá no existe todavía (ver FormError.tsx).
-//
-// Esta app es exclusiva para comprador (ver Fase > RESTRICCIÓN DE ROLE):
-// el backend puede autenticar credenciales válidas de cualquier role, así
-// que después de obtener el perfil real se comprueba `role === "user"`
-// acá mismo, ANTES de navegar a (user) - evita el parpadeo de entrar y
-// que el guard central (app/_layout.tsx) recién ahí cierre la sesión.
 export default function LoginScreen() {
   const router = useRouter();
   const { email: prefilledEmail } = useLocalSearchParams<{ email?: string }>();
@@ -41,11 +28,6 @@ export default function LoginScreen() {
   const [email, setEmail] = useState(prefilledEmail ?? "");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  // Mensaje dejado por otra pantalla antes de forzar un logout (sesión
-  // expirada, cuenta bloqueada, o role no permitido restaurado al abrir
-  // la app - ver api/session.ts > setPendingSessionMessage/
-  // consumePendingSessionMessage y app/_layout.tsx). Se consume una sola
-  // vez al montar, igual que auth_alert en la web.
   const [error, setError] = useState<string | null>(() => consumePendingSessionMessage());
 
   const handleSubmit = async () => {
@@ -61,13 +43,6 @@ export default function LoginScreen() {
         return;
       }
 
-      // Retomar la intención que dejó pendiente un visitante (ver Fase
-      // Acceso Público > PENDING ACTION): se lee sin consumir (peek) -
-      // quien realmente aplica la variante/cantidad guardadas es la
-      // pantalla de destino (ver ProductDetailScreen.tsx > efecto de
-      // resume), esta pantalla solo decide A DÓNDE volver. Cualquier otro
-      // tipo (ADD_TO_FAVORITES/CHECKOUT, todavía sin pantalla que los
-      // retome) cae al comportamiento normal.
       const pending = peekPendingAction();
 
       if (pending?.type === "ADD_TO_CART") {

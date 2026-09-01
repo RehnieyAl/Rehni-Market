@@ -75,7 +75,6 @@ def get_public_products(
     max_price: Decimal | None = Query(None, ge=0),
     discount: bool | None = Query(None),
     in_stock: bool | None = Query(None),
-    # Filtros de anuncios dinámicos; el frontend los traduce desde los parámetros camelCase de la URL.
     min_discount: int | None = Query(None, ge=0, le=100),
     max_stock: int | None = Query(None, ge=0),
     days: int | None = Query(None, ge=1),
@@ -109,8 +108,6 @@ def get_daily_products(
     return get_daily_products_service(database, limit=limit)
 
 
-# Rutas estáticas: van ANTES de /products/{product_id} para que no las capture
-# el segmento dinámico.
 @router.get("/products/offers", response_model=PublicProductsPaginatedResponse)
 def get_public_offers(
     page: int = Query(1, ge=1),
@@ -161,7 +158,6 @@ def get_public_company_products(
     )
 
 
-# Reputación de empresa: endpoint único, consumido desde dashboard, "Mi tienda" y perfil público.
 @router.get("/company/{company_id}/rating", response_model=CompanyRatingResponse)
 def get_public_company_rating(company_id: UUID, database: Session = Depends(get_db)):
     return get_company_rating_service(database, company_id)

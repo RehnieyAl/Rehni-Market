@@ -1,21 +1,25 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { CheckCircle2, MapPin, Pencil } from "lucide-react";
+import { CheckCircle2, MapPin, Pencil, ShoppingCart } from "lucide-react";
 import axios from "axios";
 
 import { useCart } from "../context/useCart";
 import { checkout } from "../api/checkoutService";
+import {
+  cartHasUnavailableItems,
+  isCartItemUnavailable,
+} from "../utils/availability";
 import { getAddresses } from "@/features/addresses/api/addressService";
 import AddressSelectionModal from "@/features/addresses/components/AddressSelectionModal";
 import { getMyWallet } from "@/features/wallet/api/walletService";
 import { formatPrice } from "@/shared/utils/formatPrice";
-import { Skeleton } from "@/shared/components/ui";
+import { Button, EmptyState, Skeleton } from "@/shared/components/ui";
+import { buttonClasses } from "@/shared/components/ui/buttonVariants";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 
 import type { Address } from "@/features/addresses/types/response";
 
-// Checkout con dirección obligatoria; se gestiona desde AddressSelectionModal, sin redirigir a otra pantalla.
 export default function CheckoutView() {
   const { cart, loading, refreshCart } = useCart();
   const { showAlert } = useAlert();
@@ -39,7 +43,6 @@ export default function CheckoutView() {
         const defaultAddress = addressList.find((a) => a.isDefault) ?? addressList[0] ?? null;
         setSelectedAddress(defaultAddress);
 
-        // Sin dirección registrada: abre el modal de una vez, no un checkout que no se puede completar.
         if (!defaultAddress) {
           setAddressModalOpen(true);
         }
@@ -56,7 +59,6 @@ export default function CheckoutView() {
   const items = cart?.items ?? [];
 
   const handleConfirm = async () => {
-    // Comprar sin dirección seleccionada abre el modal (el backend ADDRESS_REQUIRED se maneja abajo como resguardo).
     if (!selectedAddress) {
       setAddressModalOpen(true);
       return;
@@ -80,10 +82,9 @@ export default function CheckoutView() {
         return;
       }
 
-      // Stock agotado o variante retirada mientras el carrito estaba abierto: el backend rechaza
-      // y aquí se recarga para reflejar el estado real antes de reintentar.
       if (
         detail?.code === ErrorCode.INSUFFICIENT_STOCK ||
+        detail?.code === ErrorCode.PRODUCT_OUT_OF_STOCK ||
         detail?.code === ErrorCode.PRODUCT_NOT_FOUND ||
         detail?.code === ErrorCode.VARIANT_NOT_FOUND
       ) {
@@ -101,8 +102,8 @@ export default function CheckoutView() {
   if (success) {
     return (
       <section className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
-          <CheckCircle2 className="h-10 w-10 text-green-600" />
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-success-bg text-success">
+          <CheckCircle2 className="h-10 w-10" />
         </div>
 
         <h1 className="text-2xl font-bold text-gray-900">
@@ -115,7 +116,7 @@ export default function CheckoutView() {
 
         <Link
           to="/user/dashboard?tab=orders"
-          className="mt-6 inline-block rounded-xl bg-[#6D0F2D] px-6 py-3 text-sm font-medium text-white transition hover:bg-[#530A20]"
+          className={buttonClasses({ className: "mt-6" })}
         >
           Ver mis pedidos
         </Link>
@@ -125,54 +126,66 @@ export default function CheckoutView() {
 
   if (loading || !addressesLoaded) {
     return (
-      <div className="mx-auto grid max-w-5xl gap-8 px-4 py-8 lg:grid-cols-[1fr_360px]">
-        <div className="space-y-4">
-          <Skeleton className="h-32 rounded-card" />
-          <Skeleton className="h-48 rounded-card" />
+      <section className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
+        <Skeleton className="h-9 w-40 rounded-control" />
+        <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_340px]">
+          <div className="space-y-6">
+            <Skeleton className="h-40 rounded-card" />
+            <Skeleton className="h-56 rounded-card" />
+          </div>
+          <Skeleton className="h-64 rounded-card" />
         </div>
-        <Skeleton className="h-72 rounded-card" />
-      </div>
+      </section>
     );
   }
 
   if (items.length === 0) {
     return (
-      <section className="mx-auto max-w-2xl px-4 py-16 text-center">
-        <p className="text-lg text-gray-700">Tu carrito está vacío.</p>
-
-        <Link
-          to="/products"
-          className="mt-6 inline-block rounded-xl bg-[#6D0F2D] px-6 py-3 text-sm font-medium text-white transition hover:bg-[#530A20]"
-        >
-          Explorar productos
-        </Link>
+      <section className="mx-auto max-w-2xl px-4 py-16">
+        <EmptyState
+          icon={<ShoppingCart size={22} />}
+          title="Tu carrito está vacío"
+          description="Agrega productos para continuar con tu compra."
+          action={
+            <Link to="/products" className={buttonClasses({ size: "sm" })}>
+              Explorar productos
+            </Link>
+          }
+        />
       </section>
     );
   }
 
-  const subtotal = items.reduce((sum, item) => sum + Number(item.subtotal), 0);
-  const tax = subtotal * 0.19;
-  const total = subtotal + tax;
+  const subtotal = cart?.subtotal ?? "0";
+  const tax = Number(cart?.tax ?? 0);
+  const total = Number(cart?.total ?? 0);
   const hasEnoughBalance = Number(walletBalance) >= total;
 
+  const hasUnavailableItems = cartHasUnavailableItems(items);
+  const canConfirm = hasEnoughBalance && !hasUnavailableItems;
+
   return (
-    <section className="mx-auto max-w-5xl px-4 py-8">
-      <h1 className="text-3xl font-bold">Checkout</h1>
+    <section className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
+      <header>
+        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Checkout</h1>
+        <p className="mt-1 text-sm text-gray-500">
+          Confirma tu dirección y finaliza el pago con RehniCoin.
+        </p>
+      </header>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
+      <div className="mt-8 grid items-start gap-8 lg:grid-cols-[1fr_340px]">
         <div className="space-y-6">
-
-          <div className="rounded-2xl border bg-white p-6">
-            <div className="mb-4 flex items-center justify-between">
+          <div className="rounded-card border border-gray-200 bg-white p-6 shadow-card">
+            <div className="flex items-center justify-between gap-3">
               <h2 className="flex items-center gap-2 font-semibold text-gray-900">
-                <MapPin size={18} />
+                <MapPin size={18} className="text-gray-400" />
                 Dirección de envío
               </h2>
 
               {selectedAddress && (
                 <button
                   onClick={() => setAddressModalOpen(true)}
-                  className="flex items-center gap-1.5 text-sm font-medium text-[#6D0F2D] hover:underline"
+                  className="flex items-center gap-1.5 text-sm font-medium text-primary transition hover:text-primary-hover"
                 >
                   <Pencil size={14} />
                   Cambiar
@@ -181,7 +194,7 @@ export default function CheckoutView() {
             </div>
 
             {selectedAddress ? (
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm">
+              <div className="mt-4 rounded-control bg-gray-50 p-4 text-sm">
                 <p className="font-medium text-gray-900">
                   {selectedAddress.label ?? "Dirección"}
                   {selectedAddress.fullName ? ` · ${selectedAddress.fullName}` : ""}
@@ -196,67 +209,76 @@ export default function CheckoutView() {
             ) : (
               <button
                 onClick={() => setAddressModalOpen(true)}
-                className="w-full rounded-xl border border-dashed border-gray-300 py-4 text-sm font-medium text-[#6D0F2D] hover:bg-gray-50"
+                className="mt-4 w-full rounded-control border border-dashed border-gray-300 py-4 text-sm font-medium text-primary transition hover:bg-gray-50"
               >
                 + Agregar dirección de entrega
               </button>
             )}
           </div>
 
-          <div className="rounded-2xl border bg-white p-6">
-            <h2 className="mb-4 font-semibold text-gray-900">Productos</h2>
+          <div className="rounded-card border border-gray-200 bg-white p-6 shadow-card">
+            <h2 className="font-semibold text-gray-900">Productos</h2>
 
-            <div className="divide-y divide-gray-100">
+            <ul className="mt-3 divide-y divide-gray-100">
               {items.map((item) => {
                 const optionsLabel =
                   item.options.length > 0
                     ? item.options.map((option) => option.value).join(" / ")
                     : item.variantName;
 
+                const unavailable = isCartItemUnavailable(item);
+
                 return (
-                  <div key={item.id} className="flex justify-between gap-3 py-3 text-sm">
+                  <li key={item.id} className="flex justify-between gap-3 py-3 text-sm">
                     <span className="text-gray-700">
                       {item.quantity} × {item.name}
                       {optionsLabel ? ` (${optionsLabel})` : ""}
+                      {unavailable && (
+                        <span className="ml-2 inline-flex items-center rounded-full bg-danger-bg px-2 py-0.5 text-xs font-bold text-danger">
+                          {item.availableStock <= 0 ? "Agotado" : "Sin stock suficiente"}
+                        </span>
+                      )}
                     </span>
-                    <span className="font-medium">{formatPrice(item.subtotal)}</span>
-                  </div>
+                    <span className="shrink-0 font-medium text-gray-900">
+                      {formatPrice(item.subtotal)}
+                    </span>
+                  </li>
                 );
               })}
-            </div>
+            </ul>
           </div>
         </div>
 
-        <div className="h-fit rounded-2xl border bg-white p-6">
-          <h2 className="mb-4 font-semibold text-gray-900">Resumen</h2>
+        <div className="rounded-card border border-gray-200 bg-white p-6 shadow-card lg:sticky lg:top-6">
+          <h2 className="font-semibold text-gray-900">Resumen</h2>
 
-          <div className="space-y-2 text-sm text-gray-600">
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span>{formatPrice(subtotal)}</span>
+          <dl className="mt-4 space-y-2 text-sm">
+            <div className="flex justify-between text-gray-600">
+              <dt>Subtotal</dt>
+              <dd>{formatPrice(subtotal)}</dd>
             </div>
 
-            <div className="flex justify-between">
-              <span>Impuestos (19%)</span>
-              <span>{formatPrice(tax)}</span>
+            <div className="flex justify-between text-gray-600">
+              <dt>IVA</dt>
+              <dd>{tax > 0 ? formatPrice(cart?.tax ?? "0") : "No aplica"}</dd>
             </div>
 
-            <div className="flex justify-between border-t pt-2 text-base font-bold text-gray-900">
-              <span>Total</span>
-              <span>{formatPrice(total)}</span>
+            <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-bold text-gray-900">
+              <dt>Total</dt>
+              <dd>{formatPrice(total)}</dd>
             </div>
-          </div>
+          </dl>
 
-          <div className="mt-4 rounded-xl bg-gray-50 p-3 text-sm">
+          <div className="mt-4 rounded-control bg-gray-50 p-3 text-sm">
             <div className="flex justify-between text-gray-600">
               <span>Saldo RehniCoin</span>
-              <span className="font-medium">{formatPrice(walletBalance)}</span>
+              <span className="font-medium text-gray-900">{formatPrice(walletBalance)}</span>
             </div>
 
             {!hasEnoughBalance && (
-              <p className="mt-2 text-xs text-red-600">
+              <p className="mt-2 text-xs text-danger">
                 Tu saldo no alcanza para esta compra.{" "}
-                <Link to="/user/dashboard?tab=profile" className="underline">
+                <Link to="/user/dashboard?tab=wallet" className="font-medium underline">
                   Recarga en tu cuenta
                 </Link>
                 .
@@ -264,17 +286,30 @@ export default function CheckoutView() {
             )}
           </div>
 
-          <button
+          {hasUnavailableItems && (
+            <p className="mt-4 rounded-control bg-danger-bg p-3 text-xs text-danger">
+              Hay productos agotados o sin stock suficiente en tu carrito.{" "}
+              <Link to="/cart" className="font-medium underline">
+                Vuelve al carrito
+              </Link>{" "}
+              para eliminarlos o ajustar la cantidad.
+            </p>
+          )}
+
+          <Button
+            className="mt-6"
+            fullWidth
+            size="lg"
+            loading={confirming}
+            disabled={!canConfirm}
             onClick={handleConfirm}
-            disabled={confirming || !hasEnoughBalance}
-            className="mt-6 w-full rounded-xl bg-[#6D0F2D] py-3 font-medium text-white transition hover:bg-[#530A20] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {confirming
-              ? "Confirmando..."
+              ? "Confirmando…"
               : selectedAddress
                 ? "Confirmar compra"
                 : "Elegir dirección para continuar"}
-          </button>
+          </Button>
         </div>
       </div>
 

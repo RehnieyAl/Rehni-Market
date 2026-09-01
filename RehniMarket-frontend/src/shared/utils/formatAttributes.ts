@@ -3,7 +3,6 @@ export interface AttributePair {
   value: string;
 }
 
-// "Color: Negro · Talla: 40" a partir de options[] del carrito o del attributes_snapshot del pedido.
 export function formatAttributePairs(
   pairs: AttributePair[] | Record<string, string> | null | undefined,
 ): string {

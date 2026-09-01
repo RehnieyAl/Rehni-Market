@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-ssr
+.pnpm-store
+.git
+
+!.env.example
+*.log
+design

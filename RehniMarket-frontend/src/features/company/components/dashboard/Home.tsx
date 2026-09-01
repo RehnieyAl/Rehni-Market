@@ -35,10 +35,6 @@ interface HomeProps {
   onNavigate: (view: string) => void;
 }
 
-// Etiqueta del estado real de verificación (CompanyCertificateStatus) -
-// antes se mostraba "verificada" con solo tener un certificado subido,
-// sin importar si un admin lo había aprobado (ver Dashboard.py >
-// company_dashboard_me_service).
 function getVerificationBadge(company: DashboardHomeResponse | null) {
   if (!company) {
     return { label: "", className: "bg-gray-100 text-gray-500" };
@@ -65,9 +61,6 @@ function getVerificationBadge(company: DashboardHomeResponse | null) {
 }
 
 export default function Home({ onNavigate }: HomeProps) {
-  // El correo es un dato de la CUENTA (no de la empresa) - se reutiliza
-  // el mismo AuthContext que ya alimenta navbar/sidebar/topbar (ver
-  // AccountSettings.tsx) en vez de volver a pedirlo aquí (GET /auth/me).
   const { user } = useAuth();
 
   const [company, setCompany] = useState<DashboardHomeResponse | null>(null);
@@ -111,9 +104,6 @@ export default function Home({ onNavigate }: HomeProps) {
     const loadRecentProducts = async () => {
       try {
         setRecentLoading(true);
-        // Los 10 productos más recientes (el backend ya los ordena por
-        // fecha de creación descendente - ver
-        // company_dashboard_get_my_products).
         const data = await getMyProducts(1, 10, "");
         setRecentProducts(data.products);
       } catch (error) {
@@ -130,9 +120,7 @@ export default function Home({ onNavigate }: HomeProps) {
 
   return (
     <>
-      {/* Hero */}
       <section className="mt-8 overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
-        {/* Banner */}
         <div className="h-48 overflow-hidden md:h-52 lg:h-56">
           <img
             src={company?.banner ?? defaultbanner}
@@ -144,10 +132,8 @@ export default function Home({ onNavigate }: HomeProps) {
           />
         </div>
 
-        {/* Información */}
         <div className="relative px-8 pb-10">
           <div className="flex items-start gap-6">
-            {/* Logo */}
             <div className="-mt-6 flex h-36 w-36 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-white shadow-pop">
               <img
                 src={company?.logo ?? defaultLogo}
@@ -159,7 +145,6 @@ export default function Home({ onNavigate }: HomeProps) {
               />
             </div>
 
-            {/* Datos */}
             <div className="pt-2">
               {company ? (
                 <h2 className="text-2xl font-bold text-gray-900">
@@ -180,10 +165,6 @@ export default function Home({ onNavigate }: HomeProps) {
                   <Skeleton className="h-6 w-24 rounded-full" />
                 )}
 
-                {/* Reputación real, calculada sobre las reseñas activas
-                    de todos los productos de la empresa - ver ALCANCE >
-                    Calificaciones de empresa (la empresa no tiene
-                    reseñas propias). */}
                 {company && <CompanyRatingBadge companyId={company.id} />}
               </div>
 
@@ -231,9 +212,6 @@ export default function Home({ onNavigate }: HomeProps) {
         </div>
       </section>
 
-      {/* Estadísticas: solo datos reales calculados sobre los productos
-          de la empresa (no hay ventas/visitas/favoritos/reseñas en el
-          backend - ver ALCANCE > Home > ESTADÍSTICAS). */}
       <section className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Productos publicados"
@@ -264,7 +242,6 @@ export default function Home({ onNavigate }: HomeProps) {
         />
       </section>
 
-      {/* Productos recientes */}
       <section className="mt-8 overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <div>

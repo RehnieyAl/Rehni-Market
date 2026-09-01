@@ -10,10 +10,6 @@ import Finance from "@/features/company/components/dashboard/Finance";
 import MyCompany from "@/features/company/components/dashboard/MyCompany";
 import Profile from "@/features/company/components/dashboard/Profile";
 
-// Mismo patrón que pages/user/Dashboard.tsx: la pestaña activa se deriva
-// de la URL (?tab=...) en vez de un useState aparte, para poder
-// deep-linkear una sección puntual sin crear
-// ninguna ruta nueva - el click del sidebar solo actualiza la URL.
 const VALID_TABS = ["home", "products", "orders", "finance", "company", "profile"];
 
 export default function Dashboard() {

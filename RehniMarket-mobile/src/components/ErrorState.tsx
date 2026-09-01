@@ -8,11 +8,6 @@ interface Props {
   onRetry: () => void;
 }
 
-// Bloque de error INLINE con reintento - cada sección de Home (banner/
-// categorías/productos) es independiente (mismo criterio que la web:
-// Hero/CategoriesSection/DailyProducts cargan por separado), así que si
-// una falla, se le muestra esto sin bloquear las demás (ver Fase Home >
-// ESTADOS, "no mostrar pantalla completamente blanca").
 export function ErrorState({ message = "No se pudo cargar el contenido.", onRetry }: Props) {
   return (
     <View style={styles.container}>

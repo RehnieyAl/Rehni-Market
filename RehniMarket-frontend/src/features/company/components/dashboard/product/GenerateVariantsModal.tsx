@@ -19,8 +19,6 @@ interface Props {
   catalogId: string;
 }
 
-// El backend genera el producto cartesiano; aquí solo se eligen los ejes y se crean
-// las combinaciones que falten con un precio y stock base.
 export default function GenerateVariantsModal({
   isOpen,
   onClose,

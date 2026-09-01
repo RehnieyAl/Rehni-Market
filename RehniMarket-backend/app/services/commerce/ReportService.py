@@ -21,9 +21,8 @@ from app.schemas.SchemaCommerce.SchemaReport import (
     ReportResponse,
 )
 
-# Evidencias: opcionales, máximo 5, solo imágenes; validado también en el backend.
 MAX_EVIDENCE_IMAGES = 5
-MAX_EVIDENCE_FILE_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB por imagen
+MAX_EVIDENCE_FILE_SIZE_BYTES = 5 * 1024 * 1024
 ALLOWED_EVIDENCE_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
 ALLOWED_EVIDENCE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 
@@ -53,7 +52,6 @@ def _validate_evidence_files(evidences: list[UploadFile]) -> None:
                 "Solo se permiten imágenes en formato JPEG, PNG o WEBP.",
             )
 
-        # Medir con seek/tell y volver a 0 para que nas.upload_file lo lea desde el inicio.
         file.file.seek(0, 2)
         size = file.file.tell()
         file.file.seek(0)
@@ -97,7 +95,6 @@ def create_report_service(
             if not product:
                 api_error(404, ErrorCodes.PRODUCT_NOT_FOUND, "Producto no encontrado.")
 
-            # Reporte de producto: company_id queda NULL; la empresa se obtiene vía Product.company.
             product_id = product.id
 
             target_type = ReportTargetType.PRODUCT
@@ -127,7 +124,6 @@ def create_report_service(
 
         repo.create_report(database, report)
 
-        # Subir evidencias tras crear el reporte (necesita report.id) pero antes del commit.
         if evidence_files and nas:
             for file in evidence_files:
                 result = nas.upload_file(file, f"reports/{report.id}/evidences/")

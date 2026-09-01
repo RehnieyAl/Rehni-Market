@@ -1,22 +1,16 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
 
-import logo from "@/assets/logo.png";
 import { cn } from "@/shared/utils/cn";
 
 interface AuthLayoutProps {
   title: string;
   subtitle?: ReactNode;
-  // Icono en un círculo de marca sobre el título.
   icon?: ReactNode;
   children: ReactNode;
-  // Contenido bajo la tarjeta (aviso legal, enlace secundario…).
   belowCard?: ReactNode;
   size?: "md" | "lg";
 }
 
-// Cáscara común de las pantallas de autenticación: logo (enlace a inicio),
-// tarjeta centrada y responsive. No contiene lógica.
 export default function AuthLayout({
   title,
   subtitle,
@@ -33,10 +27,6 @@ export default function AuthLayout({
           size === "lg" ? "max-w-xl" : "max-w-md",
         )}
       >
-        <Link to="/" className="mx-auto mb-6 block" aria-label="Ir al inicio">
-          <img src={logo} alt="RehniMarket" className="h-9 w-auto object-contain" />
-        </Link>
-
         <div className="animate-fade-in rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
           {icon && (
             <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-primary">

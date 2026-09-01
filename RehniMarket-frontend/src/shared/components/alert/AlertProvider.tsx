@@ -1,4 +1,3 @@
-
 import {
   useEffect,
   useState,
@@ -28,8 +27,6 @@ interface AlertState {
 export default function AlertProvider({
   children,
 }: AlertProviderProps) {
-  // Inicializador perezoso: consume (lee y borra) el mensaje que dejó en sessionStorage un redirect
-  // con window.location.href, para que ya esté en el estado en el primer render.
   const [alert, setAlert] =
     useState<AlertState | null>(() => {
       const pendingMessage =
@@ -107,4 +104,3 @@ export default function AlertProvider({
     </AlertContext.Provider>
   );
 }
-

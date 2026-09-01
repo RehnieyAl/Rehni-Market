@@ -40,7 +40,6 @@ export default function Favorites() {
   const handleRemove = async (favorite: Favorite) => {
     try {
       setRemovingId(favorite.id);
-      // Mismo toggleFavorite que ProductCard, para que el estado global se actualice en todas partes.
       await toggleFavorite(favorite.product.id);
       setFavorites((prev) => prev.filter((f) => f.id !== favorite.id));
     } catch (error) {

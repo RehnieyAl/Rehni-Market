@@ -4,7 +4,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-# Mismos 4 valores que BankAccountTypeEnum, como Literal en vez del Enum de SQLAlchemy.
 BankAccountType = Literal["savings", "checking", "nequi", "daviplata"]
 
 

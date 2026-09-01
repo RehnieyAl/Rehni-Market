@@ -3,7 +3,6 @@ import { getPublicNewProducts } from "@/features/public/products/api/productsSer
 
 const HOME_LIMIT = 12;
 
-// Primera página de novedades para el carrusel del Home.
 async function fetchHomeNewProducts() {
   const response = await getPublicNewProducts(1, HOME_LIMIT);
   return response.products;

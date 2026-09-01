@@ -54,7 +54,6 @@ def clear_default(database: Session, company_id: UUID) -> None:
 
 
 def is_bank_account_referenced_by_payout(database: Session, bank_account_id: UUID) -> bool:
-    # Import local para evitar un ciclo entre los repos de bank accounts y payouts.
     from app.models.ModelCompanyPayout import CompanyPayout
 
     return (

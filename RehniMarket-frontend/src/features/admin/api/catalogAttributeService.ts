@@ -8,9 +8,6 @@ import type {
   UpdateAttributeOptionRequest,
 } from "../types/request";
 
-// El Admin/Owner define, por categoría, qué atributos existen, si son de producto
-// (role="product") o eje de variante (role="variant"), y sus opciones.
-
 export async function getCatalogAttributes(
   catalogId: string,
 ): Promise<AdminCatalogAttributeResponse[]> {

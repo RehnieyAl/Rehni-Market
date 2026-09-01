@@ -1,5 +1,3 @@
-// Espejo de PublicCompanyProfileResponse / PublicCompanyProductsResponse
-// (backend > app/schemas/SchemaPublic.py).
 import type { PublicProductCard } from "@/features/public/home/types/response";
 
 export interface PublicCompanyProfile {
@@ -21,10 +19,6 @@ export interface PublicCompanyProductsResponse {
   products: PublicProductCard[];
 }
 
-// Espejo de CompanyRatingResponse (backend > SchemaPublic.py) - la
-// empresa no tiene reseñas propias, esto es la agregación de las
-// reseñas activas de todos sus productos (ver ALCANCE > Calificaciones
-// de empresa).
 export interface CompanyRating {
   average_rating: number | null;
   total_reviews: number;

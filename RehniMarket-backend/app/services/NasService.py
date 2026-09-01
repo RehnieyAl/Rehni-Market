@@ -24,12 +24,6 @@ _bucket_ready = False
 
 
 def ensure_bucket() -> None:
-    """Crea el bucket 'uploads' si no existe.
-
-    Se invoca en el arranque de la app (lifespan) y de forma perezosa antes de
-    subir un archivo. NUNCA al importar el módulo: importar no debe hacer I/O de
-    red, porque eso rompe `pytest` y cualquier import fuera de la red de Docker
-    (el host no resuelve `minio`)."""
     global _bucket_ready
 
     if _bucket_ready:
@@ -39,7 +33,7 @@ def ensure_bucket() -> None:
         if not client.bucket_exists(bucket):
             client.make_bucket(bucket)
         _bucket_ready = True
-    except Exception as exc:  # MinIO no disponible no debe tumbar el proceso
+    except Exception as exc:
         logger.warning("No se pudo verificar/crear el bucket '%s': %s", bucket, exc)
 
 

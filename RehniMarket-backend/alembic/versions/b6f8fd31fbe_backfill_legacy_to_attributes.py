@@ -82,7 +82,6 @@ def _get_or_create_option(bind, attribute_id, value, hex_color) -> uuid.UUID:
 def upgrade() -> None:
     bind = op.get_bind()
 
-    # 1. ColorVariant + ProductVariant.color_id -> atributo "Color" (role=variant) + variant_options.
     variant_rows = bind.execute(
         sa.text(
             "SELECT v.id AS variant_id, p.catalog_id AS catalog_id, "
@@ -132,7 +131,6 @@ def upgrade() -> None:
             {"combo_key": _combo_key(option_id), "variant_id": str(row["variant_id"])},
         )
 
-    # 2. SpecificationTemplate + ProductSpecification -> atributo (role=product) + product_attribute_values.
     spec_rows = bind.execute(
         sa.text(
             "SELECT ps.product_id AS product_id, st.catalog_id AS catalog_id, "
@@ -173,8 +171,6 @@ def upgrade() -> None:
 def downgrade() -> None:
     bind = op.get_bind()
 
-    # Se deshacen los enlaces y el combo_key; los atributos/opciones generados se
-    # conservan porque son configuración de catálogo (admin pudo ampliarlos).
     bind.execute(sa.text("DELETE FROM variant_options"))
     bind.execute(sa.text("DELETE FROM product_attribute_values"))
     bind.execute(sa.text("UPDATE product_variants SET combo_key = NULL"))

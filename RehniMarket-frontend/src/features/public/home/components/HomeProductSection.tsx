@@ -8,13 +8,9 @@ interface HomeProductSectionProps {
   title: string;
   viewAllHref: string;
   emptyMessage: string;
-  // Trae la primera página de la sección (Ofertas, Novedades). La regla de negocio
-  // vive en el endpoint, no aquí.
   fetchProducts: () => Promise<PublicProductCard[]>;
 }
 
-// Sección de carrusel del Home con su propio fetch. Cada apartado (Ofertas,
-// Novedades) pasa su fuente y sus textos; la presentación es HomeProductCarousel.
 export default function HomeProductSection({
   title,
   viewAllHref,

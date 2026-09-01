@@ -56,7 +56,6 @@ class CompanyBankAccount(Base):
     payouts = relationship("CompanyPayout", back_populates="bank_account")
 
     __table_args__ = (
-        # Defensa a nivel de BD contra carreras: una sola cuenta is_default por empresa.
         Index(
             "uq_company_bank_account_default",
             "company_id",

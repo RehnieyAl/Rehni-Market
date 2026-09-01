@@ -42,7 +42,6 @@ def get_my_transactions(
 def recharge_wallet(
     request: Request, data: RechargeWalletRequest, database: Session = Depends(get_db)
 ):
-    # Exclusivo ADMIN/OWNER; se revalida el rol aquí porque tienen bypass del middleware.
     if request.state.role not in ("admin", "owner"):
         api_error(
             403,

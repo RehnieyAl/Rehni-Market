@@ -10,7 +10,6 @@ interface SellerCardProps {
   isVerified: boolean;
 }
 
-// Tarjeta "Vendido por": nombre, badge de verificación y enlace al perfil público de la empresa.
 export default function SellerCard({
   companyId,
   companyName,

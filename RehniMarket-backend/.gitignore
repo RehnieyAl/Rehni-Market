@@ -3,6 +3,10 @@
 venv/
 env/
 .env
+.env.dev
+.env.*
+!.env.example
+!.env.public.example
 *.env.local
 .env.*.local
 .env.local
@@ -14,6 +18,10 @@ __pycache__/te
 *.sqlite3
 *.db
 *.bak
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
 .env
 __pycache__/
 soloparami.md

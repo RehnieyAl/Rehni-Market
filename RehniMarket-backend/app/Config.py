@@ -1,4 +1,3 @@
-# Este archivo se encarga de cargar las variables de entorno desde el archivo .env
 from dotenv import load_dotenv
 import os
 load_dotenv()
@@ -23,6 +22,8 @@ class config():
     OWNER_PASSWORD_DEFAULT = os.getenv("OWNER_PASSWORD_DEFAULT")
     RUN_SEED = os.getenv("RUN_SEED", "false").lower() == "true"
     URL_BACKEND = os.getenv("URL_BACKEND")
+    RATE_LIMIT_ENABLED = os.getenv("RATE_LIMIT_ENABLED", "false").lower() == "true"
+    REQUEST_LIMIT = int(os.getenv("REQUEST_LIMIT", "100"))
+    TIME_WINDOW = int(os.getenv("TIME_WINDOW", "60"))
 
 config = config()
-

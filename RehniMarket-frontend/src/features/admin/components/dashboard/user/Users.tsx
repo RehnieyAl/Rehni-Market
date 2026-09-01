@@ -1,4 +1,3 @@
-
 import {
   Search,
   Eye,
@@ -25,7 +24,6 @@ import type { AdminUserResponse } from "@/features/admin/types/response";
 import { useRole } from "@/hooks/useRole";
 
 export default function Users() {
-  // Solo para mostrar/ocultar acciones; el backend hace cumplir las reglas.
   const { isOwner } = useRole();
 
   const [users, setUsers] = useState<AdminUserResponse[]>([]);
@@ -202,7 +200,6 @@ export default function Users() {
     }
   };
 
-  // Owner no se elimina desde aquí; admin solo lo elimina un owner. El backend aplica lo mismo.
   const canDeleteUser = (user: AdminUserResponse) => {
     if (user.role === "owner") return false;
     if (user.role === "admin") return isOwner;
@@ -461,8 +458,6 @@ export default function Users() {
                           </button>
                         )}
 
-                        {/* RECARGAR REHNICOIN (solo compradores) */}
-
                         {user.role === "user" && (
                           <button
                             type="button"
@@ -636,4 +631,3 @@ function RoleStatus({
     </span>
   );
 }
-

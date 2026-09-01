@@ -99,7 +99,7 @@ class TestOffers:
             f"/company/dashboard/products/{product.id}/variants/{disc['id']}",
             headers=auth(tokens["company"]),
         )
-        assert good  # el producto sigue siendo comprable, pero ya no está en oferta
+        assert good
 
         ids, _ = _offer_ids(client)
         assert str(product.id) not in ids
@@ -117,7 +117,6 @@ class TestOffers:
         assert str(product.id) not in ids
 
     def test_card_price_reflects_best_variant_deal(self, client, tokens, product, axes):
-        # Variante A: 500 sin descuento. Variante B: 400 con 20% -> final 320 (la más barata).
         _make_variant(
             client, tokens, product.id, _combo(axes, "negro", "t40"), price=500,
         )
@@ -233,7 +232,6 @@ class TestSharedCardBehaviour:
         assert detail.status_code == 200
         body = detail.json()
         assert len(body["variants"]) == 1
-        # "Desde" del detalle = mismo mejor precio de variante que la tarjeta.
         assert body["price"] == "400.00"
         assert body["final_price"] == "320.00"
         assert body["discount_enabled"] is True

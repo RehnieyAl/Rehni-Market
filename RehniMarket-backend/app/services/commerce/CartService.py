@@ -1,4 +1,5 @@
 import traceback
+from collections import defaultdict
 from decimal import Decimal
 from uuid import UUID
 
@@ -21,6 +22,7 @@ from app.schemas.SchemaCommerce.SchemaCart import (
     CartItemOptionResponse,
 )
 
+from app.core.TaxConfig import compute_tax
 from app.services.NasService import build_media_url
 from app.services.pricing import resolve_price
 from app.services.variants import attributes as attrs
@@ -66,6 +68,9 @@ def _to_item_response(item: CartItem) -> CartItemResponse:
 
     available_stock = variant.stock if variant else item.product.stock
 
+    line_subtotal = price.final_price * item.quantity
+    applies_tax = item.product.applies_tax
+
     return CartItemResponse(
         id=item.id,
         productId=item.product_id,
@@ -85,8 +90,10 @@ def _to_item_response(item: CartItem) -> CartItemResponse:
         basePrice=price.base_price,
         unitPrice=price.final_price,
         discountPercentage=price.discount_percentage,
+        appliesTax=applies_tax,
+        taxAmount=compute_tax(line_subtotal) if applies_tax else Decimal("0.00"),
         quantity=item.quantity,
-        subtotal=price.final_price * item.quantity,
+        subtotal=line_subtotal,
         availableStock=available_stock,
     )
 
@@ -94,10 +101,24 @@ def _to_item_response(item: CartItem) -> CartItemResponse:
 def _to_cart_response(cart) -> CartResponse:
     items = [_to_item_response(item) for item in cart.items]
 
+    subtotal = sum((item.subtotal for item in items), Decimal("0"))
+
+    taxable_by_company: dict = defaultdict(lambda: Decimal("0"))
+    for item in items:
+        if item.appliesTax:
+            taxable_by_company[item.companyId] += item.subtotal
+
+    tax = sum(
+        (compute_tax(base) for base in taxable_by_company.values()),
+        Decimal("0"),
+    )
+
     return CartResponse(
         id=cart.id,
         items=items,
-        subtotal=sum((item.subtotal for item in items), Decimal("0")),
+        subtotal=subtotal,
+        tax=tax,
+        total=subtotal + tax,
         totalItems=sum(item.quantity for item in items),
     )
 
@@ -118,7 +139,6 @@ def add_to_cart_service(
     try:
         product = repo.get_product_by_id(database, data.productId)
 
-        # Producto de empresa suspendida: se trata igual que "no encontrado".
         if not product or not product.is_active or not product.company or not product.company.CompanyStatus:
             api_error(404, ErrorCodes.PRODUCT_NOT_FOUND, "Producto no encontrado.")
 

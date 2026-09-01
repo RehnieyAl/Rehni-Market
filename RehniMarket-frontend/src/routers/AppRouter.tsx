@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import RequireAuth from "@/shared/components/auth/RequireAuth";
 import ScrollToTop from "@/shared/components/ScrollToTop";
+import { useAuth } from "@/features/public/auth/context/useAuth";
 
 import Home from "../pages/public/Home";
 import Categories from "../pages/public/Categories";
@@ -25,11 +26,13 @@ import Admin from "../pages/dashboard/Admin";
 import UserDashboard from "../pages/user/Dashboard";
 
 export default function AppRouter() {
+  const { user, role } = useAuth();
+  const sessionKey = user?.email ?? role ?? "anon";
+
   return (
     <BrowserRouter>
       <ScrollToTop />
       <Routes>
-        {/* Public */}
         <Route path="/" element={<Home />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/products" element={<Products />} />
@@ -41,7 +44,7 @@ export default function AppRouter() {
         <Route
           path="/checkout"
           element={
-            <RequireAuth>
+            <RequireAuth key={sessionKey} area="user">
               <CheckoutPage />
             </RequireAuth>
           }
@@ -53,11 +56,10 @@ export default function AppRouter() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Dashboards */}
         <Route
           path="/company/dashboard"
           element={
-            <RequireAuth>
+            <RequireAuth key={sessionKey} area="company">
               <Company />
             </RequireAuth>
           }
@@ -65,7 +67,7 @@ export default function AppRouter() {
         <Route
           path="/admin/dashboard"
           element={
-            <RequireAuth>
+            <RequireAuth key={sessionKey} area="admin">
               <Admin />
             </RequireAuth>
           }
@@ -73,7 +75,7 @@ export default function AppRouter() {
         <Route
           path="/user/dashboard"
           element={
-            <RequireAuth>
+            <RequireAuth key={sessionKey} area="user">
               <UserDashboard />
             </RequireAuth>
           }

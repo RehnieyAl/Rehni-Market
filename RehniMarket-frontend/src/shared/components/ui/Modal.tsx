@@ -21,30 +21,20 @@ interface ModalProps {
   description?: ReactNode;
   size?: ModalSize;
   children: ReactNode;
-  // Barra de acciones fija al pie.
   footer?: ReactNode;
   closeOnOverlayClick?: boolean;
   closeOnEsc?: boolean;
   hideClose?: boolean;
-  // Deshabilita cerrar (durante una operación en curso, p. ej.).
   busy?: boolean;
-  // Clase extra para el panel.
   className?: string;
-  // Etiqueta accesible cuando no hay `title` visible.
   ariaLabel?: string;
 }
 
-// Cuántos modales hay montados: el bloqueo de scroll del body solo se libera
-// cuando se cierra el último (un modal anidado no debe desbloquear al padre).
 let openModalCount = 0;
 
 const FOCUSABLE =
   'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
-// Modal base del sistema: overlay + panel con animación de entrada, portal al
-// body (evita choques de z-index / overflow), cierre con Esc y clic fuera,
-// bloqueo de scroll, y foco atrapado + restaurado. La reducción de movimiento
-// del sistema la respeta la regla global de index.css.
 export default function Modal({
   isOpen,
   onClose,
@@ -69,7 +59,6 @@ export default function Modal({
     if (!busy) onClose();
   }, [busy, onClose]);
 
-  // Bloqueo de scroll del body mientras el modal está montado.
   useEffect(() => {
     if (!isOpen) return;
 
@@ -83,7 +72,6 @@ export default function Modal({
     };
   }, [isOpen]);
 
-  // Foco: mover al panel al abrir, restaurar al cerrar, atrapar Tab dentro.
   useEffect(() => {
     if (!isOpen) return;
 

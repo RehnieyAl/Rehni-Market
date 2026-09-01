@@ -45,7 +45,6 @@ def create_review(database: Session, review: Review) -> Review:
 
 
 def list_product_reviews(database: Session, product_id: UUID, page: int, limit: int):
-    # selectinload(Review.user): evita el N+1 al leer review.user en _to_review_response.
     query = (
         database.query(Review)
         .options(selectinload(Review.user))

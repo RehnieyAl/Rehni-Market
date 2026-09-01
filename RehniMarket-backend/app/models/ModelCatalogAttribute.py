@@ -12,7 +12,6 @@ from app.database.Connection import Base
 ATTRIBUTE_ROLES = ("product", "variant")
 ATTRIBUTE_INPUT_TYPES = ("select", "color", "text", "number")
 
-# Solo estos tipos aceptan valores predefinidos.
 OPTION_INPUT_TYPES = ("select", "color")
 
 
@@ -39,7 +38,6 @@ class CatalogAttribute(Base):
 
     name: Mapped[str] = mapped_column(String(80), nullable=False)
 
-    # "product" define al producto principal; "variant" es eje de variante.
     role: Mapped[str] = mapped_column(String(16), nullable=False)
 
     input_type: Mapped[str] = mapped_column(
@@ -89,7 +87,6 @@ class CatalogAttributeOption(Base):
 
     value: Mapped[str] = mapped_column(String(80), nullable=False)
 
-    # Solo input_type="color".
     hex_color: Mapped[str | None] = mapped_column(String(7), nullable=True)
 
     position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

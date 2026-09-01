@@ -3,9 +3,6 @@ import { Smartphone, X } from "lucide-react";
 
 const DISMISS_KEY = "rm_mobile_notice_dismissed";
 
-// Aviso informativo NO bloqueante: RehniMarket funciona en el navegador del
-// teléfono. Sin enlace de descarga (todavía no hay APK real). Se descarta y
-// no vuelve a aparecer. Oculto en escritorio.
 export default function MobileAppNotice() {
   const [dismissed, setDismissed] = useState(() => {
     try {
@@ -21,7 +18,8 @@ export default function MobileAppNotice() {
     try {
       localStorage.setItem(DISMISS_KEY, "1");
     } catch {
-      /* almacenamiento no disponible */
+      setDismissed(true);
+      return;
     }
     setDismissed(true);
   };

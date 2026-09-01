@@ -13,6 +13,10 @@ from decimal import Decimal
 from app.services.email.EmailService import send_email
 from app.services.email.template.EmailBase import (
     email_wrapper,
+    greeting_html,
+    heading_html,
+    subheading_html,
+    paragraph_html,
     signature_html,
     info_box,
     label_value_rows,
@@ -60,31 +64,18 @@ def EmailPayoutProcessed(
         )
     )
 
-    content = f"""
-<h2 style="margin:0;color:#222222;font-size:28px;">
-¡Tu liquidación mensual fue realizada!
-</h2>
-
-<p style="margin-top:25px;color:#555555;font-size:16px;line-height:28px;">
-Hola <strong style="color:#6D0F2D;">{company_name}</strong>,
-</p>
-
-<p style="color:#555555;font-size:16px;line-height:28px;">
-Ya procesamos la liquidación de tus ventas del periodo indicado y transferimos
-el valor neto a tu cuenta registrada.
-</p>
-
-<h3 style="margin-top:35px;margin-bottom:10px;color:#222222;font-size:18px;">
-Resumen de la liquidación
-</h3>
-{payout_info}
-
-<h3 style="margin-top:35px;margin-bottom:10px;color:#222222;font-size:18px;">
-Cuenta de destino
-</h3>
-{bank_info}
-
-{signature_html()}
-"""
+    content = (
+        heading_html("¡Tu liquidación mensual fue realizada!")
+        + greeting_html(company_name)
+        + paragraph_html(
+            "Ya procesamos la liquidación de tus ventas del periodo indicado y "
+            "transferimos el valor neto a tu cuenta registrada."
+        )
+        + subheading_html("Resumen de la liquidación")
+        + payout_info
+        + subheading_html("Cuenta de destino")
+        + bank_info
+        + signature_html()
+    )
 
     send_email(to_email, subject, email_wrapper("Liquidación mensual", content))

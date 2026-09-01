@@ -9,6 +9,7 @@ import ProductGallery from "./ProductGallery";
 import SellerCard from "./SellerCard";
 import ProductRatingBadge from "./ProductRatingBadge";
 import ProductPrice from "./ProductPrice";
+import ProductTaxLine from "./ProductTaxLine";
 import ProductTabs from "./ProductTabs";
 import RelatedProducts from "./RelatedProducts";
 import VariantAttributePicker from "./VariantAttributePicker";
@@ -29,7 +30,7 @@ export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const { role } = useRole();
+  const { role, status } = useRole();
   const canPurchase = role === null || role === "user";
 
   const { addItem } = useCart();
@@ -43,7 +44,6 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  // { [attributeName]: value } — la selección del comprador por cada eje de variante.
   const [selected, setSelected] = useState<Record<string, string>>({});
   const [manualImage, setManualImage] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -94,22 +94,13 @@ export default function ProductDetail() {
     return resolveVariant(product.variants, axes, selected);
   }, [product, axes, selected, allAxesChosen]);
 
-  // La combinación elegida no corresponde a ninguna variante existente.
   const invalidCombination = allAxesChosen && activeVariant === null;
 
-  // Primera variante viva: SOLO fuente de la imagen inicial, no se auto-selecciona
-  // (`activeVariant` sigue null hasta que el usuario elige todos los ejes).
   const firstVariant = useMemo(
     () => (product ? firstLiveVariant(product.variants) : null),
     [product],
   );
 
-  // Galería (fuente primaria -> fallbacks, nunca queda vacía):
-  //  1. Variante activa (selección completa y válida) con imágenes propias.
-  //  2. Selección parcial / combinación inexistente: una variante que coincida con
-  //     TODOS los ejes ya elegidos y tenga imágenes (solo representación visual).
-  //  3. Sin selección: imágenes de la PRIMERA VARIANTE VIVA (imagen inicial del producto).
-  //  4. Fallback heredado: imágenes generales del producto padre.
   const images = useMemo(() => {
     if (!product) return [];
 
@@ -152,6 +143,12 @@ export default function ProductDetail() {
   const discountPercentage = activeVariant
     ? activeVariant.discount_percentage
     : product?.discount_percentage ?? null;
+  const displayTaxAmount = activeVariant
+    ? activeVariant.tax_amount
+    : product?.tax_amount ?? "0";
+  const displayPriceWithTax = activeVariant
+    ? activeVariant.final_price_with_tax
+    : product?.price_with_tax ?? "0";
 
   const anyVariantInStock = useMemo(
     () => (product?.variants ?? []).some((variant) => variant.stock > 0),
@@ -168,9 +165,6 @@ export default function ProductDetail() {
 
   const canAddToCart = !requiresVariant || activeVariant !== null;
 
-  // Selector jerárquico por el orden de `axes`: al cambiar el eje del índice N se
-  // conservan los ejes anteriores (< N), se fija el nuevo valor en N y se limpian
-  // TODOS los posteriores (> N), aunque siguieran siendo combinables.
   const handleAxisChange = (attributeName: string, value: string) => {
     const axisIndex = axes.findIndex((axis) => axis.name === attributeName);
     const priorAxisNames = axes
@@ -191,6 +185,8 @@ export default function ProductDetail() {
 
   const handleAddToCart = async (redirectToCart: boolean) => {
     if (!product) return;
+
+    if (status === "loading") return;
 
     if (role === null) {
       redirectToLogin();
@@ -219,6 +215,7 @@ export default function ProductDetail() {
   };
 
   const handleReportClick = () => {
+    if (status === "loading") return;
     if (role === null) {
       redirectToLogin();
       return;
@@ -306,6 +303,13 @@ export default function ProductDetail() {
                 discountEnabled={discountEnabled}
                 discountPercentage={discountPercentage}
                 finalPrice={displayFinalPrice}
+              />
+
+              <ProductTaxLine
+                appliesTax={product.applies_tax}
+                taxRate={product.tax_rate}
+                taxAmount={displayTaxAmount}
+                priceWithTax={displayPriceWithTax}
               />
             </div>
 

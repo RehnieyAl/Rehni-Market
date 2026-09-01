@@ -9,7 +9,6 @@ class CatalogResponse(BaseModel):
     id: UUID
     name: str
 
-    # product_count: calculado (productos activos y con stock válido), no es columna.
     product_count: int
     image_url: str | None
 
@@ -48,14 +47,13 @@ class PublicProductCardResponse(BaseModel):
 
     price: Decimal
     discount_enabled: bool
-    # None cuando discount_enabled es False.
     discount_percentage: int | None
     final_price: Decimal
 
-    # Con variantes es el stock del producto base; la disponibilidad real la resuelve el filtro.
+    applies_tax: bool
+
     stock: int
 
-    # None cuando no tiene reseñas activas.
     average_rating: float | None
     review_count: int
 
@@ -93,10 +91,13 @@ class PublicProductVariantResponse(BaseModel):
     sku: str | None = None
     price: Decimal
 
-    # Descuento efectivo: variante propia o, si no tiene, el del producto.
     discount_enabled: bool
     discount_percentage: int | None
     final_price: Decimal
+
+    applies_tax: bool
+    tax_amount: Decimal
+    final_price_with_tax: Decimal
 
     stock: int
     options: list[PublicVariantOptionResponse]
@@ -149,7 +150,6 @@ class PublicProductDetailResponse(BaseModel):
     company_name: str
     company_id: UUID
     company_logo: str | None
-    # CompanyCertificateStatus == APPROVED.
     company_is_verified: bool
     is_active: bool
 
@@ -157,6 +157,11 @@ class PublicProductDetailResponse(BaseModel):
     discount_enabled: bool
     discount_percentage: int | None
     final_price: Decimal
+
+    applies_tax: bool
+    tax_rate: Decimal
+    tax_amount: Decimal
+    price_with_tax: Decimal
 
     stock: int
 

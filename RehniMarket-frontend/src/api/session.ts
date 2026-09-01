@@ -39,12 +39,15 @@ export const clearTokens = () => {
   );
 };
 
-// Guarda "a dónde volver" tras el login en sessionStorage: el caso crítico (sesión expirada)
-// ocurre en un interceptor de axios, fuera de React, donde no hay useNavigate.
 const POST_LOGIN_REDIRECT_KEY = "postLoginRedirect";
+const AUTH_ALERT_KEY = "auth_alert";
+
+export const clearAuthArtifacts = () => {
+  sessionStorage.removeItem(POST_LOGIN_REDIRECT_KEY);
+  sessionStorage.removeItem(AUTH_ALERT_KEY);
+};
 
 export const setPostLoginRedirect = (path: string) => {
-  // Nunca se guarda "/login" como destino: evitaría un bucle tras el login.
   if (!path || path === "/login") return;
 
   sessionStorage.setItem(
@@ -53,7 +56,6 @@ export const setPostLoginRedirect = (path: string) => {
   );
 };
 
-// Lee y limpia el destino guardado: se consume una sola vez tras el login.
 export const consumePostLoginRedirect = (): string | null => {
   const value = sessionStorage.getItem(
     POST_LOGIN_REDIRECT_KEY,
@@ -66,8 +68,6 @@ export const consumePostLoginRedirect = (): string | null => {
   return value;
 };
 
-// Como redirectToLogin pero con un mensaje específico de cuenta bloqueada.
-// El mensaje va en sessionStorage porque window.location.href recarga la página; lo muestra AlertProvider.
 export const redirectToLoginWithMessage = (
   message: string,
 ) => {

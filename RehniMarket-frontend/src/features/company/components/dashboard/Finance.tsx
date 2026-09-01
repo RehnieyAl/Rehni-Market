@@ -12,7 +12,6 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "bankAccounts", label: "Cuentas bancarias" },
 ];
 
-// Sección "Finanzas": Resumen / Liquidaciones / Cuentas bancarias, con tabs locales (useState, sin sub-rutas).
 export default function Finance() {
   const [tab, setTab] = useState<TabId>("summary");
 

@@ -26,16 +26,15 @@ from app.services.PayoutService import (
     mark_payout_paid_service,
 )
 
-# Exclusivo ADMIN/OWNER; el rol se revalida en cada endpoint (tienen bypass del middleware).
 router = APIRouter(prefix="/admin/payouts", tags=["admin", "payouts"])
 
 
-def _require_admin_or_owner(request: Request):
-    if request.state.role not in ("admin", "owner"):
+def _require_owner(request: Request):
+    if request.state.role != "owner":
         api_error(
             403,
             ErrorCodes.FORBIDDEN,
-            "Solo un administrador puede gestionar liquidaciones.",
+            "Solo el propietario puede gestionar liquidaciones.",
         )
 
 
@@ -43,7 +42,7 @@ def _require_admin_or_owner(request: Request):
 def generate_payout(
     request: Request, data: GeneratePayoutRequest, database: Session = Depends(get_db)
 ):
-    _require_admin_or_owner(request)
+    _require_owner(request)
 
     return generate_company_payout_service(data, database)
 
@@ -56,19 +55,18 @@ def get_payouts(
     status: str | None = Query(None),
     database: Session = Depends(get_db),
 ):
-    _require_admin_or_owner(request)
+    _require_owner(request)
 
     return list_admin_payouts_service(database, page=page, limit=limit, status=status)
 
 
-# Rutas estáticas: deben registrarse antes de GET /{payout_id} para que no las capture como UUID.
 @router.get("/available-periods", response_model=list[PayoutAvailablePeriodResponse])
 def get_available_periods(
     request: Request,
     company_id: UUID = Query(...),
     database: Session = Depends(get_db),
 ):
-    _require_admin_or_owner(request)
+    _require_owner(request)
 
     return list_available_payout_periods_service(company_id, database)
 
@@ -81,20 +79,20 @@ def get_payout_preview(
     period_end: date = Query(...),
     database: Session = Depends(get_db),
 ):
-    _require_admin_or_owner(request)
+    _require_owner(request)
 
     return get_payout_preview_service(company_id, period_start, period_end, database)
 
 
 @router.get("/{payout_id}", response_model=CompanyPayoutResponse)
 def get_payout_detail(request: Request, payout_id: UUID, database: Session = Depends(get_db)):
-    _require_admin_or_owner(request)
+    _require_owner(request)
 
     return get_admin_payout_detail_service(payout_id, database)
 
 
 @router.patch("/{payout_id}/pay", response_model=CompanyPayoutResponse)
 def pay_payout(request: Request, payout_id: UUID, database: Session = Depends(get_db)):
-    _require_admin_or_owner(request)
+    _require_owner(request)
 
     return mark_payout_paid_service(payout_id, database)

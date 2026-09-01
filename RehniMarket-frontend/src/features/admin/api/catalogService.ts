@@ -15,8 +15,6 @@ export async function getAdminCatalogs(): Promise<AdminCatalogResponse[]> {
   return response.data;
 }
 
-// multipart/form-data - la
-// imagen viaja como archivo, no puede ir en JSON.
 export async function createAdminCatalog(
   data: CreateCatalogRequest,
 ): Promise<AdminCatalogResponse> {

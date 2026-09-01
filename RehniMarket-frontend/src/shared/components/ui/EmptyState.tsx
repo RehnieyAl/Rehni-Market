@@ -8,11 +8,9 @@ interface EmptyStateProps {
   description?: string;
   action?: ReactNode;
   className?: string;
-  // "card" (borde sólido, sobre fondo blanco) o "plain" (sin card, para dentro de una).
   variant?: "card" | "plain";
 }
 
-// Estado vacío / sin resultados / error de carga. Un solo patrón para todo el sitio.
 export default function EmptyState({
   icon,
   title,

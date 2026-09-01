@@ -2,7 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class CheckoutRequest(BaseModel):
@@ -15,11 +15,8 @@ class OrderItemResponse(BaseModel):
     variantId: UUID | None
     productName: str
     variantName: str | None
-    # Combinación comprada, congelada al checkout: {"Color": "Negro", "Talla": "40"}.
     attributes: dict[str, str] | None = None
-    # Precio final ya con descuento.
     unitPrice: Decimal
-    # Precio antes del descuento, snapshot al comprar. None si no había descuento.
     originalUnitPrice: Decimal | None = None
     quantity: int
     subtotal: Decimal
@@ -38,9 +35,17 @@ class OrderAddressResponse(BaseModel):
     phone: str
 
 
+class OrderShippingCarrierResponse(BaseModel):
+    """Datos mínimos de la transportadora asignada a un pedido; `trackingUrl` se
+    usa en el frontend para armar el enlace de seguimiento (comprador)."""
+
+    id: UUID
+    name: str
+    trackingUrl: str
+
+
 class OrderResponse(BaseModel):
     id: UUID
-    # Referencia legible ("RM-000001"); el frontend nunca muestra `id` al usuario.
     reference: str
     status: str
     companyId: UUID
@@ -51,11 +56,12 @@ class OrderResponse(BaseModel):
     createdAt: datetime
     items: list[OrderItemResponse]
 
-    # Resumen liviano para listados.
+    shippingCarrier: OrderShippingCarrierResponse | None = None
+    trackingNumber: str | None = None
+
     firstItemName: str | None = None
     totalItems: int = 0
 
-    # El mismo schema sirve para el lado comprador y el lado empresa.
     buyerName: str
     buyerEmail: str
     buyerPhoto: str | None = None
@@ -73,6 +79,27 @@ class OrdersPaginatedResponse(BaseModel):
 
 class UpdateOrderStatusRequest(BaseModel):
     status: str
+
+
+class SetOrderShippingRequest(BaseModel):
+    """La empresa asigna transportadora + guía a uno de sus pedidos. No cambia el
+    estado del pedido (eso sigue por PATCH /orders/{id}/status)."""
+
+    shippingCarrierId: UUID
+    trackingNumber: str
+
+    @field_validator("trackingNumber")
+    @classmethod
+    def validate_tracking_number(cls, value: str) -> str:
+        value = value.strip()
+
+        if len(value) < 3:
+            raise ValueError("El número de guía debe tener al menos 3 caracteres.")
+
+        if len(value) > 80:
+            raise ValueError("El número de guía no debe exceder los 80 caracteres.")
+
+        return value
 
 
 class CheckoutSummaryResponse(BaseModel):
@@ -93,4 +120,3 @@ class OrderStatusCountsResponse(BaseModel):
     inProgress: int
     completed: int
     cancelled: int
-

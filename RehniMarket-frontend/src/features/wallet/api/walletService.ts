@@ -14,8 +14,6 @@ export async function getMyTransactions(page = 1, limit = 10): Promise<WalletTra
   return data;
 }
 
-// Solo ADMIN/OWNER pueden llamar esto (el backend lo valida igual, ver
-// WalletRouter.py) - se usa desde el panel de administración.
 export async function rechargeWallet(
   userId: string,
   amount: number,

@@ -12,10 +12,6 @@ import { FormError } from "@/components/FormError";
 import { ErrorCode } from "@/types/ErrorCode";
 import { colors, fontSize, fontWeight, radii, spacing } from "@/theme";
 
-// Portado de RehniMarket-frontend/src/features/public/auth/pages/
-// ForgotPassword.tsx: mismo endpoint (POST /auth/forgot-password-user) y
-// mismo manejo de EMAIL_NOT_VERIFIED (redirige a verify-email en vez de
-// mostrar el error genérico, igual que la web).
 export default function ForgotPasswordScreen() {
   const router = useRouter();
 

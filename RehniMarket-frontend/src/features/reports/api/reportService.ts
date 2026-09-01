@@ -7,9 +7,6 @@ import type {
   ReportTargetType,
 } from "../types/response";
 
-// Crea un reporte de producto o de empresa (usuario autenticado).
-// multipart/form-data: las evidencias viajan como archivos; `evidences` es opcional.
-
 export async function createReport(
   targetType: ReportTargetType,
   targetId: string,
@@ -39,8 +36,6 @@ export async function createReport(
 
   return response.data;
 }
-
-// ADMIN - centro único de gestión (Admin > Reportes)
 
 export type ReportTypeFilter = "all" | ReportTargetType;
 export type ReportStatusFilter = "all" | ReportStatus;

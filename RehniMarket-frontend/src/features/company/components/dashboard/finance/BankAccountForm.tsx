@@ -10,8 +10,6 @@ import type { BankAccount, BankAccountType } from "@/features/payouts/types/resp
 
 interface BankAccountFormProps {
   isOpen: boolean;
-  // Si viene una cuenta, el formulario edita (PATCH); si no, crea (POST) -
-  // mismo componente para ambos casos, como AddressForm.tsx.
   account: BankAccount | null;
   hasExistingAccounts: boolean;
   onSaved: (account: BankAccount) => void;
@@ -27,10 +25,6 @@ const emptyForm = {
   isDefault: false,
 };
 
-// Formulario "Nueva cuenta bancaria" / "Editar cuenta bancaria" (ver
-// ALCANCE > Módulo de liquidaciones, Fase 1) - mismo patrón que
-// AddressForm.tsx (checkbox "predeterminada", la primera cuenta queda
-// predeterminada sola en el backend).
 export default function BankAccountForm({
   isOpen,
   account,

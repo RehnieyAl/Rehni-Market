@@ -9,7 +9,6 @@ export interface CatalogFormValues {
   displayOrder: number;
   isActive: boolean;
   image: File | null;
-  // Solo en edición: elimina la imagen actual; se ignora si llega una nueva.
   removeImage: boolean;
 }
 
@@ -21,7 +20,6 @@ interface CatalogFormModalProps {
   onSubmit: (values: CatalogFormValues) => void;
 }
 
-// El padre lo monta con una `key` distinta en cada apertura, así useState arranca fresco sin efecto de reset.
 export default function CatalogFormModal({
   isOpen,
   catalog,

@@ -1,5 +1,3 @@
-// Mismos valores reales que ModelReport.py (backend) - única fuente de
-// verdad, ver ALCANCE > Reportes, sección 8 (estados) y 5 (target_type).
 export type ReportTargetType = "product" | "company";
 export type ReportStatus = "pending" | "reviewing" | "resolved" | "rejected";
 
@@ -31,10 +29,6 @@ export interface ReportDetail {
   id: string;
   targetType: ReportTargetType;
 
-  // IDs, nunca una URL guardada -
-  // el enlace "Ver producto"/"Ver empresa" se arma acá, en el frontend,
-  // con estos IDs y las rutas ya existentes (/products/:id,
-  // /company/:companyId
   productId: string | null;
   productName: string | null;
 

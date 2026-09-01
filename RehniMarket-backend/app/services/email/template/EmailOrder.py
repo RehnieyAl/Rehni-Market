@@ -7,6 +7,10 @@ from decimal import Decimal
 from app.services.email.EmailService import send_email
 from app.services.email.template.EmailBase import (
     email_wrapper,
+    greeting_html,
+    heading_html,
+    subheading_html,
+    paragraph_html,
     signature_html,
     info_box,
     label_value_rows,
@@ -16,6 +20,18 @@ from app.services.email.template.EmailBase import (
     products_summary_list_html,
     format_price,
 )
+
+
+def _address_section(address: dict) -> str:
+    return subheading_html("Dirección de entrega") + label_value_rows(
+        [
+            ("Nombre completo", address["full_name"]),
+            ("Teléfono", address["phone"]),
+            ("Dirección", address["address"]),
+            ("Ciudad", address["city"]),
+            ("Departamento", address["department"]),
+        ]
+    )
 
 
 def EmailOrderCreated(
@@ -44,21 +60,7 @@ def EmailOrderCreated(
         )
     )
 
-    address_section = ""
-
-    if address:
-        address_section = f"""
-<h3 style="margin-top:35px;margin-bottom:10px;color:#222222;font-size:18px;">
-Dirección de entrega
-</h3>
-{label_value_rows([
-    ("Nombre completo", address["full_name"]),
-    ("Teléfono", address["phone"]),
-    ("Dirección", address["address"]),
-    ("Ciudad", address["city"]),
-    ("Departamento", address["department"]),
-])}
-"""
+    address_section = _address_section(address) if address else ""
 
     rows_html = "".join(
         product_row_html(
@@ -83,37 +85,21 @@ Dirección de entrega
         )
     )
 
-    content = f"""
-<h2 style="margin:0;color:#222222;font-size:28px;">
-¡Pedido recibido!
-</h2>
-
-<p style="margin-top:25px;color:#555555;font-size:16px;line-height:28px;">
-Hola <strong style="color:#6D0F2D;">{buyer_name}</strong>,
-</p>
-
-<p style="color:#555555;font-size:16px;line-height:28px;">
-Hemos recibido tu pedido correctamente y ya se encuentra en proceso de validación.
-</p>
-
-<h3 style="margin-top:35px;margin-bottom:10px;color:#222222;font-size:18px;">
-Información del pedido
-</h3>
-{order_info}
-{address_section}
-
-<h3 style="margin-top:35px;margin-bottom:10px;color:#222222;font-size:18px;">
-Detalle de productos
-</h3>
-{products_table_html(rows_html)}
-
-<h3 style="margin-top:35px;margin-bottom:10px;color:#222222;font-size:18px;">
-Resumen del pedido
-</h3>
-{summary}
-
-{signature_html()}
-"""
+    content = (
+        heading_html("¡Pedido recibido!")
+        + greeting_html(buyer_name)
+        + paragraph_html(
+            "Hemos recibido tu pedido correctamente y ya se encuentra en proceso de validación."
+        )
+        + subheading_html("Información del pedido")
+        + order_info
+        + address_section
+        + subheading_html("Detalle de productos")
+        + products_table_html(rows_html)
+        + subheading_html("Resumen del pedido")
+        + summary
+        + signature_html()
+    )
 
     send_email(to_email, subject, email_wrapper("Pedido recibido", content))
 
@@ -129,36 +115,24 @@ def EmailOrderProcessing(
 ):
     subject = f"Tu pedido #{reference} está en proceso"
 
-    content = f"""
-<h2 style="margin:0;color:#222222;font-size:28px;">
-Tu pedido está en preparación
-</h2>
-
-<p style="margin-top:25px;color:#555555;font-size:16px;line-height:28px;">
-Hola <strong style="color:#6D0F2D;">{buyer_name}</strong>,
-</p>
-
-<p style="color:#555555;font-size:16px;line-height:28px;">
-La empresa ya está preparando tu pedido.
-</p>
-
-{info_box(label_value_rows([
-    ("Referencia", reference),
-    ("Estado actual", status_label),
-    ("Fecha de actualización", updated_at_label),
-]))}
-
-<h3 style="margin-top:35px;margin-bottom:10px;color:#222222;font-size:18px;">
-Resumen de productos
-</h3>
-{products_summary_list_html(items)}
-
-<p style="margin-top:20px;font-size:16px;color:#222222;">
-<strong>Total: {format_price(total)}</strong>
-</p>
-
-{signature_html()}
-"""
+    content = (
+        heading_html("Tu pedido está en preparación")
+        + greeting_html(buyer_name)
+        + paragraph_html("La empresa ya está preparando tu pedido.")
+        + info_box(
+            label_value_rows(
+                [
+                    ("Referencia", reference),
+                    ("Estado actual", status_label),
+                    ("Fecha de actualización", updated_at_label),
+                ]
+            )
+        )
+        + subheading_html("Resumen de productos")
+        + products_summary_list_html(items)
+        + paragraph_html(f"<strong>Total: {format_price(total)}</strong>")
+        + signature_html()
+    )
 
     send_email(to_email, subject, email_wrapper("Pedido en proceso", content))
 
@@ -174,52 +148,28 @@ def EmailOrderShipped(
 ):
     subject = f"Tu pedido #{reference} ha sido enviado"
 
-    address_section = ""
+    address_section = _address_section(address) if address else ""
 
-    if address:
-        address_section = f"""
-<h3 style="margin-top:35px;margin-bottom:10px;color:#222222;font-size:18px;">
-Dirección de entrega
-</h3>
-{label_value_rows([
-    ("Nombre completo", address["full_name"]),
-    ("Teléfono", address["phone"]),
-    ("Dirección", address["address"]),
-    ("Ciudad", address["city"]),
-    ("Departamento", address["department"]),
-])}
-"""
-
-    content = f"""
-<h2 style="margin:0;color:#222222;font-size:28px;">
-¡Tu pedido va en camino!
-</h2>
-
-<p style="margin-top:25px;color:#555555;font-size:16px;line-height:28px;">
-Hola <strong style="color:#6D0F2D;">{buyer_name}</strong>,
-</p>
-
-<p style="color:#555555;font-size:16px;line-height:28px;">
-Tu pedido ha sido enviado y se encuentra camino a la dirección registrada.
-</p>
-
-{info_box(label_value_rows([
-    ("Referencia", reference),
-    ("Estado", status_label),
-]))}
-{address_section}
-
-<h3 style="margin-top:35px;margin-bottom:10px;color:#222222;font-size:18px;">
-Resumen de productos
-</h3>
-{products_summary_list_html(items)}
-
-<p style="margin-top:20px;font-size:16px;color:#222222;">
-<strong>Total: {format_price(total)}</strong>
-</p>
-
-{signature_html()}
-"""
+    content = (
+        heading_html("¡Tu pedido va en camino!")
+        + greeting_html(buyer_name)
+        + paragraph_html(
+            "Tu pedido ha sido enviado y se encuentra camino a la dirección registrada."
+        )
+        + info_box(
+            label_value_rows(
+                [
+                    ("Referencia", reference),
+                    ("Estado", status_label),
+                ]
+            )
+        )
+        + address_section
+        + subheading_html("Resumen de productos")
+        + products_summary_list_html(items)
+        + paragraph_html(f"<strong>Total: {format_price(total)}</strong>")
+        + signature_html()
+    )
 
     send_email(to_email, subject, email_wrapper("Pedido enviado", content))
 
@@ -235,41 +185,27 @@ def EmailOrderDelivered(
 ):
     subject = f"Tu pedido #{reference} fue entregado"
 
-    content = f"""
-<h2 style="margin:0;color:#222222;font-size:28px;">
-¡Tu pedido fue entregado!
-</h2>
-
-<p style="margin-top:25px;color:#555555;font-size:16px;line-height:28px;">
-Hola <strong style="color:#6D0F2D;">{buyer_name}</strong>,
-</p>
-
-<p style="color:#555555;font-size:16px;line-height:28px;">
-Confirmamos que tu pedido fue entregado correctamente.
-</p>
-
-{info_box(label_value_rows([
-    ("Referencia", reference),
-    ("Fecha de entrega", delivered_at_label),
-]))}
-
-<h3 style="margin-top:35px;margin-bottom:10px;color:#222222;font-size:18px;">
-Resumen de productos
-</h3>
-{products_summary_list_html(items)}
-
-<p style="margin-top:20px;font-size:16px;color:#222222;">
-<strong>Total: {format_price(total)}</strong>
-</p>
-
-<p style="margin-top:25px;color:#555555;font-size:16px;line-height:28px;">
-¿Qué te pareció tu compra? Cuéntaselo a otros compradores.
-</p>
-
-{cta_button("Calificar productos", rate_products_url)}
-
-{signature_html()}
-"""
+    content = (
+        heading_html("¡Tu pedido fue entregado!")
+        + greeting_html(buyer_name)
+        + paragraph_html("Confirmamos que tu pedido fue entregado correctamente.")
+        + info_box(
+            label_value_rows(
+                [
+                    ("Referencia", reference),
+                    ("Fecha de entrega", delivered_at_label),
+                ]
+            )
+        )
+        + subheading_html("Resumen de productos")
+        + products_summary_list_html(items)
+        + paragraph_html(f"<strong>Total: {format_price(total)}</strong>")
+        + paragraph_html(
+            "¿Qué te pareció tu compra? Cuéntaselo a otros compradores."
+        )
+        + cta_button("Calificar productos", rate_products_url)
+        + signature_html()
+    )
 
     send_email(to_email, subject, email_wrapper("Pedido entregado", content))
 
@@ -303,30 +239,17 @@ def EmailOrderCancelled(
 
     if refunded_amount is not None:
         refund_section = info_box(
-            f"""
-<strong>Reembolso realizado:</strong>
-<br><br>
-{format_price(refunded_amount)} RehniCoin fueron devueltos a tu billetera.
-"""
+            "<strong>Reembolso realizado:</strong><br><br>"
+            f"{format_price(refunded_amount)} RehniCoin fueron devueltos a tu billetera."
         )
 
-    content = f"""
-<h2 style="margin:0;color:#222222;font-size:28px;">
-Tu pedido fue cancelado
-</h2>
-
-<p style="margin-top:25px;color:#555555;font-size:16px;line-height:28px;">
-Hola <strong style="color:#6D0F2D;">{buyer_name}</strong>,
-</p>
-
-<p style="color:#555555;font-size:16px;line-height:28px;">
-Tu pedido ha sido cancelado.
-</p>
-
-{info_box(label_value_rows(info_pairs))}
-{refund_section}
-
-{signature_html()}
-"""
+    content = (
+        heading_html("Tu pedido fue cancelado")
+        + greeting_html(buyer_name)
+        + paragraph_html("Tu pedido ha sido cancelado.")
+        + info_box(label_value_rows(info_pairs))
+        + refund_section
+        + signature_html()
+    )
 
     send_email(to_email, subject, email_wrapper("Pedido cancelado", content))

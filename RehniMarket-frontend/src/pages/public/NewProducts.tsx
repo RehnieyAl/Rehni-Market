@@ -4,7 +4,6 @@ import Footer from "@/shared/components/Footer";
 import CollectionView from "@/features/public/products/components/CollectionView";
 import { getPublicNewProducts } from "@/features/public/products/api/productsService";
 
-// Apartado público independiente: productos publicados recientemente (GET /public/products/new).
 export default function NewProducts() {
   return (
     <div className="flex min-h-screen flex-col bg-white">

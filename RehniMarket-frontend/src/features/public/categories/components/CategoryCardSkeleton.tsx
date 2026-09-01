@@ -1,7 +1,3 @@
-// Skeleton de tarjeta de categoría (mismo patrón que ProductCardSkeleton,
-// ver features/public/home/components) mientras se cargan los catálogos.
-// Mismo layout que CategoryCard.tsx (imagen arriba + cuerpo blanco debajo)
-// para no "saltar" de forma entre el skeleton y la tarjeta real.
 export default function CategoryCardSkeleton() {
   return (
     <div className="flex animate-pulse flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">

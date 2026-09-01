@@ -56,13 +56,19 @@ from app.services.commerce.OrderService import (
     get_company_order_detail_service,
     get_company_order_status_counts_service,
     update_company_order_status_service,
+    set_company_order_shipping_service,
+)
+from app.services.publicService.ShippingCarriers import (
+    get_active_shipping_carriers_service,
 )
 from app.schemas.SchemaCommerce.SchemaOrder import (
     OrderResponse,
     OrdersPaginatedResponse,
     OrderStatusCountsResponse,
     UpdateOrderStatusRequest,
+    SetOrderShippingRequest,
 )
+from app.schemas.SchemaDashboard.SchemaShippingCarrier import ShippingCarrierResponse
 
 router = APIRouter(
     prefix=("/company"),
@@ -82,11 +88,9 @@ def dashboard(request: Request,database: Session = Depends(get_db)):
 
 @router.get("/dashboard/my-profile")
 def get_info_company(request:Request, database: Session =Depends(get_db)):
-    # Request del middleware
     user_id = request.state.user_id
     return company_dashboard_my_profile_service(user_id, database)
 
-# PATCH parcial.
 @router.patch("/dashboard/upgrade-my-profile")
 def upgrade_info_company_profile(request: Request, upgrade_profile: UpdateInformationCompanyRequest,database: Session = Depends(get_db)):
     user_id = request.state.user_id
@@ -116,11 +120,11 @@ def create_product(
     request: Request,
     nameProduct: str = Form(...),
     catalogId: str = Form(...),
-    # ge=0 rechaza negativos y NaN (NaN >= 0 es False en IEEE754).
     priceProduct: float = Form(..., ge=0),
     stockProduct: int = Form(..., ge=0),
     descripcionProduct: str = Form(...),
     technicalSpecProduct: str = Form(...),
+    appliesTax: bool = Form(True),
     imagesProduct: list[UploadFile] = File(None),
     mainColorId: str = Form(None),
     nas: NasService = Depends(get_nas_service),
@@ -137,6 +141,7 @@ def create_product(
         stockProduct=stockProduct,
         descripcionProduct=descripcionProduct,
         technicalSpecProduct=technicalSpecProduct,
+        appliesTax=appliesTax,
         imagesProduct=imagesProduct,
         mainColorId=mainColorId,
         nas=nas,
@@ -238,8 +243,6 @@ def delete_my_product(request: Request,product_id: UUID, database: Session = Dep
         database=database
     )
 
-
-# El ownership (user -> company -> product -> variant) se valida en el service, no aquí.
 
 @router.post("/dashboard/products/{product_id}/variants", response_model=VariantDetailResponse)
 def create_variant(
@@ -460,14 +463,11 @@ def set_variant_attribute_values(
     )
 
 
-# Pedidos recibidos por la empresa; el lado comprador vive en OrderRouter.py.
-
 @router.get("/dashboard/orders", response_model=OrdersPaginatedResponse)
 def get_company_orders(
     request: Request,
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=50),
-    # Repetible (?status=pending&status=paid): las pestañas agrupan varios estados.
     status: list[str] | None = Query(None),
     search: str | None = Query(None),
     database: Session = Depends(get_db),
@@ -515,3 +515,22 @@ def update_company_order_status(
         database=database,
     )
 
+
+@router.get("/dashboard/shipping-carriers", response_model=list[ShippingCarrierResponse])
+def get_company_shipping_carriers(request: Request, database: Session = Depends(get_db)):
+    return get_active_shipping_carriers_service(database)
+
+
+@router.patch("/dashboard/orders/{order_id}/shipping", response_model=OrderResponse)
+def set_company_order_shipping(
+    request: Request,
+    order_id: UUID,
+    data: SetOrderShippingRequest,
+    database: Session = Depends(get_db),
+):
+    return set_company_order_shipping_service(
+        user_id=request.state.user_id,
+        order_id=order_id,
+        data=data,
+        database=database,
+    )

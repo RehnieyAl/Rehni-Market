@@ -1,8 +1,10 @@
-
 import { useEffect, useState } from "react";
-import { Upload, Download, Pencil, Save, X } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Upload, Download, Pencil, Save, X, UserRound } from "lucide-react";
 
-import { Button, Input, Skeleton, Textarea } from "@/shared/components/ui";
+import { Badge, Button, Input, Skeleton, Textarea } from "@/shared/components/ui";
+import { buttonClasses } from "@/shared/components/ui/buttonVariants";
+import { useAuth } from "@/features/public/auth/context/useAuth";
 
 import {
   getMyCompanyProfile,
@@ -25,6 +27,8 @@ import logoTemplate from "@/assets/example-logo.webp";
 import bannerTemplate from "@/assets/example-banner.jpg";
 
 export default function Company() {
+  const { user } = useAuth();
+
   const [editing, setEditing] = useState(false);
 
   const [media, setMedia] = useState<CompanyMediaUpload>({});
@@ -35,13 +39,9 @@ export default function Company() {
   const [company, setCompany] =
     useState<CompanyProfileResponse | null>(null);
 
-  // Solo información pública de la tienda - el correo (y cualquier otro
-  // dato de la cuenta) se gestiona en "Configuración de cuenta"
-  // , no aquí.
   const [form, setForm] = useState({
     nameCompany: "",
     addressCompany: "",
-    tellCompany: "",
     description: "",
   });
 
@@ -57,7 +57,6 @@ export default function Company() {
         setForm({
           nameCompany: data.nameCompany,
           addressCompany: data.addressCompany,
-          tellCompany: data.tellCompany,
           description: data.description ?? "",
         });
       } catch (error) {
@@ -79,12 +78,9 @@ export default function Company() {
 
   const handleSave = async () => {
     try {
-      const response = await updateMyCompanyProfile(form);
+      await updateMyCompanyProfile(form);
 
-      setCompany({
-        ...company!,
-        ...response,
-      });
+      setCompany((prev) => (prev ? { ...prev, ...form } : prev));
 
       setEditing(false);
     } catch (error) {
@@ -137,9 +133,6 @@ export default function Company() {
           Administra la información pública de tu empresa.
         </p>
 
-        {/* Reputación real, calculada sobre las reseñas activas de todos
-            los productos de la empresa (ver ALCANCE > Calificaciones de
-            empresa) - la empresa no tiene reseñas propias. */}
         {company && <CompanyRatingBadge companyId={company.id} className="mt-3" />}
       </div>
 
@@ -282,14 +275,14 @@ export default function Company() {
       </section>
 
       <section className="mt-8 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
-              Información de la tienda
+              Información de la empresa
             </h2>
 
             <p className="mt-1 text-sm text-gray-500">
-              Datos públicos de tu empresa.
+              Datos de tu negocio, visibles para los compradores.
             </p>
           </div>
 
@@ -301,7 +294,6 @@ export default function Company() {
                   setForm({
                     nameCompany: company.nameCompany,
                     addressCompany: company.addressCompany,
-                    tellCompany: company.tellCompany,
                     description: company.description ?? "",
                   });
                 }
@@ -309,7 +301,7 @@ export default function Company() {
                 setEditing(true);
               }}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
-              aria-label="Editar información de la tienda"
+              aria-label="Editar información de la empresa"
             >
               <Pencil size={18} />
             </button>
@@ -325,40 +317,46 @@ export default function Company() {
         ) : (
           <div className="mt-8 grid gap-6 md:grid-cols-2">
             <InputCompany
-              label="Nombre empresa"
+              label="Razón social"
               value={form.nameCompany}
               edit={editing}
-              onChange={(v) =>
-                handleChange("nameCompany", v)
-              }
+              onChange={(v) => handleChange("nameCompany", v)}
             />
 
             <InputCompany
               label="Dirección"
               value={form.addressCompany}
               edit={editing}
-              onChange={(v) =>
-                handleChange("addressCompany", v)
-              }
+              onChange={(v) => handleChange("addressCompany", v)}
             />
 
-            <InputCompany
-              label="Teléfono"
-              value={form.tellCompany}
-              edit={editing}
-              onChange={(v) =>
-                handleChange("tellCompany", v)
-              }
+            <ReadOnlyField label="NIT" value={company?.CompanyNIT ?? "—"} />
+
+            <ReadOnlyField
+              label="Dígito de verificación"
+              value={company?.CompanyNITDV ?? "—"}
             />
+
+            <div>
+              <span className="mb-1.5 block text-sm font-medium text-gray-700">
+                Estado de la empresa
+              </span>
+              <Badge tone={company?.CompanyStatus === false ? "danger" : "success"} dot>
+                {company?.CompanyStatus === false ? "Suspendida" : "Activa"}
+              </Badge>
+              {company?.CompanyStatus === false && company.suspensionReason && (
+                <p className="mt-2 text-xs text-danger">
+                  Motivo: {company.suspensionReason}
+                </p>
+              )}
+            </div>
 
             <div className="md:col-span-2">
               <TextareaCompany
                 label="Descripción"
                 value={form.description}
                 edit={editing}
-                onChange={(v) =>
-                  handleChange("description", v)
-                }
+                onChange={(v) => handleChange("description", v)}
               />
             </div>
           </div>
@@ -380,7 +378,60 @@ export default function Company() {
           </div>
         )}
       </section>
+
+      <section className="mt-8 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-brand-50 text-primary">
+              <UserRound size={18} />
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Información del representante
+              </h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Datos de tu cuenta. Se editan en Configuración de cuenta.
+              </p>
+            </div>
+          </div>
+
+          <Link
+            to="/company/dashboard?tab=profile"
+            className={buttonClasses({ variant: "outline", size: "sm", className: "shrink-0" })}
+          >
+            <Pencil size={15} />
+            Editar
+          </Link>
+        </div>
+
+        <div className="mt-8 grid gap-6 md:grid-cols-2">
+          {user ? (
+            <>
+              <ReadOnlyField label="Nombre del representante" value={user.name} />
+              <ReadOnlyField label="Teléfono" value={user.tell} />
+              <div className="md:col-span-2">
+                <ReadOnlyField label="Correo electrónico" value={user.email} />
+              </div>
+            </>
+          ) : (
+            Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={index} className="h-12" />
+            ))
+          )}
+        </div>
+      </section>
     </>
+  );
+}
+
+function ReadOnlyField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <span className="mb-1.5 block text-sm font-medium text-gray-700">{label}</span>
+      <p className="min-h-11 rounded-control border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900">
+        {value}
+      </p>
+    </div>
   );
 }
 
@@ -428,4 +479,3 @@ function TextareaCompany({
     />
   );
 }
-

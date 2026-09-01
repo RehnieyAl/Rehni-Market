@@ -11,9 +11,6 @@ export interface FieldShellProps {
   className?: string;
 }
 
-// Estructura común de un campo: label + control + ayuda/error, con el
-// cableado de accesibilidad (for/id, aria-describedby, aria-invalid).
-// `render` recibe los ids ya calculados para pasárselos al control.
 export default function FormField({
   label,
   hint,

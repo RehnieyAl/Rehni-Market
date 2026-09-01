@@ -61,13 +61,13 @@ def _validate_target_reference(
         AdvertisementTargetType.BLACK_FRIDAY,
         AdvertisementTargetType.CYBER_DAYS,
     ):
-        pass  # minimum_discount se valida al resolver el destino
+        pass
 
     elif target_type == AdvertisementTargetType.LIQUIDATION:
-        pass  # minimum_discount/maximum_stock se validan al resolver el destino
+        pass
 
     elif target_type == AdvertisementTargetType.NEW_RELEASE:
-        pass  # max_age_days se valida al resolver el destino
+        pass
 
 
 def _resolve_and_require_destination(data) -> str | None:
@@ -119,12 +119,10 @@ def _to_response(
     return AdvertisementResponse(
         id=advertisement.id,
 
-        # Desktop
         image_url=build_media_url(
             advertisement.image_url
         ),
 
-        # Mobile
         mobile_image_url=(
             build_media_url(
                 advertisement.mobile_image_url
@@ -237,7 +235,6 @@ def create_advertisement_service(
 
             mobile_path = mobile_result["path"]
 
-        # Con target_type != None valida el target y calcula el destino; con None no hace nada.
         _validate_target_reference(
             database,
             data.target_type,
@@ -313,8 +310,6 @@ def update_advertisement_service(
             advertisement_id,
         )
 
-        # `clear_target` vuelve el anuncio a manual clásico (un PATCH con target_type=None
-        # es ambiguo). Un target_type nuevo reemplaza toda la configuración de target junta.
         if data.clear_target:
             advertisement.target_type = None
             advertisement.target_product_id = None
@@ -342,7 +337,6 @@ def update_advertisement_service(
             advertisement.max_age_days = data.max_age_days
 
         if advertisement.target_type is not None:
-            # El destino siempre se recalcula, aunque el target no haya cambiado en este request.
             resolved_link = resolve_advertisement_destination(
                 target_type=advertisement.target_type,
                 target_product_id=advertisement.target_product_id,
@@ -363,7 +357,6 @@ def update_advertisement_service(
             advertisement.button_link = resolved_link
 
         elif data.button_link is not None:
-            # Manual clásico (target_type None): único caso donde button_link lo escribe el admin.
             advertisement.button_link = (
                 data.button_link.strip()
                 or None
@@ -398,7 +391,6 @@ def update_advertisement_service(
                 desktop_result["path"]
             )
 
-            # Eliminar imagen anterior
             if previous_image:
 
                 nas.delete_file(
@@ -433,7 +425,6 @@ def update_advertisement_service(
                 mobile_result["path"]
             )
 
-            # Eliminar imagen móvil anterior
             if previous_mobile_image:
 
                 nas.delete_file(
@@ -444,7 +435,6 @@ def update_advertisement_service(
 
         elif data.remove_mobile_image:
 
-            # Elimina la imagen móvil actual sin reemplazarla (si no llegó una nueva).
             previous_mobile_image = (
                 advertisement.mobile_image_url
             )

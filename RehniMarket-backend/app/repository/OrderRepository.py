@@ -83,7 +83,6 @@ def list_company_orders(
             Users.fullName.ilike(f"%{normalized}%"),
         ]
 
-        # Acepta la referencia con o sin prefijo "RM-" y sin ceros a la izquierda.
         reference_digits = normalized.upper()
         if reference_digits.startswith("RM-"):
             reference_digits = reference_digits[3:]
@@ -126,7 +125,6 @@ def sum_valid_company_sales(
     """Suma de Order.total de ventas DELIVERED de una empresa en un periodo.
     Se filtra por created_at: no hay un delivered_at en el modelo."""
 
-    # period_end es inclusivo; se compara contra el inicio del día siguiente.
     period_end_exclusive = period_end + timedelta(days=1)
 
     total = (

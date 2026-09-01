@@ -4,6 +4,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from fastapi import HTTPException
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.core.ErrorCodes import ErrorCodes
@@ -11,6 +12,9 @@ from app.core.Exceptions import api_error
 
 from app.models.ModelOrder import Order, OrderItem
 from app.models.ModelAddress import Address
+from app.models.ModelProduct import Product
+from app.models.ModelVariant import ProductVariant
+from app.models.ModelWallet import Wallet
 
 from app.repository import CartRepository as cart_repo
 from app.repository import OrderRepository as order_repo
@@ -24,8 +28,7 @@ from app.services.pricing import resolve_price
 from app.services.variants import attributes as attrs
 from app.services.email.OrderEmailService import send_order_created_email
 
-# IVA de Colombia; tasa fija sobre el subtotal, igual para todo el checkout.
-TAX_RATE = Decimal("0.19")
+from app.core.TaxConfig import compute_tax
 
 
 def checkout_service(
@@ -39,7 +42,6 @@ def checkout_service(
         if not cart.items:
             api_error(400, ErrorCodes.CART_EMPTY, "Tu carrito está vacío.")
 
-        # Dirección obligatoria: seleccionada, con nombre completo y teléfono.
         if data.addressId is None:
             api_error(
                 400,
@@ -63,14 +65,11 @@ def checkout_service(
                 "Debes registrar una dirección para continuar con la compra.",
             )
 
-        # Revalida stock/activo/empresa (pudo cambiar desde que se agregó al carrito)
-        # y agrupa por empresa: un pedido pertenece a una sola empresa.
         items_by_company: dict[UUID, list] = defaultdict(list)
 
         for cart_item in cart.items:
             product = cart_item.product
 
-            # Producto de empresa suspendida: se revalida en el checkout igual que is_active.
             if (
                 not product
                 or not product.is_active
@@ -94,15 +93,6 @@ def checkout_service(
                     f"Una variante de '{product.name}' ya no está disponible.",
                 )
 
-            available_stock = variant.stock if variant else product.stock
-
-            if cart_item.quantity > available_stock:
-                api_error(
-                    409,
-                    ErrorCodes.INSUFFICIENT_STOCK,
-                    f"'{product.name}' ya no tiene suficiente stock disponible.",
-                )
-
             price = resolve_price(product, variant)
 
             items_by_company[product.company_id].append(
@@ -111,8 +101,8 @@ def checkout_service(
                     "product": product,
                     "variant": variant,
                     "unit_price": price.final_price,
-                    # Precio antes del descuento, solo si había descuento activo en este instante.
                     "original_unit_price": price.base_price if price.discount_enabled else None,
+                    "applies_tax": product.applies_tax,
                 }
             )
 
@@ -125,13 +115,29 @@ def checkout_service(
                 Decimal("0"),
             )
 
-            tax = (subtotal * TAX_RATE).quantize(Decimal("0.01"))
+            taxable_subtotal = sum(
+                (
+                    entry["unit_price"] * entry["cart_item"].quantity
+                    for entry in entries
+                    if entry["applies_tax"]
+                ),
+                Decimal("0"),
+            )
+
+            tax = compute_tax(taxable_subtotal)
             total = subtotal + tax
 
             per_company_totals[company_id] = (subtotal, tax, total)
             grand_total += total
 
-        wallet = get_or_create_wallet(database, user_id)
+        get_or_create_wallet(database, user_id)
+        wallet = (
+            database.query(Wallet)
+            .filter(Wallet.user_id == user_id)
+            .with_for_update()
+            .populate_existing()
+            .first()
+        )
 
         if Decimal(wallet.balance) < grand_total:
             api_error(
@@ -139,6 +145,44 @@ def checkout_service(
                 ErrorCodes.INSUFFICIENT_BALANCE,
                 "Tu saldo de RehniCoin no alcanza para completar la compra.",
             )
+
+        stock_decrements: list[tuple] = []
+        for cart_item in cart.items:
+            if cart_item.variant_id is not None:
+                stock_decrements.append(
+                    (
+                        ProductVariant,
+                        cart_item.variant_id,
+                        cart_item.quantity,
+                        cart_item.product.name,
+                    )
+                )
+            else:
+                stock_decrements.append(
+                    (
+                        Product,
+                        cart_item.product_id,
+                        cart_item.quantity,
+                        cart_item.product.name,
+                    )
+                )
+
+        stock_decrements.sort(key=lambda row: (row[0].__name__, str(row[1])))
+
+        for model, target_id, quantity, product_name in stock_decrements:
+            affected = database.execute(
+                update(model)
+                .where(model.id == target_id, model.stock >= quantity)
+                .values(stock=model.stock - quantity)
+                .execution_options(synchronize_session=False)
+            ).rowcount
+
+            if affected == 0:
+                api_error(
+                    409,
+                    ErrorCodes.INSUFFICIENT_STOCK,
+                    f"'{product_name}' ya no tiene suficiente stock disponible.",
+                )
 
         created_orders = []
 
@@ -149,7 +193,6 @@ def checkout_service(
                 user_id=user_id,
                 company_id=company_id,
                 address_id=address.id,
-                # Snapshot de la dirección en este instante.
                 delivery_label=address.label,
                 delivery_full_name=address.full_name,
                 delivery_phone=address.phone,
@@ -188,11 +231,6 @@ def checkout_service(
                     )
                 )
 
-                if variant:
-                    variant.stock -= cart_item.quantity
-                else:
-                    product.stock -= cart_item.quantity
-
             created_orders.append(order)
 
         charge_wallet(
@@ -208,7 +246,6 @@ def checkout_service(
 
         for order in created_orders:
             database.refresh(order)
-            # Correo "Pedido recibido", uno por pedido creado.
             send_order_created_email(order)
 
         return CheckoutSummaryResponse(

@@ -1,4 +1,3 @@
-// Primitivos del sistema de diseño RehniMarket.
 export { default as Modal } from "./Modal";
 export type { ModalSize } from "./Modal";
 export { default as Button } from "./Button";

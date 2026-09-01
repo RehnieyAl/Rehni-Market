@@ -14,7 +14,6 @@ import type { PublicCatalog } from "@/features/public/products/types/response";
 import type { PublicProductCard } from "@/features/public/home/types/response";
 import type { AdminCompanyResponse } from "@/features/admin/types/response";
 
-// Etiqueta + umbral sugerido por tipo. PROMOTION/BLACK_FRIDAY/CYBER_DAYS comparten el campo minimumDiscount.
 const TARGET_TYPE_OPTIONS: { value: AdvertisementTargetType; label: string }[] = [
   { value: "PRODUCT", label: "Producto específico" },
   { value: "CATEGORY", label: "Categoría" },
@@ -27,17 +26,12 @@ const TARGET_TYPE_OPTIONS: { value: AdvertisementTargetType; label: string }[] =
 ];
 
 export interface AdvertisementFormValues {
-  // Solo se usa cuando targetType es "" (manual clásico).
   buttonLink: string;
   order: number;
   isActive: boolean;
-  // Desktop/tablet
   image: File | null;
-  // Móvil (opcional)
   mobileImage: File | null;
-  // Solo en edición: elimina la imagen móvil actual; se ignora si llega una nueva.
   removeMobileImage: boolean;
-  // "" = anuncio manual clásico.
   targetType: AdvertisementTargetType | "";
   targetProductId: string;
   targetCatalogId: string;
@@ -45,7 +39,6 @@ export interface AdvertisementFormValues {
   minimumDiscount: number | null;
   maximumStock: number | null;
   maxAgeDays: number | null;
-  // Solo en edición: volver de un tipo dinámico a manual clásico.
   clearTarget: boolean;
 }
 
@@ -57,7 +50,6 @@ interface AdvertisementFormModalProps {
   onSubmit: (values: AdvertisementFormValues) => void;
 }
 
-// El padre lo monta con una `key` distinta en cada apertura, así useState arranca fresco sin efecto de reset.
 export default function AdvertisementFormModal({
   isOpen,
   advertisement,
@@ -78,7 +70,6 @@ export default function AdvertisementFormModal({
   );
   const [removeMobileImage, setRemoveMobileImage] = useState(false);
 
-  // "" = manual clásico, con button_link editable a mano.
   const [targetType, setTargetType] = useState<AdvertisementTargetType | "">(
     advertisement?.target_type ?? "",
   );
@@ -91,10 +82,8 @@ export default function AdvertisementFormModal({
   const [maximumStock, setMaximumStock] = useState(advertisement?.maximum_stock?.toString() ?? "");
   const [maxAgeDays, setMaxAgeDays] = useState(advertisement?.max_age_days?.toString() ?? "");
 
-  // Catálogos reales para el selector de CATEGORY; se cargan completos una vez.
   const [catalogs, setCatalogs] = useState<PublicCatalog[]>([]);
 
-  // Buscador de producto (PRODUCT) y empresa (COMPANY), sobre los endpoints ya existentes.
   const [productQuery, setProductQuery] = useState("");
   const [productResults, setProductResults] = useState<PublicProductCard[]>([]);
   const [selectedProductLabel, setSelectedProductLabel] = useState("");
@@ -108,7 +97,6 @@ export default function AdvertisementFormModal({
 
   const isEditing = advertisement !== null;
 
-  // Al editar un anuncio con target puntual solo se conoce el id; se resuelve el nombre para mostrarlo.
   useEffect(() => {
     if (advertisement?.target_type === "PRODUCT" && advertisement.target_product_id) {
       getPublicProductDetail(advertisement.target_product_id)
@@ -121,7 +109,6 @@ export default function AdvertisementFormModal({
         .then((company) => setSelectedCompanyLabel(company.nameCompany))
         .catch((error) => console.error("Error cargando la empresa del anuncio:", error));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -132,7 +119,6 @@ export default function AdvertisementFormModal({
       .catch((error) => console.error("Error cargando categorías:", error));
   }, [targetType]);
 
-  // Debounce 300ms de la búsqueda de producto.
   useEffect(() => {
     if (targetType !== "PRODUCT" || !productQuery.trim()) {
       const timeout = setTimeout(() => setProductResults([]));
@@ -194,7 +180,6 @@ export default function AdvertisementFormModal({
     }
   };
 
-  // Requisitos mínimos por tipo: evita enviar un anuncio dinámico a medio configurar.
   const isTargetValid = (() => {
     switch (targetType) {
       case "PRODUCT":
@@ -223,7 +208,6 @@ export default function AdvertisementFormModal({
 
     if (!isValid) return;
 
-    // Solo viaja la config del tipo elegido; los campos de los otros tipos quedan sin usar.
     onSubmit({
       buttonLink: buttonLink.trim(),
       order,
@@ -238,7 +222,6 @@ export default function AdvertisementFormModal({
       minimumDiscount: minimumDiscount ? Number(minimumDiscount) : null,
       maximumStock: maximumStock ? Number(maximumStock) : null,
       maxAgeDays: maxAgeDays ? Number(maxAgeDays) : null,
-      // Solo tiene efecto si la edición pasó de un tipo dinámico a manual clásico.
       clearTarget: isEditing && !!advertisement?.target_type && targetType === "",
     });
   };
@@ -363,7 +346,6 @@ export default function AdvertisementFormModal({
                 value={targetType}
                 onChange={(event) => {
                   setTargetType(event.target.value as AdvertisementTargetType | "");
-                  // Cambiar de tipo limpia la config anterior para no mezclar.
                   setTargetProductId("");
                   setTargetCatalogId("");
                   setTargetCompanyId("");
@@ -586,7 +568,6 @@ export default function AdvertisementFormModal({
                   type="number"
                   value={order}
                   onChange={(event) => {
-                    // type="number" no frena "1e400" -> Infinity; se descarta antes de guardarlo.
                     const parsed = Number(event.target.value);
                     setOrder(Number.isFinite(parsed) ? parsed : 0);
                   }}
@@ -640,7 +621,6 @@ export default function AdvertisementFormModal({
   );
 }
 
-// Chip de "ya elegido" para PRODUCT/COMPANY, con una X para volver a buscar.
 function SelectedChip({ label, onClear }: { label: string; onClear: () => void }) {
   return (
     <div className="flex items-center justify-between rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-900">
@@ -663,7 +643,6 @@ interface SearchPickerResult {
   sublabel?: string;
 }
 
-// Buscador reutilizado por PRODUCT y COMPANY, sobre los endpoints ya existentes.
 function SearchPicker({
   query,
   onQueryChange,

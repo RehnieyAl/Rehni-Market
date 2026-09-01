@@ -12,10 +12,6 @@ interface Props {
   style?: StyleProp<ViewStyle>;
 }
 
-// Espejo visual de los botones `bg-[#6D0F2D]` / `border-gray-300` de la
-// web (Login/Register/ProductDetail/etc.) - mismo alto (h-12/h-14 ≈ 48-56
-// acá 52), mismo radio (rounded-xl), mismo estado disabled con opacidad
-// reducida.
 export function Button({
   label,
   onPress,

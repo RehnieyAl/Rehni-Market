@@ -8,14 +8,10 @@ import type { PublicProductsPaginated } from "../types/response";
 const PAGE_SIZE = 12;
 
 interface PublicProductCollectionProps {
-  // Fuente de los productos: /offers, /new, etc. Cada apartado pasa la suya.
   fetchPage: (page: number, limit: number) => Promise<PublicProductsPaginated>;
   emptyMessage: string;
 }
 
-// Colección pública paginada de productos, parametrizada por su fuente de datos.
-// La página vive en la URL (?page=N) para que sea compartible y sobreviva al back.
-// La lógica de qué productos traer NO vive aquí: llega como `fetchPage`.
 export default function PublicProductCollection({
   fetchPage,
   emptyMessage,

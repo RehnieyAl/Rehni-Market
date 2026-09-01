@@ -37,7 +37,6 @@ class UpdateCatalogRequest(BaseModel):
     display_order: int | None = Field(default=None, ge=0)
     is_active: bool | None = None
 
-    # Elimina la imagen actual sin subir otra; un campo ausente es ambiguo entre "no tocar" y "borrar".
     remove_image: bool = False
 
     @classmethod
@@ -66,7 +65,6 @@ class CatalogResponse(BaseModel):
     display_order: int
     is_active: bool
 
-    # Productos activos del catálogo; calculado, no es columna del modelo.
     product_count: int = 0
 
     model_config = {

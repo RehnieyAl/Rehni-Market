@@ -18,8 +18,6 @@ import type { WalletTransaction } from "@/features/wallet/types/response";
 
 const PAGE_SIZE = 10;
 
-// Vista "RehniCoins" del comprador: saldo + historial paginado (GET /wallet/me + /wallet/transactions).
-// No recarga saldo: "Recargar" abre RechargeRequestModal (mensaje de WhatsApp).
 export default function Wallet() {
   const { user } = useAuth();
 

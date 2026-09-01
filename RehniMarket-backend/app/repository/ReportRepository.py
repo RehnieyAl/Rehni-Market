@@ -40,8 +40,6 @@ def list_reports(
     """Listado paginado para Admin > Reportes. `search` cubre producto, empresa y
     reportante, todo con outer join para no excluir un tipo de reporte por el otro."""
 
-    # Dos alias de Company: un reporte de producto tiene Report.company_id NULL;
-    # su empresa dueña solo se alcanza vía Product.company_id.
     reported_company = aliased(Company)
     product_owner_company = aliased(Company)
 

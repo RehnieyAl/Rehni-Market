@@ -12,10 +12,6 @@ import { TextField } from "@/components/TextField";
 import { FormError } from "@/components/FormError";
 import { colors, fontSize, fontWeight, radii, spacing } from "@/theme";
 
-// Portado de RehniMarket-frontend/src/features/public/auth/pages/
-// ResetPassword.tsx: mismo endpoint (POST /auth/reset-password-user),
-// misma validación de "las contraseñas coinciden" y "código completo"
-// antes de llamar a la API.
 export default function ResetPasswordScreen() {
   const router = useRouter();
   const { email } = useLocalSearchParams<{ email?: string }>();

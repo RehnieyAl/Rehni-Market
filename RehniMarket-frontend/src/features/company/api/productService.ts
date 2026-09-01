@@ -13,8 +13,6 @@ interface CreateProductResult {
   catalog: string;
 }
 
-// El backend resuelve technicalSpecProduct como JSON [{attributeId, value}] contra los
-// atributos role="product" del catálogo.
 function serializeAttributes(values: AttributeValueInput[]): string {
   return JSON.stringify(
     values
@@ -32,7 +30,7 @@ export async function createProduct(
   formData.append("catalogId", product.catalogId);
   formData.append("descripcionProduct", product.descripcionProduct);
   formData.append("technicalSpecProduct", serializeAttributes(product.productAttributes));
-  // Datos comerciales (precio, stock, imágenes) viven en las variantes.
+  formData.append("appliesTax", String(product.appliesTax));
   formData.append("priceProduct", "0");
   formData.append("stockProduct", "0");
 
@@ -77,6 +75,9 @@ export async function updateProduct(productId: string, patch: UpdateProductReque
   if (patch.catalogId !== undefined) formData.append("catalogId", patch.catalogId);
   if (patch.descripcionProduct !== undefined) {
     formData.append("descripcionProduct", patch.descripcionProduct);
+  }
+  if (patch.appliesTax !== undefined) {
+    formData.append("appliesTax", String(patch.appliesTax));
   }
   if (patch.productAttributes !== undefined) {
     formData.append("technicalSpecProduct", serializeAttributes(patch.productAttributes));

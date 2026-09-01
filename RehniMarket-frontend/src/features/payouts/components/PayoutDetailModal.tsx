@@ -16,17 +16,8 @@ interface PayoutDetailModalProps {
   payoutId: string | null;
   isOpen: boolean;
   onClose: () => void;
-  // Company y admin leen el mismo shape (CompanyPayoutResponse) pero de
-  // endpoints distintos (ver features/company/api/payoutService.ts vs
-  // features/admin/api/payoutService.ts) - un solo componente de detalle
-  // reutilizado por ambos dashboards en vez de duplicar este layout.
   fetchDetail: (payoutId: string) => Promise<CompanyPayout>;
-  // Acción exclusiva admin ("Marcar como pagada", ver
-  // AdminPayoutDetailModal.tsx) - el lado empresa no pasa esta prop, así
-  // que el modal queda de solo lectura ahí.
   footer?: (payout: CompanyPayout) => ReactNode;
-  // companyName solo lo trae CompanyPayoutResponse cuando lo consulta el
-  // admin - se muestra el título acorde.
   showCompanyName?: boolean;
 }
 
@@ -72,7 +63,6 @@ export default function PayoutDetailModal({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, payoutId]);
 
   const periodLabel = (p: CompanyPayout) =>

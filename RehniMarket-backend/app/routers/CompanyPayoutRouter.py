@@ -16,7 +16,6 @@ from app.services.PayoutService import (
     get_company_balance_service,
 )
 
-# Router delgado; la lógica vive en PayoutService.py (compartido con el lado admin).
 router = APIRouter(prefix="/company", tags=["company", "payouts"])
 
 

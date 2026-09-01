@@ -59,9 +59,6 @@ def verify_email_service(code: VerifyEmailRequest, database: Session):
             api_error(400, ErrorCodes.INVALID_CODE, "El código de verificación es incorrecto.")
 
         if result == VerifyCodeStatus.EXPIRED:
-            # No se autogenera un codigo nuevo aca: el usuario debe pulsar
-            # "Reenviar codigo" (que aplica su propio cooldown). El codigo
-            # expirado ya quedo invalidado dentro de verify_code_service.
             api_error(
                 400,
                 ErrorCodes.CODE_EXPIRED,
@@ -125,9 +122,6 @@ def resend_verification_code_service(data: ResendVerificationCodeRequest, databa
         database.rollback()
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor..")
 
-
-#Si el usuario se equivoca al ingresar su correo, puede cambiarlo antes de verificarlo.
-#Esto solo es posible si el correo no ha sido verificado aun.
 
 def change_email_service(changeEmail: ChangeEmailRequestOnlyRegistered, database: Session):
 

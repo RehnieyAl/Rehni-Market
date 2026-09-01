@@ -143,8 +143,6 @@ def _to_report_response(report: Report) -> ReportResponse:
     )
 
 
-# RESOLVED es terminal: ningún endpoint de escritura puede tocar un Report ya resuelto.
-# Todo endpoint que modifique un Report debe llamar a esto primero.
 def _assert_report_editable(report: Report) -> None:
     if report.status == ReportStatus.RESOLVED:
         api_error(
@@ -154,8 +152,6 @@ def _assert_report_editable(report: Report) -> None:
         )
 
 
-# Un solo PATCH de estado (PENDING/REVIEWING/RESOLVED/REJECTED). Gestionar un reporte
-# nunca toca CompanyStatus/Product.is_active: eso lo hace el admin aparte.
 def update_report_status_service(
     database: Session,
     report_id: UUID,
@@ -169,7 +165,6 @@ def update_report_status_service(
         if not report:
             api_error(404, ErrorCodes.REPORT_NOT_FOUND, "Reporte no encontrado.")
 
-        # Se valida antes de tocar cualquier campo del request.
         _assert_report_editable(report)
 
         try:

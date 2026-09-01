@@ -11,22 +11,17 @@ interface ProductGridProps {
   products: PublicProductCard[];
   loading: boolean;
   failed: boolean;
-  // Total real (todas las páginas), para "Mostrando X-Y de Z".
   total: number;
   page: number;
   totalPages: number;
   pageSize: number;
   onPageChange: (page: number) => void;
   onRetry?: () => void;
-  // Mensaje del estado vacío, propio de cada sección.
   emptyMessage: string;
 }
 
-// 2 columnas en móvil, 3 en tablet, 4 en pantallas anchas. Gaps del sistema.
 const GRID = "grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:gap-5 xl:grid-cols-4";
 
-// Grilla de tarjetas + skeleton + estados vacío/error + paginación.
-// Presentacional puro: no sabe de dónde salen los productos (catálogo, Ofertas, Novedades).
 export default function ProductGrid({
   products,
   loading,

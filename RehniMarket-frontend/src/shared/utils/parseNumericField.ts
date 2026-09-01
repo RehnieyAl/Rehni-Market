@@ -1,5 +1,3 @@
-// Convierte el valor crudo de un input numérico a número, o `null` si no es finito
-// (o no es entero con `integer: true`). Usa Number() (estricto), no parseFloat/parseInt.
 export function parseNumericField(
   value: string,
   { integer = false }: { integer?: boolean } = {},

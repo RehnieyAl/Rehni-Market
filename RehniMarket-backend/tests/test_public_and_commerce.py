@@ -334,3 +334,283 @@ class TestCheckoutAndOrders:
         assert detail.json()["items"][0]["attributes"] == {
             "Color": "Negro", "Talla": "40",
         }
+
+
+class TestCheckoutStockDiscount:
+    """El stock se descuenta SOLO en el checkout, de forma atómica y segura ante
+    concurrencia. Agregar al carrito nunca reserva stock."""
+
+    @staticmethod
+    def _variant(client, tokens, product_id, option_ids, stock):
+        payload = {"name": "V", "price": 100, "stock": stock, "option_ids": option_ids}
+        r = client.post(
+            f"/company/dashboard/products/{product_id}/variants",
+            json=payload,
+            headers=auth(tokens["company"]),
+        )
+        assert r.status_code == 200, r.text
+        return r.json()
+
+    def test_add_to_cart_does_not_touch_stock(
+        self, client, tokens, product, axes, buyer_wallet
+    ):
+        variant = self._variant(
+            client, tokens, product.id,
+            [str(axes["negro"].id), str(axes["t40"].id)], stock=5,
+        )
+
+        client.post(
+            "/cart/add",
+            json={"productId": str(product.id), "variantId": variant["id"], "quantity": 3},
+            headers=auth(tokens["user"]),
+        )
+
+        r = client.get(f"/public/products/{product.id}")
+        stock_in_api = next(
+            v["stock"] for v in r.json()["variants"] if v["id"] == variant["id"]
+        )
+        assert stock_in_api == 5
+
+    def test_checkout_decrements_only_the_bought_quantity(
+        self, client, tokens, product, axes, buyer_wallet, address, monkeypatch, db
+    ):
+        monkeypatch.setattr(
+            "app.services.commerce.CheckoutService.send_order_created_email",
+            lambda order: None,
+        )
+        from uuid import UUID
+        from app.models.ModelVariant import ProductVariant
+
+        variant = self._variant(
+            client, tokens, product.id,
+            [str(axes["negro"].id), str(axes["t40"].id)], stock=5,
+        )
+
+        client.post(
+            "/cart/add",
+            json={"productId": str(product.id), "variantId": variant["id"], "quantity": 2},
+            headers=auth(tokens["user"]),
+        )
+        r = client.post(
+            "/checkout", json={"addressId": str(address.id)}, headers=auth(tokens["user"])
+        )
+        assert r.status_code == 200, r.text
+
+        db.expire_all()
+        assert db.get(ProductVariant, UUID(variant["id"])).stock == 3
+
+    def test_checkout_exact_stock_lands_on_zero(
+        self, client, tokens, product, axes, buyer_wallet, address, monkeypatch, db
+    ):
+        monkeypatch.setattr(
+            "app.services.commerce.CheckoutService.send_order_created_email",
+            lambda order: None,
+        )
+        from uuid import UUID
+        from app.models.ModelVariant import ProductVariant
+
+        variant = self._variant(
+            client, tokens, product.id,
+            [str(axes["negro"].id), str(axes["t40"].id)], stock=5,
+        )
+        client.post(
+            "/cart/add",
+            json={"productId": str(product.id), "variantId": variant["id"], "quantity": 5},
+            headers=auth(tokens["user"]),
+        )
+        r = client.post(
+            "/checkout", json={"addressId": str(address.id)}, headers=auth(tokens["user"])
+        )
+        assert r.status_code == 200, r.text
+
+        db.expire_all()
+        assert db.get(ProductVariant, UUID(variant["id"])).stock == 0
+
+    def test_checkout_rejected_when_stock_drops_below_cart_and_nothing_persists(
+        self, client, tokens, product, axes, buyer_wallet, address, monkeypatch, db
+    ):
+        monkeypatch.setattr(
+            "app.services.commerce.CheckoutService.send_order_created_email",
+            lambda order: None,
+        )
+        from uuid import UUID
+        from app.models.ModelVariant import ProductVariant
+        from app.models.ModelOrder import Order
+        from app.models.ModelWallet import Wallet, WalletTransaction
+
+        variant = self._variant(
+            client, tokens, product.id,
+            [str(axes["negro"].id), str(axes["t40"].id)], stock=5,
+        )
+        client.post(
+            "/cart/add",
+            json={"productId": str(product.id), "variantId": variant["id"], "quantity": 5},
+            headers=auth(tokens["user"]),
+        )
+
+        db.query(ProductVariant).filter(
+            ProductVariant.id == UUID(variant["id"])
+        ).update({"stock": 2})
+        db.commit()
+
+        r = client.post(
+            "/checkout", json={"addressId": str(address.id)}, headers=auth(tokens["user"])
+        )
+        assert r.status_code == 409
+        assert r.json()["detail"]["code"] == "INSUFFICIENT_STOCK"
+
+        db.expire_all()
+        assert db.get(ProductVariant, UUID(variant["id"])).stock == 2
+        assert db.query(Order).count() == 0
+        assert db.get(Wallet, buyer_wallet.id).balance == buyer_wallet.balance
+        assert db.query(WalletTransaction).count() == 0
+
+    def test_checkout_over_stock_is_still_blocked_at_cart(
+        self, client, tokens, product, axes, buyer_wallet
+    ):
+        variant = self._variant(
+            client, tokens, product.id,
+            [str(axes["negro"].id), str(axes["t40"].id)], stock=5,
+        )
+        r = client.post(
+            "/cart/add",
+            json={"productId": str(product.id), "variantId": variant["id"], "quantity": 6},
+            headers=auth(tokens["user"]),
+        )
+        assert r.status_code == 409
+        assert r.json()["detail"]["code"] == "INSUFFICIENT_STOCK"
+
+    def test_checkout_only_touches_the_selected_variant(
+        self, client, tokens, product, axes, buyer_wallet, address, monkeypatch, db
+    ):
+        monkeypatch.setattr(
+            "app.services.commerce.CheckoutService.send_order_created_email",
+            lambda order: None,
+        )
+        from uuid import UUID
+        from app.models.ModelVariant import ProductVariant
+
+        variant_a = self._variant(
+            client, tokens, product.id,
+            [str(axes["negro"].id), str(axes["t40"].id)], stock=2,
+        )
+        variant_b = self._variant(
+            client, tokens, product.id,
+            [str(axes["blanco"].id), str(axes["t41"].id)], stock=2,
+        )
+
+        client.post(
+            "/cart/add",
+            json={"productId": str(product.id), "variantId": variant_a["id"], "quantity": 1},
+            headers=auth(tokens["user"]),
+        )
+        r = client.post(
+            "/checkout", json={"addressId": str(address.id)}, headers=auth(tokens["user"])
+        )
+        assert r.status_code == 200, r.text
+
+        db.expire_all()
+        assert db.get(ProductVariant, UUID(variant_a["id"])).stock == 1
+        assert db.get(ProductVariant, UUID(variant_b["id"])).stock == 2
+
+    def test_concurrent_checkout_of_last_unit_lets_only_one_win(
+        self, db, engine, users, company, catalog, monkeypatch
+    ):
+        """stock = 1, dos compradores confirman a la vez: exactamente uno gana,
+        el otro recibe INSUFFICIENT_STOCK. Nunca dos pedidos, nunca stock negativo."""
+
+        import threading
+        from uuid import UUID
+
+        from fastapi import HTTPException
+        from sqlalchemy.orm import sessionmaker
+
+        from app.models.ModelAddress import Address
+        from app.models.ModelCart import Cart, CartItem
+        from app.models.ModelOrder import Order
+        from app.models.ModelProduct import Product
+        from app.models.ModelRole import Role
+        from app.models.ModelUser import Users
+        from app.models.ModelWallet import Wallet
+        from app.schemas.SchemaCommerce.SchemaOrder import CheckoutRequest
+        from app.services.commerce.CheckoutService import checkout_service
+        from app.utils.Security import hash_password
+
+        monkeypatch.setattr(
+            "app.services.commerce.CheckoutService.send_order_created_email",
+            lambda order: None,
+        )
+
+        product = Product(
+            name="Última unidad", price=100, descripcion="d", stock=1,
+            company_id=company.id, catalog_id=catalog.id,
+        )
+        db.add(product)
+
+        user_role = db.query(Role).filter(Role.name == "user").first()
+        buyer2 = Users(
+            fullName="Buyer 2", email="buyer2@test.local",
+            hashed_password=hash_password("secret123"), tell="3000000001",
+            verified=True, role_id=user_role.id,
+        )
+        db.add(buyer2)
+        db.flush()
+
+        buyer_ids = [users["user"].id, buyer2.id]
+        address_by_user: dict = {}
+
+        for uid in buyer_ids:
+            db.add(Wallet(user_id=uid, balance=1_000_000))
+            addr = Address(
+                user_id=uid, label="Casa", full_name="Comprador Test",
+                country="Colombia", department="Antioquia", city="Medellín",
+                address="Calle 1", phone="3001112222",
+            )
+            db.add(addr)
+            db.flush()
+            address_by_user[uid] = addr.id
+
+            cart = Cart(user_id=uid)
+            db.add(cart)
+            db.flush()
+            db.add(CartItem(cart_id=cart.id, product_id=product.id, quantity=1))
+
+        db.commit()
+        product_id = product.id
+
+        Session = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+        barrier = threading.Barrier(len(buyer_ids))
+        results: dict = {}
+
+        def worker(uid):
+            session = Session()
+            try:
+                barrier.wait(timeout=10)
+                summary = checkout_service(
+                    uid, "user",
+                    CheckoutRequest(addressId=address_by_user[uid]),
+                    session,
+                )
+                results[uid] = ("ok", summary)
+            except HTTPException as exc:
+                results[uid] = ("error", exc.detail)
+            except Exception as exc:
+                results[uid] = ("boom", repr(exc))
+            finally:
+                session.close()
+
+        threads = [threading.Thread(target=worker, args=(uid,)) for uid in buyer_ids]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=30)
+
+        outcomes = sorted(state for state, _ in results.values())
+        assert outcomes == ["error", "ok"], results
+
+        error_detail = next(payload for state, payload in results.values() if state == "error")
+        assert error_detail["code"] == "INSUFFICIENT_STOCK"
+
+        db.expire_all()
+        assert db.get(Product, product_id).stock == 0
+        assert db.query(Order).count() == 1

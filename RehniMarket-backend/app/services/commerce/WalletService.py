@@ -24,7 +24,6 @@ from app.schemas.SchemaCommerce.SchemaWallet import (
 )
 
 def _to_transaction_response(transaction: WalletTransaction) -> WalletTransactionResponse:
-    # Mapeo a mano: createdAt (schema) no coincide con created_at (modelo).
     return WalletTransactionResponse(
         id=transaction.id,
         type=transaction.type.value,

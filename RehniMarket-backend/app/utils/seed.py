@@ -16,6 +16,7 @@ from app.models.ModelVariant import ProductVariant
 from app.models.ModelVariantImage import ProductVariantImage
 from app.models.ModelVariantOption import VariantOption
 from app.models.ModelAttributeValue import ProductAttributeValue
+from app.models.ModelShippingCarrier import ShippingCarrier
 from app.services.variants.combo_key import build_combo_key
 from app.utils.Security import hash_password
 from app.Config import config
@@ -32,19 +33,6 @@ def seed_roles(db: Session):
 
     db.commit()
 
-
-# ============================================================================
-# Datos de prueba de catálogos.
-#
-# Cada catálogo tiene dos grupos SEPARADOS:
-#   - specifications  -> CatalogAttribute role="product" (input_type="text", sin
-#     opciones). Información descriptiva del producto principal.
-#   - variant_attrs   -> CatalogAttribute role="variant" (+ CatalogAttributeOption).
-#     Ejes seleccionables para resolver una variante.
-#
-# Un mismo nombre nunca aparece en los dos grupos del mismo catálogo
-# (lo impediría UniqueConstraint(catalog_id, name)).
-# ============================================================================
 
 COLORS = [
     ("Negro", "#1A1A1A"), ("Blanco", "#F2F2F2"), ("Gris", "#8E8E93"),
@@ -174,9 +162,7 @@ def _book_specs(*extra):
     return ["Autor", "Editorial", "Idioma original", "Número de páginas", "ISBN", *extra]
 
 
-# (name, description, product_specs, [(variant_attr, options)])
 CATALOGS = [
-    # --------------------------- Tecnología ---------------------------
     ("Computadoras", "Equipos de escritorio para hogar, oficina y gaming.",
      _specs("Procesador", "Tarjeta gráfica", "Sistema operativo", "Fuente de poder", "Conectividad"),
      [("Color", COLORS_NEUTRAL), ("Memoria RAM", RAM_CAPACITY), ("Almacenamiento", STORAGE_PC)]),
@@ -295,7 +281,6 @@ CATALOGS = [
      _specs("Tipo", "Compatibilidad", "Cable", "Software"),
      [("Color", COLORS), ("Conexión", CONNECTION)]),
 
-    # --------------------------- Anime / Entretenimiento ---------------------------
     ("Figuras Coleccionables", "Figuras a escala de anime, cómics y videojuegos.",
      _specs("Franquicia", "Fabricante", "Material", "Altura aproximada", "Licencia oficial"),
      [("Escala", FIGURE_SCALE), ("Edición", FIGURE_EDITION)]),
@@ -354,7 +339,6 @@ CATALOGS = [
      _specs("Material", "Tecnología de tejido", "Transpirabilidad", "Uso recomendado", "Instrucciones de cuidado"),
      [("Talla", APPAREL_SIZES), ("Color", COLORS)]),
 
-    # --------------------------- Ropa ---------------------------
     ("Camisetas", "Camisetas casuales de manga corta.",
      _specs("Material", "Composición", "Tipo de cuello", "Instrucciones de cuidado", "País de fabricación"),
      [("Talla", APPAREL_SIZES), ("Color", COLORS), ("Corte", TSHIRT_FIT)]),
@@ -408,7 +392,6 @@ CATALOGS = [
      _specs("Material", "Composición", "Uso", "Resistencia", "Instrucciones de cuidado"),
      [("Talla", APPAREL_SIZES), ("Color", COLORS_BASIC)]),
 
-    # --------------------------- Calzado ---------------------------
     ("Calzado", "Calzado casual y urbano.",
      _specs("Material exterior", "Material interior", "Tipo de suela", "Género", "Uso recomendado"),
      [("Talla", SHOE_SIZES), ("Color", COLORS)]),
@@ -440,7 +423,6 @@ CATALOGS = [
      _specs("Material exterior", "Material interior", "Tipo de suela", "Plantilla", "Uso recomendado"),
      [("Talla", SHOE_SIZES), ("Color", COLORS), ("Altura", HEEL_HEIGHT)]),
 
-    # --------------------------- Accesorios ---------------------------
     ("Relojes", "Relojes analógicos y digitales.",
      _specs("Tipo de movimiento", "Material de caja", "Cristal", "Resistencia al agua", "Diámetro"),
      [("Color", COLORS), ("Material de correa", STRAP_MATERIAL), ("Tamaño de caja", ["36 mm", "40 mm", "42 mm", "44 mm"])]),
@@ -463,7 +445,6 @@ CATALOGS = [
      _specs("Número de ranuras", "Compartimento para billetes", "Bloqueo RFID", "Dimensiones"),
      [("Color", COLORS_LEATHER), ("Material", WALLET_MATERIAL)]),
 
-    # --------------------------- Hogar ---------------------------
     ("Muebles de Sala", "Sofás, sillones y muebles de sala.",
      _specs("Material de estructura", "Relleno", "Dimensiones", "Peso soportado", "Requiere ensamblaje"),
      [("Color", FURNITURE_COLOR), ("Material", FURNITURE_MATERIAL), ("Plazas", SOFA_SEATS)]),
@@ -603,18 +584,6 @@ def seed_catalog_attributes(db: Session):
 
     db.commit()
 
-
-# ============================================================================
-# Empresas + productos de prueba (5 empresas x 5 productos = 25).
-#
-#   - Especificaciones -> ProductAttributeValue apuntando a CatalogAttribute
-#     role="product" (creados por seed_specifications). Es lo que el detalle
-#     público muestra en la pestaña "Especificaciones".
-#   - Ejes de variante -> subconjunto de los CatalogAttribute role="variant"
-#     del catálogo; cada variante lleva un VariantOption por eje.
-#   - SpecificationTemplate / ProductSpecification (legacy) NO se usan aquí:
-#     el detalle público del frontend ya no los lee (ver ARQUITECTURA-VARIANTES).
-# ============================================================================
 
 SEED_COMPANY_PASSWORD = "RehniSeed2026*"
 _SEED_PWD_HASH: str | None = None
@@ -836,11 +805,14 @@ def _seed_product(db: Session, company, data: dict):
             price=data["price"],
             stock=data.get("stock", 0),
             has_variants=has_variants,
+            applies_tax=data.get("applies_tax", True),
             is_active=True,
         )
         _apply_discount(product, data.get("discount"))
         db.add(product)
         db.flush()
+    else:
+        product.applies_tax = data.get("applies_tax", True)
 
     slug = _slug(data["name"])
     _ensure_product_image(db, product, f"seed/products/{slug}-1.png", data.get("image", _DEFAULT_RGB), True)
@@ -863,8 +835,6 @@ def _seed_product(db: Session, company, data: dict):
 
     db.flush()
 
-
-# ---- helpers de datos declarativos ----
 
 def _combos(axes, rows):
     """rows: lista de tuplas (valores..., sku, price, stock[, discount])."""
@@ -1293,6 +1263,7 @@ COMPANIES = [
                 "catalog": "Peluches",
                 "descripcion": "Peluche suave de Pikachu con bordados de alta calidad.",
                 "price": 90000,
+                "applies_tax": False,
                 "image": (245, 205, 60),
                 "specs": {
                     "Marca": "Kawaii World", "Modelo": "Plush Pikachu",
@@ -1624,6 +1595,24 @@ def seed_owner(db: Session):
         db.commit()
 
 
+def seed_shipping_carriers(db: Session):
+
+    if db.query(ShippingCarrier).first():
+        return
+
+    carriers = [
+        ("Servientrega", "https://www.servientrega.com/wps/portal/rastreo-envio?guia={tracking}"),
+        ("Coordinadora", "https://www.coordinadora.com/rastreo/rastreo-de-guia/?guia={tracking}"),
+        ("Interrapidísimo", "https://interrapidisimo.com/sigue-tu-envio/?guia={tracking}"),
+        ("Envía", "https://envia.co/rastreo?guia={tracking}"),
+    ]
+
+    for name, tracking_url in carriers:
+        db.add(ShippingCarrier(name=name, tracking_url=tracking_url, is_active=True))
+
+    db.commit()
+
+
 def run_seed(db: Session):
     seed_roles(db)
     seed_catalog(db)
@@ -1631,4 +1620,4 @@ def run_seed(db: Session):
     seed_catalog_attributes(db)
     seed_admin(db)
     seed_owner(db)
-    #seed_companies_and_products(db)
+    seed_shipping_carriers(db)

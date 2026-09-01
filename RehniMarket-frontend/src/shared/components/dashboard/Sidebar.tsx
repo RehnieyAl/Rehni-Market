@@ -16,15 +16,11 @@ interface SidebarNavProps {
   items: SidebarItem[];
   activeItem: string;
   onItemClick: (id: string) => void;
-  // Modo rail (solo escritorio).
   collapsed?: boolean;
   onToggleCollapse?: () => void;
-  // Presente = modo drawer móvil: muestra un botón de cerrar, nunca colapsa.
   onClose?: () => void;
 }
 
-// Contenido de navegación del panel. El contenedor (aside fijo / drawer) lo
-// aporta DashboardLayout: este componente solo pinta logo + enlaces + acciones.
 export default function SidebarNav({
   items,
   activeItem,
@@ -40,7 +36,7 @@ export default function SidebarNav({
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/login", { replace: true });
   };
 
   return (

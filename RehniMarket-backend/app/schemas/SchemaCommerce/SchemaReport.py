@@ -11,7 +11,6 @@ ReportTargetTypeLiteral = Literal["product", "company"]
 ReportStatusLiteral = Literal["pending", "reviewing", "resolved", "rejected"]
 
 
-# multipart/form-data: las evidencias viajan como archivos en el mismo request.
 class CreateReportRequest(BaseModel):
     targetType: ReportTargetTypeLiteral
     targetId: UUID
@@ -38,10 +37,8 @@ class ReportListItemResponse(BaseModel):
     id: UUID
     targetType: ReportTargetTypeLiteral
 
-    # Nombre del producto o de la empresa reportada.
     targetLabel: str
 
-    # Empresa dueña. None solo si el producto/empresa ya no existiera.
     companyName: str | None
 
     reporterName: str
@@ -60,7 +57,6 @@ class ReportsPaginatedResponse(BaseModel):
 
 class ReportEvidenceResponse(BaseModel):
     id: UUID
-    # Ya armada con build_media_url.
     url: str
 
 
@@ -68,7 +64,6 @@ class ReportResponse(BaseModel):
     id: UUID
     targetType: ReportTargetTypeLiteral
 
-    # IDs, nunca URLs: el frontend arma el enlace con sus propias rutas.
     productId: UUID | None
     productName: str | None
 

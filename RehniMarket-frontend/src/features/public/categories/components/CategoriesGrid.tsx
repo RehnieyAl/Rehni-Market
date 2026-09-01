@@ -16,7 +16,6 @@ import type { CategorySort } from "../utils/categorySort";
 const PAGE_SIZE = 8;
 const SKELETON_COUNT = PAGE_SIZE;
 
-// Página "Explorar categorías". Datos: GET /public/catalogs; búsqueda/orden/paginación en el cliente.
 export default function CategoriesGrid() {
   const [categories, setCategories] = useState<PublicCatalog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +60,6 @@ export default function CategoriesGrid() {
     };
   }, [reloadKey]);
 
-  // Nombres para el dropdown de categoría, sobre la lista completa.
   const categoryNames = useMemo(
     () => [...new Set(categories.map((category) => category.name))],
     [categories],
@@ -77,8 +75,6 @@ export default function CategoriesGrid() {
       return matchesSearch && matchesSelected;
     });
 
-    // "Más populares" no tiene métrica real (sin visitas/ventas por categoría): se deja el orden del backend.
-    // "Más productos" sí es un dato real.
     if (sort === "products") {
       result = [...result].sort((a, b) => b.product_count - a.product_count);
     } else if (sort === "az") {
@@ -92,7 +88,6 @@ export default function CategoriesGrid() {
 
   const totalPages = Math.max(1, Math.ceil(visibleCategories.length / PAGE_SIZE));
 
-  // Si `page` queda fuera de rango tras filtrar, se recalcula acá (derivado, no en un efecto).
   const currentPage = Math.min(page, totalPages);
 
   const pagedCategories = useMemo(

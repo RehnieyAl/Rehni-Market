@@ -8,8 +8,6 @@ import { useAuth } from "@/features/public/auth/context/useAuth";
 import { forgotPassword, updateMe, updateMePhoto } from "@/features/public/auth/api/authService";
 import { Button, Input } from "@/shared/components/ui";
 
-// Configuración de cuenta, común a cualquier rol: nombre, correo, foto y contraseña son de la cuenta.
-// Cada dashboard monta este mismo componente.
 export default function AccountSettings() {
   const navigate = useNavigate();
   const { user, refreshProfile } = useAuth();
@@ -17,9 +15,10 @@ export default function AccountSettings() {
 
   const [confirmPasswordOpen, setConfirmPasswordOpen] = useState(false);
 
-  const [editingName, setEditingName] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
   const [nameForm, setNameForm] = useState(user?.name ?? "");
-  const [savingName, setSavingName] = useState(false);
+  const [tellForm, setTellForm] = useState(user?.tell ?? "");
+  const [savingProfile, setSavingProfile] = useState(false);
 
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
@@ -31,29 +30,36 @@ export default function AccountSettings() {
 
   const [sendingCode, setSendingCode] = useState(false);
 
-  const handleStartEditName = () => {
+  const handleStartEditProfile = () => {
     setNameForm(user?.name ?? "");
-    setEditingName(true);
+    setTellForm(user?.tell ?? "");
+    setEditingProfile(true);
   };
 
-  const handleSaveName = async () => {
-    const trimmed = nameForm.trim();
+  const handleSaveProfile = async () => {
+    const name = nameForm.trim();
+    const tell = tellForm.trim();
 
-    if (trimmed.length < 3) {
+    if (name.length < 3) {
       showAlert("error", "El nombre debe tener al menos 3 caracteres.");
       return;
     }
 
+    if (!/^\d{10}$/.test(tell)) {
+      showAlert("error", "El teléfono debe tener exactamente 10 dígitos.");
+      return;
+    }
+
     try {
-      setSavingName(true);
-      await updateMe({ fullName: trimmed });
+      setSavingProfile(true);
+      await updateMe({ fullName: name, tell });
       await refreshProfile();
-      setEditingName(false);
+      setEditingProfile(false);
     } catch (error) {
-      console.error("Error actualizando el nombre", error);
-      showAlert("error", "No se pudo actualizar el nombre. Intenta de nuevo.");
+      console.error("Error actualizando el perfil", error);
+      showAlert("error", "No se pudo actualizar el perfil. Intenta de nuevo.");
     } finally {
-      setSavingName(false);
+      setSavingProfile(false);
     }
   };
 
@@ -110,7 +116,6 @@ export default function AccountSettings() {
     }
   };
 
-  // Reutiliza el flujo de recuperación de contraseña; no hay endpoint aparte para "cambiar estando logueado".
   const handleChangePassword = async () => {
     if (!user) return;
 
@@ -131,7 +136,6 @@ export default function AccountSettings() {
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      {/* Encabezado */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Configuración de cuenta</h1>
 
@@ -140,23 +144,22 @@ export default function AccountSettings() {
         </p>
       </div>
 
-      {/* PERFIL: foto de perfil + nombre */}
       <section className="mt-6 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Perfil</h2>
 
             <p className="mt-1 text-sm text-gray-500">
-              Tu foto y tu nombre, visibles en toda la plataforma.
+              Tu foto, tu nombre y tu teléfono de contacto.
             </p>
           </div>
 
-          {!editingName && (
+          {!editingProfile && (
             <button
               type="button"
-              onClick={handleStartEditName}
+              onClick={handleStartEditProfile}
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
-              aria-label="Editar nombre"
+              aria-label="Editar perfil"
             >
               <Pencil size={18} />
             </button>
@@ -199,37 +202,47 @@ export default function AccountSettings() {
           </div>
         </div>
 
-        <Input
-          className="mt-6"
-          label="Nombre"
-          value={editingName ? nameForm : (user?.name ?? "")}
-          disabled={!editingName}
-          onChange={(e) => setNameForm(e.target.value)}
-        />
+        <div className="mt-6 grid gap-6 sm:grid-cols-2">
+          <Input
+            label="Nombre"
+            value={editingProfile ? nameForm : (user?.name ?? "")}
+            disabled={!editingProfile}
+            onChange={(e) => setNameForm(e.target.value)}
+          />
 
-        {editingName && (
+          <Input
+            label="Teléfono"
+            type="tel"
+            inputMode="numeric"
+            maxLength={10}
+            value={editingProfile ? tellForm : (user?.tell ?? "")}
+            disabled={!editingProfile}
+            onChange={(e) => setTellForm(e.target.value.replace(/\D/g, ""))}
+          />
+        </div>
+
+        {editingProfile && (
           <div className="mt-6 flex justify-end gap-3">
             <Button
               variant="outline"
-              disabled={savingName}
+              disabled={savingProfile}
               leadingIcon={<X size={18} />}
-              onClick={() => setEditingName(false)}
+              onClick={() => setEditingProfile(false)}
             >
               Cancelar
             </Button>
 
             <Button
-              loading={savingName}
+              loading={savingProfile}
               leadingIcon={<Save size={18} />}
-              onClick={handleSaveName}
+              onClick={handleSaveProfile}
             >
-              {savingName ? "Guardando…" : "Guardar"}
+              {savingProfile ? "Guardando…" : "Guardar"}
             </Button>
           </div>
         )}
       </section>
 
-      {/* CUENTA: correo electrónico */}
       <section className="mt-6 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -281,7 +294,6 @@ export default function AccountSettings() {
         )}
       </section>
 
-      {/* SEGURIDAD: cambiar contraseña */}
       <section className="mt-6 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
         <h2 className="text-lg font-semibold text-gray-900">Seguridad</h2>
 

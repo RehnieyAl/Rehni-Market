@@ -62,9 +62,6 @@ export const changeEmail = async (data: ChangeEmailRequest) => {
   return res.data;
 };
 
-// Botón "Reenviar código" de la pantalla de verificación. El backend
-// aplica el cooldown de 60 s (responde 429 RESEND_COOLDOWN_ACTIVE con
-// `retry_after` si aún no pasa) e invalida el código anterior.
 export const resendVerificationCode = async (
   data: ResendVerificationCodeRequest,
 ): Promise<VerificationCodeState & { message: string }> => {
@@ -96,14 +93,11 @@ export const getProfile = async (): Promise<MeResponse> => {
 
 };
 
-// Actualiza nombre y/o correo de la propia cuenta - funciona igual para
-// cualquier rol (ver "Configuración de cuenta").
 export const updateMe = async (data: UpdateMeRequest): Promise<MeResponse> => {
   const res = await api.patch("/auth/me", data);
   return res.data;
 };
 
-// Foto de perfil de la CUENTA - común a cualquier rol.
 export const updateMePhoto = async (photo: File): Promise<MeResponse> => {
   const formData = new FormData();
   formData.append("photo", photo);

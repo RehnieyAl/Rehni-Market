@@ -6,8 +6,6 @@ interface OrderTimelineProps {
   status: OrderStatus;
 }
 
-// 5 pasos: Pendiente, Pagado, En proceso, Enviado, Entregado. "Pendiente" y "Pagado" se marcan juntos
-// (el pago ocurre en el checkout, PAID no es un estado propio del pedido).
 const STEPS: { label: string; isReached: (status: OrderStatus) => boolean }[] = [
   { label: "Pendiente", isReached: () => true },
   { label: "Pagado", isReached: () => true },
@@ -20,11 +18,10 @@ const STEPS: { label: string; isReached: (status: OrderStatus) => boolean }[] = 
 ];
 
 export default function OrderTimeline({ status }: OrderTimelineProps) {
-  // Un pedido cancelado muestra un estado propio, no la barra de progreso.
   if (status === "cancelled") {
     return (
-      <div className="flex items-center gap-3 rounded-card border border-red-100 bg-red-50 p-4">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-600 text-white">
+      <div className="flex items-center gap-3 rounded-card border border-danger/20 bg-danger-bg p-4">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-danger text-white">
           <X size={16} />
         </span>
 

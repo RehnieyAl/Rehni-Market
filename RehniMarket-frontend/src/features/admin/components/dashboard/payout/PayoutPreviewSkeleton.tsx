@@ -1,6 +1,3 @@
-// Skeleton de la vista previa financiera -
-// mismo radio/spacing que el resto de skeletons del módulo (ver
-// features/payouts/components/PayoutRowSkeleton.tsx).
 export default function PayoutPreviewSkeleton() {
   return (
     <div className="animate-pulse space-y-3 rounded-card border border-gray-200 bg-gray-50 p-4">

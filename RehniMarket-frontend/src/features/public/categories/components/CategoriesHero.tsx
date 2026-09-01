@@ -1,4 +1,3 @@
-// Bloque "Explorar categorías": solo título + descripción, sin imagen de fondo ni contenido dinámico.
 export default function CategoriesHero() {
   return (
     <section className="border-b border-gray-100 bg-gradient-to-b from-gray-50 to-white">

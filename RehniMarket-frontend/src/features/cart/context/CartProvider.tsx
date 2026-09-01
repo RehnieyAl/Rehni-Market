@@ -18,11 +18,9 @@ interface Props {
   children: ReactNode;
 }
 
-// El carrito es exclusivo del rol USER (ver ALCANCE > Restricciones de
-// compra) - este provider solo pide /cart cuando hay sesión de comprador,
-// para no disparar un 403 en cualquier otro rol o visitante anónimo.
 export function CartProvider({ children }: Props) {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
+  const identity = user?.email ?? null;
 
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(false);
@@ -63,7 +61,7 @@ export function CartProvider({ children }: Props) {
     };
 
     loadCart();
-  }, [role]);
+  }, [role, identity]);
 
   const addItem = async (productId: string, quantity: number, variantId?: string) => {
     const data = await addToCart({ productId, quantity, variantId });

@@ -4,7 +4,6 @@ import Button from "./Button";
 import EmptyState from "./EmptyState";
 
 interface ErrorStateProps {
-  // Qué no se pudo cargar. Ej: "No pudimos cargar los pedidos".
   title?: string;
   description?: string;
   onRetry?: () => void;
@@ -13,8 +12,6 @@ interface ErrorStateProps {
   className?: string;
 }
 
-// Estado de error de carga. Se distingue de EmptyState: aquí SÍ hubo un fallo,
-// no es que no haya datos. Ofrece reintentar cuando es posible.
 export default function ErrorState({
   title = "No pudimos cargar esta información",
   description = "Ocurrió un problema al obtener los datos. Intenta de nuevo.",

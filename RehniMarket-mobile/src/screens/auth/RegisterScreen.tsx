@@ -20,14 +20,6 @@ import { TextField } from "@/components/TextField";
 import { FormError } from "@/components/FormError";
 import { colors, fontSize, fontWeight, radii, spacing } from "@/theme";
 
-// Portado de RehniMarket-frontend/src/features/public/auth/pages/
-// RegisterUser.tsx: mismos 4 campos que espera POST /auth/register-user
-// (full_name, email, password, tell - ver RegisterUserRequest). El
-// checkbox de términos es solo un gate de UI, igual que en la web: el
-// backend no recibe ningún campo de aceptación. El contenido completo de
-// Términos y Condiciones (TermsModal/UserTerms en la web) no se porta en
-// esta fase - no hay una pantalla de auth funcional que dependa de ese
-// texto legal, queda para cuando se porte el contenido real.
 export default function RegisterScreen() {
   const router = useRouter();
   const { register } = useAuth();

@@ -28,14 +28,11 @@ const MONTH_NAMES = [
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
 ];
 
-// "2026-08-01" -> "Agosto 2026". Se parsea a mano para evitar el desfase UTC de new Date("YYYY-MM-DD").
 function formatPeriodLabel(period: PayoutAvailablePeriod): string {
   const [year, month] = period.periodStart.split("-").map(Number);
   return `${MONTH_NAMES[month - 1]} ${year}`;
 }
 
-// Modal "Generar liquidación": único punto que crea una liquidación (POST /admin/payouts/generate).
-// Ofrece solo meses con ventas DELIVERED sin liquidar, no un input de fecha libre.
 export default function GeneratePayoutModal({
   isOpen,
   onClose,
@@ -49,19 +46,16 @@ export default function GeneratePayoutModal({
 
   const [selectedCompany, setSelectedCompany] = useState<AdminCompanyResponse | null>(null);
 
-  // Periodos liquidables de la empresa elegida (con ventas válidas, sin liquidación previa).
   const [periods, setPeriods] = useState<PayoutAvailablePeriod[]>([]);
   const [periodsLoading, setPeriodsLoading] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<PayoutAvailablePeriod | null>(null);
 
   const [generating, setGenerating] = useState(false);
 
-  // Vista previa financiera. preview=null + previewError=null = estado inicial sin selección suficiente.
   const [preview, setPreview] = useState<PayoutPreview | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
 
-  // Diferido con setTimeout para no hacer setState síncrono dentro del efecto.
   useEffect(() => {
     if (isOpen) return;
 
@@ -104,7 +98,6 @@ export default function GeneratePayoutModal({
     };
   }, [isOpen, search, selectedCompany]);
 
-  // Carga los periodos liquidables al elegir empresa; se reinicia periodo/preview al cambiar de empresa.
   useEffect(() => {
     if (!isOpen || !selectedCompany) {
       const timeout = setTimeout(() => {
@@ -138,8 +131,6 @@ export default function GeneratePayoutModal({
     };
   }, [isOpen, selectedCompany]);
 
-  // Vista previa automática al elegir empresa+periodo; GET /admin/payouts/preview corre la misma
-  // validación/cálculo que generar, sin persistir.
   useEffect(() => {
     if (!isOpen || !selectedCompany || !selectedPeriod) {
       const timeout = setTimeout(() => {
@@ -197,7 +188,6 @@ export default function GeneratePayoutModal({
     try {
       setGenerating(true);
 
-      // Reutiliza el periodo que confirmó el preview: se genera exactamente lo que el admin vio.
       await generatePayout({
         companyId: selectedCompany.id,
         periodStart: preview.periodStart,

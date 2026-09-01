@@ -1,12 +1,15 @@
-import { User, Building2, Package, CalendarDays, ExternalLink } from "lucide-react";
-import { useEffect, useState } from "react";
+import { User, Building2, Package, CalendarDays, ExternalLink, Ban } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   getAdminReport,
   updateReportStatus,
 } from "@/features/reports/api/reportService";
+import { getAdminCompany, updateCompanyStatus } from "@/features/admin/api/companyService";
 import { useAlert } from "@/shared/components/alert/useAlert";
-import { Modal, Button, Textarea, Spinner, EmptyState } from "@/shared/components/ui";
+import { Modal, Button, Textarea, Spinner, EmptyState, Badge } from "@/shared/components/ui";
+import { formatPrice } from "@/shared/utils/formatPrice";
+import CompanyStatusConfirmModal from "@/features/admin/components/dashboard/company/CompanyStatusConfirmModal";
 
 import { ReportStatusBadge } from "./Reports";
 
@@ -16,11 +19,15 @@ interface ReportDetailModalProps {
   reportId: string | null;
   isOpen: boolean;
   onClose: () => void;
-  // Avisa al listado para que recargue: el reporte pudo salir del filtro de estado.
   onResolved: () => void;
 }
 
-// Detalle de un reporte, reutilizado para PRODUCT y COMPANY (render dinámico según el tipo).
+interface TargetCompanyState {
+  id: string;
+  active: boolean;
+  suspensionReason: string | null;
+}
+
 export default function ReportDetailModal({
   reportId,
   isOpen,
@@ -32,12 +39,17 @@ export default function ReportDetailModal({
   const [report, setReport] = useState<ReportDetail | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Acción admin en curso. "reviewing" se confirma directo; "resolved"/"rejected" piden respuesta antes.
   const [pendingAction, setPendingAction] = useState<
     "reviewing" | "resolved" | "rejected" | null
   >(null);
   const [adminResponse, setAdminResponse] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const [targetCompany, setTargetCompany] = useState<TargetCompanyState | null>(null);
+  const [targetCompanyLoading, setTargetCompanyLoading] = useState(false);
+  const [blockOpen, setBlockOpen] = useState(false);
+  const [blockReason, setBlockReason] = useState("");
+  const [blocking, setBlocking] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !reportId) return;
@@ -47,10 +59,31 @@ export default function ReportDetailModal({
         setLoading(true);
         setPendingAction(null);
         setAdminResponse("");
+        setTargetCompany(null);
+        setBlockOpen(false);
+        setBlockReason("");
 
         const response = await getAdminReport(reportId);
 
         setReport(response);
+
+        if (response.companyId) {
+          try {
+            setTargetCompanyLoading(true);
+
+            const company = await getAdminCompany(response.companyId);
+
+            setTargetCompany({
+              id: company.id,
+              active: company.CompanyStatus,
+              suspensionReason: company.suspensionReason,
+            });
+          } catch (companyError) {
+            console.error("Error cargando la empresa del reporte:", companyError);
+          } finally {
+            setTargetCompanyLoading(false);
+          }
+        }
       } catch (error) {
         console.error("Error cargando el reporte:", error);
       } finally {
@@ -93,179 +126,230 @@ export default function ReportDetailModal({
     }
   };
 
+  const handleBlockCompany = async () => {
+    if (!report?.companyId || blocking) return;
+    if (blockReason.trim().length === 0) return;
+
+    try {
+      setBlocking(true);
+
+      const result = await updateCompanyStatus(
+        report.companyId,
+        false,
+        blockReason.trim(),
+      );
+
+      setTargetCompany({
+        id: result.id,
+        active: result.CompanyStatus,
+        suspensionReason: result.suspensionReason,
+      });
+      setBlockOpen(false);
+      setBlockReason("");
+
+      const message =
+        result.affectedOrdersCount > 0
+          ? `Empresa suspendida correctamente. Se procesaron ${result.affectedOrdersCount} pedido${
+              result.affectedOrdersCount !== 1 ? "s" : ""
+            } y se reembolsaron ${formatPrice(result.totalRefunded)} en RehniCoins.`
+          : "Empresa suspendida correctamente. No había pedidos pendientes de reembolso.";
+
+      showAlert("success", message);
+    } catch (error) {
+      console.error("Error suspendiendo la empresa desde el reporte:", error);
+    } finally {
+      setBlocking(false);
+    }
+  };
+
+  const handleCloseBlockModal = useCallback(() => {
+    setBlockOpen(false);
+    setBlockReason("");
+  }, []);
+
   const isProduct = report?.targetType === "product";
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size="lg"
-      title="Detalle del reporte"
-      description={isProduct ? "Reporte de producto" : "Reporte de empresa"}
-      footer={
-        <Button variant="outline" onClick={onClose}>
-          Cerrar
-        </Button>
-      }
-    >
-      {loading && (
-        <div className="flex items-center justify-center gap-2 p-10 text-sm text-gray-500">
-          <Spinner /> Cargando reporte...
-        </div>
-      )}
+    <>
+      <Modal
+        isOpen={isOpen && !blockOpen}
+        onClose={onClose}
+        size="lg"
+        title="Detalle del reporte"
+        description={isProduct ? "Reporte de producto" : "Reporte de empresa"}
+        footer={
+          <Button variant="outline" onClick={onClose}>
+            Cerrar
+          </Button>
+        }
+      >
+        {loading && (
+          <div className="flex items-center justify-center gap-2 p-10 text-sm text-gray-500">
+            <Spinner /> Cargando reporte…
+          </div>
+        )}
 
-      {!loading && report && (
-            <div className="space-y-5">
-              <div className="flex items-center justify-between">
-                <ReportStatusBadge status={report.status} />
-                <span className="text-xs text-gray-500">
-                  <CalendarDays size={14} className="mr-1 inline" />
-                  {new Date(report.createdAt).toLocaleString("es-CO")}
-                </span>
-              </div>
+        {!loading && report && (
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <ReportStatusBadge status={report.status} />
+              <span className="text-xs text-gray-500">
+                <CalendarDays size={14} className="mr-1 inline" />
+                {new Date(report.createdAt).toLocaleString("es-CO")}
+              </span>
+            </div>
 
-              {/* OBJETIVO: producto o empresa, según targetType */}
-              {isProduct ? (
-                <InfoRow
-                  icon={<Package size={18} />}
-                  label="Producto"
-                  value={report.productName ?? "Producto eliminado"}
-                />
-              ) : (
-                <InfoRow
-                  icon={<Building2 size={18} />}
-                  label="Empresa"
-                  value={report.companyName ?? "Empresa eliminada"}
-                />
-              )}
-
-              {/* Empresa propietaria - solo tiene sentido para un
-                  reporte de producto (ver ALCANCE > sección 7). */}
-              {isProduct && (
-                <InfoRow
-                  icon={<Building2 size={18} />}
-                  label="Empresa propietaria"
-                  value={report.companyName ?? "Empresa eliminada"}
-                />
-              )}
-
-              {/* ENLACE AL OBJETIVO (ver ALCANCE > Reportes, sección
-                  10-12): se arma acá, en el frontend, con el ID recibido
-                  y las rutas públicas ya existentes - nunca con una URL
-                  guardada en el backend (ver ALCANCE > sección 11/15).
-                  Usa las mismas rutas públicas /products/:id y
-                  /company/:companyId sin importar si el producto quedó
-                  desactivado o la empresa suspendida (ver sección 13/14):
-                  esas páginas ya manejan ese caso con su propio estado
-                  de "no disponible", sin necesitar una vista admin
-                  nueva. */}
-              {isProduct && report.productId && (
-                <a
-                  href={`/products/${report.productId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-                >
-                  Ver producto
-                  <ExternalLink size={14} />
-                </a>
-              )}
-
-              {!isProduct && report.companyId && (
-                <a
-                  href={`/company/${report.companyId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-                >
-                  Ver empresa
-                  <ExternalLink size={14} />
-                </a>
-              )}
-
+            {isProduct ? (
               <InfoRow
-                icon={<User size={18} />}
-                label="Usuario reportante"
-                value={`${report.reporterName} (${report.reporterEmail})`}
+                icon={<Package size={18} />}
+                label="Producto"
+                value={report.productName ?? "Producto eliminado"}
               />
+            ) : (
+              <InfoRow
+                icon={<Building2 size={18} />}
+                label="Empresa"
+                value={report.companyName ?? "Empresa eliminada"}
+              />
+            )}
 
-              <InfoRow label="Motivo" value={report.reason} />
+            {isProduct && (
+              <InfoRow
+                icon={<Building2 size={18} />}
+                label="Empresa propietaria"
+                value={report.companyName ?? "Empresa eliminada"}
+              />
+            )}
 
-              {report.description && (
-                <InfoRow label="Descripción" value={report.description} />
-              )}
+            {isProduct && report.productId && (
+              <a
+                href={`/products/${report.productId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                Ver producto
+                <ExternalLink size={14} />
+              </a>
+            )}
 
-              {/* EVIDENCIAS (ver ALCANCE > Reportes, sección 8): solo se
-                  pueden agregar al crear el reporte - no existe ningún
-                  control para agregar/quitar acá, ni siquiera antes de
-                  resolver (ver ALCANCE > sección 20, "no agregar/
-                  eliminar evidencias" bajo ninguna circunstancia desde
-                  el detalle admin). Las URLs ya vienen armadas con el
-                  mismo mecanismo público (build_media_url) que usa el
-                  resto de imágenes del proyecto. */}
-              {report.evidences.length > 0 && (
-                <div>
-                  <div className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                    Evidencias
-                  </div>
+            {!isProduct && report.companyId && (
+              <a
+                href={`/company/${report.companyId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                Ver empresa
+                <ExternalLink size={14} />
+              </a>
+            )}
 
-                  <div className="mt-2 flex flex-wrap gap-3">
-                    {report.evidences.map((evidence, index) => (
-                      <a
-                        key={evidence.id}
-                        href={evidence.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Ver imagen completa"
-                        className="block h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-gray-200 transition hover:opacity-80"
-                      >
-                        <img
-                          src={evidence.url}
-                          alt={`Evidencia ${index + 1}`}
-                          className="h-full w-full object-cover"
-                        />
-                      </a>
-                    ))}
-                  </div>
+            <InfoRow
+              icon={<User size={18} />}
+              label="Usuario reportante"
+              value={`${report.reporterName} (${report.reporterEmail})`}
+            />
+
+            <InfoRow label="Motivo" value={report.reason} />
+
+            {report.description && (
+              <InfoRow label="Descripción" value={report.description} />
+            )}
+
+            {report.evidences.length > 0 && (
+              <div>
+                <div className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                  Evidencias
                 </div>
-              )}
 
-              {report.adminResponse && (
-                <div className="rounded-xl bg-gray-50 p-4">
-                  <p className="text-sm font-medium text-gray-900">
-                    Respuesta administrativa
-                  </p>
-                  <p className="mt-1 text-sm text-gray-600">
-                    {report.adminResponse}
-                  </p>
-                  {report.resolvedByName && (
-                    <p className="mt-2 text-xs text-gray-400">
-                      Por {report.resolvedByName}
-                      {report.resolvedAt &&
-                        ` · ${new Date(report.resolvedAt).toLocaleString("es-CO")}`}
+                <div className="mt-2 flex flex-wrap gap-3">
+                  {report.evidences.map((evidence, index) => (
+                    <a
+                      key={evidence.id}
+                      href={evidence.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Ver imagen completa"
+                      className="block h-20 w-20 shrink-0 overflow-hidden rounded-card border border-gray-200 transition hover:opacity-80"
+                    >
+                      <img
+                        src={evidence.url}
+                        alt={`Evidencia ${index + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {report.companyId && (
+              <div className="rounded-card border border-gray-200 p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-gray-900">
+                      {isProduct
+                        ? "Empresa propietaria del producto"
+                        : "Empresa reportada"}
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-600">
+                      {report.companyName ?? "Empresa"}
                     </p>
-                  )}
-                </div>
-              )}
+                  </div>
 
-              {/* RESOLVED ES TERMINAL (ver ALCANCE > Reportes - "RESOLVED
-                  = estado terminal"): ni acá ni en el backend existe
-                  ningún camino para volver a tocar un reporte ya
-                  resuelto - una vez en este estado, el modal es
-                  únicamente un visor (ver más abajo, sección de solo
-                  lectura). Esto es solo UX: la protección real está en
-                  update_report_status_service > _assert_report_editable,
-                  que rechaza la modificación aunque se llame al endpoint
-                  directamente. */}
-              {report.status === "resolved" ? (
-                <div className="rounded-card border border-gray-200 bg-gray-50 p-5 text-sm text-gray-500">
-                  Este reporte está resuelto y ya no puede modificarse.
+                  {targetCompanyLoading && !targetCompany ? (
+                    <Spinner size={16} />
+                  ) : targetCompany ? (
+                    targetCompany.active ? (
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        leadingIcon={<Ban size={16} />}
+                        disabled={blocking}
+                        onClick={() => setBlockOpen(true)}
+                      >
+                        Suspender empresa
+                      </Button>
+                    ) : (
+                      <Badge tone="danger" dot>
+                        Empresa suspendida
+                      </Badge>
+                    )
+                  ) : null}
                 </div>
-              ) : (
-              /* ACCIONES ADMIN (ver ALCANCE > sección 9) - NUNCA
-                  suspenden empresa ni desactivan producto por sí solas;
-                  eso lo decide el admin aparte con los servicios ya
-                  existentes (ver ALCANCE > punto 10). */
+
+                {targetCompany && !targetCompany.active && targetCompany.suspensionReason && (
+                  <p className="mt-3 rounded-control bg-danger-bg p-3 text-sm text-danger">
+                    Motivo: {targetCompany.suspensionReason}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {report.adminResponse && (
+              <div className="rounded-card bg-gray-50 p-4">
+                <p className="text-sm font-medium text-gray-900">
+                  Respuesta administrativa
+                </p>
+                <p className="mt-1 text-sm text-gray-600">
+                  {report.adminResponse}
+                </p>
+                {report.resolvedByName && (
+                  <p className="mt-2 text-xs text-gray-400">
+                    Por {report.resolvedByName}
+                    {report.resolvedAt &&
+                      ` · ${new Date(report.resolvedAt).toLocaleString("es-CO")}`}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {report.status === "resolved" ? (
+              <div className="rounded-card border border-gray-200 bg-gray-50 p-5 text-sm text-gray-500">
+                Este reporte está resuelto y ya no puede modificarse.
+              </div>
+            ) : (
               <div className="rounded-card border border-gray-200 p-5">
                 <h3 className="font-semibold text-gray-900">
                   Gestionar reporte
@@ -339,17 +423,31 @@ export default function ReportDetailModal({
                   </div>
                 )}
               </div>
-              )}
-            </div>
-      )}
+            )}
+          </div>
+        )}
 
-      {!loading && !report && (
-        <EmptyState
-          variant="plain"
-          title="No se pudo cargar la información del reporte"
+        {!loading && !report && (
+          <EmptyState
+            variant="plain"
+            title="No se pudo cargar la información del reporte"
+          />
+        )}
+      </Modal>
+
+      {report?.companyId && (
+        <CompanyStatusConfirmModal
+          isOpen={blockOpen}
+          companyName={report.companyName ?? "esta empresa"}
+          active
+          loading={blocking}
+          reason={blockReason}
+          onReasonChange={setBlockReason}
+          onConfirm={handleBlockCompany}
+          onClose={handleCloseBlockModal}
         />
       )}
-    </Modal>
+    </>
   );
 }
 

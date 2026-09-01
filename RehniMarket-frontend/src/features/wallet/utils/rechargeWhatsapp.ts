@@ -1,5 +1,3 @@
-// Único punto que lee VITE_REHNIMARKET_WHATSAPP y arma la URL de wa.me.
-// Devuelve null (no lanza) si la variable no está configurada, para que el caller avise.
 export function buildRechargeWhatsappUrl(params: {
   amount: number;
   userName: string;
@@ -9,12 +7,10 @@ export function buildRechargeWhatsappUrl(params: {
 
   if (!rawNumber) return null;
 
-  // wa.me solo acepta dígitos: se limpian "+", espacios y guiones.
   const number = rawNumber.replace(/\D/g, "");
 
   if (!number) return null;
 
-  // Cantidad sin símbolo de moneda: es un mensaje leído por una persona.
   const message = [
     `Hola, soy ${params.userName}.`,
     "Quiero solicitar una recarga de RehniCoins.",

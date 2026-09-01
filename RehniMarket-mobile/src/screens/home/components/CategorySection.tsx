@@ -1,21 +1,20 @@
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
-import { Link } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { FlatList, StyleSheet, View } from "react-native";
+import { useRouter } from "expo-router";
 
 import { getCatalogs } from "@/api/catalogService";
-import { CategoryCard } from "./CategoryCard";
+import { CategoryCard, CATEGORY_CARD_GAP } from "./CategoryCard";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Skeleton } from "@/components/Skeleton";
 import { ErrorState } from "@/components/ErrorState";
-import { colors, fontSize, fontWeight, spacing } from "@/theme";
+import { useResponsive } from "@/hooks/useResponsive";
+import { spacing } from "@/theme";
 import type { PublicCatalog } from "@/types/catalog";
 
-// Espejo funcional de RehniMarket-frontend/src/features/public/home/
-// components/CategoriesSection.tsx (mismo endpoint GET /public/catalogs).
-// Diseño horizontal/scroll en vez del grid de la web - así lo pide
-// explícitamente references/ux-user.png para esta sección ("Explorar
-// categorías" es una fila que se desliza, no un grid que envuelve).
 export function CategorySection() {
+  const router = useRouter();
+  const { isTablet, columns } = useResponsive();
+
   const [categories, setCategories] = useState<PublicCatalog[]>([]);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
@@ -39,24 +38,19 @@ export function CategorySection() {
     load();
   }, [load]);
 
-  // Sin categorías activas: se omite la sección entera (mismo criterio
-  // que la web).
   if (!loading && !failed && categories.length === 0) {
     return null;
   }
 
+  const gridColumns = columns({ min: 4, max: 8, target: 96 });
+
   return (
     <View style={styles.section}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Explorar categorías</Text>
-
-        <Link href="/(user)/(tabs)/categories" style={styles.link}>
-          <View style={styles.linkContent}>
-            <Text style={styles.linkText}>Ver todas</Text>
-            <Ionicons name="arrow-forward" size={14} color={colors.primary} />
-          </View>
-        </Link>
-      </View>
+      <SectionHeader
+        title="Explorar categorías"
+        actionLabel="Ver todas"
+        onPressAction={() => router.push("/(user)/(tabs)/categories")}
+      />
 
       {failed ? (
         <ErrorState message="No se pudieron cargar las categorías." onRetry={load} />
@@ -66,14 +60,24 @@ export function CategorySection() {
             <Skeleton key={index} width={56} height={56} radius="md" />
           ))}
         </View>
+      ) : isTablet ? (
+        <View style={styles.grid}>
+          {categories.map((category) => (
+            <CategoryCard
+              key={category.id}
+              category={category}
+              style={{ width: `${100 / gridColumns}%`, paddingHorizontal: CATEGORY_CARD_GAP / 2 }}
+            />
+          ))}
+        </View>
       ) : (
         <FlatList
           data={categories}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <CategoryCard category={item} />}
+          renderItem={({ item }) => <CategoryCard category={item} style={styles.horizontalCard} />}
           horizontal
           showsHorizontalScrollIndicator={false}
-          ItemSeparatorComponent={() => <View style={{ width: spacing.md }} />}
+          ItemSeparatorComponent={() => <View style={{ width: CATEGORY_CARD_GAP }} />}
         />
       )}
     </View>
@@ -84,29 +88,16 @@ const styles = StyleSheet.create({
   section: {
     gap: spacing.md,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  title: {
-    fontSize: fontSize.lg,
-    fontWeight: fontWeight.bold,
-    color: colors.textPrimary,
-  },
-  link: {},
-  linkContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  linkText: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.medium,
-    color: colors.primary,
-  },
   skeletonRow: {
     flexDirection: "row",
     gap: spacing.md,
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    rowGap: spacing.lg,
+  },
+  horizontalCard: {
+    width: 84,
   },
 });

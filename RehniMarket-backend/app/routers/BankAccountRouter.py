@@ -17,7 +17,6 @@ from app.services.DashboardService.company.BankAccountService import (
     delete_bank_account_service,
 )
 
-# Router delgado; la lógica vive en BankAccountService.py.
 router = APIRouter(prefix="/company/bank-accounts", tags=["company", "bank-accounts"])
 
 

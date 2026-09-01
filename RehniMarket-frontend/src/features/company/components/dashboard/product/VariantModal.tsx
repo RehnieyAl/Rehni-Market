@@ -62,7 +62,6 @@ export default function VariantModal({
   const [sku, setSku] = useState("");
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
-  // { [attributeId]: optionId }
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [discount, setDiscount] = useState<DiscountFormState>(discountToLocalState(null));
   const [errors, setErrors] = useState<{ price?: string; stock?: string }>({});
@@ -150,7 +149,6 @@ export default function VariantModal({
     };
   }, [isOpen, variantId, productId, catalogId]);
 
-  // Nombre por defecto a partir de las opciones elegidas (Negro / 40).
   const suggestedName = useMemo(() => {
     const parts = axes
       .map((axis) => {

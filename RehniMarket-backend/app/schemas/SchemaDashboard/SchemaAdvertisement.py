@@ -14,7 +14,6 @@ class AdvertisementResponse(BaseModel):
     image_url: str
     mobile_image_url: str | None
 
-    # Con target_type != None lo calcula el backend; con None se usa lo que escribió el admin.
     button_link: str | None
 
     is_active: bool
@@ -40,7 +39,6 @@ class CreateAdvertisementRequest(BaseModel):
     """multipart/form-data: las imágenes llegan como UploadFile desde el router.
     El anuncio es un banner visual: no tiene texto (título/descripción/botón)."""
 
-    # Solo se usa con target_type None; con otro valor lo calcula el backend.
     button_link: str | None = Field(
         default=None,
         max_length=255
@@ -104,10 +102,8 @@ class UpdateAdvertisementRequest(BaseModel):
 
     is_active: bool | None = None
 
-    # Elimina la imagen móvil actual sin subir otra; se ignora si llega una nueva.
     remove_mobile_image: bool = False
 
-    # clear_target como bandera explícita: un PATCH parcial no distingue "no enviado" de "limpiar".
     target_type: AdvertisementTargetType | None = None
     clear_target: bool = False
     target_product_id: UUID | None = None

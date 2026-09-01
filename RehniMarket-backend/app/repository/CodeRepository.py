@@ -19,10 +19,6 @@ def create_code(database: Session,user_id: UUID,code: str,code_type: TypeCode,ex
     return new_code
 
 def get_code(database: Session,user_id: UUID,code_type: TypeCode) -> Codes | None:
-    # created_at DESC: normalmente solo hay una fila por usuario+tipo
-    # (create_code_service borra la anterior antes de insertar), pero si
-    # por lo que sea quedara mas de una, siempre gana la mas reciente -
-    # nunca un codigo viejo.
     return (
         database.query(Codes)
         .filter(Codes.user_id == user_id, Codes.type == code_type)

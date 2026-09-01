@@ -1,5 +1,3 @@
-// Escala de tamaños igual a la de Tailwind ya usada en la web
-// (text-xs..text-3xl) y los mismos pesos (font-medium/semibold/bold).
 export const fontSize = {
   xs: 12,
   sm: 14,

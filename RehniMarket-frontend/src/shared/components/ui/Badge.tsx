@@ -26,8 +26,6 @@ interface BadgeProps {
   dot?: boolean;
 }
 
-// Etiqueta de estado. Un solo lenguaje para "Activo / Inactivo / Pendiente / …"
-// en tablas, listados y detalles.
 export default function Badge({ tone = "neutral", children, className, dot }: BadgeProps) {
   return (
     <span

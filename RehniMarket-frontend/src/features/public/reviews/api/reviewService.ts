@@ -2,8 +2,6 @@ import { api } from "@/api/Client";
 
 import type { Review, ReviewsPaginated, ReviewEligibility } from "../types/response";
 
-// Listado público de reseñas de un producto (sin auth) - reseñas
-// ACTIVAS únicamente, ver backend > list_product_reviews_service.
 export async function getProductReviews(
   productId: string,
   page = 1,
@@ -16,8 +14,6 @@ export async function getProductReviews(
   return data;
 }
 
-// Resto de endpoints requieren auth (rol USER, ver
-// app/middleware/RolePermissions.py > "/reviews").
 export async function getReviewEligibility(productId: string): Promise<ReviewEligibility> {
   const { data } = await api.get<ReviewEligibility>(`/reviews/eligibility/${productId}`);
 

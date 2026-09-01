@@ -6,21 +6,16 @@ import { Textarea } from "@/shared/components/ui";
 interface CompanyStatusConfirmModalProps {
   isOpen: boolean;
   companyName: string;
-  // true = la empresa está activa y se va a suspender.
   active: boolean;
   loading: boolean;
   onConfirm: () => void;
   onClose: () => void;
-  // Motivo de suspensión — obligatorio solo al suspender (ALCANCE > punto 14).
-  // El estado vive en el padre; este modal es controlado.
   reason?: string;
   onReasonChange?: (value: string) => void;
 }
 
 const REASON_MAX_LENGTH = 500;
 
-// Suspender / desbloquear una empresa. ConfirmModal con un motivo obligatorio
-// embebido cuando se suspende.
 export default function CompanyStatusConfirmModal({
   isOpen,
   companyName,

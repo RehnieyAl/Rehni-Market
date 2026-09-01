@@ -25,9 +25,6 @@ from app.services.email.template.EmailRegisterCompany import EmailRegisterCompan
 
 CODE_LENGTH = 6
 
-# Duracion (en minutos) de cada tipo de codigo. El codigo de verificacion
-# de correo dura 5 minutos (ver HU "verificacion de correo + reenvio"); el
-# de recuperacion de contrasena se mantiene en 15, no lo toca esta HU.
 VERIFY_EMAIL_EXPIRATION_MINUTES = 5
 RESET_PASSWORD_EXPIRATION_MINUTES = 15
 
@@ -37,9 +34,6 @@ CODE_EXPIRATION_MINUTES = {
     TypeCode.CHANGE_EMAIL: RESET_PASSWORD_EXPIRATION_MINUTES,
 }
 
-# Tiempo minimo entre dos solicitudes de reenvio del mismo codigo. Lo
-# controla el backend (no el reloj del navegador): se mide contra
-# created_at del codigo activo, que es unico por cuenta+tipo.
 RESEND_COOLDOWN_SECONDS = 60
 
 
@@ -80,15 +74,16 @@ def verification_state(code_entry, now: datetime | None = None) -> dict:
 
 def send_code(email: str, code: str, code_type: TypeCode, role: str = None, company_name: str = None) -> None:
 
+    expiration_minutes = _expiration_minutes(code_type)
 
     if code_type == TypeCode.RESET_PASSWORD:
-        EmailForgotPassword(email, code, code_type)
+        EmailForgotPassword(email, code, expiration_minutes)
 
     elif code_type == TypeCode.VERIFY_EMAIL:
         if role == "company":
-            EmailRegisterCompany(email, company_name, code)
+            EmailRegisterCompany(email, company_name, code, expiration_minutes)
         else:
-            EmailRegisterUser(email, code, code_type)
+            EmailRegisterUser(email, code, expiration_minutes)
 
 
 def create_code_service(database: Session, user_id: uuid.UUID, code_type: TypeCode, now: datetime | None = None):

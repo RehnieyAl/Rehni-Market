@@ -18,7 +18,6 @@ import {
 
 import type { AdminAdvertisementResponse } from "@/features/admin/types/response";
 
-// Etiqueta legible por tipo de targeting; "" (manual) cae al texto por defecto.
 const TARGET_TYPE_LABELS: Record<string, string> = {
   PRODUCT: "Producto específico",
   CATEGORY: "Categoría",
@@ -86,9 +85,6 @@ export default function Advertisements() {
       (a, b) => a.order - b.order || a.created_at.localeCompare(b.created_at),
     );
 
-  // Config del target elegido - un
-  // solo lugar que arma estos 7 campos, reutilizado por create/update en
-  // vez de repetirlos en las dos ramas de abajo.
   const buildTargetFields = (values: AdvertisementFormValues) =>
     values.targetType
       ? {

@@ -14,7 +14,6 @@ class VariantOption(Base):
     __tablename__ = "variant_options"
 
     __table_args__ = (
-        # Una sola opción por eje de variante.
         UniqueConstraint(
             "variant_id", "attribute_id", name="uq_variant_option_axis"
         ),

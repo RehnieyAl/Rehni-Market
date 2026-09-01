@@ -16,12 +16,10 @@ interface HomeProductCarouselProps {
   emptyMessage: string;
 }
 
-const SKELETON_COUNT = 6;
-const ITEM_CLASS =
-  "w-[150px] shrink-0 snap-start sm:w-[180px] lg:w-[210px] xl:w-[230px]";
+const SKELETON_COUNT = 8;
 
-// Carrusel horizontal del Home (Ofertas, Novedades). Presentacional: recibe ya
-// los productos; cada sección decide de qué endpoint vienen.
+const GRID = "grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:gap-5 xl:grid-cols-4";
+
 export default function HomeProductCarousel({
   title,
   viewAllHref,
@@ -30,7 +28,6 @@ export default function HomeProductCarousel({
   failed,
   emptyMessage,
 }: HomeProductCarouselProps) {
-  // Un error puntual no debe romper el Home: la sección simplemente no se muestra.
   if (failed && !loading) return null;
 
   return (
@@ -52,17 +49,13 @@ export default function HomeProductCarousel({
       {!loading && products.length === 0 ? (
         <EmptyState variant="plain" className="mt-5" title={emptyMessage} />
       ) : (
-        <div className="mt-5 flex snap-x gap-4 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className={`mt-5 ${GRID}`}>
           {loading
             ? Array.from({ length: SKELETON_COUNT }).map((_, index) => (
-                <div key={index} className={ITEM_CLASS}>
-                  <ProductCardSkeleton />
-                </div>
+                <ProductCardSkeleton key={index} />
               ))
             : products.map((product) => (
-                <div key={product.id} className={ITEM_CLASS}>
-                  <ProductCard product={product} variant="carousel" />
-                </div>
+                <ProductCard key={product.id} product={product} />
               ))}
         </div>
       )}

@@ -1,11 +1,3 @@
-// Espejo de RehniMarket-frontend/src/features/public/home/types/
-// response.ts > PublicProductCard (backend: SchemaPublic.py >
-// PublicProductCardResponse). Reutilizable en cualquier listado de
-// productos (Home, Categorías, búsqueda, favoritos - ver Fase Home >
-// PRODUCT CARD), no exclusivo de Home.
-//
-// price/final_price viajan como string (Pydantic serializa Decimal así) -
-// nunca asumir number, convertir con Number() al operar.
 export interface PublicProductCard {
   id: string;
   name: string;
@@ -22,9 +14,30 @@ export interface PublicProductCard {
   review_count: number;
 }
 
-// A partir de acá: espejo de RehniMarket-frontend/src/features/public/
-// products/types/response.ts (backend: SchemaPublic.py) - contrato real
-// de GET /public/products/{id}, ver Fase Product Detail.
+export interface PublicProductsPaginated {
+  page: number;
+  limit: number;
+  total: number;
+  total_pages: number;
+  products: PublicProductCard[];
+}
+
+export type PublicProductsSort = "relevance" | "price_asc" | "price_desc" | "discount";
+
+export interface PublicProductsFilters {
+  search?: string;
+  catalogId?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  discount?: boolean;
+  inStock?: boolean;
+  minDiscount?: number;
+  maxStock?: number;
+  days?: number;
+  sort?: PublicProductsSort;
+  page?: number;
+  limit?: number;
+}
 
 export interface PublicProductImage {
   id: string;
@@ -42,10 +55,12 @@ export interface PublicProductColor {
   hex_color: string;
 }
 
-// Variante real del producto (ProductVariant). Cada variante tiene
-// exactamente un color (regla de negocio del backend - ver
-// CreateVariantRequest) y su propio precio/descuento/stock, independiente
-// del producto base (ver ModelVariant.py) - nunca se hereda del padre.
+export interface PublicVariantOption {
+  attribute: string;
+  value: string;
+  hex_color: string | null;
+}
+
 export interface PublicProductVariant {
   id: string;
   name: string;
@@ -53,16 +68,16 @@ export interface PublicProductVariant {
   discount_enabled: boolean;
   discount_percentage: number | null;
   final_price: string;
+  applies_tax: boolean;
+  tax_amount: string;
+  final_price_with_tax: string;
   stock: number;
+  options: PublicVariantOption[];
   color: PublicProductColor | null;
   images: PublicProductImage[];
   specifications: PublicProductSpecification[];
 }
 
-// Conteo real de reseñas activas por puntaje. Tipado por contrato aunque
-// esta fase todavía no renderiza reseñas/rating (ver Fase Product Detail
-// > NO IMPLEMENTAR TODAVÍA) - PublicProductDetail debe representar la
-// respuesta real completa del backend, no un subconjunto recortado.
 export interface PublicRatingDistribution {
   five: number;
   four: number;
@@ -86,10 +101,10 @@ export interface PublicProductDetail {
   discount_enabled: boolean;
   discount_percentage: number | null;
   final_price: string;
-  // Stock del PRODUCTO BASE - engañoso cuando `variants.length > 0` (ver
-  // ProductDetailScreen.tsx > REGLA DE STOCK): puede ser 0 aunque exista
-  // una variante con stock. Nunca ocultar/deshabilitar variantes a partir
-  // de este campo.
+  applies_tax: boolean;
+  tax_rate: string;
+  tax_amount: string;
+  price_with_tax: string;
   stock: number;
   average_rating: number | null;
   review_count: number;

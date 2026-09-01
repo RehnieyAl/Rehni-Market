@@ -8,12 +8,10 @@ import type {
   PayoutStatus,
 } from "@/features/payouts/types/response";
 
-// Módulo de liquidaciones del panel admin; único lado que genera o marca como pagada una liquidación.
-
 export interface GeneratePayoutPayload {
   companyId: string;
-  periodStart: string; // YYYY-MM-DD
-  periodEnd: string; // YYYY-MM-DD
+  periodStart: string;
+  periodEnd: string;
 }
 
 export async function getAdminPayouts(
@@ -38,7 +36,6 @@ export async function generatePayout(payload: GeneratePayoutPayload): Promise<Co
   return data;
 }
 
-// GET /admin/payouts/available-periods: meses con ventas DELIVERED sin liquidación generada.
 export async function getAvailablePayoutPeriods(companyId: string): Promise<PayoutAvailablePeriod[]> {
   const { data } = await api.get<PayoutAvailablePeriod[]>("/admin/payouts/available-periods", {
     params: { company_id: companyId },
@@ -47,7 +44,6 @@ export async function getAvailablePayoutPeriods(companyId: string): Promise<Payo
   return data;
 }
 
-// GET /admin/payouts/preview: misma validación/cálculo que generatePayout, sin crear nada.
 export async function getPayoutPreview(
   companyId: string,
   periodStart: string,

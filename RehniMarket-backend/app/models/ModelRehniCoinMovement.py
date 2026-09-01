@@ -22,7 +22,6 @@ class RehniCoinMovement(Base):
         UUID(as_uuid=True), ForeignKey("company.id"), nullable=False
     )
 
-    # Uno a uno con la liquidación.
     payout_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("company_payouts.id", ondelete="CASCADE"),

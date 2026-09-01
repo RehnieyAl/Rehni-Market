@@ -11,11 +11,9 @@ from app.schemas.SchemaCommerce.SchemaReport import (
 from app.services.commerce.ReportService import create_report_service
 from app.services.NasService import NasService, get_nas_service
 
-# Creación de reportes por un usuario autenticado; la gestión vive en AdminReportRouter.py.
 router = APIRouter(prefix="/reports", tags=["reports"])
 
 
-# multipart/form-data: las evidencias viajan como archivos; `evidences` es opcional.
 @router.post("", response_model=ReportResponse)
 def create_report(
     request: Request,

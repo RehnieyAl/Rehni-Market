@@ -8,17 +8,10 @@ import { colors, fontSize, fontWeight, radii, spacing } from "@/theme";
 interface Props extends Omit<TextInputProps, "style"> {
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
-  // Si es true, el campo agrega su propio botón de mostrar/ocultar (ver
-  // Login/Register/ResetPassword en la web - cada input de contraseña
-  // maneja su propio `showPassword`).
   toggleable?: boolean;
   error?: string;
 }
 
-// Espejo visual de los inputs `h-12/h-14 rounded-xl border` con ícono a
-// la izquierda que usa toda la web (Login/Register/ForgotPassword/
-// ResetPassword) - acá con react-native-vector-icons (Ionicons) en vez de
-// lucide-react.
 export function TextField({ label, icon, toggleable, error, secureTextEntry, ...inputProps }: Props) {
   const [visible, setVisible] = useState(false);
   const isSecure = toggleable ? !visible : secureTextEntry;

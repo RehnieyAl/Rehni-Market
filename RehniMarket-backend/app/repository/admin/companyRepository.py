@@ -51,7 +51,6 @@ def get_all_companies(
             Company.CompanyCertificateStatus == status
         )
 
-    # Orden de estados: pendientes, rechazadas, aprobadas.
     status_order = case(
         (
             Company.CompanyCertificateStatus
@@ -71,7 +70,6 @@ def get_all_companies(
         else_=4,
     )
 
-    # Paginación por cursor. Orden real: status_order ASC, created_at DESC, id DESC.
     if (
         cursor_status_order is not None
         and cursor_created_at is not None

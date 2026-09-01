@@ -15,7 +15,6 @@ import type { Order, OrderStatus, OrderStatusCounts } from "@/features/orders/ty
 
 type TabId = "all" | "pending" | "inProgress" | "completed" | "cancelled";
 
-// Pantalla única de gestión de pedidos para empresa. El cambio de estado vive en OrderDetailModal.
 const STATUS_TABS: { id: TabId; label: string; statuses?: OrderStatus[] }[] = [
   { id: "all", label: "Todos" },
   { id: "pending", label: "Pendientes", statuses: ["pending"] },
@@ -60,7 +59,6 @@ export default function Orders() {
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, activeTab, search]);
 
   const loadCounts = useCallback(async () => {
@@ -75,7 +73,6 @@ export default function Orders() {
     }
   }, []);
 
-  // Debounce del buscador para no disparar un request por cada tecla.
   useEffect(() => {
     const timeout = setTimeout(loadOrders, 300);
     return () => clearTimeout(timeout);
@@ -101,7 +98,6 @@ export default function Orders() {
     setDetailOpen(true);
   };
 
-  // Un cambio de estado afecta la fila visible y los contadores de las pestañas.
   const handleStatusChanged = () => {
     loadOrders();
     loadCounts();

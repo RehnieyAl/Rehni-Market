@@ -5,7 +5,6 @@ interface ProductRatingBadgeProps {
   reviewCount: number;
 }
 
-// Calificación promedio + total de opiniones. Si no hay reseñas, no se muestra nada (nunca "0.0").
 export default function ProductRatingBadge({
   averageRating,
   reviewCount,

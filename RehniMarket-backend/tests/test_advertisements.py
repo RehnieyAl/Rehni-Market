@@ -35,7 +35,6 @@ def nas(client):
 
 
 def _png():
-    # Cabecera PNG mínima; el contenido no importa, la subida está mockeada.
     return ("banner.png", b"\x89PNG\r\n\x1a\n", "image/png")
 
 
@@ -64,7 +63,6 @@ class TestAdvertisementIsVisualOnly:
         assert body["button_link"] is None
 
     def test_text_fields_in_payload_are_ignored(self, client, tokens, nas):
-        # El contrato ya no acepta estos campos: llegan como form extra y se descartan.
         response = _create(
             client, tokens,
             {"title": "aaaa", "description": "aaaa", "button_text": "a"},
@@ -96,7 +94,6 @@ class TestAdvertisementTargeting:
         body = response.json()
         assert body["target_type"] == "PROMOTION"
         assert body["minimum_discount"] == 20
-        # button_link lo calcula el targeting, sin depender de ningún texto.
         assert body["button_link"] == "/products?minDiscount=20"
 
     def test_manual_advertisement_keeps_button_link(self, client, tokens, nas):
@@ -147,5 +144,5 @@ class TestAdvertisementLifecycle:
             headers=auth(tokens["owner"]),
         )
         assert response.status_code == 200, response.text
-        assert len(nas.deleted) == 2  # desktop + mobile
+        assert len(nas.deleted) == 2
         assert client.get("/public/advertisements").json() == []

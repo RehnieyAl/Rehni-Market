@@ -12,7 +12,6 @@ class ProductVariant(Base):
     __tablename__ = "product_variants"
 
     __table_args__ = (
-        # Dos variantes vivas del mismo producto no pueden compartir combinación.
         Index(
             "uq_variant_product_combo_active",
             "product_id",
@@ -55,13 +54,11 @@ class ProductVariant(Base):
         default=0
     )
 
-    # Huella determinista de la combinación de opciones (ver services/variants/combo_key.py).
     combo_key: Mapped[str | None] = mapped_column(
         String(64),
         nullable=True
     )
 
-    # Descuento propio de la variante.
     discount_enable: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
@@ -74,7 +71,6 @@ class ProductVariant(Base):
         nullable=False
     )
 
-    # "percent" | "fixed"; NULL se interpreta como "percent" por compatibilidad.
     discount_type: Mapped[str | None] = mapped_column(
         String(8),
         nullable=True
@@ -90,7 +86,6 @@ class ProductVariant(Base):
         nullable=True
     )
 
-    # Soft-delete: una variante comprada nunca se borra físicamente (FK de OrderItem sin CASCADE).
     deleted_at: Mapped[datetime | None] = mapped_column(
         DateTime,
         nullable=True,
@@ -103,7 +98,6 @@ class ProductVariant(Base):
         nullable=False
     )
 
-    # Legacy: se conserva mientras se verifica el backfill hacia variant_options.
     color_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("color_variants.id"),

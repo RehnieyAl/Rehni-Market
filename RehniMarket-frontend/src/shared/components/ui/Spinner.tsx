@@ -8,8 +8,6 @@ interface SpinnerProps {
   label?: string;
 }
 
-// Indicador de carga. El giro es feedback esencial, así que se mantiene incluso
-// con prefers-reduced-motion (la regla global solo acorta su duración).
 export default function Spinner({ size = 18, className, label = "Cargando" }: SpinnerProps) {
   return (
     <Loader2

@@ -27,7 +27,6 @@ class Order(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
 
-    # Referencia legible ("RM-000001"); el UUID de `id` nunca se muestra al usuario.
     order_number: Mapped[int] = mapped_column(
         Integer, Identity(start=1, increment=1), unique=True, nullable=False
     )
@@ -44,8 +43,6 @@ class Order(Base):
         UUID(as_uuid=True), ForeignKey("addresses.id"), nullable=True
     )
 
-    # Snapshot de la dirección al checkout: el pedido no cambia si el usuario la
-    # edita o borra. `address_id` queda solo como trazo, no se lee en vivo.
     delivery_label: Mapped[str | None] = mapped_column(String(60), nullable=True)
     delivery_full_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
     delivery_phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
@@ -56,6 +53,11 @@ class Order(Base):
     status: Mapped[OrderStatusEnum] = mapped_column(
         Enum(OrderStatusEnum), nullable=False, default=OrderStatusEnum.PENDING
     )
+
+    shipping_carrier_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("shipping_carriers.id"), nullable=True
+    )
+    tracking_number: Mapped[str | None] = mapped_column(String(80), nullable=True)
 
     subtotal: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     tax: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=0)
@@ -74,6 +76,7 @@ class Order(Base):
     user = relationship("Users", back_populates="orders")
     company = relationship("Company")
     address = relationship("Address")
+    shipping_carrier = relationship("ShippingCarrier", back_populates="orders")
 
     items: Mapped[list["OrderItem"]] = relationship(
         "OrderItem", back_populates="order", cascade="all, delete-orphan"
@@ -104,14 +107,10 @@ class OrderItem(Base):
     product_name: Mapped[str] = mapped_column(String(150), nullable=False)
     variant_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
 
-    # Combinación comprada, congelada: {"Color": "Negro", "Talla": "40"}.
     attributes_snapshot: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
-    # Precio final ya con descuento: lo que realmente se cobró.
     unit_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
 
-    # Precio antes del descuento, snapshot al checkout. None si no había descuento
-    # activo o en pedidos previos a esta columna.
     original_unit_price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2), nullable=True)
 
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)

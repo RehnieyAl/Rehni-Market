@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.Config import config
 from app.database.Connection import Base, get_db
-import app.models  # noqa: F401  (registra los mappers)
+import app.models
 from app.models.ModelCatalog import Catalog
 from app.models.ModelCatalogAttribute import CatalogAttribute, CatalogAttributeOption
 from app.models.ModelCompany import Company
@@ -39,6 +39,18 @@ def engine():
     admin_engine.dispose()
 
     test_engine = create_engine(TEST_DB_URL)
+
+    with test_engine.begin() as connection:
+        connection.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
+        connection.execute(text("CREATE EXTENSION IF NOT EXISTS unaccent"))
+        connection.execute(
+            text(
+                "CREATE OR REPLACE FUNCTION rehni_search_norm(txt text) "
+                "RETURNS text LANGUAGE sql IMMUTABLE PARALLEL SAFE STRICT "
+                "AS $$ SELECT lower(public.unaccent('public.unaccent', txt)) $$"
+            )
+        )
+
     yield test_engine
     test_engine.dispose()
 

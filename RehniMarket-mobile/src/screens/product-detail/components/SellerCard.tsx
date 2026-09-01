@@ -10,14 +10,6 @@ interface Props {
   isVerified: boolean;
 }
 
-// Espejo (solo consulta) de RehniMarket-frontend/src/features/public/
-// products/components/SellerCard.tsx: logo + nombre + verificación real
-// (company_is_verified, ver publicService/Products.py). Sin "Ver tienda":
-// esta fase no incluye la pantalla de perfil de empresa en mobile (no
-// existe ninguna ruta /(user)/company todavía) y esta fase es solo
-// consulta (ver Fase Product Detail > SELLER/EMPRESA, "no permitir
-// editar/administrar/crear desde acá") - agregar un botón sin destino
-// real sería un link muerto, no fidelidad a la web.
 export function SellerCard({ companyName, companyLogo, isVerified }: Props) {
   return (
     <View style={styles.container}>

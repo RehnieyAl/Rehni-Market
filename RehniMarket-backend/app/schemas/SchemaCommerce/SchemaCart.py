@@ -11,7 +11,6 @@ class AddCartItemRequest(BaseModel):
 
 
 class UpdateCartItemRequest(BaseModel):
-    # No se permite 0: para quitar un producto se usa el DELETE dedicado.
     quantity: int = Field(ge=1)
 
 
@@ -43,10 +42,11 @@ class CartItemResponse(BaseModel):
     basePrice: Decimal
     unitPrice: Decimal
     discountPercentage: int | None = None
+    appliesTax: bool
+    taxAmount: Decimal
     quantity: int
     subtotal: Decimal
 
-    # Stock actual del producto o la variante seleccionada.
     availableStock: int
 
     model_config = {"from_attributes": True}
@@ -56,4 +56,6 @@ class CartResponse(BaseModel):
     id: UUID
     items: list[CartItemResponse]
     subtotal: Decimal
+    tax: Decimal
+    total: Decimal
     totalItems: int

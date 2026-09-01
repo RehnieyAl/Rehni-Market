@@ -5,9 +5,13 @@ import CompanyProfile from "@/features/public/company/components/CompanyProfile"
 
 export default function CompanyProfilePage() {
   return (
-    <div>
+    <div className="flex min-h-screen flex-col bg-white">
       <NavBar />
-      <CompanyProfile />
+
+      <main className="flex-1">
+        <CompanyProfile />
+      </main>
+
       <Footer />
     </div>
   );

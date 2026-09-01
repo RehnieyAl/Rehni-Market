@@ -4,7 +4,6 @@ import Footer from "@/shared/components/Footer";
 import CollectionView from "@/features/public/products/components/CollectionView";
 import { getPublicOffers } from "@/features/public/products/api/productsService";
 
-// Apartado público independiente: productos realmente en oferta (GET /public/products/offers).
 export default function Offers() {
   return (
     <div className="flex min-h-screen flex-col bg-white">

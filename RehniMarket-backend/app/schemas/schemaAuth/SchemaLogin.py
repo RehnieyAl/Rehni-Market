@@ -11,16 +11,17 @@ class MeProfileResponse(BaseModel):
     email: str
     name: str
     role: str
-    # Foto de la cuenta autenticada, común a cualquier rol.
+    tell: str
     profileImagen: str | None = None
 
 
 class UpdateMeRequest(BaseModel):
-    """PATCH parcial sobre la propia cuenta (cualquier rol): nombre y correo
-    son de la cuenta, no del perfil público de una empresa."""
+    """PATCH parcial sobre la propia cuenta (cualquier rol): nombre, correo y
+    teléfono son de la cuenta, no del perfil público de una empresa."""
 
     fullName: Optional[str] = None
     email: Optional[EmailStr] = None
+    tell: Optional[str] = None
 
     @field_validator("fullName")
     @classmethod
@@ -38,6 +39,26 @@ class UpdateMeRequest(BaseModel):
         if len(value) > 60:
             raise ValueError(
                 "El nombre no debe exceder los 60 caracteres."
+            )
+
+        return value
+
+    @field_validator("tell")
+    @classmethod
+    def validate_tell(cls, value: Optional[str]):
+        if value is None:
+            return value
+
+        value = value.strip()
+
+        if not value.isdigit():
+            raise ValueError(
+                "El número de teléfono solo puede contener números."
+            )
+
+        if len(value) != 10:
+            raise ValueError(
+                "El número de teléfono debe tener exactamente 10 dígitos."
             )
 
         return value

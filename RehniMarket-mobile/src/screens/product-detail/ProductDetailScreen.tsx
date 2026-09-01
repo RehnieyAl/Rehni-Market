@@ -1,11 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
 import { getProductDetail } from "@/api/productService";
-import { getApiErrorDetail } from "@/api/apiError";
+import { useCart } from "@/features/cart/hooks/useCart";
+import { useFavorites } from "@/features/favorites/hooks/useFavorites";
+import { getApiErrorDetail, getApiErrorMessage } from "@/api/apiError";
 import { consumePendingAction } from "@/api/session";
 import type { PendingAction } from "@/api/session";
 import { useRequireUser } from "@/features/auth/hooks/useRequireUser";
@@ -14,60 +25,43 @@ import { Skeleton } from "@/components/Skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { ErrorState } from "@/components/ErrorState";
 import { formatPrice } from "@/utils/formatPrice";
+import { deriveVariantAxes, firstLiveVariant, resolveVariant } from "@/utils/variantAxes";
+import { useResponsive } from "@/hooks/useResponsive";
 import { colors, fontSize, fontWeight, radii, spacing } from "@/theme";
-import type { PublicProductDetail, PublicProductVariant } from "@/types/product";
+import type { PublicProductDetail } from "@/types/product";
 
+import { QuantityStepper } from "@/components/product/QuantityStepper";
 import { ProductGallery } from "./components/ProductGallery";
 import { ProductInfo } from "./components/ProductInfo";
+import { ProductTaxLine } from "./components/ProductTaxLine";
 import { SellerCard } from "./components/SellerCard";
 import { VariantSelector } from "./components/VariantSelector";
-import type { ColorOption } from "./components/VariantSelector";
-import { QuantitySelector } from "./components/QuantitySelector";
 import { StockStatus } from "./components/StockStatus";
 
 interface Props {
   productId: string;
 }
 
-interface ColorOptionInternal extends ColorOption {
-  variant: PublicProductVariant | null;
-}
+const JUST_ADDED_RESET_MS = 2500;
 
-// Detalle real de producto (ver references/ux-user.png > panel de
-// detalle + RehniMarket-frontend/src/features/public/products/components/
-// ProductDetail.tsx, misma fuente funcional). Mismo endpoint (GET
-// /public/products/{id}) y misma regla de negocio de variantes/stock que
-// la web - ver STOCK - REGLA CRÍTICA más abajo. NO incluye todavía:
-// rating/reseñas, "Comprar ahora", productos relacionados ni reportar
-// producto (ver Fase Product Detail > NO IMPLEMENTAR TODAVÍA) - esos
-// existen en la web pero esta fase los deja fuera a propósito.
 export function ProductDetailScreen({ productId }: Props) {
   const router = useRouter();
   const requireUser = useRequireUser();
+  const responsive = useResponsive();
+  const { addItem } = useCart();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   const [product, setProduct] = useState<PublicProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [failed, setFailed] = useState(false);
 
-  // Variante activa (misma modelización que ProductDetail.tsx en la web):
-  // `null` = datos del producto base. `hasChosenColor` existe aparte de
-  // `selectedVariant !== null` porque elegir la swatch "base" (color
-  // propio del producto, sin variante) también es una elección explícita
-  // y debe habilitar la compra igual que elegir cualquier variante real.
-  const [selectedVariant, setSelectedVariant] = useState<PublicProductVariant | null>(null);
-  const [hasChosenColor, setHasChosenColor] = useState(false);
+  const [selected, setSelected] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
 
-  // Favorito: UI provisional en estado local, sin persistencia todavía
-  // (no existe FavoritesProvider - ver Fase Product Detail > FAVORITOS,
-  // mismo criterio que ProductCard.tsx en Home).
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
 
-  // Acción pendiente restaurada tras volver de Login (ver Fase Acceso
-  // Público > PENDING ACTION) - `null` en el caso normal (entrada
-  // directa, sin login de por medio). Ver los dos efectos de "resume" más
-  // abajo.
   const [resumeAction, setResumeAction] = useState<PendingAction | null>(null);
 
   const load = useCallback(async () => {
@@ -81,8 +75,7 @@ export function ProductDetailScreen({ productId }: Props) {
       const response = await getProductDetail(productId);
 
       setProduct(response);
-      setSelectedVariant(null);
-      setHasChosenColor(false);
+      setSelected({});
       setQuantity(1);
     } catch (error) {
       console.error("Error cargando el producto:", error);
@@ -103,129 +96,125 @@ export function ProductDetailScreen({ productId }: Props) {
     load();
   }, [load]);
 
-  // Colores seleccionables: color propio del producto ("base") + cada
-  // variante con color. Las agotadas se incluyen igual, deshabilitadas -
-  // NUNCA se quitan de la lista (ver STOCK - REGLA CRÍTICA abajo).
-  const colorOptions = useMemo<ColorOptionInternal[]>(() => {
+  const axes = useMemo(
+    () => (product ? deriveVariantAxes(product.variants) : []),
+    [product],
+  );
+  const requiresVariant = axes.length > 0;
+  const allAxesChosen = requiresVariant && axes.every((axis) => selected[axis.name]);
+
+  const activeVariant = useMemo(
+    () =>
+      product && allAxesChosen ? resolveVariant(product.variants, axes, selected) : null,
+    [product, axes, selected, allAxesChosen],
+  );
+  const invalidCombination = allAxesChosen && activeVariant === null;
+  const hasChosenVariant = activeVariant !== null;
+
+  const anyVariantInStock = useMemo(
+    () => (product?.variants ?? []).some((variant) => variant.stock > 0),
+    [product],
+  );
+
+  const canAddToCart = !requiresVariant || activeVariant !== null;
+
+  const firstVariant = useMemo(
+    () => (product ? firstLiveVariant(product.variants) : null),
+    [product],
+  );
+
+  const images = useMemo(() => {
     if (!product) return [];
 
-    const options: ColorOptionInternal[] = [];
+    if (activeVariant && activeVariant.images.length > 0) return activeVariant.images;
 
-    if (product.color) {
-      options.push({
-        key: "base",
-        variant: null,
-        hex: product.color.hex_color,
-        name: product.color.name,
-        outOfStock: product.stock <= 0,
+    const chosen = Object.entries(selected).filter(([, value]) => Boolean(value));
+    if (chosen.length > 0) {
+      const representative = product.variants.find((variant) => {
+        if (variant.images.length === 0) return false;
+        const optionValues = Object.fromEntries(
+          variant.options.map((option) => [option.attribute, option.value]),
+        );
+        return chosen.every(([name, value]) => optionValues[name] === value);
       });
+      if (representative) return representative.images;
     }
 
-    for (const variant of product.variants) {
-      if (variant.color) {
-        options.push({
-          key: variant.id,
-          variant,
-          hex: variant.color.hex_color,
-          name: variant.color.name,
-          outOfStock: variant.stock <= 0,
-        });
-      }
-    }
+    if (firstVariant && firstVariant.images.length > 0) return firstVariant.images;
 
-    return options;
-  }, [product]);
+    return product.images ?? [];
+  }, [product, activeVariant, selected, firstVariant]);
 
-  // STOCK - REGLA CRÍTICA (ver Fase Product Detail > 7): el stock del
-  // producto principal (product.stock) NUNCA decide si una variante es
-  // seleccionable. Ejemplo real: product.stock = 0 pero la variante
-  // "Rojo" tiene stock = 5 → "Rojo" sigue apareciendo y puede elegirse
-  // (mismo criterio que _has_visible_stock en publicService/Products.py
-  // y que colorOptions/anyVariantInStock en ProductDetail.tsx web).
-  const requiresVariant = (product?.variants.length ?? 0) > 0;
-  const anyVariantInStock = colorOptions.some((option) => !option.outOfStock);
-  const canAddToCart = !requiresVariant || hasChosenColor;
-
-  // Datos "en pantalla": los de la variante elegida o, por defecto, los
-  // del producto base - mismo patrón derivado que la web (nunca se
-  // recalcula precio/descuento acá, el backend ya los resuelve).
-  const images = selectedVariant ? selectedVariant.images : (product?.images ?? []);
-  const stock = selectedVariant ? selectedVariant.stock : (product?.stock ?? 0);
-  const displayPrice = selectedVariant ? selectedVariant.price : (product?.price ?? "0");
-  const displayFinalPrice = selectedVariant
-    ? selectedVariant.final_price
+  const stock = activeVariant ? activeVariant.stock : (product?.stock ?? 0);
+  const displayPrice = activeVariant ? activeVariant.price : (product?.price ?? "0");
+  const displayFinalPrice = activeVariant
+    ? activeVariant.final_price
     : (product?.final_price ?? "0");
-  const discountEnabled = selectedVariant
-    ? selectedVariant.discount_enabled
+  const discountEnabled = activeVariant
+    ? activeVariant.discount_enabled
     : (product?.discount_enabled ?? false);
-  const discountPercentage = selectedVariant
-    ? selectedVariant.discount_percentage
+  const discountPercentage = activeVariant
+    ? activeVariant.discount_percentage
     : (product?.discount_percentage ?? null);
+  const displayTaxAmount = activeVariant
+    ? activeVariant.tax_amount
+    : (product?.tax_amount ?? "0");
+  const displayPriceWithTax = activeVariant
+    ? activeVariant.final_price_with_tax
+    : (product?.price_with_tax ?? "0");
 
-  // La swatch "base" se ve seleccionada por defecto (antes de elegir nada)
-  // cuando existe, igual que en la web - el nombre en el título "Color: X"
-  // solo aparece una vez que `hasChosenColor` es true.
-  const selectedKey = selectedVariant?.id ?? "base";
-  const selectedColorName = hasChosenColor
-    ? (selectedVariant?.color?.name ?? product?.color?.name ?? null)
-    : null;
+  const handleAxisChange = (attributeName: string, value: string) => {
+    const axisIndex = axes.findIndex((axis) => axis.name === attributeName);
+    const priorNames = axes
+      .slice(0, axisIndex < 0 ? 0 : axisIndex)
+      .map((axis) => axis.name);
 
-  const handleSelectVariant = (key: string) => {
-    const option = colorOptions.find((candidate) => candidate.key === key);
-    if (!option || option.outOfStock) return;
-
-    setSelectedVariant(option.variant);
-    setHasChosenColor(true);
+    setSelected((prev) => {
+      const next: Record<string, string> = {};
+      priorNames.forEach((name) => {
+        if (prev[name]) next[name] = prev[name];
+      });
+      next[attributeName] = value;
+      return next;
+    });
     setQuantity(1);
+    setJustAdded(false);
   };
 
-  // Primera acción realmente protegida de la app (ver Fase Acceso Público
-  // > PRODUCT DETAIL, punto 6): un visitante SÍ puede llegar hasta acá
-  // (cargar el producto, elegir variante, cambiar cantidad - todo
-  // público), pero tocar "Agregar al carrito" exige cuenta. `useCallback`
-  // con las dependencias reales (no solo por prolijidad): el efecto de
-  // resume de abajo depende de esta función para saber cuándo
-  // stock/canAddToCart ya reflejan la variante/cantidad restauradas tras
-  // volver de Login.
-  const handleAddToCart = useCallback(() => {
-    if (!product || !canAddToCart || stock <= 0) return;
+  const handleAddToCart = useCallback(async () => {
+    if (!product || !canAddToCart || stock <= 0 || addingToCart) return;
 
     const allowed = requireUser({
       type: "ADD_TO_CART",
       productId: product.id,
-      variantId: selectedVariant?.id ?? null,
+      variantId: activeVariant?.id ?? null,
       quantity,
     });
 
     if (!allowed) return;
 
-    // No hay CartProvider todavía (ver Fase Product Detail > BOTÓN
-    // PRINCIPAL): nada se guarda de forma permanente, solo se confirma la
-    // selección con un Alert hasta que exista el carrito real.
-    Alert.alert(
-      "Carrito próximamente",
-      `${product.name}${selectedColorName ? ` · ${selectedColorName}` : ""} · Cantidad: ${quantity}`,
-    );
-  }, [product, canAddToCart, stock, requireUser, selectedVariant, quantity, selectedColorName]);
-
-  // Favorito: mismo gate centralizado que "Agregar al carrito" (ver Fase
-  // Acceso Público > FAVORITOS, "no dejar lógica de autenticación
-  // duplicada en cada componente") - sin resume tras login todavía (no
-  // hay FavoritesProvider real que retomar, ver punto 19 NO IMPLEMENTAR
-  // TODAVÍA), a diferencia de ADD_TO_CART.
-  const handleToggleFavorite = () => {
-    if (!product) return;
-
-    const allowed = requireUser({
-      type: "ADD_TO_FAVORITES",
-      productId: product.id,
-      variantId: selectedVariant?.id ?? null,
-    });
-
-    if (!allowed) return;
-
-    setIsFavorite((prev) => !prev);
-  };
+    try {
+      setAddingToCart(true);
+      await addItem(product.id, quantity, activeVariant?.id);
+      setJustAdded(true);
+    } catch (error) {
+      Alert.alert(
+        "No se pudo agregar",
+        getApiErrorMessage(error, "No se pudo agregar el producto al carrito."),
+      );
+    } finally {
+      setAddingToCart(false);
+    }
+  }, [
+    product,
+    canAddToCart,
+    stock,
+    addingToCart,
+    requireUser,
+    activeVariant,
+    quantity,
+    addItem,
+  ]);
 
   const handleShare = () => {
     if (!product) return;
@@ -235,15 +224,20 @@ export function ProductDetailScreen({ productId }: Props) {
     }).catch(() => {});
   };
 
-  // Resume tras volver de Login (ver Fase Acceso Público > punto 7-8):
-  // dos efectos porque hace falta esperar a que la variante/cantidad
-  // restauradas ya se hayan aplicado al estado antes de reintentar
-  // "Agregar al carrito" - llamarlo en el mismo efecto que hace los
-  // setState leería `stock`/`canAddToCart` viejos (de ANTES de aplicar la
-  // selección guardada).
-  //
-  // Efecto 1: al cargar el producto, si hay una acción pendiente PARA
-  // ESTE producto, aplica la selección guardada (variante + cantidad).
+  const handleToggleFavorite = () => {
+    if (!product || !requireUser()) return;
+
+    toggleFavorite(product.id).catch((error) =>
+      Alert.alert("No se pudo actualizar", getApiErrorMessage(error, "Intenta de nuevo.")),
+    );
+  };
+
+  useEffect(() => {
+    if (!justAdded) return;
+    const timer = setTimeout(() => setJustAdded(false), JUST_ADDED_RESET_MS);
+    return () => clearTimeout(timer);
+  }, [justAdded]);
+
   useEffect(() => {
     if (!product) return;
 
@@ -252,21 +246,17 @@ export function ProductDetailScreen({ productId }: Props) {
 
     if (pending.variantId) {
       const variant = product.variants.find((candidate) => candidate.id === pending.variantId);
-      setSelectedVariant(variant ?? null);
-      setHasChosenColor(true);
-    } else if (product.color) {
-      setHasChosenColor(true);
+      if (variant) {
+        setSelected(
+          Object.fromEntries(variant.options.map((option) => [option.attribute, option.value])),
+        );
+      }
     }
 
     setQuantity(pending.quantity);
     setResumeAction(pending);
   }, [product]);
 
-  // Efecto 2: una vez que `handleAddToCart` ya refleja la variante/
-  // cantidad restauradas (cambia de referencia cuando cambian sus
-  // dependencias reales, ver el useCallback de arriba), retoma la acción
-  // automáticamente - el visitante no tiene que repetir manualmente lo
-  // que ya había elegido antes de que lo mandáramos a Login.
   useEffect(() => {
     if (!resumeAction) return;
 
@@ -274,24 +264,144 @@ export function ProductDetailScreen({ productId }: Props) {
     handleAddToCart();
   }, [resumeAction, handleAddToCart]);
 
+  const twoColumn =
+    responsive.atLeast("lg") || (responsive.atLeast("md") && responsive.isLandscape);
+  const frameMaxWidth = twoColumn
+    ? Math.min(responsive.contentMaxWidth, 1080)
+    : Math.min(responsive.contentMaxWidth, 600);
+  const frameWidth = Math.min(responsive.width, frameMaxWidth);
+  const innerWidth = frameWidth - spacing.lg * 2;
+  const galleryWidth = twoColumn
+    ? Math.min(440, Math.round(innerWidth * 0.46))
+    : Math.min(460, innerWidth);
+
+  const ctaDisabled =
+    !canAddToCart || stock <= 0 || addingToCart || invalidCombination;
+
+  const gallery = (
+    <ProductGallery
+      key={activeVariant?.id ?? "base"}
+      images={images}
+      productName={product?.name ?? ""}
+      width={galleryWidth}
+    />
+  );
+
+  const infoBlocks = product && (
+    <>
+      <ProductInfo
+        catalogName={product.catalog_name}
+        name={product.name}
+        price={displayPrice}
+        discountEnabled={discountEnabled}
+        discountPercentage={discountPercentage}
+        finalPrice={displayFinalPrice}
+        averageRating={product.average_rating}
+        reviewCount={product.review_count}
+      />
+
+      <ProductTaxLine
+        appliesTax={product.applies_tax}
+        taxRate={product.tax_rate}
+        taxAmount={displayTaxAmount}
+        priceWithTax={displayPriceWithTax}
+      />
+
+      <SellerCard
+        companyName={product.company_name}
+        companyLogo={product.company_logo}
+        isVerified={product.company_is_verified}
+      />
+
+      {requiresVariant && (
+        <VariantSelector
+          variants={product.variants}
+          selected={selected}
+          onChange={handleAxisChange}
+        />
+      )}
+
+      <StockStatus
+        requiresVariant={requiresVariant}
+        hasChosenVariant={hasChosenVariant}
+        anyVariantInStock={anyVariantInStock}
+        stock={stock}
+      />
+
+      {invalidCombination ? (
+        <Text style={styles.selectVariantHint}>Esa combinación no está disponible.</Text>
+      ) : requiresVariant && !allAxesChosen ? (
+        <Text style={styles.selectVariantHint}>
+          Elige {axes.length === 1 ? "una opción" : "todas las opciones"} para continuar.
+        </Text>
+      ) : null}
+
+      <View style={styles.buyRow}>
+        <QuantityStepper
+          value={quantity}
+          max={stock}
+          onChange={setQuantity}
+          disabled={stock <= 0}
+        />
+
+        <Pressable
+          style={[styles.cta, ctaDisabled && styles.ctaDisabled]}
+          disabled={ctaDisabled}
+          onPress={handleAddToCart}
+        >
+          {addingToCart ? (
+            <ActivityIndicator color={colors.textOnPrimary} />
+          ) : (
+            <>
+              <Ionicons
+                name={justAdded ? "checkmark" : "cart-outline"}
+                size={18}
+                color={colors.textOnPrimary}
+              />
+              <Text style={styles.ctaText}>
+                {justAdded ? "Agregado" : "Agregar al carrito"}
+              </Text>
+            </>
+          )}
+        </Pressable>
+      </View>
+    </>
+  );
+
+  const description = product?.descripcion ? (
+    <View style={styles.description}>
+      <Text style={styles.descriptionTitle}>Descripción</Text>
+      <Text style={styles.descriptionText}>{product.descripcion}</Text>
+    </View>
+  ) : null;
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+    <SafeAreaView
+      style={styles.safeArea}
+      edges={responsive.isLandscape ? ["top", "left", "right"] : ["top"]}
+    >
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={8}>
+        <Pressable onPress={() => router.back()} hitSlop={8} accessibilityLabel="Volver">
           <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </Pressable>
 
         {product && (
           <View style={styles.headerActions}>
-            <Pressable onPress={handleToggleFavorite} hitSlop={8}>
+            <Pressable
+              onPress={handleToggleFavorite}
+              hitSlop={8}
+              accessibilityLabel={
+                isFavorite(product.id) ? "Quitar de favoritos" : "Agregar a favoritos"
+              }
+            >
               <Ionicons
-                name={isFavorite ? "heart" : "heart-outline"}
+                name={isFavorite(product.id) ? "heart" : "heart-outline"}
                 size={22}
-                color={isFavorite ? colors.primary : colors.textPrimary}
+                color={isFavorite(product.id) ? colors.primary : colors.textPrimary}
               />
             </Pressable>
 
-            <Pressable onPress={handleShare} hitSlop={8}>
+            <Pressable onPress={handleShare} hitSlop={8} accessibilityLabel="Compartir">
               <Ionicons name="share-outline" size={22} color={colors.textPrimary} />
             </Pressable>
           </View>
@@ -299,13 +409,15 @@ export function ProductDetailScreen({ productId }: Props) {
       </View>
 
       {loading ? (
-        <View style={styles.scrollContent}>
-          <Skeleton height={320} radius="lg" />
-          <Skeleton width="40%" height={14} />
-          <Skeleton width="85%" height={26} />
-          <Skeleton width="45%" height={26} />
-          <Skeleton height={64} radius="md" />
-          <Skeleton height={48} radius="md" />
+        <View style={styles.stateOuter}>
+          <View style={[styles.stateContent, { maxWidth: frameMaxWidth }]}>
+            <Skeleton height={galleryWidth} radius="lg" />
+            <Skeleton width="40%" height={14} />
+            <Skeleton width="85%" height={26} />
+            <Skeleton width="45%" height={26} />
+            <Skeleton height={64} radius="md" />
+            <Skeleton height={48} radius="md" />
+          </View>
         </View>
       ) : notFound ? (
         <View style={styles.centerContent}>
@@ -320,61 +432,27 @@ export function ProductDetailScreen({ productId }: Props) {
           <ErrorState message="No se pudo cargar el producto." onRetry={load} />
         </View>
       ) : product ? (
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <ProductGallery key={selectedVariant?.id ?? "base"} images={images} productName={product.name} />
-
-          <ProductInfo
-            catalogName={product.catalog_name}
-            name={product.name}
-            price={displayPrice}
-            discountEnabled={discountEnabled}
-            discountPercentage={discountPercentage}
-            finalPrice={displayFinalPrice}
-          />
-
-          <SellerCard
-            companyName={product.company_name}
-            companyLogo={product.company_logo}
-            isVerified={product.company_is_verified}
-          />
-
-          {colorOptions.length > 0 && (
-            <VariantSelector
-              options={colorOptions}
-              selectedKey={selectedKey}
-              selectedName={selectedColorName}
-              onSelect={handleSelectVariant}
-            />
-          )}
-
-          <StockStatus
-            requiresVariant={requiresVariant}
-            hasChosenVariant={hasChosenColor}
-            anyVariantInStock={anyVariantInStock}
-            stock={stock}
-          />
-
-          <QuantitySelector value={quantity} max={stock} onChange={setQuantity} />
-
-          {product.descripcion ? (
-            <View style={styles.description}>
-              <Text style={styles.descriptionTitle}>Descripción</Text>
-              <Text style={styles.descriptionText}>{product.descripcion}</Text>
-            </View>
-          ) : null}
-
-          {requiresVariant && !hasChosenColor && (
-            <Text style={styles.selectVariantHint}>Selecciona un color antes de continuar.</Text>
-          )}
-
-          <Pressable
-            style={[styles.cta, (!canAddToCart || stock <= 0) && styles.ctaDisabled]}
-            disabled={!canAddToCart || stock <= 0}
-            onPress={handleAddToCart}
-          >
-            <Ionicons name="cart-outline" size={18} color={colors.textOnPrimary} />
-            <Text style={styles.ctaText}>Agregar al carrito</Text>
-          </Pressable>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={[styles.frame, { maxWidth: frameMaxWidth }]}>
+            {twoColumn ? (
+              <>
+                <View style={styles.row}>
+                  <View style={{ width: galleryWidth }}>{gallery}</View>
+                  <View style={styles.infoColumn}>{infoBlocks}</View>
+                </View>
+                {description}
+              </>
+            ) : (
+              <>
+                <View style={styles.galleryCenter}>{gallery}</View>
+                {infoBlocks}
+                {description}
+              </>
+            )}
+          </View>
         </ScrollView>
       ) : null}
     </SafeAreaView>
@@ -399,8 +477,34 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   scrollContent: {
-    paddingHorizontal: spacing.lg,
+    alignItems: "center",
     paddingBottom: spacing.xxl,
+  },
+  frame: {
+    width: "100%",
+    paddingHorizontal: spacing.lg,
+    gap: spacing.lg,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: spacing.xl,
+  },
+  infoColumn: {
+    flex: 1,
+    maxWidth: 560,
+    gap: spacing.lg,
+  },
+  galleryCenter: {
+    alignSelf: "center",
+  },
+  stateOuter: {
+    alignItems: "center",
+  },
+  stateContent: {
+    width: "100%",
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
     gap: spacing.lg,
   },
   centerContent: {
@@ -440,7 +544,13 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     color: colors.warning,
   },
+  buyRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+  },
   cta: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",

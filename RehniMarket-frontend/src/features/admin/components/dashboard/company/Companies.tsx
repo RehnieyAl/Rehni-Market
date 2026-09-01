@@ -1,6 +1,6 @@
 import { Search, Eye, Lock, Unlock } from "lucide-react";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Badge, Button, EmptyState, ErrorState, Input, Select, TableSkeleton } from "@/shared/components/ui";
 import CompanyDetailModal from "./CompanyDetailModal";
@@ -208,7 +208,7 @@ export default function Companies() {
     setStatusModalOpen(true);
   };
 
-  const handleCloseStatusModal = () => {
+  const handleCloseStatusModal = useCallback(() => {
     if (updatingStatus) {
       return;
     }
@@ -216,7 +216,7 @@ export default function Companies() {
     setStatusModalOpen(false);
     setSelectedStatusCompany(null);
     setStatusReason("");
-  };
+  }, [updatingStatus]);
 
   const handleCompanyStatus = async () => {
     if (!selectedStatusCompany) {
@@ -226,7 +226,6 @@ export default function Companies() {
     const newStatus =
       !selectedStatusCompany.CompanyStatus;
 
-    // El motivo es obligatorio solo al suspender (newStatus false); respaldo del modal.
     if (!newStatus && !statusReason.trim()) {
       return;
     }
@@ -237,7 +236,6 @@ export default function Companies() {
       const result = await updateCompanyStatus(
         selectedStatusCompany.id,
         newStatus,
-        // El motivo aplica al suspender (newStatus=false), no al desbloquear.
         !newStatus ? statusReason.trim() : undefined,
       );
 
@@ -262,7 +260,6 @@ export default function Companies() {
       setStatusModalOpen(false);
       setStatusReason("");
 
-      // Feedback con los valores reales devueltos por el backend.
       if (newStatus) {
         showAlert(
           "success",

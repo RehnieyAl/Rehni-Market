@@ -6,11 +6,6 @@ import type {
   CompanyPayoutsPaginated,
 } from "@/features/payouts/types/response";
 
-// Liquidaciones y balance del lado empresa (ver ALCANCE > Módulo de
-// liquidaciones, Fase 6) - siempre de solo lectura, la empresa nunca
-// genera ni marca como pagada su propia liquidación (eso es exclusivo
-// admin, ver features/admin/api/payoutService.ts).
-
 export async function getCompanyPayouts(
   page = 1,
   limit = 10,
