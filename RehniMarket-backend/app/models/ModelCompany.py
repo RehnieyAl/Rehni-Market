@@ -13,7 +13,13 @@ from enum import Enum as PyEnum
 class CompanyCertificateEnum(str, PyEnum):
     PENDING = "pending"
     APPROVED = "approved"
+    # Rechazo terminal de la empresa: NO puede resubir el certificado por sí misma
+    # (solo un admin/owner puede volver a moverla). Mantiene el motivo en rejection_reason.
     REJECTED = "rejected"
+    # El certificado presentado no es válido / está vencido / ilegible: la empresa
+    # SÍ puede subir uno nuevo (POST /company/certificate/update sin JWT o
+    # PUT /company/certificate con JWT), lo que la devuelve a PENDING.
+    NEEDS_UPDATE = "needs_update"
 
 
 class Company(Base):
@@ -70,6 +76,11 @@ class Company(Base):
         Enum(CompanyCertificateEnum),
         nullable=False,
         default=CompanyCertificateEnum.PENDING,
+    )
+
+    rejection_reason: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
     )
 
     CompanyStatus: Mapped[bool] = mapped_column(

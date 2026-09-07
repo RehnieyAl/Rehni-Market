@@ -6,11 +6,12 @@ import { dashboardNavigation } from "@/shared/config/dashboardNavigation";
 import Home from "@/features/company/components/dashboard/Home";
 import Products from "@/features/company/components/dashboard/product/Products";
 import Orders from "@/features/company/components/dashboard/Orders";
+import Returns from "@/features/company/components/dashboard/Returns";
 import Finance from "@/features/company/components/dashboard/Finance";
 import MyCompany from "@/features/company/components/dashboard/MyCompany";
 import Profile from "@/features/company/components/dashboard/Profile";
 
-const VALID_TABS = ["home", "products", "orders", "finance", "company", "profile"];
+const VALID_TABS = ["home", "products", "orders", "returns", "finance", "company", "profile"];
 
 export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -26,6 +27,7 @@ export default function Dashboard() {
     home: <Home onNavigate={handleViewChange} />,
     products: <Products />,
     orders: <Orders />,
+    returns: <Returns />,
     finance: <Finance />,
     company: <MyCompany />,
     profile: <Profile />,

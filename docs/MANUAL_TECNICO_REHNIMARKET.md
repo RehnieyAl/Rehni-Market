@@ -256,7 +256,7 @@ RehniMarket-backend/
 ├── CHANGELOG.md · README.md
 ├── alembic/
 │   ├── env.py                  # toma la URL de app.Config; importa Base.metadata
-│   └── versions/               # 10 migraciones (29fe206320ce → a1b2c3d4e5f6)
+│   └── versions/               # 12 migraciones (29fe206320ce → e1f2a3b4c5d6)
 ├── app/
 │   ├── main.py                 # app = FastAPI(lifespan=...); 24 routers
 │   ├── Config.py               # variables de entorno
@@ -392,8 +392,11 @@ Flujo completo (`app/services/authentication/`, `app/routers/AuthRouters.py`):
    - Cuenta no verificada → `400 EMAIL_NOT_VERIFIED` (el cuerpo trae `expires_in` /
      `resend_available_in`); **el código se `commit()`ea** antes de responder.
    - Cuenta bloqueada (`Users.isActive = false`) → `403 USER_BLOCKED`.
-   - Empresa con certificación pendiente/rechazada/suspendida → `403` con
-     `COMPANY_PENDING` / `COMPANY_REJECTED` / `COMPANY_SUSPENDED` (`LoginService.py`).
+   - Empresa con certificación **pendiente** → `403 COMPANY_PENDING`. Empresa
+     **suspendida** → `403 COMPANY_SUSPENDED` (`LoginService.py`).
+   - Empresa con certificación **rechazada** → **login normal, sí emite tokens**
+     (necesita entrar para ver `rejection_reason` y reemplazar el certificado; ver
+     §16). El acceso al resto del panel lo restringe el middleware, no el login.
    - Éxito → devuelve `access_token` + `refresh_token`.
 4. **Recuperación de contraseña** — `POST /auth/forgot-password-user` (envía código
    `RESET_PASSWORD`, válido 15 min) + `POST /auth/reset-password-user` (código + nueva
@@ -434,7 +437,9 @@ Definición en `app/middleware/RolePermissions.py` y `app/utils/seed.py`.
 1. `OPTIONS` → pasa (CORS preflight).
 2. Ruta en `PUBLIC_ROUTES` (igualdad exacta) o con prefijo/sufijo público
    (`/public/products/{id}`, `/public/company/{id}`, `/public/catalogs/{id}/attributes`,
-   `/media/proxy`, `/docs`, `/openapi.json`, health…) → pasa sin token.
+   `/media/proxy`, `/company/certificate/update`, `/docs`, `/openapi.json`, health…)
+   → pasa sin token. `/company/certificate/update` es la única ruta bajo `/company`
+   que no exige JWT: se valida con correo + contraseña dentro del endpoint.
 3. `Authorization: Bearer <token>` obligatorio; formato validado.
 4. `verify_token`: expirado → `401 TOKEN_EXPIRED`; inválido → `401 INVALID_TOKEN`;
    `type != "access"` → `401`.
@@ -443,6 +448,13 @@ Definición en `app/middleware/RolePermissions.py` y `app/utils/seed.py`.
    - `isActive = false` → `403 USER_BLOCKED`.
    - `role == "company"` y `company.CompanyStatus = false` → `403 COMPANY_SUSPENDED`
      (con `reason` si `company.suspension_reason` existe).
+   - `role == "company"` y `CompanyCertificateStatus != APPROVED` (pendiente o
+     rechazada) y la ruta no está en `COMPANY_UNAPPROVED_ALLOWED_ROUTES`
+     (`/auth/me`, `/company/dashboard/me`, `/company/dashboard/my-profile`,
+     `/company/certificate`) → `403 COMPANY_PENDING` / `403 COMPANY_REJECTED`
+     (con `reason` si `rejection_reason` existe). Es la comprobación que limita a
+     una empresa no aprobada a solo consultar su estado y reemplazar el
+     certificado, incluso si conserva un access token válido.
    - `role` desconocido → `403 FORBIDDEN`.
 6. **Autorización por rol:**
    - `admin` / `owner` (`FULL_ACCESS_ROLES`) → **bypass total** (acceso a cualquier ruta).
@@ -457,7 +469,7 @@ Prefijos permitidos por rol (extracto real):
 | Rol | Prefijos |
 |---|---|
 | `user` | `/auth/me`, `/cart`, `/checkout`, `/orders`, `/favorites`, `/addresses`, `/wallet/me`, `/wallet/transactions`, `/reviews`, `/reports` |
-| `company` | `/company/dashboard/*`, `/company/bank-accounts`, `/company/payouts`, `/company/balance`, `/auth/me` |
+| `company` | `/company/dashboard/*`, `/company/certificate`, `/company/bank-accounts`, `/company/payouts`, `/company/balance`, `/auth/me` |
 | `admin` / `owner` | (bypass) — además lista explícita de `/admin/dashboard/*`, `/admin/payouts`, `/admin/reports` |
 
 > **Nota de seguridad:** `POST /wallet/recharge` **no** está en la lista blanca de `user`:
@@ -490,14 +502,57 @@ Prefijos permitidos por rol (extracto real):
 ## 16. Gestión de empresas
 
 - **Registro:** `POST /auth/register-company` — crea `users` (rol `company`) + `company`
-  (NIT, DV, certificado PDF subido a MinIO), `CompanyCertificate = pending`.
-- **Aprobación:** `PATCH /admin/dashboard/companies/certificate/status/{id}` — `approved` /
-  `rejected`. Solo una empresa **aprobada** puede iniciar sesión y aparece como "verificada".
+  (NIT, DV, certificado PDF subido a MinIO), `CompanyCertificateStatus = pending`.
+- **Aprobación / rechazo:** `PATCH /admin/dashboard/companies/certificate/status/{id}`
+  (`UpdateCertificateStatusRequest`, `status: approved|rejected` + `reason` opcional) →
+  `update_certificate_status_service` (`app/services/DashboardService/admin/CompanyService.py`):
+  - `rejected` **exige `reason`** no vacío (`400 MISSING_REQUIRED_FIELD` si falta); se
+    guarda en `Company.rejection_reason` (migración `e1f2a3b4c5d6`), se adjunta al correo
+    `EmailCertificateRejected` y al `AdminActivity` (`COMPANY_REJECTED`, `reason`).
+  - `approved` limpia `rejection_reason` (repositorio `update_certificate_status`) y envía
+    `EmailCertificateApproved`. Solo una empresa **aprobada** aparece como "verificada" en
+    el perfil público y tiene acceso completo al panel (ver §14, punto 5).
+- **Reemplazo de certificado por la empresa:** `PUT /company/certificate`
+  (`CompanyRouter.py` → `replace_company_certificate_service`,
+  `app/services/DashboardService/company/Dashboard.py`). Requiere el JWT normal del login
+  (rol `company`; ningún token especial) y resuelve la empresa desde
+  `request.state.user_id → user.company` — **nunca** de un `company_id` en la petición, así
+  una empresa no puede tocar el certificado de otra.
+  - Solo permitido con `CompanyCertificateStatus == REJECTED`; si está `pending` o
+    `approved` responde `409` (`COMPANY_PENDING` / `COMPANY_APPROVED`).
+  - Valida el archivo (`application/pdf`, extensión `.pdf`, máx. 5 MB) → `400 INVALID_FILE`
+    si no cumple.
+  - Sube el nuevo PDF con el `NasService` existente (mismo patrón que el registro:
+    `companies/<NIT>/certificates/<uuid>.pdf`), actualiza `Company.CompanyCertificate`,
+    pone `CompanyCertificateStatus = PENDING`, limpia `rejection_reason` y, tras el
+    `commit`, borra el PDF anterior de MinIO. No acepta `status` ni `reason`: la empresa no
+    puede autoaprobarse ni tocar el motivo de rechazo.
+- **Actualización de certificado por credenciales (sin JWT):**
+  `POST /company/certificate/update` (`CompanyRouter.py` →
+  `app/services/authentication/CertificateUpdateService.py` →
+  `update_certificate_with_credentials_service`). Endpoint **público** (está en
+  `PUBLIC_ROUTES`), pensado para la página independiente `/actualizar-certificado`.
+  Recibe `multipart/form-data` con `email`, `password`, `certificate` — **nunca**
+  `company_id` (los campos extra los ignora FastAPI). **No** emite `access_token` /
+  `refresh_token`, no abre sesión y no guarda las credenciales.
+  - Identifica al usuario con `UserRepository.get_by_email` y verifica la contraseña
+    con `Security.verify_password` (mismo hashing que el login). Correo inexistente,
+    contraseña incorrecta o cuenta que **no es una empresa** → `400 INVALID_CREDENTIALS`
+    (respuesta opaca, no revela si el correo existe). Cuenta bloqueada →
+    `403 USER_BLOCKED`; empresa suspendida → `403 COMPANY_SUSPENDED`.
+  - El resto (exigir `REJECTED`, `409 COMPANY_PENDING` / `COMPANY_APPROVED`, validar
+    el PDF, subir a MinIO, `REJECTED → PENDING`, `rejection_reason → NULL`, `commit` +
+    borrado del anterior, `rollback` + borrado del nuevo si algo falla) lo hace
+    `Dashboard.apply_certificate_replacement`, el **mismo núcleo** que usa el flujo
+    con JWT (se extrajo de `replace_company_certificate_service`).
+  - Respuesta: `{ "message": "...", "certificateStatus": "pending" }`
+    (`CompanyCertificateUpdateResponse`). El login normal del dashboard (JWT) no se
+    toca: son dos flujos independientes.
 - **Suspensión:** `PATCH /admin/dashboard/company/status/{id}` — al desactivar
   (`CompanyStatus = false`), sus pedidos en `pending`/`paid`/`processing` se **cancelan y se
   reembolsan** en RehniCoin al comprador (`CompanyService` + `WalletService.refund`).
-- **Perfil:** `GET /company/dashboard/me`, `PATCH .../my-profile`,
-  `PATCH .../patch-media-logo-banner`.
+- **Perfil:** `GET /company/dashboard/me`, `GET/PATCH /company/dashboard/my-profile`
+  (incluyen `certificate_status` / `rejection_reason`), `PATCH .../patch-media-logo-banner`.
 - **Finanzas:** cuentas bancarias (`/company/bank-accounts`), balance (`/company/balance`),
   liquidaciones (`/company/payouts`). Una liquidación exige **cuenta bancaria predeterminada**.
 - **Perfil público:** `GET /public/company/{id}`, `.../products`, `.../rating` (promedio y
@@ -542,6 +597,46 @@ pending / paid ──► processing ──► shipped ──► delivered   (fin
 verifica que ante dos compras simultáneas de la última unidad **solo una gana**, sin stock
 negativo ni pedido duplicado.
 
+### 17.1 Devoluciones (`ReturnRequest`)
+
+`app/models/ModelReturnRequest.py` · `app/services/commerce/ReturnService.py` ·
+`app/repository/ReturnRepository.py` · migración `f7a2b9c1d3e4`.
+
+Una **devolución** cubre **un `OrderItem`** de un pedido en estado `delivered`. Tabla
+`return_requests`: `order_id`, `order_item_id`, `user_id` (comprador), `company_id`
+(denormalizado desde `Order`, define el *scope* de la empresa), `reason` (motivo del
+comprador), `status` (`return_status`: `PENDING → APPROVED | REJECTED`),
+`company_response` (motivo de rechazo), `reviewed_by`, `refund_amount`, `resolved_at`.
+Índice único parcial `uq_return_active_per_item` sobre `order_item_id WHERE status <> 'REJECTED'`:
+solo una devolución activa/aprobada por ítem; tras un rechazo se puede volver a solicitar.
+
+```
+USUARIO  POST /orders/{id}/returns            → PENDING
+EMPRESA  PATCH /company/dashboard/returns/{id}
+            action=reject (reason obligatorio) → REJECTED  (company_response = reason)
+            action=approve                     → APPROVED  + reembolso RehniCoin
+```
+
+- **Elegibilidad:** solo `Order.status == DELIVERED` (mismo patrón que la reseña
+  verificada). Sin ventana temporal (no hay `delivered_at` en el modelo).
+- **Reembolso:** al aprobar, `amount = order_item.subtotal + compute_tax(subtotal)`
+  (el IVA solo si `Product.applies_tax`, leído en vivo). Se acredita con
+  `WalletService.refund_wallet(..., order_id=None)` — **`order_id=None` a propósito**:
+  el índice único parcial `uq_wallet_transaction_refund_per_order` es solo para el
+  reembolso de cancelación de pedido; la idempotencia de la devolución la dan
+  `ReturnRequest.status` (solo se decide en `PENDING`) + el índice único por ítem.
+  No se repone stock (el ítem ya fue entregado; no hay confirmación física de retorno).
+- **Seguridad:** el comprador se resuelve desde el token; la empresa desde
+  `Order.company_id`. `ReturnRepository.get_for_company(return_id, company_id)` devuelve
+  `None` (→ `404 RETURN_NOT_FOUND`) si la devolución es de otra empresa. El comprador no
+  puede enviar `status`, `company_response` ni `company_id`; la empresa no puede tocar
+  devoluciones de otra empresa ni re-decidir una ya resuelta (`409 RETURN_ALREADY_RESOLVED`).
+- **Correos:** `EmailReturnRequested` (empresa), `EmailReturnApproved` /
+  `EmailReturnRejected` (comprador).
+- **Tests:** `tests/test_returns_flow.py` (14 casos: elegibilidad, doble solicitud,
+  aislamiento entre empresas, reembolso `subtotal + IVA`, motivo obligatorio al rechazar,
+  permisos usuario/empresa, estado embebido en el detalle del pedido).
+
 ## 18. PostgreSQL
 
 | Parámetro | Valor | Fuente |
@@ -565,9 +660,10 @@ negativo ni pedido duplicado.
 
 ## 19. Alembic
 
-- **10 revisiones en cadena lineal** (sin ramas):
+- **12 revisiones en cadena lineal** (sin ramas):
   `29fe206320ce` → `d72ef7fa597e` → `048871b47f63` → `a90540bebea` → `b6f8fd31fbe` →
-  `cb6d38ee0bd` → `d4e5f6a7b8c9` → `e7a1c9d24b30` → `f2b7c4e91a05` → **`a1b2c3d4e5f6`** (HEAD).
+  `cb6d38ee0bd` → `d4e5f6a7b8c9` → `e7a1c9d24b30` → `f2b7c4e91a05` → `a1b2c3d4e5f6` →
+  `c3d5e7f9a1b2` → **`e1f2a3b4c5d6`** (HEAD).
 - `alembic/env.py` toma `sqlalchemy.url` de `app.Config` (no de `alembic.ini`) e importa
   `Base.metadata` con todos los modelos.
 - **Aplicación automática** en el arranque del contenedor `backend`:
@@ -579,7 +675,8 @@ negativo ni pedido duplicado.
   `cb6d38ee0bd` (`order_items.attributes_snapshot`),
   `d4e5f6a7b8c9` (anuncios pierden campos de texto),
   `e7a1c9d24b30` (transportadoras + envío), `f2b7c4e91a05` (`Product.applies_tax`),
-  `a1b2c3d4e5f6` (búsqueda difusa).
+  `a1b2c3d4e5f6` (búsqueda difusa), `c3d5e7f9a1b2` (índice único de reembolso por pedido),
+  `e1f2a3b4c5d6` (`Company.rejection_reason`).
 
 ## 20. MinIO
 
@@ -698,13 +795,13 @@ El backend expone **~130 rutas** (`GET /openapi.json`). Agrupadas por router:
 | `mediaRouter` | `/media` | `proxy?path=uploads/...` |
 | `CartRouter` | `/cart` | `GET`, `add`, `item/{id}` (`PATCH`/`DELETE`), `clear` |
 | `CheckoutRouter` | `/checkout` | `POST { addressId }` |
-| `OrderRouter` | `/orders` | `GET`, `{id}`, `{id}/cancel` |
+| `OrderRouter` | `/orders` | `GET`, `{id}`, `{id}/cancel`, `{id}/returns` (`GET`/`POST`) |
 | `FavoriteRouter` | `/favorites` | `GET`, `POST`, `{product_id}` (`DELETE`) |
 | `ReviewRouter` | `/reviews` | `eligibility/{product_id}`, `POST`, `{id}` (`PATCH`/`DELETE`) |
 | `ReportRouter` | `/reports` | `POST` |
 | `AddressRouter` | `/addresses` | CRUD + `{id}/set-default` |
 | `WalletRouter` | `/wallet` | `me`, `transactions` |
-| `CompanyRouter` / `CompanyProductArchitectureRouters` | `/company/dashboard` | `me`, `my-profile`, `patch-media-logo-banner`, `create-product`, `get-my-products`, `products-summary`, `get-my-product/{id}`, `update-my-product/{id}`, `change-status-my-product/{id}`, `delete-my-product/{id}`, `products/{id}/variants[...]`, `products/{id}/variants/generate`, `products/{id}/discount`, `orders`, `orders/status-counts`, `orders/{id}` (`GET`/`status`/`shipping`), `shipping-carriers` |
+| `CompanyRouter` / `CompanyProductArchitectureRouters` | `/company/dashboard` | `me`, `my-profile`, `patch-media-logo-banner`, `create-product`, `get-my-products`, `products-summary`, `get-my-product/{id}`, `update-my-product/{id}`, `change-status-my-product/{id}`, `delete-my-product/{id}`, `products/{id}/variants[...]`, `products/{id}/variants/generate`, `products/{id}/discount`, `orders`, `orders/status-counts`, `orders/{id}` (`GET`/`status`/`shipping`), `returns` (`GET`), `returns/{id}` (`GET`/`PATCH`), `shipping-carriers`. Fuera de `/dashboard`: `PUT /company/certificate` (JWT), `POST /company/certificate/update` (**público**, correo + contraseña) |
 | `BankAccountRouter` / `CompanyPayoutRouter` | `/company` | `bank-accounts` (CRUD + default), `payouts`, `payouts/{id}`, `balance` |
 | `AdminDashboardRouters` | `/admin/dashboard` | `statistics`, `recent-activities`, `recent-users` |
 | `AdminCompanyRouters` | `/admin/dashboard` | `get-companies`, `get-company/{id}`, `companies/certificate/status/{id}`, `company/status/{id}` |

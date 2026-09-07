@@ -7,6 +7,10 @@ import OrderTimeline from "./OrderTimeline";
 import OrderShippingInfo from "./OrderShippingInfo";
 import ConfirmModal from "@/shared/components/ConfirmModal";
 import { Badge, Modal, Button, Spinner } from "@/shared/components/ui";
+import { RotateCcw } from "lucide-react";
+import RequestReturnModal from "@/features/returns/components/RequestReturnModal";
+import ReturnStatusCard from "@/features/returns/components/ReturnStatusCard";
+import { canRequestItemReturn } from "@/features/returns/utils/returnStatus";
 import { getMyOrderDetail, cancelMyOrder } from "@/features/orders/api/orderService";
 import { ORDER_STATUS_LABEL, ORDER_STATUS_TONE } from "@/features/orders/utils/orderStatus";
 import { formatPrice } from "@/shared/utils/formatPrice";
@@ -36,6 +40,20 @@ export default function OrderDetailModal({
   const [loading, setLoading] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
+
+  const [returnItem, setReturnItem] = useState<
+    { id: string; productName: string; variantName: string | null } | null
+  >(null);
+
+  const reloadOrder = async () => {
+    if (!orderId) return;
+    try {
+      const data = await getMyOrderDetail(orderId);
+      setOrder(data);
+    } catch (error) {
+      console.error("Error recargando el pedido:", error);
+    }
+  };
 
   useEffect(() => {
     if (!isOpen || !orderId) return;
@@ -202,32 +220,58 @@ export default function OrderDetailModal({
                 <div className="divide-y divide-gray-100 overflow-hidden rounded-card border border-gray-200">
                   {order.items.map((item) => {
                     const combo = formatAttributePairs(item.attributes) || item.variantName;
+                    const itemReturn = order.returns.find(
+                      (entry) => entry.orderItemId === item.id,
+                    );
 
                     return (
-                    <div key={item.id} className="flex items-center justify-between gap-3 p-4">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-gray-900">
-                          {item.productName}
-                        </p>
+                    <div key={item.id} className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-gray-900">
+                            {item.productName}
+                          </p>
 
-                        {combo && (
-                          <p className="text-xs text-gray-500">{combo}</p>
-                        )}
-
-                        <p className="text-xs text-gray-500">
-                          {item.quantity} ×{" "}
-                          {item.originalUnitPrice && (
-                            <span className="mr-1 line-through">
-                              {formatPrice(item.originalUnitPrice)}
-                            </span>
+                          {combo && (
+                            <p className="text-xs text-gray-500">{combo}</p>
                           )}
-                          {formatPrice(item.unitPrice)}
-                        </p>
+
+                          <p className="text-xs text-gray-500">
+                            {item.quantity} ×{" "}
+                            {item.originalUnitPrice && (
+                              <span className="mr-1 line-through">
+                                {formatPrice(item.originalUnitPrice)}
+                              </span>
+                            )}
+                            {formatPrice(item.unitPrice)}
+                          </p>
+                        </div>
+
+                        <span className="shrink-0 font-medium text-gray-900">
+                          {formatPrice(item.subtotal)}
+                        </span>
                       </div>
 
-                      <span className="shrink-0 font-medium text-gray-900">
-                        {formatPrice(item.subtotal)}
-                      </span>
+                      {itemReturn ? (
+                        <ReturnStatusCard data={itemReturn} />
+                      ) : (
+                        canRequestItemReturn(order.status, item.id, order.returns) && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setReturnItem({
+                                id: item.id,
+                                productName: item.productName,
+                                variantName: item.variantName,
+                              })
+                            }
+                            className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                          >
+                            <RotateCcw size={13} />
+                            Solicitar devolución
+                          </button>
+                        )
+                      )}
                     </div>
                     );
                   })}
@@ -279,6 +323,18 @@ export default function OrderDetailModal({
         loading={cancelling}
         onConfirm={handleCancel}
         onClose={() => setConfirmCancelOpen(false)}
+      />
+
+      <RequestReturnModal
+        key={returnItem?.id ?? "none"}
+        orderId={order?.id ?? ""}
+        item={returnItem}
+        isOpen={returnItem !== null}
+        onClose={() => setReturnItem(null)}
+        onSubmitted={() => {
+          reloadOrder();
+          onCancelled?.();
+        }}
       />
     </>
   );

@@ -1,4 +1,8 @@
-export type CompanyCertificateStatus = "pending" | "approved" | "rejected";
+export type CompanyCertificateStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "needs_update";
 
 export interface DashboardHomeResponse {
   id: string;
@@ -8,6 +12,7 @@ export interface DashboardHomeResponse {
   addressCompany: string;
   description: string | null;
   certificate_status: CompanyCertificateStatus;
+  rejection_reason: string | null;
   is_verified: boolean;
   memberAT: string;
 }
@@ -28,6 +33,8 @@ export interface CompanyProfileResponse {
   CompanyNITDV: string;
   CompanyStatus: boolean;
   suspensionReason: string | null;
+  certificateStatus: CompanyCertificateStatus;
+  rejectionReason: string | null;
   memberAT: string;
   logo?: string;
   banner?: string;

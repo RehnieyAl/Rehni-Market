@@ -19,6 +19,7 @@ from .ModelAdvertisement import Advertisement
 
 from .ModelCart import Cart, CartItem
 from .ModelOrder import Order, OrderItem, OrderStatusEnum
+from .ModelReturnRequest import ReturnRequest, ReturnStatusEnum
 from .ModelFavorite import Favorite
 from .ModelAddress import Address
 from .ModelWallet import Wallet, WalletTransaction, WalletTransactionType

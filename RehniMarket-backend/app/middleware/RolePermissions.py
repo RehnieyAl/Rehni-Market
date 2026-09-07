@@ -1,5 +1,16 @@
 FULL_ACCESS_ROLES = {"admin", "owner"}
 
+# Empresa con certificado PENDING / REJECTED / NEEDS_UPDATE: solo puede ver su propio
+# estado y, si está en NEEDS_UPDATE, reemplazar el certificado (el endpoint 409ea para
+# PENDING/APPROVED/REJECTED). El resto del panel (productos, pedidos, finanzas...) exige
+# CompanyCertificateStatus == APPROVED.
+COMPANY_UNAPPROVED_ALLOWED_ROUTES = {
+    "/auth/me",
+    "/company/dashboard/me",
+    "/company/dashboard/my-profile",
+    "/company/certificate",
+}
+
 ROLES_PERMISSIONS_ROUTERS = {
     "admin": [
         "/admin/dashboard/statistics",
@@ -46,6 +57,7 @@ ROLES_PERMISSIONS_ROUTERS = {
         "/company/dashboard/my-profile",
         "/company/dashboard/upgrade-my-profile",
         "/company/dashboard/patch-media-logo-banner",
+        "/company/certificate",
         "/company/dashboard/create-product",
         "/company/dashboard/products-summary",
         "/company/dashboard/get-my-products",
@@ -55,6 +67,7 @@ ROLES_PERMISSIONS_ROUTERS = {
         "/company/dashboard/update-my-product/",
         "/company/dashboard/products/",
         "/company/dashboard/orders",
+        "/company/dashboard/returns",
         "/company/dashboard/shipping-carriers",
         "/company/bank-accounts",
         "/company/payouts",

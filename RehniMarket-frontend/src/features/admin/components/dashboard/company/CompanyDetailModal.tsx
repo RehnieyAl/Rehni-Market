@@ -17,6 +17,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Badge, Button, ErrorState, Modal, Skeleton, Spinner } from "@/shared/components/ui";
 import type { BadgeTone } from "@/shared/components/ui";
 import { getAdminCompany, updateCertificateStatus } from "@/features/admin/api/companyService";
+import type { CertificateReviewAction } from "@/features/admin/api/companyService";
 import { getAdminUserById } from "@/features/admin/api/userService";
 import type {
   AdminCompanyResponse,
@@ -24,6 +25,8 @@ import type {
   CompanyCertificateStatus,
 } from "@/features/admin/types/response";
 import CertificateModal from "./CertificateModal";
+import CertificateReviewModal from "./CertificateReviewModal";
+import type { CertificateReviewDecision } from "./CertificateReviewModal";
 
 interface CompanyDetailModalProps {
   companyId: string | null;
@@ -42,12 +45,14 @@ const ROLE_LABEL: Record<string, string> = {
 const CERT_TONE: Record<CompanyCertificateStatus, BadgeTone> = {
   approved: "success",
   rejected: "danger",
+  needs_update: "warning",
   pending: "warning",
 };
 
 function certLabel(status: CompanyCertificateStatus): string {
   if (status === "approved") return "Aprobado";
   if (status === "rejected") return "Rechazado";
+  if (status === "needs_update") return "Certificado inválido";
   return "Pendiente";
 }
 
@@ -66,6 +71,8 @@ export default function CompanyDetailModal({
   const [certificateOpen, setCertificateOpen] = useState(false);
   const [updatingCertificate, setUpdatingCertificate] = useState(false);
 
+  const [reviewOpen, setReviewOpen] = useState(false);
+
   useEffect(() => {
     if (!isOpen || !companyId) return;
 
@@ -75,6 +82,7 @@ export default function CompanyDetailModal({
         setFailed(false);
         setRepresentative(null);
         setCertificateOpen(false);
+        setReviewOpen(false);
 
         const detail = await getAdminCompany(companyId);
         setCompany(detail);
@@ -96,19 +104,27 @@ export default function CompanyDetailModal({
     load();
   }, [isOpen, companyId, reloadKey]);
 
-  const handleCertificateStatus = async (status: "approved" | "rejected") => {
+  const handleCertificateStatus = async (
+    status: CertificateReviewAction,
+    reason?: string,
+  ) => {
     if (!company) return;
 
     try {
       setUpdatingCertificate(true);
-      await updateCertificateStatus(company.id, status);
+      await updateCertificateStatus(company.id, status, reason);
+
+      const keepsReason = status === "rejected" || status === "needs_update";
 
       const updatedCompany: AdminCompanyResponse = {
         ...company,
         CompanyCertificateStatus: status,
+        rejectionReason: keepsReason ? (reason ?? null) : null,
       };
       setCompany(updatedCompany);
       onCompanyUpdated?.(updatedCompany);
+
+      setReviewOpen(false);
     } catch (error) {
       console.error("Error actualizando estado del certificado:", error);
     } finally {
@@ -116,10 +132,14 @@ export default function CompanyDetailModal({
     }
   };
 
+  const handleReviewConfirm = (decision: CertificateReviewDecision, reason: string) => {
+    void handleCertificateStatus(decision, reason);
+  };
+
   return (
     <>
       <Modal
-        isOpen={isOpen && !certificateOpen}
+        isOpen={isOpen && !certificateOpen && !reviewOpen}
         onClose={onClose}
         size="xl"
         title="Detalle de empresa"
@@ -237,6 +257,26 @@ export default function CompanyDetailModal({
                     </Field>
                   </div>
                 )}
+
+                {(company.CompanyCertificateStatus === "rejected" ||
+                  company.CompanyCertificateStatus === "needs_update") && (
+                  <div className="sm:col-span-2">
+                    <Field
+                      icon={<Ban size={18} />}
+                      label={
+                        company.CompanyCertificateStatus === "rejected"
+                          ? "Motivo del rechazo"
+                          : "Motivo — certificado inválido"
+                      }
+                    >
+                      <span className="whitespace-pre-line font-normal text-gray-700">
+                        {company.rejectionReason?.trim()
+                          ? company.rejectionReason.trim()
+                          : "No hay motivo registrado."}
+                      </span>
+                    </Field>
+                  </div>
+                )}
               </div>
 
               <div className="mt-4 rounded-card border border-gray-200 p-5">
@@ -283,9 +323,9 @@ export default function CompanyDetailModal({
                           variant="danger"
                           leadingIcon={<Ban size={18} />}
                           disabled={updatingCertificate}
-                          onClick={() => handleCertificateStatus("rejected")}
+                          onClick={() => setReviewOpen(true)}
                         >
-                          {updatingCertificate ? "Actualizando…" : "No aprobar"}
+                          Rechazar o solicitar cambios
                         </Button>
                       </div>
                     </div>
@@ -378,6 +418,17 @@ export default function CompanyDetailModal({
           companyName={company.nameCompany}
           isOpen={certificateOpen}
           onClose={() => setCertificateOpen(false)}
+        />
+      )}
+
+      {reviewOpen && (
+        <CertificateReviewModal
+          key={company?.id ?? "review"}
+          isOpen
+          companyName={company?.nameCompany}
+          loading={updatingCertificate}
+          onClose={() => setReviewOpen(false)}
+          onConfirm={handleReviewConfirm}
         />
       )}
     </>

@@ -22,7 +22,7 @@ export default function ReviewsList({
     return (
       <div className="space-y-4">
         {Array.from({ length: 3 }).map((_, index) => (
-          <div key={index} className="flex gap-3 rounded-card border border-gray-200 p-4">
+          <div key={index} className="flex gap-3 rounded-card border border-gray-200 p-4 dark:border-hairline">
             <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-32" />
@@ -48,7 +48,7 @@ export default function ReviewsList({
     <div>
       <div className="space-y-4">
         {reviews.map((review) => (
-          <div key={review.id} className="rounded-card border border-gray-200 p-4">
+          <div key={review.id} className="rounded-card border border-gray-200 p-4 dark:border-hairline">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-bold text-primary-fg">
                 {review.buyerPhoto ? (
@@ -64,9 +64,9 @@ export default function ReviewsList({
 
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="font-medium text-gray-900">{review.buyerName}</p>
+                  <p className="font-medium text-gray-900 dark:text-ink">{review.buyerName}</p>
 
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-gray-400 dark:text-ink-muted">
                     {new Date(review.createdAt).toLocaleDateString("es-CO")}
                   </span>
                 </div>
@@ -74,7 +74,7 @@ export default function ReviewsList({
                 <StarRating value={review.rating} size={14} />
 
                 {review.comment && (
-                  <p className="mt-2 text-sm text-gray-600">{review.comment}</p>
+                  <p className="mt-2 text-sm text-gray-600 dark:text-ink-muted">{review.comment}</p>
                 )}
               </div>
             </div>
@@ -93,7 +93,7 @@ export default function ReviewsList({
             Anterior
           </Button>
 
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-gray-600 dark:text-ink-muted">
             Página {page} de {totalPages}
           </span>
 

@@ -45,6 +45,7 @@ def get_all_companies(
     if status in {
         "pending",
         "rejected",
+        "needs_update",
         "approved",
     }:
         query = query.filter(
@@ -59,15 +60,20 @@ def get_all_companies(
         ),
         (
             Company.CompanyCertificateStatus
-            == CompanyCertificateEnum.REJECTED,
+            == CompanyCertificateEnum.NEEDS_UPDATE,
             2,
         ),
         (
             Company.CompanyCertificateStatus
-            == CompanyCertificateEnum.APPROVED,
+            == CompanyCertificateEnum.REJECTED,
             3,
         ),
-        else_=4,
+        (
+            Company.CompanyCertificateStatus
+            == CompanyCertificateEnum.APPROVED,
+            4,
+        ),
+        else_=5,
     )
 
     if (
@@ -160,6 +166,7 @@ def get_company_by_id(
         CompanyCertificateStatus=company.CompanyCertificateStatus,
         CompanyStatus=company.CompanyStatus,
         suspensionReason=company.suspension_reason,
+        rejectionReason=company.rejection_reason,
         addressCompany=company.addressCompany,
         user_id=company.user_id,
         created_at=company.created_at,
@@ -184,6 +191,7 @@ def update_certificate_status(
     database: Session,
     company_id: UUID,
     status: str,
+    reason: str | None = None,
 ) -> Company | None:
 
     company = (
@@ -198,6 +206,10 @@ def update_certificate_status(
         return None
 
     company.CompanyCertificateStatus = status
+
+    company.rejection_reason = (
+        reason if status in ("rejected", "needs_update") else None
+    )
 
     return company
 

@@ -61,7 +61,7 @@ export default function RelatedProducts({ catalogId, excludeProductId }: Related
   return (
     <section className="mt-12">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Productos relacionados</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-ink">Productos relacionados</h2>
 
         {!loading && products.length > 2 && (
           <div className="hidden gap-2 sm:flex">
@@ -69,7 +69,7 @@ export default function RelatedProducts({ catalogId, excludeProductId }: Related
               type="button"
               onClick={() => scroll(-1)}
               aria-label="Anterior"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-600 transition hover:bg-gray-50"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-600 transition hover:bg-gray-50 dark:border-hairline dark:text-ink-muted dark:hover:bg-white/5"
             >
               <ChevronLeft size={16} />
             </button>
@@ -78,7 +78,7 @@ export default function RelatedProducts({ catalogId, excludeProductId }: Related
               type="button"
               onClick={() => scroll(1)}
               aria-label="Siguiente"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-600 transition hover:bg-gray-50"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 text-gray-600 transition hover:bg-gray-50 dark:border-hairline dark:text-ink-muted dark:hover:bg-white/5"
             >
               <ChevronRight size={16} />
             </button>

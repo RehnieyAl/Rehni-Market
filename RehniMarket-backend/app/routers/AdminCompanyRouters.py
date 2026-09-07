@@ -154,6 +154,7 @@ def update_certificate_status(
         status=data.status,
         database=database,
         admin_id=admin_id,
+        reason=data.reason,
     )
 
 

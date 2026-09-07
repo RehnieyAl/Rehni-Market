@@ -24,24 +24,24 @@ export default function ProductReviewsSummary({
   distribution,
 }: ProductReviewsSummaryProps) {
   return (
-    <div className="rounded-card border border-gray-200 bg-white p-5">
-      <h3 className="font-semibold text-gray-900">Opiniones de compradores</h3>
+    <div className="rounded-card border border-gray-200 bg-white p-5 dark:border-hairline dark:bg-surface-1">
+      <h3 className="font-semibold text-gray-900 dark:text-ink">Opiniones de compradores</h3>
 
       {reviewCount === 0 ? (
-        <p className="mt-4 text-sm text-gray-500">
+        <p className="mt-4 text-sm text-gray-500 dark:text-ink-muted">
           Este producto todavía no tiene reseñas.
         </p>
       ) : (
         <>
           <div className="mt-3 flex items-center gap-3">
-            <span className="text-4xl font-bold text-gray-900">
+            <span className="text-4xl font-bold text-gray-900 dark:text-ink">
               {averageRating?.toFixed(1)}
             </span>
 
             <div>
               <StarRating value={Math.round(averageRating ?? 0)} size={16} />
 
-              <p className="mt-0.5 text-xs text-gray-500">
+              <p className="mt-0.5 text-xs text-gray-500 dark:text-ink-muted">
                 ({reviewCount} {reviewCount === 1 ? "opinión" : "opiniones"})
               </p>
             </div>
@@ -53,18 +53,18 @@ export default function ProductReviewsSummary({
               const percentage = reviewCount ? Math.round((count / reviewCount) * 100) : 0;
 
               return (
-                <div key={key} className="flex items-center gap-2 text-xs text-gray-600">
+                <div key={key} className="flex items-center gap-2 text-xs text-gray-600 dark:text-ink-muted">
                   <span className="w-2 shrink-0 text-right">{label}</span>
                   <Star size={12} className="shrink-0 fill-amber-400 text-amber-400" />
 
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
                     <div
-                      className="h-full rounded-full bg-primary"
+                      className="h-full rounded-full bg-primary dark:bg-brand-400"
                       style={{ width: `${percentage}%` }}
                     />
                   </div>
 
-                  <span className="w-6 shrink-0 text-right text-gray-500">{count}</span>
+                  <span className="w-6 shrink-0 text-right text-gray-500 dark:text-ink-muted">{count}</span>
                 </div>
               );
             })}

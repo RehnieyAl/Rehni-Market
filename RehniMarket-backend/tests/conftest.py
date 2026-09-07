@@ -10,7 +10,7 @@ from app.database.Connection import Base, get_db
 import app.models
 from app.models.ModelCatalog import Catalog
 from app.models.ModelCatalogAttribute import CatalogAttribute, CatalogAttributeOption
-from app.models.ModelCompany import Company
+from app.models.ModelCompany import Company, CompanyCertificateEnum
 from app.models.ModelProduct import Product
 from app.models.ModelRole import Role
 from app.models.ModelUser import Users
@@ -138,6 +138,10 @@ def company(db, users):
         CompanyNIT="900123456",
         CompanyNITDV="7",
         user_id=users["company"].id,
+        # APPROVED: es la empresa "en funcionamiento normal" que usa el resto de la
+        # suite (productos, variantes, pedidos...). Los tests del flujo de
+        # certificación mueven el estado explícitamente con los endpoints de admin.
+        CompanyCertificateStatus=CompanyCertificateEnum.APPROVED,
     )
     db.add(company)
     db.commit()

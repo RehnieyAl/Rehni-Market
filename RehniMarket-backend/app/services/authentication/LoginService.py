@@ -69,14 +69,44 @@ def login_service(user: LoginRequest, database: Session) -> LoginResponse:
             api_error(400, ErrorCodes.ROLE_NOT_ASSIGNED, "El usuario no tiene un rol asignado")
 
         if search_user.role.name == "company":
-            
+
             company = search_user.company
-            
+
             if company.CompanyCertificateStatus == CompanyCertificateEnum.PENDING:
                 api_error(403, ErrorCodes.COMPANY_PENDING, "Tu empresa esta en revision")
-        
+
+            # NEEDS_UPDATE y REJECTED: credenciales correctas pero la revisión del
+            # certificado no fue favorable. El login NO continúa y NO se emite ningún
+            # JWT ni refresh token (se comprueba ANTES de crearlos, más abajo). El
+            # frontend muestra el modal correspondiente con el motivo real:
+            #   - NEEDS_UPDATE -> botón "Actualizar certificado" (POST /company/
+            #     certificate/update, sin JWT). Estado NEEDS_UPDATE -> PENDING.
+            #   - REJECTED     -> rechazo terminal, sólo "Entendido".
+            if company.CompanyCertificateStatus == CompanyCertificateEnum.NEEDS_UPDATE:
+                api_error(
+                    403,
+                    ErrorCodes.COMPANY_CERTIFICATE_INVALID,
+                    "El certificado que presentaste no es válido. Debes subir uno "
+                    "nuevo para que tu empresa vuelva a revisión.",
+                    extra=(
+                        {"reason": company.rejection_reason}
+                        if company.rejection_reason
+                        else None
+                    ),
+                )
+
             if company.CompanyCertificateStatus == CompanyCertificateEnum.REJECTED:
-                api_error(403, ErrorCodes.COMPANY_REJECTED, "Tu empresa ha sido rechazada")
+                api_error(
+                    403,
+                    ErrorCodes.COMPANY_REJECTED,
+                    "Tu empresa fue rechazada. Para volver a operar debe intervenir "
+                    "un administrador.",
+                    extra=(
+                        {"reason": company.rejection_reason}
+                        if company.rejection_reason
+                        else None
+                    ),
+                )
 
             if company.CompanyStatus == False:
                 api_error(

@@ -49,7 +49,14 @@ function getVerificationBadge(company: DashboardHomeResponse | null) {
 
   if (company.certificate_status === "rejected") {
     return {
-      label: "Certificado rechazado",
+      label: "Empresa rechazada",
+      className: "bg-danger-bg text-danger",
+    };
+  }
+
+  if (company.certificate_status === "needs_update") {
+    return {
+      label: "Certificado no válido",
       className: "bg-danger-bg text-danger",
     };
   }

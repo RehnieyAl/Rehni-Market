@@ -13,7 +13,12 @@ from app.middleware.PublicRoutes import (
     PUBLIC_PRODUCT_DETAIL_PREFIX,
     PUBLIC_COMPANY_PROFILE_PREFIX,
 )
-from app.middleware.RolePermissions import ROLES_PERMISSIONS_ROUTERS, FULL_ACCESS_ROLES
+from app.middleware.RolePermissions import (
+    ROLES_PERMISSIONS_ROUTERS,
+    FULL_ACCESS_ROLES,
+    COMPANY_UNAPPROVED_ALLOWED_ROUTES,
+)
+from app.models.ModelCompany import CompanyCertificateEnum
 from app.middleware.AuthUser import get_authenticated_user
 
 from app.database.Connection import SessionLocal
@@ -183,6 +188,48 @@ async def auth_middleware(request: Request, call_next):
                 return JSONResponse(
                     status_code=403,
                     content={"detail": suspended_detail},
+                )
+
+            if (
+                role == "company"
+                and user.company
+                and user.company.CompanyCertificateStatus
+                != CompanyCertificateEnum.APPROVED
+                and not any(
+                    path.startswith(route)
+                    for route in COMPANY_UNAPPROVED_ALLOWED_ROUTES
+                )
+            ):
+                cert_status = user.company.CompanyCertificateStatus
+
+                if cert_status == CompanyCertificateEnum.REJECTED:
+                    unapproved_detail = {
+                        "code": ErrorCodes.COMPANY_REJECTED,
+                        "message": (
+                            "Tu empresa fue rechazada. Revisa el motivo; para volver a "
+                            "operar debe intervenir un administrador."
+                        ),
+                    }
+                elif cert_status == CompanyCertificateEnum.NEEDS_UPDATE:
+                    unapproved_detail = {
+                        "code": ErrorCodes.COMPANY_CERTIFICATE_INVALID,
+                        "message": (
+                            "El certificado presentado no es válido. Actualízalo para "
+                            "volver a revisión."
+                        ),
+                    }
+                else:
+                    unapproved_detail = {
+                        "code": ErrorCodes.COMPANY_PENDING,
+                        "message": "Tu empresa está en revisión.",
+                    }
+
+                if user.company.rejection_reason:
+                    unapproved_detail["reason"] = user.company.rejection_reason
+
+                return JSONResponse(
+                    status_code=403,
+                    content={"detail": unapproved_detail},
                 )
 
             if role not in ROLES_PERMISSIONS_ROUTERS:

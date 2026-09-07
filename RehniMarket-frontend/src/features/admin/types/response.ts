@@ -3,7 +3,8 @@ import type { AdvertisementTargetType } from "./request";
 export type CompanyCertificateStatus =
   | "pending"
   | "approved"
-  | "rejected";
+  | "rejected"
+  | "needs_update";
 
 export interface AdminCompanyResponse {
   id: string;
@@ -13,6 +14,7 @@ export interface AdminCompanyResponse {
   CompanyCertificate: string;
   CompanyStatus: boolean;
   suspensionReason: string | null;
+  rejectionReason: string | null;
   user_id: string;
   addressCompany: string;
   CompanyNIT: string;

@@ -2,12 +2,20 @@ import type { Role } from "./types/auth";
 
 export type AreaKey = "admin" | "company" | "user";
 
+/**
+ * Ruta a la que `RequireAuth` rebota a cada rol cuando intenta entrar a un área
+ * ajena (p. ej. una empresa abriendo `/admin/dashboard`). NO es el destino del
+ * login: tras iniciar sesión todos los roles van al Home (`STORE_HOME`).
+ */
 export const ROLE_HOME: Record<Role, string> = {
   admin: "/admin/dashboard",
   owner: "/admin/dashboard",
   company: "/company/dashboard",
   user: "/",
 };
+
+/** Ruta pública del Home (tienda). Destino de todos los roles tras el login. */
+export const STORE_HOME = "/";
 
 export const AREA_ROLES: Record<AreaKey, Role[]> = {
   admin: ["admin", "owner"],

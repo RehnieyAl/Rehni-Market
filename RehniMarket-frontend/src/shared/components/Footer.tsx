@@ -4,11 +4,7 @@ export default function Footer() {
   const links = [
     { to: "/productos", label: "Productos" },
     { to: "/categorias", label: "Categorías" },
-    { to: "/register-company", label: "Registrar empresa" },
-    { to: "/como-vender", label: "¿Cómo vender?" },
-    { to: "/contacto", label: "Contacto" },
-    { to: "/terminos", label: "Términos" },
-    { to: "/privacidad", label: "Privacidad" },
+    { to: "/register-company", label: "Registrar empresa" }
   ];
 
   return (

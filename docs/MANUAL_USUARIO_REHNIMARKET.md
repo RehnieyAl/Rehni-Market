@@ -168,8 +168,9 @@ Cuenta de vendedor. Disponible **solo en la plataforma web**.
 
 **Restricciones:**
 
-- Una empresa **solo puede iniciar sesión si su certificación fue aprobada** por la administración. Si está **pendiente** de revisión, el inicio de sesión es rechazado con el mensaje *"Tu empresa esta en revision"*; si fue **rechazada**, con *"Tu empresa ha sido rechazada"*; si fue **suspendida**, con *"Tu empresa se encuentra suspendida."*
-- Una empresa **no** puede comprar, ni marcar favoritos, ni cambiar por sí misma su estado de verificación.
+- Si el certificado está **pendiente** de revisión, el inicio de sesión es rechazado con el mensaje *"Tu empresa esta en revision"*; si la empresa fue **suspendida**, con *"Tu empresa se encuentra suspendida."*
+- Si el certificado fue **rechazado**, la empresa **sí puede iniciar sesión** con su correo y contraseña (el flujo normal, sin nada especial): una vez dentro solo ve **Mi tienda** — con el **motivo del rechazo** — para poder **reemplazar el certificado**; el resto del panel (Productos, Pedidos, Finanzas...) permanece bloqueado hasta que la administración apruebe el nuevo certificado.
+- Una empresa **no** puede comprar, ni marcar favoritos, ni cambiar por sí misma su estado de verificación ni el motivo de un rechazo.
 - Solo puede gestionar sus **propios** productos, variantes y pedidos.
 - El panel de Empresa **no existe en la aplicación móvil**.
 
@@ -267,7 +268,7 @@ No requiere ninguna acción: al abrir la plataforma web o la app móvil, se pued
 2. Ingresar los datos comerciales de la empresa y del representante, incluido el **NIT** y el **certificado** requerido.
 3. Enviar el formulario. Se crea la cuenta de empresa en estado **no verificado** (correo) y con **certificación pendiente** de aprobación por la administración.
 4. Verificar el correo (igual que un comprador).
-5. **La empresa no podrá iniciar sesión hasta que la administración apruebe su certificación.**
+5. La administración revisa el certificado: si lo **aprueba**, la empresa queda habilitada para usar todo el panel; si lo **rechaza**, registra un **motivo obligatorio** que la empresa puede consultar iniciando sesión normalmente (ver [6.4](#64-inicio-de-sesión) y [15.1](#151-mi-tienda-perfil-de-la-empresa)). Para **subir un certificado nuevo** la empresa usa la página independiente **`/actualizar-certificado`** (correo + contraseña + PDF, sin sesión), lo que deja el certificado de nuevo **pendiente** de revisión.
 
 ### 6.3 Verificación de cuenta
 
@@ -299,7 +300,7 @@ No requiere ninguna acción: al abrir la plataforma web o la app móvil, se pued
 | Cuenta no verificada | *"Tu correo no ha sido verificado. Te enviamos un código de verificación a tu correo electrónico."* y dirige a verificar |
 | Cuenta bloqueada por la administración | *"Tu cuenta se encuentra bloqueada. Contacta con un administrador."* |
 | Empresa con certificación pendiente | *"Tu empresa esta en revision"* |
-| Empresa con certificación rechazada | *"Tu empresa ha sido rechazada"* |
+| Empresa con certificación rechazada | Inicia sesión con normalidad; ve **Mi tienda** (motivo del rechazo + botón a `/actualizar-certificado`) y **Configuración de cuenta**, el resto del panel queda bloqueado. El nuevo certificado se sube desde `/actualizar-certificado` (correo + contraseña + PDF, sin sesión) |
 | Empresa suspendida | *"Tu empresa se encuentra suspendida."* |
 
 ### 6.5 Cierre de sesión
@@ -390,7 +391,12 @@ Es el listado general de productos.
 - **Stock disponible real** de la variante seleccionada (o del producto si no tiene variantes).
 - Indicación de si el precio **incluye IVA** (según lo defina la empresa para ese producto).
 - **Datos del vendedor** (empresa): logo, nombre y si es **empresa verificada**.
-- **Web:** enlace al **perfil público de la empresa**, pestañas de *Descripción / Especificaciones / Opiniones*, la sección de **opiniones de compradores**, productos relacionados y las opciones **"Reportar producto"** y (desde el perfil de empresa) **"Reportar empresa"**.
+- **Web:** enlace al **perfil público de la empresa**, cuatro **tarjetas informativas**
+  (envío nacional, vendedor verificado/registrado, devolución fácil, compra protegida),
+  pestañas de *Descripción / Especificaciones / Opiniones*, la sección de **opiniones de
+  compradores**, un bloque de **Preguntas frecuentes**, productos relacionados y las
+  opciones **"Reportar producto"** y (desde el perfil de empresa) **"Reportar empresa"**.
+  La página de detalle usa un **tema visual oscuro**; el resto del sitio no cambia.
 - **Móvil:** el detalle muestra la calificación promedio, pero **no muestra el listado de opiniones**, ni permite escribir reseñas, ni abrir el perfil de la empresa, ni reportar.
 
 **Acciones:**
@@ -625,6 +631,29 @@ No existe un seguimiento en tiempo real dentro de RehniMarket. El "seguimiento" 
 - El **estado** del pedido, que la empresa actualiza.
 - El **enlace externo de rastreo** de la transportadora (cuando aplica), en el detalle del pedido en web.
 
+### 12.7 Devoluciones (web)
+
+Cuando un pedido está **Entregado**, en el detalle del pedido aparece, junto a cada
+producto, el botón **"Solicitar devolución"**.
+
+1. El comprador pulsa **Solicitar devolución** en el producto que quiere devolver.
+2. Escribe **obligatoriamente el motivo** (mínimo 5 caracteres) y envía la solicitud.
+3. La devolución queda **En revisión**. Solo se puede tener **una devolución activa por
+   producto** del pedido.
+4. La **empresa vendedora** revisa la solicitud y la **aprueba** o la **rechaza**:
+   - **Aprobada:** se reintegra el valor del producto (con IVA si aplicaba) a la
+     **billetera RehniCoin** del comprador. El detalle del pedido muestra
+     *"Devolución aprobada · Reembolso acreditado en RehniCoin: $…"*.
+   - **Rechazada:** la empresa indica un motivo, que el comprador ve en el detalle del
+     pedido: *"Devolución rechazada — Motivo: …"*. Si el motivo del rechazo lo permite,
+     el comprador puede volver a solicitar la devolución de ese producto.
+
+El comprador recibe un correo cuando la devolución se aprueba o se rechaza. La solicitud
+**no** cambia el estado del pedido (sigue *Entregado*).
+
+> Solo se pueden devolver productos de **pedidos propios** y **entregados**. El comprador
+> nunca decide el resultado ni el monto: eso lo controla el sistema y la empresa vendedora.
+
 ---
 
 ## 13. Favoritos
@@ -663,15 +692,45 @@ La **calificación promedio y el conteo de opiniones** que se muestran en el pro
 
 ## 15. Funcionalidades de Empresa
 
-> Disponibles **solo en la plataforma web**, en el **Panel Empresa**. Requieren una cuenta de empresa con **certificación aprobada**.
+> Disponibles **solo en la plataforma web**, en el **Panel Empresa**. Con certificación **pendiente** o **rechazada** solo se puede usar **Mi tienda** (ver el estado, el motivo si fue rechazado, y reemplazar el certificado) y **Configuración de cuenta**; **Productos**, **Pedidos** y **Finanzas** exigen certificación **aprobada**.
 
-El panel tiene seis secciones: **Inicio**, **Productos**, **Pedidos**, **Finanzas**, **Mi tienda** y **Configuración de cuenta**.
+El panel tiene siete secciones: **Inicio**, **Productos**, **Pedidos**, **Devoluciones**, **Finanzas**, **Mi tienda** y **Configuración de cuenta**.
 
 ### 15.1 Mi tienda (perfil de la empresa)
 
 - Consultar y **actualizar** los datos del perfil comercial (nombre, información de contacto).
 - **Actualizar el logo y el banner** de la empresa.
-- Consultar el **estado de verificación** (certificado aprobado, pendiente o rechazado). Es informativo: lo determina la administración y la empresa no puede cambiarlo.
+- Consultar el **estado de verificación** (certificado aprobado, pendiente o rechazado) y, si fue **rechazado**, el **motivo**. Es informativo: lo determina la administración y la empresa no puede cambiar el estado ni el motivo directamente.
+- Si el certificado está **rechazado**, en **Mi tienda** aparece el botón **"Actualizar certificado"**, que lleva a la página **`/actualizar-certificado`**. Esa página es **independiente del panel**: pide **correo + contraseña + el nuevo PDF** y no necesita haber iniciado sesión (ver [15.1-bis](#151-bis-actualizar-certificado-página-independiente)). Al enviarlo, el estado vuelve a **pendiente**, el certificado anterior deja de ser válido y la administración debe revisarlo de nuevo; la empresa **no** queda aprobada automáticamente. Mientras el certificado esté **pendiente** o **aprobado**, la operación se rechaza.
+
+### 15.1-bis Actualizar certificado (página independiente)
+
+La página **`/actualizar-certificado`** permite a una empresa **rechazada** subir un
+certificado nuevo **sin entrar al panel**. Es un flujo aparte del inicio de sesión
+normal: **no** genera ninguna sesión ni token.
+
+Pide tres datos:
+
+| Campo | |
+|---|---|
+| Correo electrónico | El de la cuenta de la empresa. |
+| Contraseña | La misma del inicio de sesión. |
+| Nuevo certificado | Archivo **PDF**, **máximo 5 MB**. |
+
+Al pulsar **"Actualizar certificado"** el servidor verifica el correo y la contraseña,
+comprueba que la empresa esté **rechazada**, guarda el nuevo PDF y deja el certificado
+en estado **pendiente**, borrando el motivo del rechazo anterior. Mensajes:
+
+- Credenciales incorrectas → *"Correo o contraseña incorrectos."* (no revela si el
+  correo existe).
+- La empresa no está rechazada (ya aprobada o ya en revisión) → *"El certificado de
+  esta empresa no puede actualizarse en este momento."*
+- Archivo que no es PDF o pesa más de 5 MB → *"El certificado debe ser un archivo PDF
+  de máximo 5 MB."*
+- Éxito → *"Certificado actualizado correctamente. Tu empresa volverá a revisión."*
+
+> El motivo del rechazo **no** se muestra en esta página; se consulta en **Mi tienda**
+> (iniciando sesión) o en el correo de rechazo, que ya lo incluye.
 
 ### 15.2 Productos
 
@@ -689,6 +748,25 @@ El panel tiene seis secciones: **Inicio**, **Productos**, **Pedidos**, **Finanza
 - **Avanzar el estado** siguiendo el flujo permitido (Pendiente/Pagado → En preparación → Enviado → Entregado) o **cancelarlo** mientras esté Pendiente o Pagado.
 - Al marcar un pedido como **Enviado**, registrar la **transportadora** (del catálogo de transportadoras activas) y el **número de guía**.
 - Si se intenta una transición no permitida: *"No se puede pasar de '{estado}' a '{estado}'."*
+
+### 15.3-bis Devoluciones
+
+Sección **Devoluciones** del Panel Empresa. Muestra únicamente las solicitudes de
+devolución de **pedidos de esta empresa** (nunca de otra empresa).
+
+- Lista con filtros por estado (**En revisión**, **Aprobadas**, **Rechazadas**) y
+  búsqueda por referencia del pedido, correo o nombre del comprador.
+- En el **detalle** de una solicitud: pedido, comprador, producto, cantidad, valor,
+  fecha y **motivo del comprador**.
+- Para una solicitud **En revisión**, dos acciones:
+  - **Aprobar devolución:** se reintegra el valor del producto (con IVA si aplicaba) a
+    la billetera **RehniCoin** del comprador, en el momento de aprobar. La solicitud
+    pasa a **Aprobada** y no admite más cambios.
+  - **Rechazar devolución:** exige **obligatoriamente** un motivo (por ejemplo,
+    *"El producto presenta daños causados por el comprador."*). El motivo se guarda y
+    se le muestra al comprador. La solicitud pasa a **Rechazada**.
+- La empresa no puede cambiar arbitrariamente el estado ni re-evaluar una solicitud ya
+  resuelta.
 
 ### 15.4 Finanzas
 
@@ -715,7 +793,7 @@ Resumen general de la plataforma: **estadísticas** (totales de usuarios, empres
 ### 16.2 Empresas
 
 - Consultar el listado de empresas y el **detalle** de cada una (incluye su certificado).
-- **Aprobar o rechazar** la certificación. Solo una empresa **aprobada** se muestra como "empresa verificada" a los compradores.
+- **Aprobar o rechazar** la certificación. Al **rechazar** es obligatorio registrar un **motivo**; la empresa lo consulta desde su panel y puede reemplazar el certificado. Al **aprobar**, cualquier motivo de rechazo anterior deja de mostrarse. Solo una empresa **aprobada** se muestra como "empresa verificada" a los compradores.
 - **Activar o desactivar (suspender)** la cuenta de una empresa. Al suspenderla, sus pedidos en Pendiente/Pagado/En preparación se **cancelan y se reembolsan** en RehniCoin a los compradores.
 
 ### 16.3 Usuarios
@@ -801,7 +879,7 @@ Los mensajes citados provienen del código del proyecto.
 | Código de verificación incorrecto | *"El código de verificación es incorrecto."* | Volver a escribir el código exactamente como llegó. |
 | Cuenta bloqueada | *"Tu cuenta se encuentra bloqueada. Contacta con un administrador."* | Contactar a la administración de la plataforma. |
 | Empresa en revisión | *"Tu empresa esta en revision"* | Esperar a que la administración apruebe la certificación. |
-| Empresa rechazada | *"Tu empresa ha sido rechazada"* | Contactar a la administración. |
+| Empresa rechazada | Inicio de sesión normal; solo se ve **Mi tienda** con el motivo del rechazo | Subir el nuevo certificado desde **`/actualizar-certificado`** (o el botón en Mi tienda) — correo + contraseña + PDF, sin necesidad de sesión — y esperar la nueva revisión. |
 | Empresa suspendida | *"Tu empresa se encuentra suspendida."* | Contactar a la administración. |
 | Correo ya registrado (registro) | *"El correo ya se encuentra registrado"* | Iniciar sesión o recuperar la contraseña. |
 | NIT ya registrado (registro de empresa) | *"El NIT ya se encuentra registrado"* | Verificar el NIT; puede que la empresa ya tenga cuenta. |
@@ -854,7 +932,7 @@ Cuando tengas **al menos un pedido de ese producto en estado "Entregado"**. Pued
 No. La app móvil es para **compradores y visitantes**. Si inicias sesión con una cuenta de empresa o administración, la app cierra la sesión automáticamente. Esos paneles están **solo en la web**.
 
 **Registré mi empresa pero no puedo iniciar sesión.**
-La empresa solo puede iniciar sesión cuando la administración **aprueba su certificación**. Mientras esté "en revisión" o si fue "rechazada", el inicio de sesión se rechaza con el mensaje correspondiente.
+Depende del estado del certificado. Si está **pendiente** de revisión, el inicio de sesión se rechaza con *"Tu empresa esta en revision"*; hay que esperar a que la administración lo revise. Si fue **rechazado**, sí puedes iniciar sesión con tu correo y contraseña: entra a **Mi tienda** para ver el **motivo**; el resto del panel permanece bloqueado hasta que el nuevo certificado sea aprobado. Para **subir el nuevo certificado** puedes usar el botón "Actualizar certificado" de Mi tienda o ir directamente a **`/actualizar-certificado`**, una página independiente que solo pide correo + contraseña + el PDF y **no requiere iniciar sesión**.
 
 **Cambié mi correo o mi nombre. ¿Tengo que volver a iniciar sesión?**
 No. Los cambios en *Configuración de cuenta* se reflejan de inmediato (por ejemplo, el nombre en el menú).

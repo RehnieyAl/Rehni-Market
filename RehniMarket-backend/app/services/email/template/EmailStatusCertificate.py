@@ -2,6 +2,7 @@ from app.services.email.EmailService import send_email
 from app.services.email.template.EmailBase import (
     bullet_list_html,
     email_wrapper,
+    escape,
     greeting_html,
     heading_html,
     info_box,
@@ -55,53 +56,105 @@ def EmailCertificateApproved(
     )
 
 
+def EmailCertificateNeedsUpdate(
+    to_email: str,
+    company_name: str,
+    reason: str | None = None,
+):
+    """El certificado presentado no es válido (ilegible, vencido, incorrecto...): la
+    empresa DEBE subir uno nuevo desde /actualizar-certificado. No es un rechazo de
+    la empresa."""
+
+    subject = "Tu certificado empresarial debe actualizarse | Rehni Market"
+
+    reason_section = (
+        info_box(
+            "<strong>Motivo:</strong><br><br>" + escape(reason)
+        )
+        if reason
+        else ""
+    )
+
+    content = (
+        heading_html("Actualiza tu certificado empresarial")
+        + greeting_html(company_name)
+        + paragraph_html(
+            "Hemos finalizado la revisión del certificado enviado para la validación "
+            "empresarial."
+        )
+        + paragraph_html(
+            "El certificado presentado no es válido (por ejemplo: ilegible, vencido o "
+            "incorrecto) y debe ser reemplazado por uno vigente antes de continuar con "
+            "el proceso de activación."
+        )
+        + reason_section
+        + info_box(
+            "<strong>Qué debes hacer:</strong>"
+            + bullet_list_html(
+                [
+                    "Ingresa a la página \"Actualizar certificado\".",
+                    "Verifícate con tu correo y contraseña.",
+                    "Sube el nuevo certificado en PDF.",
+                    "Tu empresa volverá automáticamente a revisión.",
+                ]
+            )
+        )
+        + info_box(
+            "<strong>Importante:</strong><br><br>"
+            "Tu cuenta empresarial no ha sido eliminada, suspendida ni rechazada.<br><br>"
+            "Solo es necesario que presentes un certificado válido.",
+            warning=True,
+        )
+        + paragraph_html(
+            "Si tienes dudas sobre el proceso de validación, puedes comunicarte con "
+            "nuestro equipo de soporte."
+        )
+        + signature_html("Atentamente")
+    )
+
+    send_email(
+        to_email,
+        subject,
+        email_wrapper("Revisión empresarial", content),
+    )
+
+
 def EmailCertificateRejected(
     to_email: str,
     company_name: str,
+    reason: str | None = None,
 ):
+    """Rechazo TERMINAL de la empresa: no puede reintentar por sí misma. Para
+    reactivarse debe intervenir un administrador."""
 
-    subject = "Certificado empresarial requiere correcciones | Rehni Market"
+    subject = "Resultado de la revisión empresarial | Rehni Market"
+
+    reason_section = (
+        info_box(
+            "<strong>Motivo del rechazo:</strong><br><br>" + escape(reason)
+        )
+        if reason
+        else ""
+    )
 
     content = (
-        heading_html("Documentación pendiente de corrección")
+        heading_html("Tu empresa no fue aprobada")
         + greeting_html(company_name)
         + paragraph_html(
             "Hemos finalizado la revisión de la documentación enviada para la validación "
             "empresarial."
         )
         + paragraph_html(
-            "En esta ocasión no fue posible aprobar el certificado empresarial debido a "
-            "inconsistencias o información que requiere ajustes antes de continuar con el "
-            "proceso de activación."
+            "En esta ocasión no fue posible aprobar tu empresa en Rehni Market."
         )
-        + info_box(
-            "<strong>Estado de la revisión:</strong>"
-            + bullet_list_html(
-                [
-                    "Certificado pendiente de aprobación",
-                    "Documentación requiere correcciones",
-                    "Puedes realizar una nueva solicitud",
-                ]
-            )
-        )
-        + paragraph_html(
-            "Te recomendamos revisar cuidadosamente la documentación enviada y realizar "
-            "las correcciones necesarias antes de volver a presentar la solicitud."
-        )
-        + paragraph_html(
-            "Una vez actualizada la información, podrás iniciar nuevamente el proceso de "
-            "validación para que nuestro equipo realice una nueva revisión."
-        )
+        + reason_section
         + info_box(
             "<strong>Importante:</strong><br><br>"
-            "La cuenta empresarial no ha sido eliminada ni suspendida.<br><br>"
-            "Solo es necesario corregir la documentación requerida para continuar con el "
-            "proceso de aprobación.",
+            "Esta decisión no se resuelve subiendo un nuevo certificado. Si consideras "
+            "que se trata de un error o quieres presentar información adicional, "
+            "comunícate con nuestro equipo de soporte para que un administrador revise "
+            "tu caso.",
             warning=True,
-        )
-        + paragraph_html(
-            "Si tienes dudas sobre el proceso de validación, puedes comunicarte con "
-            "nuestro equipo de soporte."
         )
         + signature_html("Atentamente")
     )

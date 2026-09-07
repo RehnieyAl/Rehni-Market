@@ -1,3 +1,5 @@
+import type { OrderItemReturn } from "@/features/returns/types/response";
+
 export type OrderStatus =
   | "pending"
   | "paid"
@@ -55,6 +57,8 @@ export interface Order {
 
   shippingCarrier: OrderShippingCarrier | null;
   trackingNumber: string | null;
+
+  returns: OrderItemReturn[];
 }
 
 export interface OrdersPaginated {

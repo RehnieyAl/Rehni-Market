@@ -18,6 +18,7 @@ from app.services.DashboardService.company.Dashboard import (
     company_dasboard_upgrade_my_photo_and_banner_profile,
     company_dashboard_get_my_products,
     company_dashboard_products_summary_service,
+    replace_company_certificate_service,
 )
 
 from app.services.DashboardService.company.Variants import (
@@ -34,7 +35,14 @@ from app.services.DashboardService.company.Variants import (
     set_variant_attribute_values_service,
 )
 
-from app.schemas.SchemaDashboard.ShemaCompany import UpdateInformationCompanyRequest
+from app.services.authentication.CertificateUpdateService import (
+    update_certificate_with_credentials_service,
+)
+
+from app.schemas.SchemaDashboard.ShemaCompany import (
+    UpdateInformationCompanyRequest,
+    CompanyCertificateUpdateResponse,
+)
 from app.schemas.SchemaDashboard.SchemaProduct import (
     ProductStatusRequest,
     ProductDetailResponse,
@@ -60,6 +68,16 @@ from app.services.commerce.OrderService import (
 )
 from app.services.publicService.ShippingCarriers import (
     get_active_shipping_carriers_service,
+)
+from app.services.commerce.ReturnService import (
+    list_company_returns_service,
+    get_company_return_detail_service,
+    decide_return_service,
+)
+from app.schemas.SchemaCommerce.SchemaReturn import (
+    ReturnDecisionRequest,
+    ReturnRequestResponse,
+    ReturnsPaginatedResponse,
 )
 from app.schemas.SchemaCommerce.SchemaOrder import (
     OrderResponse,
@@ -114,6 +132,59 @@ def patch_media(
         photo_profile=photo_profile,
         banner_profile=banner_profile
     )
+
+@router.put("/certificate")
+def replace_certificate(
+    request: Request,
+    certificate: UploadFile = File(...),
+    nas: NasService = Depends(get_nas_service),
+    database: Session = Depends(get_db),
+):
+    """Reemplaza el certificado de la empresa autenticada (request.state.user_id, el
+    mismo JWT del login normal). Solo permitido mientras el certificado esté
+    NEEDS_UPDATE (el admin lo marcó como inválido). REJECTED (rechazo terminal) ->
+    409 COMPANY_REJECTED. Ver replace_company_certificate_service."""
+
+    user_id = request.state.user_id
+
+    return replace_company_certificate_service(
+        user_id=user_id,
+        certificate=certificate,
+        nas=nas,
+        database=database,
+    )
+
+
+@router.post("/certificate/update", response_model=CompanyCertificateUpdateResponse)
+def update_certificate_with_credentials(
+    email: str = Form(...),
+    password: str = Form(...),
+    certificate: UploadFile = File(...),
+    nas: NasService = Depends(get_nas_service),
+    database: Session = Depends(get_db),
+):
+    """Actualiza el certificado de una empresa cuyo certificado fue marcado como
+    **inválido** (`NEEDS_UPDATE`) identificándola por **correo + contraseña**
+    (multipart/form-data). Endpoint público: NO usa JWT, no emite tokens ni abre
+    sesión, no guarda las credenciales y no acepta `company_id` (la empresa se
+    resuelve solo desde las credenciales). En caso correcto:
+    `NEEDS_UPDATE -> PENDING`, `rejection_reason -> NULL`, sin aprobación automática.
+    Una empresa con rechazo terminal (`REJECTED`) -> `409 COMPANY_REJECTED`.
+    Es un flujo independiente del login normal del dashboard."""
+
+    update_certificate_with_credentials_service(
+        email=email,
+        password=password,
+        certificate=certificate,
+        nas=nas,
+        database=database,
+    )
+
+    return CompanyCertificateUpdateResponse(
+        message="Certificado actualizado correctamente. Tu empresa volverá a revisión.",
+        certificateStatus="pending",
+    )
+
 
 @router.post("/dashboard/create-product")
 def create_product(
@@ -519,6 +590,56 @@ def update_company_order_status(
 @router.get("/dashboard/shipping-carriers", response_model=list[ShippingCarrierResponse])
 def get_company_shipping_carriers(request: Request, database: Session = Depends(get_db)):
     return get_active_shipping_carriers_service(database)
+
+
+@router.get("/dashboard/returns", response_model=ReturnsPaginatedResponse)
+def get_company_returns(
+    request: Request,
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=50),
+    status: str | None = Query(None),
+    search: str | None = Query(None),
+    database: Session = Depends(get_db),
+):
+    """Solicitudes de devolución de los pedidos de ESTA empresa (scope por company_id)."""
+
+    return list_company_returns_service(
+        user_id=request.state.user_id,
+        database=database,
+        page=page,
+        limit=limit,
+        status=status,
+        search=search,
+    )
+
+
+@router.get("/dashboard/returns/{return_id}", response_model=ReturnRequestResponse)
+def get_company_return_detail(
+    request: Request, return_id: UUID, database: Session = Depends(get_db)
+):
+    return get_company_return_detail_service(
+        user_id=request.state.user_id,
+        return_id=return_id,
+        database=database,
+    )
+
+
+@router.patch("/dashboard/returns/{return_id}", response_model=ReturnRequestResponse)
+def decide_company_return(
+    request: Request,
+    return_id: UUID,
+    data: ReturnDecisionRequest,
+    database: Session = Depends(get_db),
+):
+    """La empresa aprueba o rechaza la devolución. Al aprobar se reintegran las RehniCoin
+    al comprador. Al rechazar, `reason` es obligatorio."""
+
+    return decide_return_service(
+        user_id=request.state.user_id,
+        return_id=return_id,
+        data=data,
+        database=database,
+    )
 
 
 @router.patch("/dashboard/orders/{order_id}/shipping", response_model=OrderResponse)

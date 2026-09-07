@@ -10,7 +10,8 @@ export type CompanyCertificateFilter =
   | "all"
   | "pending"
   | "approved"
-  | "rejected";
+  | "rejected"
+  | "needs_update";
 
 export async function getAdminCompanies(
   limit: number = 10,
@@ -43,14 +44,22 @@ export async function getAdminCompany(
   return response.data;
 }
 
+export type CertificateReviewAction = "approved" | "rejected" | "needs_update";
+
 export async function updateCertificateStatus(
   companyId: string,
-  status: "approved" | "rejected",
+  status: CertificateReviewAction,
+  reason?: string,
 ): Promise<void> {
+  const needsReason = status === "rejected" || status === "needs_update";
+
   await api.patch(
     `/admin/dashboard/companies/certificate/status/${companyId}`,
     {
       status,
+      // El backend exige `reason` para "rejected" y "needs_update" y sigue siendo la
+      // autoridad final (400 MISSING_REQUIRED_FIELD si falta o viene en blanco).
+      ...(needsReason ? { reason } : {}),
     },
   );
 }

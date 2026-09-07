@@ -20,6 +20,7 @@ import VerifyEmail from "@/features/public/auth/pages/VerifyEmail";
 import Login from "@/features/public/auth/pages/Login";
 import ForgotPassword from "@/features/public/auth/pages/ForgotPassword";
 import ResetPassword from "@/features/public/auth/pages/ResetPassword";
+import UpdateCertificate from "@/features/public/auth/pages/UpdateCertificate";
 
 import Company from "../pages/dashboard/Company";
 import Admin from "../pages/dashboard/Admin";
@@ -55,6 +56,7 @@ export default function AppRouter() {
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/actualizar-certificado" element={<UpdateCertificate />} />
 
         <Route
           path="/company/dashboard"

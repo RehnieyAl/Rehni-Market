@@ -127,8 +127,8 @@ export default function ReviewsSection({
           {eligibility?.can_review ? (
             <ReviewForm productId={productId} onCreated={handleCreated} />
           ) : eligibility?.already_reviewed ? (
-            <div className="flex items-center justify-between rounded-card border border-gray-200 bg-gray-50 p-4">
-              <p className="text-sm text-gray-600">Ya reseñaste este producto.</p>
+            <div className="flex items-center justify-between rounded-card border border-gray-200 bg-gray-50 p-4 dark:border-hairline dark:bg-surface-2">
+              <p className="text-sm text-gray-600 dark:text-ink-muted">Ya reseñaste este producto.</p>
 
               <button
                 onClick={() => setConfirmDeleteOpen(true)}
@@ -139,7 +139,7 @@ export default function ReviewsSection({
               </button>
             </div>
           ) : role === "user" ? (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-ink-muted">
               Podrás reseñar este producto una vez que te sea entregado.
             </p>
           ) : null}
@@ -156,7 +156,7 @@ export default function ReviewsSection({
         {!expanded && !loading && total > COMPACT_COUNT && (
           <button
             onClick={() => setExpanded(true)}
-            className="mt-4 flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+            className="mt-4 flex items-center gap-1 text-sm font-medium text-primary hover:underline dark:text-brand-300"
           >
             Ver todas las opiniones
             <ChevronRight size={16} />

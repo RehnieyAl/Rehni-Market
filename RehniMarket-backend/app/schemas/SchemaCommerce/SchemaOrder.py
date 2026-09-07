@@ -4,6 +4,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, field_validator
 
+from app.schemas.SchemaCommerce.SchemaReturn import OrderItemReturnResponse
+
 
 class CheckoutRequest(BaseModel):
     addressId: UUID | None = None
@@ -67,6 +69,8 @@ class OrderResponse(BaseModel):
     buyerPhoto: str | None = None
     buyerPhone: str | None = None
     deliveryAddress: OrderAddressResponse | None = None
+
+    returns: list[OrderItemReturnResponse] = []
 
 
 class OrdersPaginatedResponse(BaseModel):

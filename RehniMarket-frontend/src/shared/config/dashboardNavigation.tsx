@@ -14,6 +14,7 @@ import {
   Coins,
   Wallet,
   Receipt,
+  RotateCcw,
 } from "lucide-react";
 
 import type { SidebarItem } from "../components/dashboard/Sidebar";
@@ -102,6 +103,11 @@ export const dashboardNavigation: Record<UserRole, SidebarItem[]> = {
       id: "orders",
       text: "Pedidos",
       icon: <Truck size={22} />,
+    },
+    {
+      id: "returns",
+      text: "Devoluciones",
+      icon: <RotateCcw size={22} />,
     },
     {
       id: "finance",

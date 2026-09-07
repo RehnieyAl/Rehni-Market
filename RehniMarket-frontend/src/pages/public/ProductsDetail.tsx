@@ -5,7 +5,7 @@ import ProductDetail from "@/features/public/products/components/ProductDetail";
 
 export default function ProductsDetail() {
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-surface-0">
       <NavBar />
 
       <main className="flex-1">

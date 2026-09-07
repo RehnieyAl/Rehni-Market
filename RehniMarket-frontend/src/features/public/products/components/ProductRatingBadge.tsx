@@ -15,9 +15,11 @@ export default function ProductRatingBadge({
     <div className="mt-2 flex items-center gap-2">
       <StarRating value={Math.round(averageRating)} size={16} />
 
-      <span className="text-sm font-semibold text-gray-900">{averageRating.toFixed(1)}</span>
+      <span className="text-sm font-semibold text-gray-900 dark:text-ink">
+        {averageRating.toFixed(1)}
+      </span>
 
-      <span className="text-sm text-gray-500">
+      <span className="text-sm text-gray-500 dark:text-ink-muted">
         ({reviewCount} {reviewCount === 1 ? "opinión" : "opiniones"})
       </span>
     </div>

@@ -20,6 +20,7 @@ class AdminCompanyDetailResponse(BaseModel):
     CompanyStatus: bool
 
     suspensionReason: str | None = None
+    rejectionReason: str | None = None
 
     addressCompany: str
     user_id: UUID
@@ -31,7 +32,12 @@ class AdminCompaniesPaginatedResponse(BaseModel):
     has_next: bool
 
 class UpdateCertificateStatusRequest(BaseModel):
-    status: Literal["approved", "rejected"]
+    # approved      -> empresa habilitada
+    # rejected      -> rechazo terminal de la empresa (requiere `reason`)
+    # needs_update  -> certificado inválido: la empresa debe subir uno nuevo (requiere `reason`)
+    status: Literal["approved", "rejected", "needs_update"]
+
+    reason: str | None = None
 
 
 class UpdateCompanyStatusRequest(BaseModel):

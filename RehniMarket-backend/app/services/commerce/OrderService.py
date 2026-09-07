@@ -73,7 +73,7 @@ def _restore_stock_for_order(database: Session, order: Order) -> None:
                 product.stock += item.quantity
 
 
-def _to_order_response(order: Order) -> OrderResponse:
+def _to_order_response(order: Order, returns: list | None = None) -> OrderResponse:
     items = [
         OrderItemResponse(
             id=item.id,
@@ -141,6 +141,7 @@ def _to_order_response(order: Order) -> OrderResponse:
         deliveryAddress=delivery_address,
         shippingCarrier=shipping_carrier,
         trackingNumber=order.tracking_number,
+        returns=returns or [],
     )
 
 
@@ -172,7 +173,9 @@ def get_my_order_detail_service(
     if not order:
         api_error(404, ErrorCodes.ORDER_NOT_FOUND, "Pedido no encontrado.")
 
-    return _to_order_response(order)
+    from app.services.commerce.ReturnService import order_item_returns
+
+    return _to_order_response(order, order_item_returns(database, order.id))
 
 
 def cancel_my_order_service(
@@ -298,7 +301,9 @@ def get_company_order_detail_service(
     if not order:
         api_error(404, ErrorCodes.ORDER_NOT_FOUND, "Pedido no encontrado.")
 
-    return _to_order_response(order)
+    from app.services.commerce.ReturnService import order_item_returns
+
+    return _to_order_response(order, order_item_returns(database, order.id))
 
 
 def get_company_order_status_counts_service(

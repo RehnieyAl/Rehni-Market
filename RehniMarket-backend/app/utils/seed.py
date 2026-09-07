@@ -153,6 +153,37 @@ CAPACITY_L = ["1 L", "2 L", "3 L", "5 L"]
 BED_SIZE = ["Sencilla", "Semidoble", "Doble", "Queen", "King"]
 CURTAIN_SIZE = ["1.40 x 2.20 m", "2.00 x 2.20 m", "2.80 x 2.20 m"]
 
+CPU_PRESENTATION = ["Con disipador", "Sin disipador (OEM)"]
+HDD_INTERNAL_CAPACITY = ["1 TB", "2 TB", "4 TB", "6 TB", "8 TB", "10 TB"]
+HDD_INTERNAL_FORMAT = ['3.5"', '2.5"']
+EXT_SSD_CAPACITY = ["500 GB", "1 TB", "2 TB", "4 TB"]
+FAN_SIZE = ["120 mm", "140 mm"]
+FAN_LIGHTING = ["Sin iluminación", "ARGB"]
+FAN_PACK = ["Individual", "Pack x3"]
+THERMAL_PASTE_CONTENT = ["1 g", "2 g", "4 g", "10 g"]
+NET_ADAPTER_INTERFACE = ["USB", "PCIe"]
+NET_ADAPTER_STANDARD = ["WiFi 5", "WiFi 6", "WiFi 6E"]
+NET_DEVICE_TYPE = ["Access Point", "Switch 5 puertos", "Switch 8 puertos", "Repetidor WiFi", "Switch PoE"]
+PHONE_ACCESSORY_TYPE = ["Cargador de pared", "Cable USB-C", "Cable Lightning", "Adaptador OTG",
+                        "Soporte para auto", "Cargador MagSafe", "Protector de pantalla", "Hub USB-C"]
+TV_SIZE = ['43"', '50"', '55"', '65"', '75"']
+TV_RESOLUTION = ["Full HD", "4K UHD", "8K UHD"]
+SECURITY_CAM_RESOLUTION = ["1080p", "2K", "4K"]
+SECURITY_CAM_CONNECTION = ["WiFi", "Cableada PoE"]
+CABLE_LENGTH = ["0.5 m", "1 m", "1.5 m", "2 m", "3 m"]
+CABLE_TYPE = ["HDMI 2.1", "DisplayPort 1.4", "USB-C a USB-C", "USB-C a HDMI", "Ethernet Cat 6"]
+HUB_PORTS = ["4 en 1", "6 en 1", "8 en 1", "11 en 1"]
+UPS_CAPACITY = ["650 VA", "850 VA", "1000 VA", "1500 VA", "2000 VA"]
+STAND_TYPE = ["Soporte de monitor", "Brazo articulado", "Base para laptop", "Soporte de celular", "Soporte de TV"]
+MEMORY_CARD_CAPACITY = ["64 GB", "128 GB", "256 GB", "512 GB", "1 TB"]
+MEMORY_CARD_TYPE = ["microSD", "SD"]
+TRIPOD_TYPE = ["Trípode", "Gimbal estabilizador", "Monopié", "Mini trípode"]
+VIDEO_LIGHT_TYPE = ["Panel LED", "Aro de luz", "Tubo RGB", "Kit de estudio"]
+VIDEO_LIGHT_SIZE = ['10"', '18"', "Compacto"]
+SCANNER_TYPE = ["Plano", "Con alimentador ADF", "Portátil", "De película"]
+VACUUM_TYPE = ["Robot", "Vertical", "De mano", "Trineo"]
+SOUNDBAR_CHANNELS = ["2.0", "2.1", "3.1", "5.1"]
+
 
 def _specs(*extra):
     return ["Marca", "Modelo", "Garantía", *extra]
@@ -472,6 +503,67 @@ CATALOGS = [
     ("Decoración", "Objetos decorativos para el hogar.",
      _specs("Material", "Dimensiones", "Estilo", "Uso interior/exterior"),
      [("Color", COLORS)]),
+
+    ("Procesadores", "CPU de escritorio AMD e Intel para armado y actualización.",
+     _specs("Socket", "Núcleos", "Hilos", "Frecuencia base", "Frecuencia turbo", "Caché", "TDP", "Gráficos integrados"),
+     [("Presentación", CPU_PRESENTATION)]),
+    ("Discos Duros", "Discos duros mecánicos internos para almacenamiento masivo.",
+     _specs("Interfaz", "RPM", "Caché", "Velocidad de transferencia", "Uso recomendado"),
+     [("Capacidad", HDD_INTERNAL_CAPACITY), ("Formato", HDD_INTERNAL_FORMAT)]),
+    ("Discos SSD Externos", "Unidades de estado sólido portátiles por USB.",
+     _specs("Interfaz", "Velocidad de lectura", "Velocidad de escritura", "Resistencia", "Cifrado"),
+     [("Capacidad", EXT_SSD_CAPACITY), ("Color", COLORS_NEUTRAL)]),
+    ("Ventiladores PC", "Ventiladores para gabinete y optimización de flujo de aire.",
+     _specs("Rango de RPM", "Flujo de aire", "Nivel de ruido", "Conector", "Rodamiento"),
+     [("Tamaño", FAN_SIZE), ("Iluminación", FAN_LIGHTING), ("Pack", FAN_PACK)]),
+    ("Pasta Térmica", "Compuestos térmicos para CPU y GPU.",
+     _specs("Conductividad térmica", "Composición", "Aplicaciones estimadas", "Aplicador"),
+     [("Contenido", THERMAL_PASTE_CONTENT)]),
+    ("Adaptadores de Red", "Adaptadores WiFi y Bluetooth USB y PCIe.",
+     _specs("Velocidad", "Bandas", "Antena", "Compatibilidad", "Bluetooth"),
+     [("Interfaz", NET_ADAPTER_INTERFACE), ("Estándar", NET_ADAPTER_STANDARD)]),
+    ("Equipos de Red", "Switches, access points y repetidores para el hogar y oficina.",
+     _specs("Puertos", "Velocidad", "Alimentación", "Gestión", "Montaje"),
+     [("Tipo", NET_DEVICE_TYPE)]),
+    ("Accesorios para Celular", "Cargadores, cables, soportes y protección para móviles.",
+     _specs("Material", "Compatibilidad", "Contenido", "Certificación"),
+     [("Tipo", PHONE_ACCESSORY_TYPE), ("Color", COLORS_NEUTRAL)]),
+    ("Smart TV", "Televisores inteligentes 4K y 8K con apps integradas.",
+     _specs("Panel", "Sistema operativo", "HDR", "Tasa de refresco", "Puertos", "Sintonizador"),
+     [("Tamaño", TV_SIZE), ("Resolución", TV_RESOLUTION)]),
+    ("Barras de Sonido", "Barras de sonido para TV y cine en casa.",
+     _specs("Potencia", "Subwoofer", "Conectividad", "Formatos de audio", "Montaje"),
+     [("Canales", SOUNDBAR_CHANNELS), ("Color", COLORS_NEUTRAL)]),
+    ("Cámaras de Seguridad", "Cámaras IP de vigilancia para interior y exterior.",
+     _specs("Tipo", "Visión nocturna", "Ángulo de visión", "Almacenamiento", "Audio", "Resistencia"),
+     [("Resolución", SECURITY_CAM_RESOLUTION), ("Conexión", SECURITY_CAM_CONNECTION)]),
+    ("Cables y Adaptadores", "Cables de video, datos y red.",
+     _specs("Material", "Velocidad", "Compatibilidad", "Blindaje"),
+     [("Longitud", CABLE_LENGTH), ("Tipo", CABLE_TYPE)]),
+    ("Hubs y Docking", "Hubs USB-C y estaciones de acoplamiento.",
+     _specs("Alimentación", "Salida de video", "Compatibilidad", "Material", "Lector de tarjetas"),
+     [("Puertos", HUB_PORTS), ("Color", COLORS_NEUTRAL)]),
+    ("UPS y Protección", "Sistemas de alimentación ininterrumpida y protección eléctrica.",
+     _specs("Potencia (W)", "Tomas", "Autonomía", "Tipo de onda", "Tiempo de respaldo"),
+     [("Capacidad", UPS_CAPACITY)]),
+    ("Soportes y Bases", "Soportes para monitor, laptop, TV y celular.",
+     _specs("Material", "Compatibilidad", "Peso soportado", "Ajustes", "Instalación"),
+     [("Tipo", STAND_TYPE), ("Color", COLORS_NEUTRAL)]),
+    ("Tarjetas de Memoria", "Tarjetas microSD y SD de alta velocidad.",
+     _specs("Clase de velocidad", "Velocidad de lectura", "Velocidad de escritura", "Aplicación", "Adaptador incluido"),
+     [("Capacidad", MEMORY_CARD_CAPACITY), ("Tipo", MEMORY_CARD_TYPE)]),
+    ("Trípodes y Estabilizadores", "Trípodes y gimbals para foto y video.",
+     _specs("Altura máxima", "Carga máxima", "Material", "Cabezal", "Peso"),
+     [("Tipo", TRIPOD_TYPE)]),
+    ("Iluminación para Video", "Paneles LED y aros de luz para creadores de contenido.",
+     _specs("Potencia", "Temperatura de color", "CRI", "Alimentación", "Montaje"),
+     [("Tipo", VIDEO_LIGHT_TYPE), ("Tamaño", VIDEO_LIGHT_SIZE)]),
+    ("Escáneres", "Escáneres de documentos y fotografía.",
+     _specs("Resolución óptica", "Velocidad", "Conectividad", "Alimentador de documentos", "Formatos"),
+     [("Tipo", SCANNER_TYPE)]),
+    ("Aspiradoras", "Aspiradoras robot, verticales y de mano.",
+     _specs("Potencia", "Capacidad", "Autonomía", "Filtro", "Nivel de ruido"),
+     [("Tipo", VACUUM_TYPE), ("Color", APPLIANCE_COLOR)]),
 ]
 
 
@@ -832,6 +924,19 @@ def _seed_product(db: Session, company, data: dict):
 
         for combo in variants_data["combos"]:
             _seed_variant(db, product, axis_attrs, combo)
+
+        db.flush()
+        live = (
+            db.query(ProductVariant)
+            .filter(
+                ProductVariant.product_id == product.id,
+                ProductVariant.deleted_at.is_(None),
+            )
+            .all()
+        )
+        if live:
+            product.price = min(variant.price for variant in live)
+            product.stock = sum(variant.stock for variant in live)
 
     db.flush()
 
@@ -1491,6 +1596,8 @@ COMPANIES = [
 
 
 def seed_companies_and_products(db: Session):
+    from app.utils.seed_products import build_extra_companies
+
     company_role = db.query(Role).filter(Role.name == "company").first()
 
     if not company_role:
@@ -1498,7 +1605,7 @@ def seed_companies_and_products(db: Session):
 
     password_hash = _seed_password_hash()
 
-    for company_data in COMPANIES:
+    for company_data in COMPANIES + build_extra_companies():
         user = db.query(Users).filter(Users.email == company_data["email"]).first()
 
         if user is None:
@@ -1621,3 +1728,4 @@ def run_seed(db: Session):
     seed_admin(db)
     seed_owner(db)
     seed_shipping_carriers(db)
+    seed_companies_and_products(db)

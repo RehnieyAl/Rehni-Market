@@ -9,15 +9,16 @@ import { ErrorCode } from "@/shared/types/ErrorCode";
 import { consumePostLoginRedirect } from "@/api/session";
 import {
   isPathAllowedForRole,
-  resolveRoleHome,
+  STORE_HOME,
 } from "@/features/public/auth/roleAccess";
 import AuthLayout from "@/features/public/auth/components/AuthLayout";
 import { Button, Input } from "@/shared/components/ui";
+import CertificateRejectedModal from "@/features/company/components/CertificateRejectedModal";
 
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
 
   const [showPassword, setShowPassword] = useState(false);
   const [form, setForm] = useState({
@@ -25,6 +26,14 @@ export default function Login() {
     password: "",
   });
   const [loading, setLoading] = useState(false);
+
+  // Empresa cuyo certificado quedó en NEEDS_UPDATE o REJECTED: credenciales
+  // correctas, pero el login NO continúa y NO se emite JWT. Se muestra este modal
+  // sobre el propio login (sin sesión ni navegación a rutas protegidas).
+  const [certReason, setCertReason] = useState<string | null>(null);
+  const [certNoticeStatus, setCertNoticeStatus] = useState<
+    "needs_update" | "rejected" | null
+  >(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -40,11 +49,19 @@ export default function Login() {
 
       await login(res);
 
+      // `login(res)` ya guardó access token, refresh token y rol; el AuthProvider
+      // resuelve el perfil (rol + permisos) en su propio efecto. Aquí solo se
+      // decide a dónde navegar.
       const requestedPath = consumePostLoginRedirect();
+
+      // Destino tras el login: SIEMPRE el Home, para cualquier rol. Los paneles
+      // siguen existiendo, pero ya no son el destino automático. La única
+      // excepción es una ruta concreta que el propio usuario intentó abrir antes
+      // de iniciar sesión (deep link guardado por RequireAuth).
       const target =
         requestedPath && isPathAllowedForRole(requestedPath, res.role)
           ? requestedPath
-          : resolveRoleHome(res.role);
+          : STORE_HOME;
 
       navigate(target, { replace: true });
     } catch (err) {
@@ -59,6 +76,21 @@ export default function Login() {
               resendAvailableIn: errorResponse.resend_available_in,
             },
           });
+        } else if (
+          errorResponse?.code === ErrorCode.COMPANY_CERTIFICATE_INVALID ||
+          errorResponse?.code === ErrorCode.COMPANY_REJECTED
+        ) {
+          // Credenciales correctas + certificado NEEDS_UPDATE / REJECTED: sin JWT,
+          // sin sesión. Se limpia cualquier sesión previa y se abre el modal.
+          logout();
+          setCertReason(
+            typeof errorResponse.reason === "string" ? errorResponse.reason : null,
+          );
+          setCertNoticeStatus(
+            errorResponse.code === ErrorCode.COMPANY_REJECTED
+              ? "rejected"
+              : "needs_update",
+          );
         }
       }
     } finally {
@@ -129,6 +161,12 @@ export default function Login() {
           Iniciar sesión
         </Button>
       </form>
+
+      <CertificateRejectedModal
+        status={certNoticeStatus}
+        reason={certReason}
+        onClose={() => setCertNoticeStatus(null)}
+      />
     </AuthLayout>
   );
 }

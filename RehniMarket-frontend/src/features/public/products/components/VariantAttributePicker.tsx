@@ -42,7 +42,7 @@ export default function VariantAttributePicker({
 
         return (
           <div key={axis.name}>
-            <h3 className="mb-2 text-sm font-semibold text-gray-900">
+            <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-ink">
               {axis.name}
               {chosen ? `: ${chosen}` : ""}
             </h3>
@@ -83,10 +83,10 @@ export default function VariantAttributePicker({
                     onClick={() => onChange(axis.name, value)}
                     className={`rounded-control border px-3.5 py-2 text-sm font-medium transition ${
                       !available
-                        ? "cursor-not-allowed border-gray-200 text-gray-300 line-through"
+                        ? "cursor-not-allowed border-gray-200 text-gray-300 line-through dark:border-hairline dark:text-white/25"
                         : isSelected
-                          ? "border-primary bg-primary text-primary-fg"
-                          : "border-gray-300 text-gray-700 hover:border-gray-400"
+                          ? "border-primary bg-primary text-primary-fg dark:border-brand-400"
+                          : "border-gray-300 text-gray-700 hover:border-gray-400 dark:border-white/25 dark:text-ink dark:hover:border-white/45"
                     }`}
                   >
                     {value}

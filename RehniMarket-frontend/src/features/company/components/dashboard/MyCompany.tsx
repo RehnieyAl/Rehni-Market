@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Upload, Download, Pencil, Save, X, UserRound } from "lucide-react";
+import { Upload, Download, Pencil, Save, X, UserRound, FileText, ShieldAlert } from "lucide-react";
 
 import { Badge, Button, Input, Skeleton, Textarea } from "@/shared/components/ui";
 import { buttonClasses } from "@/shared/components/ui/buttonVariants";
@@ -378,6 +378,73 @@ export default function Company() {
           </div>
         )}
       </section>
+
+      {company && (
+        <section className="mt-8 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-brand-50 text-primary">
+              <FileText size={18} />
+            </span>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Certificado empresarial</h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Estado de la verificación de tu empresa en RehniMarket.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <Badge
+              tone={
+                company.certificateStatus === "approved"
+                  ? "success"
+                  : company.certificateStatus === "rejected"
+                    ? "danger"
+                    : "warning"
+              }
+              dot
+            >
+              {company.certificateStatus === "approved"
+                ? "Aprobado"
+                : company.certificateStatus === "rejected"
+                  ? "Empresa rechazada"
+                  : company.certificateStatus === "needs_update"
+                    ? "Certificado no válido"
+                    : "Pendiente de revisión"}
+            </Badge>
+
+            {(company.certificateStatus === "rejected" ||
+              company.certificateStatus === "needs_update") && (
+              <div className="mt-4 rounded-card border border-danger/30 bg-danger-bg p-4">
+                <p className="flex items-center gap-1.5 text-sm font-semibold text-danger">
+                  <ShieldAlert size={16} />
+                  Motivo del rechazo
+                </p>
+                <p className="mt-1 whitespace-pre-line text-sm text-gray-700">
+                  {company.rejectionReason?.trim()
+                    ? company.rejectionReason.trim()
+                    : "El administrador no registró un motivo. Escribe a soporte de RehniMarket si necesitas más detalle."}
+                </p>
+
+                {company.certificateStatus === "needs_update" ? (
+                  <Link
+                    to="/actualizar-certificado"
+                    className={buttonClasses({ className: "mt-4", size: "sm" })}
+                  >
+                    <Upload size={15} />
+                    Actualizar certificado
+                  </Link>
+                ) : (
+                  <p className="mt-3 text-xs text-gray-500">
+                    Este rechazo no se resuelve subiendo un nuevo certificado. Contacta con
+                    soporte de RehniMarket para que un administrador revise tu caso.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       <section className="mt-8 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-3">

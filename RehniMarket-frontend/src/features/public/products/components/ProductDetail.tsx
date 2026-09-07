@@ -11,6 +11,8 @@ import ProductRatingBadge from "./ProductRatingBadge";
 import ProductPrice from "./ProductPrice";
 import ProductTaxLine from "./ProductTaxLine";
 import ProductTabs from "./ProductTabs";
+import ProductTrustCards from "./ProductTrustCards";
+import ProductFaq from "./ProductFaq";
 import RelatedProducts from "./RelatedProducts";
 import VariantAttributePicker from "./VariantAttributePicker";
 import { deriveVariantAxes, firstLiveVariant, resolveVariant } from "../utils/variantAxes";
@@ -227,7 +229,7 @@ export default function ProductDetail() {
 
   if (notFound || !product) {
     return (
-      <div className="mx-auto w-full max-w-2xl px-4 py-16">
+      <div className="theme-dark mx-auto w-full max-w-2xl px-4 py-16">
         <EmptyState
           icon={<PackageX size={22} />}
           title="No encontramos este producto"
@@ -244,18 +246,18 @@ export default function ProductDetail() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-2 py-6 sm:px-4 sm:py-8 lg:px-8">
+    <div className="theme-dark mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-2 py-6 text-ink sm:px-4 sm:py-8 lg:px-8">
       <Link
         to="/products"
-        className="mb-6 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900"
+        className="mb-6 inline-flex items-center gap-2 text-sm text-ink-muted transition hover:text-ink"
       >
         <ChevronLeft size={16} />
         Volver a productos
       </Link>
 
-      <div className="overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
+      <div className="overflow-hidden rounded-card border border-hairline bg-surface-1 shadow-pop">
         <div className="grid items-stretch lg:grid-cols-2">
-          <div className="border-b border-gray-100 p-4 sm:p-6 lg:border-b-0 lg:border-r">
+          <div className="border-b border-hairline p-4 sm:p-6 lg:border-b-0 lg:border-r">
             <ProductGallery
               images={images}
               productName={product.name}
@@ -265,12 +267,12 @@ export default function ProductDetail() {
           </div>
 
           <div className="p-4 sm:p-6 lg:p-8">
-            <p className="text-sm font-medium uppercase tracking-wide text-primary">
+            <p className="text-sm font-medium uppercase tracking-wide text-brand-400">
               {product.catalog_name}
             </p>
 
             <div className="mt-1 flex items-start justify-between gap-3">
-              <h1 className="text-3xl font-bold leading-tight text-gray-900">
+              <h1 className="text-3xl font-bold leading-tight text-ink">
                 {product.name}
               </h1>
 
@@ -278,7 +280,7 @@ export default function ProductDetail() {
                 <button
                   type="button"
                   onClick={handleReportClick}
-                  className="mt-1 flex shrink-0 items-center gap-1.5 text-xs font-medium text-gray-400 transition hover:text-danger"
+                  className="mt-1 flex shrink-0 items-center gap-1.5 text-xs font-medium text-ink-muted transition hover:text-danger"
                   title="Reportar producto"
                 >
                   <Flag size={14} />
@@ -292,9 +294,9 @@ export default function ProductDetail() {
               reviewCount={product.review_count}
             />
 
-            <div className="mt-4">
+            <div className="mt-4 rounded-card border border-hairline bg-surface-2 p-4">
               {requiresVariant && !activeVariant && (
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
                   Desde
                 </p>
               )}
@@ -331,25 +333,27 @@ export default function ProductDetail() {
             )}
 
             <div className="mt-6">
-              <h3 className="mb-2 text-sm font-semibold text-gray-900">Cantidad</h3>
+              <h3 className="mb-2 text-sm font-semibold text-ink">Cantidad</h3>
 
-              <div className="flex w-fit items-center overflow-hidden rounded-control border border-gray-300">
+              <div className="flex w-fit items-center overflow-hidden rounded-control border border-hairline bg-surface-2">
                 <button
                   type="button"
                   aria-label="Disminuir cantidad"
-                  className="flex h-11 w-11 items-center justify-center text-lg text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
+                  className="flex h-11 w-11 items-center justify-center text-lg text-ink-muted transition hover:bg-white/5 hover:text-ink disabled:opacity-40"
                   onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
                   disabled={quantity <= 1}
                 >
                   −
                 </button>
 
-                <span className="w-12 text-center text-sm font-medium tabular-nums">{quantity}</span>
+                <span className="w-12 text-center text-sm font-medium tabular-nums text-ink">
+                  {quantity}
+                </span>
 
                 <button
                   type="button"
                   aria-label="Aumentar cantidad"
-                  className="flex h-11 w-11 items-center justify-center text-lg text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
+                  className="flex h-11 w-11 items-center justify-center text-lg text-ink-muted transition hover:bg-white/5 hover:text-ink disabled:opacity-40"
                   onClick={() => setQuantity((prev) => Math.min(stock || 1, prev + 1))}
                   disabled={stock > 0 && quantity >= stock}
                 >
@@ -358,14 +362,14 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            <p className="mt-4 text-sm">
+            <p className="mt-4 flex items-center gap-2 text-sm">
               {invalidCombination ? (
                 <span className="font-semibold text-danger">
                   Esa combinación no está disponible.
                 </span>
               ) : requiresVariant && !allAxesChosen ? (
                 anyVariantInStock ? (
-                  <span className="text-gray-500">
+                  <span className="text-ink-muted">
                     Selecciona una opción para ver el stock disponible.
                   </span>
                 ) : (
@@ -373,8 +377,9 @@ export default function ProductDetail() {
                 )
               ) : stock > 0 ? (
                 <>
-                  <span className="text-gray-500">Stock disponible: </span>
-                  <span className="font-semibold text-success">{stock} unidades</span>
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-stock" />
+                  <span className="text-ink-muted">En stock · </span>
+                  <span className="font-semibold text-stock">{stock} unidades disponibles</span>
                 </>
               ) : (
                 <span className="font-semibold text-danger">Sin stock</span>
@@ -382,9 +387,9 @@ export default function ProductDetail() {
             </p>
 
             {activeVariant?.sku && (
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 text-sm text-ink-muted">
                 SKU:{" "}
-                <span className="font-medium text-gray-700">{activeVariant.sku}</span>
+                <span className="font-medium text-ink">{activeVariant.sku}</span>
               </p>
             )}
 
@@ -408,18 +413,17 @@ export default function ProductDetail() {
                     {addingToCart ? "Agregando…" : "Agregar al carrito"}
                   </Button>
 
-                  <Button
-                    size="lg"
-                    fullWidth
-                    variant="outline"
+                  <button
+                    type="button"
                     onClick={() => handleAddToCart(true)}
                     disabled={addingToCart || !canAddToCart || stock <= 0}
+                    className="flex h-12 w-full items-center justify-center rounded-control border border-white/20 text-sm font-medium text-ink transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Comprar ahora
-                  </Button>
+                  </button>
                 </>
               ) : (
-                <p className="rounded-control border border-dashed border-gray-300 bg-gray-50 py-4 text-center text-sm text-gray-500">
+                <p className="rounded-control border border-dashed border-white/15 bg-surface-2 py-4 text-center text-sm text-ink-muted">
                   Las cuentas de empresa o administración no pueden realizar compras.
                 </p>
               )}
@@ -428,7 +432,9 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      <div className="mt-12">
+      <ProductTrustCards isVerified={product.company_is_verified} />
+
+      <div className="mt-10">
         <ProductTabs
           description={product.descripcion}
           attributes={attributePairs}
@@ -444,6 +450,8 @@ export default function ProductDetail() {
           distribution={product.rating_distribution}
         />
       </section>
+
+      <ProductFaq />
 
       <RelatedProducts catalogId={product.catalog_id} excludeProductId={product.id} />
 

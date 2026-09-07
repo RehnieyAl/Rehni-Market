@@ -54,8 +54,8 @@ async def lifespan(app):
 app = FastAPI(
     lifespan=lifespan,
     title="RehniMarket API",
-    version="2.4.0",
-    description="API REST del marketplace RehniMarket. Documentación técnica: docs/MANUAL_TECNICO_REHNIMARKET.md",
+    version="2.6.0",
+    description="API REST del marketplace RehniMarket",
 )
 
 

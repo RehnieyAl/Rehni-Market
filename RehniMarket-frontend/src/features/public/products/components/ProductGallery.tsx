@@ -29,10 +29,10 @@ export default function ProductGallery({
                 onClick={() => onSelect(image.url)}
                 aria-label={`Ver imagen ${productName}`}
                 aria-current={isActive}
-                className={`h-20 w-20 shrink-0 overflow-hidden rounded-card border-2 bg-white transition ${
+                className={`h-20 w-20 shrink-0 overflow-hidden rounded-card border-2 bg-white transition dark:bg-surface-2 ${
                   isActive
                     ? "border-primary ring-2 ring-brand-600/20"
-                    : "border-gray-200 hover:border-gray-300"
+                    : "border-gray-200 hover:border-gray-300 dark:border-hairline dark:hover:border-white/25"
                 }`}
               >
                 <img src={image.url} alt="" className="h-full w-full object-cover" />
@@ -42,7 +42,7 @@ export default function ProductGallery({
         </div>
       )}
 
-      <div className="order-1 flex h-[320px] items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 p-6 sm:order-2 sm:h-[380px] sm:flex-1 lg:h-[560px]">
+      <div className="order-1 flex h-[320px] items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 p-6 dark:border-hairline dark:bg-surface-2 sm:order-2 sm:h-[380px] sm:flex-1 lg:h-[560px]">
         {selectedUrl ? (
           <img
             src={selectedUrl}
@@ -50,7 +50,7 @@ export default function ProductGallery({
             className="h-full w-full object-contain"
           />
         ) : (
-          <ImageOff size={48} className="text-gray-300" />
+          <ImageOff size={48} className="text-gray-300 dark:text-ink-muted" />
         )}
       </div>
     </div>

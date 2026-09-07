@@ -11,6 +11,7 @@ PUBLIC_ROUTES = [
     "/auth/refresh",
     "/auth/logout",
     "/media/proxy",
+    "/company/certificate/update",
     "/docs",
     "/openapi.json",
     "/public/catalogs",

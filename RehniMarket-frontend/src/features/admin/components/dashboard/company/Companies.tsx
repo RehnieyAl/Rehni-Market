@@ -313,6 +313,9 @@ export default function Companies() {
       case "rejected":
         return "Rechazadas";
 
+      case "needs_update":
+        return "Certificado inválido";
+
       case "approved":
         return "Aprobadas";
 
@@ -359,6 +362,7 @@ export default function Companies() {
           >
             <option value="all">Todas</option>
             <option value="pending">Pendientes</option>
+            <option value="needs_update">Certificado inválido</option>
             <option value="rejected">Rechazadas</option>
             <option value="approved">Aprobadas</option>
           </Select>
@@ -667,10 +671,14 @@ function CertificateStatus({
 }: {
   status: CompanyCertificateStatus;
 }) {
-  const config = {
-    pending: { text: "Pendiente", tone: "warning" as const },
-    approved: { text: "Aprobado", tone: "success" as const },
-    rejected: { text: "Rechazado", tone: "danger" as const },
+  const config: Record<
+    CompanyCertificateStatus,
+    { text: string; tone: "warning" | "success" | "danger" }
+  > = {
+    pending: { text: "Pendiente", tone: "warning" },
+    approved: { text: "Aprobado", tone: "success" },
+    rejected: { text: "Rechazado", tone: "danger" },
+    needs_update: { text: "Certificado inválido", tone: "danger" },
   };
 
   const current = config[status];

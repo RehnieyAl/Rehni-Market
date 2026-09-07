@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* `dark:` se activa SOLO dentro de un contenedor con .theme-dark (detalle de producto,
+   paneles de devoluciones). No hay theme global ni switch de sistema. */
+@custom-variant dark (&:where(.theme-dark, .theme-dark *));
+
 @theme {
   --font-sans:
     "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif,
@@ -26,6 +30,17 @@
   --color-danger-bg: #fef2f2;
   --color-info: #1d4ed8;
   --color-info-bg: #eff6ff;
+
+  /* Superficies oscuras: detalle de producto (ruta pública) y paneles de
+     devoluciones. NO es un theme global; se usan con clases bg-surface-* / text-ink. */
+  --color-surface-0: #17181c;
+  --color-surface-1: #1f2024;
+  --color-surface-2: #26272c;
+  --color-hairline: rgba(255, 255, 255, 0.08);
+  --color-ink: #f4f4f5;
+  --color-ink-muted: #a1a1aa;
+  --color-stock: #4ade80;
+
   --radius-control: 0.7rem;
   --radius-card: 1rem;
   --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 3px 0 rgb(0 0 0 / 0.06);

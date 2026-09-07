@@ -32,6 +32,7 @@ def _media_url(object_name: str | None) -> str | None:
 from app.services.email.template.EmailStatusCertificate import (
     EmailCertificateApproved,
     EmailCertificateRejected,
+    EmailCertificateNeedsUpdate,
 )
 
 from app.services.email.template.EmailStatusCompany import (
@@ -144,21 +145,28 @@ def get_all_companies_service(
 
         elif (
             last_company.CompanyCertificateStatus
-            == CompanyCertificateEnum.REJECTED
+            == CompanyCertificateEnum.NEEDS_UPDATE
         ):
 
             status_order = 2
 
         elif (
             last_company.CompanyCertificateStatus
-            == CompanyCertificateEnum.APPROVED
+            == CompanyCertificateEnum.REJECTED
         ):
 
             status_order = 3
 
-        else:
+        elif (
+            last_company.CompanyCertificateStatus
+            == CompanyCertificateEnum.APPROVED
+        ):
 
             status_order = 4
+
+        else:
+
+            status_order = 5
 
         cursor_data = {
             "status_order": status_order,
@@ -189,6 +197,7 @@ def get_all_companies_service(
             CompanyCertificateStatus=company.CompanyCertificateStatus,
             CompanyStatus=company.CompanyStatus,
             suspensionReason=company.suspension_reason,
+            rejectionReason=company.rejection_reason,
             addressCompany=company.addressCompany,
             user_id=company.user_id,
             created_at=company.created_at,
@@ -229,6 +238,7 @@ def update_certificate_status_service(
     status: str,
     database: Session,
     admin_id: UUID,
+    reason: str | None = None,
 ):
 
     try:
@@ -237,6 +247,7 @@ def update_certificate_status_service(
             "pending",
             "approved",
             "rejected",
+            "needs_update",
         ):
 
             api_error(
@@ -245,10 +256,25 @@ def update_certificate_status_service(
                 "Estado de certificado inválido.",
             )
 
+        reason_clean = reason.strip() if reason else None
+
+        # Tanto el rechazo terminal como "certificado inválido" exigen motivo: se le
+        # muestra a la empresa.
+        requires_reason = status in ("rejected", "needs_update")
+
+        if requires_reason and not reason_clean:
+
+            api_error(
+                400,
+                ErrorCodes.MISSING_REQUIRED_FIELD,
+                "El motivo es obligatorio.",
+            )
+
         company = update_certificate_status(
             database=database,
             company_id=company_id,
             status=status,
+            reason=reason_clean,
         )
 
         if company is None:
@@ -275,8 +301,23 @@ def update_certificate_status_service(
             EmailCertificateRejected(
                 to_email=company.user.email,
                 company_name=company.nameCompany,
+                reason=reason_clean,
             )
 
+            action = (
+                AdminActivityAction.COMPANY_REJECTED
+            )
+
+        elif status == "needs_update":
+
+            EmailCertificateNeedsUpdate(
+                to_email=company.user.email,
+                company_name=company.nameCompany,
+                reason=reason_clean,
+            )
+
+            # No hay una acción propia en el enum admin_activity_action: se registra
+            # como COMPANY_REJECTED (el motivo distingue el caso).
             action = (
                 AdminActivityAction.COMPANY_REJECTED
             )
@@ -291,6 +332,7 @@ def update_certificate_status_service(
                 admin_id=admin_id,
                 action=action,
                 target_company_id=company.id,
+                reason=reason_clean if requires_reason else None,
             )
 
         database.commit()
@@ -306,6 +348,7 @@ def update_certificate_status_service(
             "certificate_status": (
                 company.CompanyCertificateStatus
             ),
+            "rejection_reason": company.rejection_reason,
         }
 
     except Exception:
@@ -429,6 +472,7 @@ def update_company_status_service(
             CompanyCertificateStatus=company.CompanyCertificateStatus,
             CompanyStatus=company.CompanyStatus,
             suspensionReason=company.suspension_reason,
+            rejectionReason=company.rejection_reason,
             addressCompany=company.addressCompany,
             user_id=company.user_id,
             created_at=company.created_at,
