@@ -26,5 +26,5 @@ yarn-error.*
 
 .env
 .env.*.local
-
+.claude
 *.tsbuildinfo
