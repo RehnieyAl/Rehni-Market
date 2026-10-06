@@ -1,6 +1,6 @@
 export default function BankAccountCardSkeleton() {
   return (
-    <div className="animate-pulse rounded-card border border-gray-200 bg-white p-5">
+    <div className="animate-pulse rounded-card border border-gray-200 bg-surface-1 p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-2">
           <div className="h-4 w-36 rounded bg-gray-200" />

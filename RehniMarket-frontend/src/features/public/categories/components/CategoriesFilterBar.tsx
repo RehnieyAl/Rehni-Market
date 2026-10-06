@@ -26,7 +26,7 @@ export default function CategoriesFilterBar({
   onSortChange,
 }: CategoriesFilterBarProps) {
   return (
-    <div className="flex flex-col gap-3 rounded-card border border-gray-200 bg-white p-4 shadow-card sm:flex-row sm:items-center sm:gap-4">
+    <div className="flex flex-col gap-3 rounded-card border border-gray-200 bg-surface-1 p-4 shadow-card sm:flex-row sm:items-center sm:gap-4">
       <Input
         className="flex-1"
         type="search"

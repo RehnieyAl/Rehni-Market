@@ -47,7 +47,7 @@ export default function ReviewForm({ productId, onCreated }: ReviewFormProps) {
   };
 
   return (
-    <div className="rounded-card border border-gray-200 bg-white p-4 dark:border-hairline dark:bg-surface-1">
+    <div className="rounded-card border border-gray-200 bg-surface-1 p-4 dark:border-hairline dark:bg-surface-1">
       <p className="mb-2 text-sm font-medium text-gray-900 dark:text-ink">Escribe tu reseña</p>
 
       <StarRating value={rating} onChange={setRating} size={24} />

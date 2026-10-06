@@ -259,7 +259,7 @@ export default function CompanyProfile() {
         />
 
         <div className="relative flex flex-col gap-5 p-6 sm:min-h-[300px] sm:flex-row sm:items-center sm:gap-8 sm:p-8 lg:min-h-[320px] lg:gap-10 lg:p-12">
-          <div className="h-24 w-24 shrink-0 overflow-hidden rounded-card border-4 border-white bg-white shadow-pop sm:h-32 sm:w-32 lg:h-40 lg:w-40">
+          <div className="h-24 w-24 shrink-0 overflow-hidden rounded-card border-4 border-white bg-surface-1 shadow-pop sm:h-32 sm:w-32 lg:h-40 lg:w-40">
             <img
               src={company.logo_url || defaultLogo}
               alt={`Logo de ${company.name}`}
@@ -345,7 +345,7 @@ export default function CompanyProfile() {
           <div className="grid gap-8 lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-10 xl:grid-cols-[17rem_minmax(0,1fr)]">
             <aside className="order-2 space-y-4 lg:order-1 lg:sticky lg:top-6 lg:self-start">
               {showCategoryCard && (
-                <div className="rounded-card border border-gray-200 bg-white p-5 shadow-card">
+                <div className="rounded-card border border-gray-200 bg-surface-1 p-5 shadow-card">
                   <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
                     <Tag size={15} className="text-gray-400" />
                     Categorías de la tienda
@@ -371,7 +371,7 @@ export default function CompanyProfile() {
                 </div>
               )}
 
-              <div className="rounded-card border border-gray-200 bg-white p-5 shadow-card">
+              <div className="rounded-card border border-gray-200 bg-surface-1 p-5 shadow-card">
                 <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
                   <Store size={15} className="text-gray-400" />
                   Sobre {company.name}
@@ -449,7 +449,7 @@ export default function CompanyProfile() {
         )}
 
         {activeTab === "informacion" && (
-          <div className="max-w-2xl rounded-card border border-gray-200 bg-white p-5 shadow-card sm:p-6">
+          <div className="max-w-2xl rounded-card border border-gray-200 bg-surface-1 p-5 shadow-card sm:p-6">
             <h2 className="text-lg font-bold text-gray-900">
               Información de la tienda
             </h2>
@@ -506,7 +506,7 @@ export default function CompanyProfile() {
                 description="Las reseñas de los productos de esta tienda aparecerán aquí cuando sus clientes las publiquen."
               />
             ) : (
-              <div className="rounded-card border border-gray-200 bg-white p-6 shadow-card">
+              <div className="rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card">
                 <div className="inline-flex items-center gap-2">
                   <Star size={22} className="fill-amber-400 text-amber-400" />
                   <span className="text-2xl font-bold text-gray-900">

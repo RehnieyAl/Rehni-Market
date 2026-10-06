@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { LogOut, ArrowLeft, PanelLeftClose, PanelLeft, X } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import logo from "@/assets/logo.png";
 import { useAuth } from "@/features/public/auth/context/useAuth";
@@ -29,18 +29,17 @@ export default function SidebarNav({
   onToggleCollapse,
   onClose,
 }: SidebarNavProps) {
-  const navigate = useNavigate();
   const { logout } = useAuth();
 
   const rail = collapsed && !onClose;
 
   const handleLogout = () => {
     logout();
-    navigate("/login", { replace: true });
+    window.location.replace("/");
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-white">
+    <div className="flex h-full min-h-0 flex-col bg-surface-1">
       <div
         className={cn(
           "flex h-16 items-center gap-2 border-b border-gray-100 px-3",

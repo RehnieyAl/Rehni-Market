@@ -98,7 +98,7 @@ export default function ShippingCarriers() {
         </Button>
       </div>
 
-      <section className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
+      <section className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-gray-200 bg-surface-1 shadow-card">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px]">
             <thead>

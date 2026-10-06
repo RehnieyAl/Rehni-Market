@@ -25,7 +25,7 @@ export default function MobileAppNotice() {
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/95 px-4 py-2.5 shadow-pop backdrop-blur lg:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-surface-1/95 px-4 py-2.5 shadow-pop backdrop-blur lg:hidden">
       <div className="mx-auto flex max-w-md items-center gap-3">
         <Smartphone size={18} className="shrink-0 text-primary" />
 

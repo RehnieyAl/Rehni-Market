@@ -61,7 +61,7 @@ export default function CartView() {
       ) : (
         <div className="mt-8 grid items-start gap-8 lg:grid-cols-[1fr_340px]">
           <div className="space-y-4">
-            <ul className="divide-y divide-gray-100 overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
+            <ul className="divide-y divide-gray-100 overflow-hidden rounded-card border border-gray-200 bg-surface-1 shadow-card">
               {items.map((item) => {
                 const outOfStock = item.availableStock <= 0;
                 const exceedsStock = cartItemExceedsStock(item);
@@ -236,7 +236,7 @@ export default function CartView() {
             </button>
           </div>
 
-          <div className="rounded-card border border-gray-200 bg-white p-6 shadow-card lg:sticky lg:top-6">
+          <div className="rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card lg:sticky lg:top-6">
             <h2 className="font-semibold text-gray-900">Resumen</h2>
 
             <dl className="mt-4 space-y-2 text-sm">

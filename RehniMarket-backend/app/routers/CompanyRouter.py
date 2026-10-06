@@ -140,10 +140,6 @@ def replace_certificate(
     nas: NasService = Depends(get_nas_service),
     database: Session = Depends(get_db),
 ):
-    """Reemplaza el certificado de la empresa autenticada (request.state.user_id, el
-    mismo JWT del login normal). Solo permitido mientras el certificado esté
-    NEEDS_UPDATE (el admin lo marcó como inválido). REJECTED (rechazo terminal) ->
-    409 COMPANY_REJECTED. Ver replace_company_certificate_service."""
 
     user_id = request.state.user_id
 
@@ -163,14 +159,6 @@ def update_certificate_with_credentials(
     nas: NasService = Depends(get_nas_service),
     database: Session = Depends(get_db),
 ):
-    """Actualiza el certificado de una empresa cuyo certificado fue marcado como
-    **inválido** (`NEEDS_UPDATE`) identificándola por **correo + contraseña**
-    (multipart/form-data). Endpoint público: NO usa JWT, no emite tokens ni abre
-    sesión, no guarda las credenciales y no acepta `company_id` (la empresa se
-    resuelve solo desde las credenciales). En caso correcto:
-    `NEEDS_UPDATE -> PENDING`, `rejection_reason -> NULL`, sin aprobación automática.
-    Una empresa con rechazo terminal (`REJECTED`) -> `409 COMPANY_REJECTED`.
-    Es un flujo independiente del login normal del dashboard."""
 
     update_certificate_with_credentials_service(
         email=email,
@@ -601,7 +589,7 @@ def get_company_returns(
     search: str | None = Query(None),
     database: Session = Depends(get_db),
 ):
-    """Solicitudes de devolución de los pedidos de ESTA empresa (scope por company_id)."""
+    
 
     return list_company_returns_service(
         user_id=request.state.user_id,
@@ -631,8 +619,6 @@ def decide_company_return(
     data: ReturnDecisionRequest,
     database: Session = Depends(get_db),
 ):
-    """La empresa aprueba o rechaza la devolución. Al aprobar se reintegran las RehniCoin
-    al comprador. Al rechazar, `reason` es obligatorio."""
 
     return decide_return_service(
         user_id=request.state.user_id,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import HomeProductCarousel from "./HomeProductCarousel";
 
@@ -6,15 +6,23 @@ import type { PublicProductCard } from "../types/response";
 
 interface HomeProductSectionProps {
   title: string;
+  subtitle?: string;
+  icon?: ReactNode;
+  badge?: string;
   viewAllHref: string;
   emptyMessage: string;
+  cardKind?: "new" | "offer";
   fetchProducts: () => Promise<PublicProductCard[]>;
 }
 
 export default function HomeProductSection({
   title,
+  subtitle,
+  icon,
+  badge,
   viewAllHref,
   emptyMessage,
+  cardKind,
   fetchProducts,
 }: HomeProductSectionProps) {
   const [products, setProducts] = useState<PublicProductCard[]>([]);
@@ -50,11 +58,15 @@ export default function HomeProductSection({
   return (
     <HomeProductCarousel
       title={title}
+      subtitle={subtitle}
+      icon={icon}
+      badge={badge}
       viewAllHref={viewAllHref}
       products={products}
       loading={loading}
       failed={failed}
       emptyMessage={emptyMessage}
+      cardKind={cardKind}
     />
   );
 }

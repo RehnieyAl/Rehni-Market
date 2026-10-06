@@ -52,15 +52,17 @@ const NAV_ITEMS: {
 ];
 
 const desktopLinkClass = (active: boolean) =>
-  `relative py-1 transition hover:text-primary ${
+  `relative py-1 transition hover:text-primary dark:hover:text-accent ${
     active
-      ? "text-primary after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:bg-primary"
-      : "text-gray-700"
+      ? "text-primary after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:bg-primary dark:text-accent dark:after:bg-accent"
+      : "text-gray-700 dark:text-ink-muted"
   }`;
 
 const mobileLinkClass = (active: boolean) =>
   `rounded-control px-4 py-3.5 text-sm font-medium transition ${
-    active ? "bg-brand-50 text-primary" : "text-gray-800 hover:bg-gray-50"
+    active
+      ? "bg-brand-50 text-primary dark:bg-accent/15 dark:text-accent"
+      : "text-gray-800 hover:bg-gray-50 dark:text-ink dark:hover:bg-white/5"
   }`;
 
 export default function Navbar() {
@@ -187,18 +189,18 @@ export default function Navbar() {
     if (!showDropdown) return null;
 
     return (
-      <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-96 overflow-y-auto rounded-card border border-gray-200 bg-white shadow-pop">
+      <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-96 overflow-y-auto rounded-card border border-gray-200 bg-surface-1 shadow-pop dark:border-hairline dark:bg-surface-1">
         {searching ? (
-          <div className="p-4 text-sm text-gray-500">Buscando…</div>
+          <div className="p-4 text-sm text-gray-500 dark:text-ink-muted">Buscando…</div>
         ) : searchResults.length === 0 ? (
-          <div className="p-4 text-sm text-gray-500">No se encontraron productos</div>
+          <div className="p-4 text-sm text-gray-500 dark:text-ink-muted">No se encontraron productos</div>
         ) : (
           searchResults.map((product) => (
             <button
               key={product.id}
               type="button"
               onClick={() => handleSelectResult(product.id)}
-              className="flex w-full items-center gap-3 border-b border-gray-100 p-3 text-left transition last:border-b-0 hover:bg-gray-50"
+              className="flex w-full items-center gap-3 border-b border-gray-100 p-3 text-left transition last:border-b-0 hover:bg-gray-50 dark:border-hairline dark:hover:bg-white/5"
             >
               {product.image ? (
                 <img
@@ -207,22 +209,22 @@ export default function Navbar() {
                   className="h-12 w-12 shrink-0 rounded-lg object-cover"
                 />
               ) : (
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-300">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-300 dark:bg-surface-2 dark:text-ink-muted">
                   <ImageOff size={18} />
                 </div>
               )}
 
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-gray-900">
+                <p className="truncate text-sm font-medium text-gray-900 dark:text-ink">
                   {product.name}
                 </p>
 
-                <p className="truncate text-xs text-gray-500">
+                <p className="truncate text-xs text-gray-500 dark:text-ink-muted">
                   {product.company_name}
                 </p>
               </div>
 
-              <span className="shrink-0 text-sm font-semibold text-primary">
+              <span className="shrink-0 text-sm font-semibold text-primary dark:text-accent">
                 {formatPrice(product.discount_enabled ? product.final_price : product.price)}
               </span>
             </button>
@@ -233,7 +235,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-white">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-surface-1 dark:border-hairline dark:bg-surface-1/95 dark:backdrop-blur">
       <div className="mx-auto flex h-16 max-w-[clamp(1280px,90vw,1600px)] items-center gap-3 px-3 sm:h-20 sm:gap-4 sm:px-4 lg:px-8">
 
         <div className="flex shrink-0 items-center gap-6 xl:gap-10">
@@ -274,15 +276,18 @@ export default function Navbar() {
                 handleSearch();
               }
             }}
-            placeholder="Buscar productos…"
-            className="w-full rounded-full bg-gray-100 py-2.5 pl-5 pr-11 text-sm text-gray-700 outline-none transition focus:bg-white focus:ring-2 focus:ring-brand-600/30"
+            placeholder="Buscar productos, marcas o categorías…"
+            className="w-full rounded-full bg-gray-100 py-2.5 pl-5 pr-12 text-sm text-gray-700 outline-none transition focus:bg-surface-1 focus:ring-2 focus:ring-brand-600/30 dark:bg-surface-2 dark:text-ink dark:placeholder:text-ink-muted dark:focus:bg-surface-2 dark:focus:ring-accent/40"
           />
 
-          <Search
-            size={18}
+          <button
+            type="button"
             onClick={handleSearch}
-            className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400"
-          />
+            aria-label="Buscar"
+            className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition hover:text-primary dark:bg-accent dark:text-white dark:hover:bg-accent-hover"
+          >
+            <Search size={17} />
+          </button>
 
           {renderSearchDropdown()}
         </div>
@@ -291,7 +296,7 @@ export default function Navbar() {
           {isBuyer && (
             <Link
               to="/user/dashboard?tab=favorites"
-              className="rounded-control p-2 text-gray-600 transition hover:bg-gray-100 hover:text-primary"
+              className="rounded-control p-2 text-gray-600 transition hover:bg-gray-100 hover:text-primary dark:text-ink-muted dark:hover:bg-white/5 dark:hover:text-accent"
               aria-label="Mis favoritos"
             >
               <Heart size={22} />
@@ -301,13 +306,13 @@ export default function Navbar() {
           {isBuyer && (
             <Link
               to="/cart"
-              className="relative rounded-control p-2 text-gray-600 transition hover:bg-gray-100 hover:text-primary"
+              className="relative rounded-control p-2 text-gray-600 transition hover:bg-gray-100 hover:text-primary dark:text-ink-muted dark:hover:bg-white/5 dark:hover:text-accent"
               aria-label="Mi carrito"
             >
               <ShoppingCart size={22} />
 
               {!!cart?.totalItems && (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-[10px] font-bold text-white">
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-[10px] font-bold text-white dark:bg-accent">
                   {cart.totalItems}
                 </span>
               )}
@@ -316,13 +321,13 @@ export default function Navbar() {
 
           {role == null ? (
             <>
-              <Link to="/login" className="font-medium">
+              <Link to="/login" className="font-medium dark:text-ink dark:hover:text-accent">
                 Iniciar sesión
               </Link>
 
               <Link
                 to="/register-user"
-                className="rounded-control bg-primary px-6 py-3 text-primary-fg transition hover:bg-primary-hover"
+                className="rounded-control bg-primary px-6 py-3 text-primary-fg transition hover:bg-primary-hover dark:bg-accent dark:hover:bg-accent-hover"
               >
                 Registrarse
               </Link>
@@ -337,7 +342,7 @@ export default function Navbar() {
           aria-label={open ? "Cerrar menú" : "Abrir menú"}
           aria-expanded={open}
           aria-controls="mobile-menu"
-          className="-mr-1 ml-auto rounded-control p-2 text-gray-700 transition hover:bg-gray-100 lg:hidden"
+          className="-mr-1 ml-auto rounded-control p-2 text-gray-700 transition hover:bg-gray-100 dark:text-ink dark:hover:bg-white/5 lg:hidden"
         >
           {open ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -347,7 +352,7 @@ export default function Navbar() {
       {open && (
         <div
           id="mobile-menu"
-          className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-gray-200 bg-white lg:hidden"
+          className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-gray-200 bg-surface-1 dark:border-hairline dark:bg-surface-1 lg:hidden"
         >
           <div className="p-5">
 
@@ -364,14 +369,14 @@ export default function Navbar() {
                     handleSearch();
                   }
                 }}
-                placeholder="Buscar productos…"
-                className="w-full rounded-control border border-gray-200 bg-gray-50 py-3 pl-4 pr-11 text-sm outline-none transition focus:border-brand-600 focus:bg-white"
+                placeholder="Buscar productos, marcas o categorías…"
+                className="w-full rounded-control border border-gray-200 bg-gray-50 py-3 pl-4 pr-11 text-sm outline-none transition focus:border-brand-600 focus:bg-surface-1 dark:border-hairline dark:bg-surface-2 dark:text-ink dark:placeholder:text-ink-muted dark:focus:border-accent"
               />
 
               <Search
                 size={18}
                 onClick={handleSearch}
-                className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400"
+                className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 dark:text-accent"
               />
 
               {renderSearchDropdown()}
@@ -390,14 +395,14 @@ export default function Navbar() {
               ))}
             </nav>
 
-            <div className="my-4 border-t border-gray-200" />
+            <div className="my-4 border-t border-gray-200 dark:border-hairline" />
 
             {isBuyer && (
               <div className="mb-4 flex flex-col gap-2">
                 <Link
                   to="/user/dashboard?tab=favorites"
                   onClick={() => setOpen(false)}
-                  className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700"
+                  className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 dark:border-hairline dark:text-ink"
                 >
                   <Heart size={18} />
                   Mis favoritos
@@ -406,7 +411,7 @@ export default function Navbar() {
                 <Link
                   to="/cart"
                   onClick={() => setOpen(false)}
-                  className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700"
+                  className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 dark:border-hairline dark:text-ink"
                 >
                   <span className="flex items-center gap-2">
                     <ShoppingCart size={18} />
@@ -414,7 +419,7 @@ export default function Navbar() {
                   </span>
 
                   {!!cart?.totalItems && (
-                    <span className="rounded-full bg-danger px-2 py-0.5 text-xs font-bold text-white">
+                    <span className="rounded-full bg-danger px-2 py-0.5 text-xs font-bold text-white dark:bg-accent">
                       {cart.totalItems}
                     </span>
                   )}
@@ -427,7 +432,7 @@ export default function Navbar() {
                 <Link
                   to="/login"
                   onClick={() => setOpen(false)}
-                  className="rounded-xl border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                  className="rounded-xl border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-hairline dark:text-ink dark:hover:bg-white/5"
                 >
                   Iniciar sesión
                 </Link>
@@ -435,14 +440,14 @@ export default function Navbar() {
                 <Link
                   to="/register-user"
                   onClick={() => setOpen(false)}
-                  className="rounded-control bg-primary px-4 py-3 text-center text-sm font-medium text-primary-fg transition hover:bg-primary-hover"
+                  className="rounded-control bg-primary px-4 py-3 text-center text-sm font-medium text-primary-fg transition hover:bg-primary-hover dark:bg-accent dark:hover:bg-accent-hover"
                 >
                   Registrarse
                 </Link>
               </div>
             ) : (
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
-                <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-gray-400">
+              <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-hairline dark:bg-surface-2">
+                <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-ink-muted">
                   Mi cuenta
                 </p>
 

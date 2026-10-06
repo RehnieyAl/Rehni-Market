@@ -175,7 +175,7 @@ export default function CheckoutView() {
 
       <div className="mt-8 grid items-start gap-8 lg:grid-cols-[1fr_340px]">
         <div className="space-y-6">
-          <div className="rounded-card border border-gray-200 bg-white p-6 shadow-card">
+          <div className="rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card">
             <div className="flex items-center justify-between gap-3">
               <h2 className="flex items-center gap-2 font-semibold text-gray-900">
                 <MapPin size={18} className="text-gray-400" />
@@ -216,7 +216,7 @@ export default function CheckoutView() {
             )}
           </div>
 
-          <div className="rounded-card border border-gray-200 bg-white p-6 shadow-card">
+          <div className="rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card">
             <h2 className="font-semibold text-gray-900">Productos</h2>
 
             <ul className="mt-3 divide-y divide-gray-100">
@@ -249,7 +249,7 @@ export default function CheckoutView() {
           </div>
         </div>
 
-        <div className="rounded-card border border-gray-200 bg-white p-6 shadow-card lg:sticky lg:top-6">
+        <div className="rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card lg:sticky lg:top-6">
           <h2 className="font-semibold text-gray-900">Resumen</h2>
 
           <dl className="mt-4 space-y-2 text-sm">

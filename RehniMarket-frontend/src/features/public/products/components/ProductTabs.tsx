@@ -27,7 +27,7 @@ export default function ProductTabs({
   ];
 
   return (
-    <div className="theme-dark rounded-2xl border border-gray-200 bg-white dark:border-hairline dark:bg-surface-1">
+    <div className="theme-dark rounded-2xl border border-gray-200 bg-surface-1 dark:border-hairline dark:bg-surface-1">
       <div className="flex gap-6 overflow-x-auto border-b border-gray-200 px-5 dark:border-hairline">
         {tabs.map((item) => (
           <button

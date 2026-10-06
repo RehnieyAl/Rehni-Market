@@ -105,7 +105,7 @@ export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModal
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-3 sm:p-6">
-      <div className="bg-white rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-200 shadow-xl">
+      <div className="bg-surface-1 rounded-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-200 shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <h2 className="text-xl font-semibold text-gray-900">Crear nuevo producto</h2>
 
@@ -140,7 +140,7 @@ export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModal
                   onChange={(e) =>
                     setProduct({ ...product, nameProduct: e.target.value })
                   }
-                  className="w-full rounded-lg bg-white border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+                  className="w-full rounded-lg bg-surface-1 border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
                 />
               </div>
 
@@ -157,7 +157,7 @@ export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModal
                     });
                     if (!e.target.value) setProductAttributes([]);
                   }}
-                  className="w-full rounded-lg bg-white border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+                  className="w-full rounded-lg bg-surface-1 border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
                 >
                   <option value="">Seleccione una categoría</option>
 
@@ -178,7 +178,7 @@ export default function ProductForm({ isOpen, onClose, onSuccess }: ProductModal
                   onChange={(e) =>
                     setProduct({ ...product, descripcionProduct: e.target.value })
                   }
-                  className="w-full rounded-lg bg-white border border-gray-300 px-4 py-3 text-gray-900 resize-none outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+                  className="w-full rounded-lg bg-surface-1 border border-gray-300 px-4 py-3 text-gray-900 resize-none outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
                 />
               </div>
 

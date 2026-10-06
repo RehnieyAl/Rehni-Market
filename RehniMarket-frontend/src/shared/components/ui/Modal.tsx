@@ -81,6 +81,16 @@ export default function Modal({
     const firstFocusable = panel?.querySelector<HTMLElement>(FOCUSABLE);
     (firstFocusable ?? panel)?.focus();
 
+    return () => {
+      restoreFocusRef.current?.focus?.();
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const panel = panelRef.current;
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && closeOnEsc) {
         event.stopPropagation();
@@ -113,7 +123,6 @@ export default function Modal({
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown, true);
-      restoreFocusRef.current?.focus?.();
     };
   }, [isOpen, closeOnEsc, requestClose]);
 
@@ -137,7 +146,7 @@ export default function Modal({
         aria-describedby={description ? descId : undefined}
         tabIndex={-1}
         className={cn(
-          "animate-pop-in flex max-h-[90vh] w-full flex-col overflow-hidden rounded-card bg-white shadow-pop outline-none",
+          "animate-pop-in flex max-h-[90vh] w-full flex-col overflow-hidden rounded-card bg-surface-1 shadow-pop outline-none",
           SIZE_CLASS[size],
           className,
         )}

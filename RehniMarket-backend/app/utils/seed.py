@@ -1642,35 +1642,6 @@ def seed_companies_and_products(db: Session):
         db.commit()
 
 
-def seed_admin(db: Session):
-    admin_role = db.query(Role).filter(Role.name == "admin").first()
-
-    if not admin_role:
-        return
-
-    admin_name = config.ADMIN_NAME
-    admin_email = config.ADMIN_DEFAULT
-    admin_password = config.PASSWORD_DEFAULT
-
-
-    exists = db.query(Users).filter(Users.email == admin_email).first()
-
-    if not exists:
-        admin = Users(
-            id=uuid.uuid4(),
-            fullName=admin_name,
-            email=admin_email,
-            tell="0000000000",
-            hashed_password=hash_password(admin_password),
-            role_id=admin_role.id,
-            verified = True
-
-        )
-
-        db.add(admin)
-        db.commit()
-
-
 def seed_owner(db: Session):
     owner_role = db.query(Role).filter(Role.name == "owner").first()
 
@@ -1725,7 +1696,6 @@ def run_seed(db: Session):
     seed_catalog(db)
     seed_specifications(db)
     seed_catalog_attributes(db)
-    seed_admin(db)
     seed_owner(db)
     seed_shipping_carriers(db)
     seed_companies_and_products(db)

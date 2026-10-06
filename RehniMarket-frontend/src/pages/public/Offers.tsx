@@ -6,7 +6,7 @@ import { getPublicOffers } from "@/features/public/products/api/productsService"
 
 export default function Offers() {
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-surface-1">
       <NavBar />
 
       <main className="flex-1">

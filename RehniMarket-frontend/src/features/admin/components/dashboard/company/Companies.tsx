@@ -338,7 +338,7 @@ export default function Companies() {
         </p>
       </div>
 
-      <section className="mt-6 shrink-0 rounded-card border border-gray-200 bg-white p-5 shadow-card">
+      <section className="mt-6 shrink-0 rounded-card border border-gray-200 bg-surface-1 p-5 shadow-card">
         <div className="flex flex-col gap-3 md:flex-row">
           <Input
             className="flex-1"
@@ -369,7 +369,7 @@ export default function Companies() {
         </div>
       </section>
 
-      <section className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
+      <section className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-gray-200 bg-surface-1 shadow-card">
 
         <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-5 py-4">
 
@@ -392,7 +392,7 @@ export default function Companies() {
         <div className="h-[360px] overflow-y-auto overflow-x-auto">
           <table className="w-full min-w-[900px]">
 
-            <thead className="sticky top-0 z-10 bg-white">
+            <thead className="sticky top-0 z-10 bg-surface-1">
               <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-400">
 
                 <th className="px-5 py-3 font-medium">

@@ -99,7 +99,7 @@ export default function BankAccountForm({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-card bg-white shadow-xl">
+      <div className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-card bg-surface-1 shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
           <h2 className="text-lg font-semibold text-gray-900">
             {account ? "Editar cuenta bancaria" : "Nueva cuenta bancaria"}

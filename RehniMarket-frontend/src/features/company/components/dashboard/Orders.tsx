@@ -165,7 +165,7 @@ export default function Orders() {
             {orders.map((order) => (
               <div
                 key={order.id}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 bg-white p-5 shadow-card transition hover:shadow-pop"
+                className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 bg-surface-1 p-5 shadow-card transition hover:shadow-pop"
               >
                 <div className="flex min-w-0 items-center gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-bold text-white">

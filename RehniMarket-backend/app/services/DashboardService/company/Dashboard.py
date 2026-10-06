@@ -278,17 +278,6 @@ def apply_certificate_replacement(
     nas: NasService,
     database: Session,
 ):
-    """Núcleo compartido del reemplazo de certificado (lo usan tanto el flujo con JWT
-    `replace_company_certificate_service` como el flujo por credenciales
-    `update_certificate_with_credentials_service`).
-
-    Exige `CompanyCertificateStatus == NEEDS_UPDATE` (el admin marcó el certificado como
-    inválido). `PENDING`/`APPROVED`/`REJECTED` -> 409 con el código correspondiente; en
-    particular `REJECTED` es un rechazo **terminal** de la empresa: no puede resubir por
-    sí misma. Valida el PDF, lo sube a MinIO, cambia la referencia, vuelve a PENDING y
-    limpia `rejection_reason`, hace un único `commit` y borra el certificado anterior. En
-    error: `rollback` + borra el objeto recién subido. Nunca aprueba automáticamente. La
-    empresa la resuelve el llamador (token o credenciales), nunca un `company_id`."""
 
     uploaded = False
     new_object_name = None
@@ -374,9 +363,6 @@ def replace_company_certificate_service(
     nas: NasService,
     database: Session,
 ):
-    """Reemplaza el certificado de la empresa autenticada. Solo permitido mientras
-    CompanyCertificateStatus == NEEDS_UPDATE. La empresa se resuelve desde el token
-    (user.company), nunca desde un company_id recibido en la petición."""
 
     user = database.query(Users).filter(Users.id == user_id).first()
 

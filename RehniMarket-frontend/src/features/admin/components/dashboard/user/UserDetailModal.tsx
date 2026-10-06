@@ -168,7 +168,7 @@ export default function UserDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-card bg-white shadow-xl">
+      <div className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-card bg-surface-1 shadow-xl">
 
         <div className="shrink-0 border-b border-gray-200 px-6 py-5">
           <div>
@@ -392,7 +392,7 @@ export default function UserDetailModal({
                         type="button"
                         onClick={handleSave}
                         disabled={saving}
-                        className="flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex items-center justify-center gap-2 rounded-xl bg-surface-2 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-surface-3 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <Save size={18} />
 
@@ -416,7 +416,7 @@ export default function UserDetailModal({
                       <button
                         type="button"
                         onClick={handleEdit}
-                        className="flex items-center justify-center gap-2 rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
+                        className="flex items-center justify-center gap-2 rounded-xl bg-surface-2 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-surface-3"
                       >
                         <Pencil size={18} />
                         Editar información
@@ -512,7 +512,7 @@ function EditField({
         onChange={(event) =>
           onChange(event.target.value)
         }
-        className="mt-3 w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-200 disabled:cursor-not-allowed disabled:bg-gray-100"
+        className="mt-3 w-full rounded-xl border border-gray-300 bg-surface-1 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-200 disabled:cursor-not-allowed disabled:bg-gray-100"
       />
     </div>
   );
@@ -551,7 +551,7 @@ function EditSelect({
         onChange={(event) =>
           onChange(event.target.value)
         }
-        className="mt-3 w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-200 disabled:cursor-not-allowed disabled:bg-gray-100"
+        className="mt-3 w-full rounded-xl border border-gray-300 bg-surface-1 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-200 disabled:cursor-not-allowed disabled:bg-gray-100"
       >
         {options.map((option) => (
           <option

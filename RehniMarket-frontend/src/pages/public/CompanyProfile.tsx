@@ -5,7 +5,7 @@ import CompanyProfile from "@/features/public/company/components/CompanyProfile"
 
 export default function CompanyProfilePage() {
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-surface-1">
       <NavBar />
 
       <main className="flex-1">

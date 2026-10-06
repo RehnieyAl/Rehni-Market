@@ -24,7 +24,7 @@ export default function ProductReviewsSummary({
   distribution,
 }: ProductReviewsSummaryProps) {
   return (
-    <div className="rounded-card border border-gray-200 bg-white p-5 dark:border-hairline dark:bg-surface-1">
+    <div className="rounded-card border border-gray-200 bg-surface-1 p-5 dark:border-hairline dark:bg-surface-1">
       <h3 className="font-semibold text-gray-900 dark:text-ink">Opiniones de compradores</h3>
 
       {reviewCount === 0 ? (

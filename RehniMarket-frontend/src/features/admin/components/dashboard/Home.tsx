@@ -249,7 +249,7 @@ export default function Home({ onNavigate }: HomeProps) {
         </section>
 
         <section className="mt-5 grid min-h-0 grid-cols-1 gap-4 xl:grid-cols-2">
-          <div className="min-h-0 overflow-hidden rounded-card border border-gray-200 bg-white">
+          <div className="min-h-0 overflow-hidden rounded-card border border-gray-200 bg-surface-1">
             <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
               <div>
                 <h2 className="font-semibold text-gray-900">
@@ -323,7 +323,7 @@ export default function Home({ onNavigate }: HomeProps) {
             </div>
           </div>
 
-          <div className="flex min-h-0 flex-col overflow-hidden rounded-card border border-gray-200 bg-white">
+          <div className="flex min-h-0 flex-col overflow-hidden rounded-card border border-gray-200 bg-surface-1">
             <div className="flex shrink-0 items-center gap-3 border-b border-gray-200 px-5 py-4">
               <div className="rounded-lg bg-gray-100 p-2 text-gray-600">
                 <Activity size={18} />

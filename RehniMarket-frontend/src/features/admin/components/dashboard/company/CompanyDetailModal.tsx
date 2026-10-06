@@ -189,7 +189,7 @@ export default function CompanyDetailModal({
                     <img
                       src={company.CompanyLogo}
                       alt={company.nameCompany}
-                      className="h-24 w-24 rounded-card border-4 border-white bg-white object-cover shadow-card"
+                      className="h-24 w-24 rounded-card border-4 border-white bg-surface-1 object-cover shadow-card"
                       onError={(e) => {
                         e.currentTarget.style.visibility = "hidden";
                       }}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Eye, Loader2, Power, Megaphone } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, Loader2, Power, Megaphone, Download } from "lucide-react";
 
 import { Badge, Button, EmptyState, Skeleton } from "@/shared/components/ui";
 
@@ -7,6 +7,8 @@ import AdvertisementFormModal from "./AdvertisementFormModal";
 import type { AdvertisementFormValues } from "./AdvertisementFormModal";
 import ConfirmModal from "@/shared/components/ConfirmModal";
 import AdvertisementPreviewModal from "./AdvertisementPreviewModal";
+import bannerTemplateDesktop from "@/assets/banner-template-desktop.png";
+import bannerTemplateMobile from "@/assets/banner-template-mobile.png";
 
 import {
   getAdminAdvertisements,
@@ -17,6 +19,17 @@ import {
 } from "@/features/admin/api/advertisementService";
 
 import type { AdminAdvertisementResponse } from "@/features/admin/types/response";
+
+const downloadTemplate = (file: string, name: string) => {
+  const link = document.createElement("a");
+
+  link.href = file;
+  link.download = name;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
 const TARGET_TYPE_LABELS: Record<string, string> = {
   PRODUCT: "Producto específico",
@@ -198,17 +211,38 @@ export default function Advertisements() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 items-center justify-between">
+      <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Anuncios</h2>
           <p className="mt-1 text-sm text-gray-500">
-            Administra el Hero que se muestra al comienzo del Home.
+            Administra el Hero que se muestra al comienzo del Home. Descarga una
+            plantilla como base para diseñar tu banner.
           </p>
         </div>
 
-        <Button onClick={handleOpenCreate} leadingIcon={<Plus size={18} />}>
-          Nuevo anuncio
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            leadingIcon={<Download size={16} />}
+            onClick={() => downloadTemplate(bannerTemplateDesktop, "banner-template-desktop.png")}
+          >
+            Plantilla web
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            leadingIcon={<Download size={16} />}
+            onClick={() => downloadTemplate(bannerTemplateMobile, "banner-template-mobile.png")}
+          >
+            Plantilla móvil
+          </Button>
+
+          <Button onClick={handleOpenCreate} leadingIcon={<Plus size={18} />}>
+            Nuevo anuncio
+          </Button>
+        </div>
       </div>
 
       <section className="mt-5 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
@@ -228,7 +262,7 @@ export default function Advertisements() {
           advertisements.map((advertisement) => (
             <div
               key={advertisement.id}
-              className="flex flex-col gap-4 rounded-card border border-gray-200 bg-white p-4 shadow-card sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-4 rounded-card border border-gray-200 bg-surface-1 p-4 shadow-card sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="flex min-w-0 items-center gap-4">
                 <img
@@ -248,6 +282,10 @@ export default function Advertisements() {
                     </Badge>
 
                     <span>Orden: {advertisement.order}</span>
+
+                    {advertisement.target_type === "CATEGORY" && advertisement.minimum_discount ? (
+                      <span>Descuento: {advertisement.minimum_discount}%</span>
+                    ) : null}
 
                     {advertisement.button_link && (
                       <span className="truncate">Destino: {advertisement.button_link}</span>

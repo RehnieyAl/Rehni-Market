@@ -1,8 +1,11 @@
 """El anuncio es un banner puramente visual: sin title / description / button_text.
 Conserva imágenes, estado, orden, targeting y button_link (navegación)."""
 
+from urllib.parse import parse_qs, urlparse
+
 import pytest
 
+from app.models.ModelProduct import Product
 from app.services.NasService import get_nas_service
 from tests.conftest import auth
 
@@ -146,3 +149,226 @@ class TestAdvertisementLifecycle:
         assert response.status_code == 200, response.text
         assert len(nas.deleted) == 2
         assert client.get("/public/advertisements").json() == []
+
+
+class TestAdvertisementCategoryDiscount:
+    """Descuento del anuncio con target CATEGORY.
+
+    Reutiliza la columna existente `minimum_discount` (sin campo/tabla nueva, sin
+    migración) y el filtro `minDiscount` que ya existe. El anuncio NO aplica un
+    precio nuevo: solo transporta el % al catálogo como filtro, y el catálogo
+    muestra el precio promocional real de cada producto (pricing.resolve_price)."""
+
+    def _cat(self, catalog, **extra):
+        return {
+            "target_type": "CATEGORY",
+            "target_catalog_id": str(catalog.id),
+            **extra,
+        }
+
+    def test_create_category_without_discount(self, client, tokens, nas, catalog):
+        body = _create(client, tokens, self._cat(catalog)).json()
+
+        assert body["target_type"] == "CATEGORY"
+        assert body["target_catalog_id"] == str(catalog.id)
+        assert body["minimum_discount"] is None
+        assert body["button_link"] == f"/products?catalog={catalog.id}"
+
+    def test_create_category_with_discount_carries_min_discount(
+        self, client, tokens, nas, catalog
+    ):
+        response = _create(client, tokens, self._cat(catalog, minimum_discount=20))
+        assert response.status_code == 200, response.text
+
+        body = response.json()
+        assert body["minimum_discount"] == 20
+        # el destino lleva la categoría + el filtro de descuento
+        assert body["button_link"] == f"/products?catalog={catalog.id}&minDiscount=20"
+
+    def test_discount_is_persisted_and_reloaded_on_edit(self, client, tokens, nas, catalog):
+        ad_id = _create(client, tokens, self._cat(catalog, minimum_discount=15)).json()["id"]
+
+        reloaded = client.get(
+            f"/admin/dashboard/get-advertisement/{ad_id}",
+            headers=auth(tokens["owner"]),
+        ).json()
+        assert reloaded["minimum_discount"] == 15
+        assert reloaded["button_link"] == f"/products?catalog={catalog.id}&minDiscount=15"
+
+    def test_edit_discount_percentage_updates_link(self, client, tokens, nas, catalog):
+        ad_id = _create(client, tokens, self._cat(catalog, minimum_discount=20)).json()["id"]
+
+        response = client.patch(
+            f"/admin/dashboard/update-advertisement/{ad_id}",
+            data=self._cat(catalog, minimum_discount=35),
+            headers=auth(tokens["owner"]),
+        )
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert body["minimum_discount"] == 35
+        assert body["button_link"] == f"/products?catalog={catalog.id}&minDiscount=35"
+
+    def test_disable_discount_on_edit_drops_min_discount_from_link(
+        self, client, tokens, nas, catalog
+    ):
+        ad_id = _create(client, tokens, self._cat(catalog, minimum_discount=20)).json()["id"]
+
+        # al desactivar el checkbox el frontend deja de enviar minimum_discount
+        response = client.patch(
+            f"/admin/dashboard/update-advertisement/{ad_id}",
+            data=self._cat(catalog),
+            headers=auth(tokens["owner"]),
+        )
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert body["minimum_discount"] is None
+        assert body["button_link"] == f"/products?catalog={catalog.id}"
+
+    def test_changing_category_keeps_the_discount_in_the_link(
+        self, client, tokens, nas, catalog, db, company
+    ):
+        from app.models.ModelCatalog import Catalog
+
+        other = Catalog(name="Otra categoría")
+        db.add(other)
+        db.commit()
+        db.refresh(other)
+
+        ad_id = _create(client, tokens, self._cat(catalog, minimum_discount=20)).json()["id"]
+
+        response = client.patch(
+            f"/admin/dashboard/update-advertisement/{ad_id}",
+            data={
+                "target_type": "CATEGORY",
+                "target_catalog_id": str(other.id),
+                "minimum_discount": 20,
+            },
+            headers=auth(tokens["owner"]),
+        )
+        assert response.status_code == 200, response.text
+        body = response.json()
+        assert body["target_catalog_id"] == str(other.id)
+        assert body["button_link"] == f"/products?catalog={other.id}&minDiscount=20"
+
+    @pytest.mark.parametrize("bad_value", [-5, 0, 150, "abc"])
+    def test_reject_invalid_percentage(self, client, tokens, nas, catalog, bad_value):
+        response = _create(
+            client, tokens, self._cat(catalog, minimum_discount=bad_value)
+        )
+        assert response.status_code == 422, response.text
+
+    def test_requires_admin_or_owner(self, client, tokens, nas, catalog):
+        data = self._cat(catalog, minimum_discount=20)
+
+        assert _create(client, tokens, data).status_code == 200  # owner
+
+        admin_response = client.post(
+            "/admin/dashboard/create-advertisement",
+            data=data,
+            files={"image": _png()},
+            headers=auth(tokens["admin"]),
+        )
+        assert admin_response.status_code == 200, admin_response.text
+        assert admin_response.json()["minimum_discount"] == 20
+
+        user_response = client.post(
+            "/admin/dashboard/create-advertisement",
+            data=data,
+            files={"image": _png()},
+            headers=auth(tokens["user"]),
+        )
+        assert user_response.status_code == 403
+
+    def test_discount_exposed_on_public_endpoint(self, client, tokens, nas, catalog):
+        _create(client, tokens, self._cat(catalog, minimum_discount=25))
+
+        items = client.get("/public/advertisements").json()
+        assert len(items) == 1
+        assert items[0]["target_type"] == "CATEGORY"
+        assert items[0]["minimum_discount"] == 25
+
+    def _make_product(self, db, company, catalog, name, price, **discount):
+        product = Product(
+            name=name,
+            price=price,
+            descripcion="d",
+            stock=5,
+            company_id=company.id,
+            catalog_id=catalog.id,
+            **discount,
+        )
+        db.add(product)
+        db.commit()
+        db.refresh(product)
+        return product
+
+    def test_clicking_the_ad_link_applies_the_existing_discount_logic(
+        self, client, tokens, nas, db, company, catalog
+    ):
+        """El destino calculado + el catálogo real: los productos de la categoría
+        con descuento vigente >= % salen con su precio promocional (pricing.py);
+        los que no llegan al % o no tienen descuento quedan fuera. Sin doble
+        descuento: cada producto muestra su único descuento propio."""
+
+        on_sale = self._make_product(
+            db, company, catalog, "Computador Gamer", 2_000_000,
+            discount_enable=True, discount_value=20,
+        )
+        small_sale = self._make_product(
+            db, company, catalog, "Teclado", 100_000,
+            discount_enable=True, discount_value=10,
+        )
+        no_sale = self._make_product(db, company, catalog, "Mouse", 50_000)
+
+        ad = _create(
+            client, tokens,
+            {"target_type": "CATEGORY", "target_catalog_id": str(catalog.id),
+             "minimum_discount": 20},
+        ).json()
+
+        # navegar con exactamente los params del enlace del anuncio
+        query = parse_qs(urlparse(ad["button_link"]).query)
+        response = client.get(
+            "/public/products",
+            params={
+                "catalog_id": query["catalog"][0],
+                "min_discount": query["minDiscount"][0],
+            },
+        )
+        assert response.status_code == 200, response.text
+        products = {p["id"]: p for p in response.json()["products"]}
+
+        assert str(on_sale.id) in products
+        assert str(small_sale.id) not in products  # 10% < 20%
+        assert str(no_sale.id) not in products  # sin descuento
+
+        card = products[str(on_sale.id)]
+        assert card["discount_enabled"] is True
+        assert card["discount_percentage"] == 20
+        assert card["price"] == "2000000.00"
+        assert card["final_price"] == "1600000.00"  # cálculo de pricing.py, no del anuncio
+
+    def test_ad_link_and_product_detail_show_the_same_price(
+        self, client, tokens, nas, db, company, catalog
+    ):
+        on_sale = self._make_product(
+            db, company, catalog, "Laptop", 3_000_000,
+            discount_enable=True, discount_value=25,
+        )
+
+        _create(
+            client, tokens,
+            {"target_type": "CATEGORY", "target_catalog_id": str(catalog.id),
+             "minimum_discount": 25},
+        )
+
+        card = next(
+            p for p in client.get(
+                "/public/products", params={"catalog_id": str(catalog.id), "min_discount": 25}
+            ).json()["products"]
+            if p["id"] == str(on_sale.id)
+        )
+        detail = client.get(f"/public/products/{on_sale.id}").json()
+
+        assert card["final_price"] == "2250000.00"
+        assert detail["final_price"] == card["final_price"]

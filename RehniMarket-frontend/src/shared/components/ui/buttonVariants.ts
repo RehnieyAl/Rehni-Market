@@ -17,7 +17,7 @@ const BASE =
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: "bg-primary text-primary-fg hover:bg-primary-hover",
   secondary: "bg-brand-50 text-primary hover:bg-brand-100",
-  outline: "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50",
+  outline: "border border-gray-300 bg-surface-1 text-gray-700 hover:bg-gray-50",
   ghost: "text-gray-700 hover:bg-gray-100",
   danger: "bg-danger text-white hover:brightness-95",
 };

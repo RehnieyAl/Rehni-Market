@@ -3,7 +3,6 @@ import {
   Eye,
   Lock,
   Unlock,
-  Trash2,
   Coins,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -11,13 +10,11 @@ import { useEffect, useState } from "react";
 import { Badge, Button, EmptyState, ErrorState, Input, TableSkeleton } from "@/shared/components/ui";
 import UserDetailModal from "./UserDetailModal";
 import UserStatusConfirmModal from "./UserStatusConfirmModal";
-import ConfirmModal from "@/shared/components/ConfirmModal";
 import RechargeWalletModal from "./RechargeWalletModal";
 
 import {
   getAdminUsers,
   toggleAdminUserStatus,
-  deleteAdminUser,
 } from "@/features/admin/api/userService";
 
 import type { AdminUserResponse } from "@/features/admin/types/response";
@@ -44,12 +41,6 @@ export default function Users() {
     useState<AdminUserResponse | null>(null);
 
   const [statusLoading, setStatusLoading] = useState(false);
-
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedDeleteUser, setSelectedDeleteUser] =
-    useState<AdminUserResponse | null>(null);
-
-  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [rechargeModalOpen, setRechargeModalOpen] = useState(false);
   const [selectedRechargeUser, setSelectedRechargeUser] =
@@ -200,61 +191,6 @@ export default function Users() {
     }
   };
 
-  const canDeleteUser = (user: AdminUserResponse) => {
-    if (user.role === "owner") return false;
-    if (user.role === "admin") return isOwner;
-    return true;
-  };
-
-  const handleOpenDeleteModal = (
-    user: AdminUserResponse,
-  ) => {
-    if (!canDeleteUser(user)) return;
-
-    setSelectedDeleteUser(user);
-    setDeleteModalOpen(true);
-  };
-
-  const handleCloseDeleteModal = () => {
-    if (deleteLoading) return;
-
-    setDeleteModalOpen(false);
-    setSelectedDeleteUser(null);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!selectedDeleteUser) return;
-
-    if (!canDeleteUser(selectedDeleteUser)) {
-      return;
-    }
-
-    try {
-      setDeleteLoading(true);
-
-      await deleteAdminUser(
-        selectedDeleteUser.id,
-      );
-
-      setUsers((currentUsers) =>
-        currentUsers.filter(
-          (user) =>
-            user.id !== selectedDeleteUser.id,
-        ),
-      );
-
-      setDeleteModalOpen(false);
-      setSelectedDeleteUser(null);
-    } catch (error) {
-      console.error(
-        "Error eliminando usuario:",
-        error,
-      );
-    } finally {
-      setDeleteLoading(false);
-    }
-  };
-
   return (
     <div className="shrink-0">
 
@@ -269,7 +205,7 @@ export default function Users() {
         </p>
       </div>
 
-      <section className="mt-6 shrink-0 rounded-card border border-gray-200 bg-white p-5 shadow-card">
+      <section className="mt-6 shrink-0 rounded-card border border-gray-200 bg-surface-1 p-5 shadow-card">
         <Input
           type="search"
           value={search}
@@ -280,7 +216,7 @@ export default function Users() {
         />
       </section>
 
-      <section className="mt-6 flex flex-col overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
+      <section className="mt-6 flex flex-col overflow-hidden rounded-card border border-gray-200 bg-surface-1 shadow-card">
 
         <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-5 py-4">
           <div>
@@ -297,7 +233,7 @@ export default function Users() {
 
         <div className="h-[360px] overflow-y-auto overflow-x-auto">
           <table className="w-full min-w-[900px]">
-            <thead className="sticky top-0 z-10 bg-white">
+            <thead className="sticky top-0 z-10 bg-surface-1">
               <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-400">
                 <th className="px-5 py-3 font-medium">
                   Usuario
@@ -472,23 +408,6 @@ export default function Users() {
                             <Coins size={18} />
                           </button>
                         )}
-
-                        {canDeleteUser(user) && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleOpenDeleteModal(
-                                user,
-                              )
-                            }
-                            disabled={deleteLoading}
-                            className="flex h-9 w-9 items-center justify-center rounded-control text-danger transition hover:bg-danger-bg disabled:cursor-not-allowed disabled:opacity-50"
-                            title="Eliminar usuario"
-                            aria-label={`Eliminar ${user.fullName}`}
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        )}
                       </div>
                     </td>
                   </tr>
@@ -548,30 +467,6 @@ export default function Users() {
         />
       )}
 
-      {selectedDeleteUser && (
-        <ConfirmModal
-          isOpen={deleteModalOpen}
-          title="Eliminar usuario"
-          tone="danger"
-          confirmLabel="Eliminar usuario"
-          loading={deleteLoading}
-          onConfirm={handleConfirmDelete}
-          onClose={handleCloseDeleteModal}
-          message={
-            <>
-              Estás a punto de eliminar la cuenta de{" "}
-              <span className="font-semibold text-gray-900">
-                {selectedDeleteUser.fullName}
-              </span>
-              .{" "}
-              <span className="font-medium text-danger">
-                Esta acción no se puede deshacer.
-              </span>
-            </>
-          }
-        />
-      )}
-
       {selectedRechargeUser && (
         <RechargeWalletModal
           isOpen={rechargeModalOpen}
@@ -621,7 +516,7 @@ function RoleStatus({
         role === "owner"
           ? "bg-primary text-primary-fg"
           : role === "admin"
-            ? "bg-gray-900 text-white"
+            ? "bg-surface-2 text-white"
             : role === "company"
               ? "bg-gray-200 text-gray-700"
               : "bg-gray-100 text-gray-700"

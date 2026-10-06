@@ -65,7 +65,7 @@ export default function PayoutsList() {
             {payouts.map((payout) => (
               <div
                 key={payout.id}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 bg-white p-5 shadow-card transition hover:shadow-pop"
+                className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 bg-surface-1 p-5 shadow-card transition hover:shadow-pop"
               >
                 <div className="min-w-0">
                   <p className="font-semibold text-gray-900">

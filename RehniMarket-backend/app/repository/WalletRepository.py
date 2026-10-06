@@ -21,6 +21,40 @@ def create_transaction(database: Session, transaction: WalletTransaction) -> Wal
     return transaction
 
 
+def get_transaction_by_id(database: Session, transaction_id: UUID) -> WalletTransaction | None:
+    return (
+        database.query(WalletTransaction)
+        .filter(WalletTransaction.id == transaction_id)
+        .first()
+    )
+
+
+def get_correction_of(database: Session, transaction_id: UUID) -> WalletTransaction | None:
+    """Fila de corrección (type=ADJUSTMENT) que corrige a `transaction_id`, o None
+    si esa recarga todavía no fue corregida."""
+
+    return (
+        database.query(WalletTransaction)
+        .filter(WalletTransaction.corrects_transaction_id == transaction_id)
+        .first()
+    )
+
+
+def corrected_recharge_ids(database: Session, recharge_ids: list[UUID]) -> set[UUID]:
+    """De la lista de recargas dada, cuáles ya tienen una corrección registrada."""
+
+    if not recharge_ids:
+        return set()
+
+    rows = (
+        database.query(WalletTransaction.corrects_transaction_id)
+        .filter(WalletTransaction.corrects_transaction_id.in_(recharge_ids))
+        .all()
+    )
+
+    return {row[0] for row in rows}
+
+
 def has_order_been_refunded(database: Session, order_id: UUID) -> bool:
     """Idempotencia del reembolso: se apoya en WalletTransaction.order_id, no en
     order.status. La garantía real es el índice único parcial; esto evita el doble insert."""

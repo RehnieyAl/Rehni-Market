@@ -127,7 +127,7 @@ export default function Home({ onNavigate }: HomeProps) {
 
   return (
     <>
-      <section className="mt-8 overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
+      <section className="mt-8 overflow-hidden rounded-card border border-gray-200 bg-surface-1 shadow-card">
         <div className="h-48 overflow-hidden md:h-52 lg:h-56">
           <img
             src={company?.banner ?? defaultbanner}
@@ -141,7 +141,7 @@ export default function Home({ onNavigate }: HomeProps) {
 
         <div className="relative px-8 pb-10">
           <div className="flex items-start gap-6">
-            <div className="-mt-6 flex h-36 w-36 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-white shadow-pop">
+            <div className="-mt-6 flex h-36 w-36 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-surface-1 shadow-pop">
               <img
                 src={company?.logo ?? defaultLogo}
                 alt={company?.nameCompany ?? "Logo por defecto"}
@@ -249,7 +249,7 @@ export default function Home({ onNavigate }: HomeProps) {
         />
       </section>
 
-      <section className="mt-8 overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
+      <section className="mt-8 overflow-hidden rounded-card border border-gray-200 bg-surface-1 shadow-card">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">

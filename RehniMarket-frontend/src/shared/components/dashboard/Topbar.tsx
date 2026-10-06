@@ -14,7 +14,7 @@ export default function Topbar({ title, description, roleName, onMenuClick }: To
   const { user } = useAuth();
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-3 border-b border-gray-200 bg-white px-4 sm:h-[72px] sm:px-6 lg:px-8">
+    <header className="flex h-16 shrink-0 items-center gap-3 border-b border-gray-200 bg-surface-1 px-4 sm:h-[72px] sm:px-6 lg:px-8">
       <button
         type="button"
         onClick={onMenuClick}

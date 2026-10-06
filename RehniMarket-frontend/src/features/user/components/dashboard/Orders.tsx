@@ -99,7 +99,7 @@ export default function Orders() {
       ) : (
         <div className="mt-8 space-y-4">
           {orders.map((order) => (
-            <div key={order.id} className="rounded-card border border-gray-200 bg-white p-5 shadow-card">
+            <div key={order.id} className="rounded-card border border-gray-200 bg-surface-1 p-5 shadow-card">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-gray-900">

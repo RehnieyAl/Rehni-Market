@@ -1,6 +1,6 @@
 export default function StatCardSkeleton() {
   return (
-    <div className="animate-pulse rounded-card border border-gray-200 bg-white p-5 shadow-card">
+    <div className="animate-pulse rounded-card border border-gray-200 bg-surface-1 p-5 shadow-card">
       <div className="flex items-start justify-between">
         <div className="w-full space-y-3">
           <div className="h-3 w-24 rounded bg-gray-200" />

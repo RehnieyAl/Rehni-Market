@@ -37,7 +37,7 @@ export default function StatCard({
   return (
     <div
       className={cn(
-        "rounded-card border border-gray-200 bg-white shadow-card",
+        "rounded-card border border-gray-200 bg-surface-1 shadow-card",
         compact ? "p-4" : "p-5",
         className,
       )}

@@ -29,7 +29,7 @@ export default function ProductGallery({
                 onClick={() => onSelect(image.url)}
                 aria-label={`Ver imagen ${productName}`}
                 aria-current={isActive}
-                className={`h-20 w-20 shrink-0 overflow-hidden rounded-card border-2 bg-white transition dark:bg-surface-2 ${
+                className={`h-20 w-20 shrink-0 overflow-hidden rounded-card border-2 bg-surface-1 transition dark:bg-surface-2 ${
                   isActive
                     ? "border-primary ring-2 ring-brand-600/20"
                     : "border-gray-200 hover:border-gray-300 dark:border-hairline dark:hover:border-white/25"

@@ -1,7 +1,13 @@
 import { useState } from "react";
 import { Coins, X } from "lucide-react";
+import axios from "axios";
 
 import { rechargeWallet } from "@/features/wallet/api/walletService";
+import {
+  MAX_ADMIN_RECHARGE_AMOUNT,
+  MAX_ADMIN_RECHARGE_AMOUNT_LABEL,
+  MAX_ADMIN_RECHARGE_MESSAGE,
+} from "@/features/wallet/constants";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { Button } from "@/shared/components/ui";
 
@@ -29,7 +35,14 @@ export default function RechargeWalletModal({
   if (!isOpen) return null;
 
   const parsedAmount = Number(amount);
-  const isValid = amount.trim() !== "" && Number.isFinite(parsedAmount) && parsedAmount > 0;
+  const amountFilled = amount.trim() !== "";
+  const overLimit =
+    amountFilled && Number.isFinite(parsedAmount) && parsedAmount > MAX_ADMIN_RECHARGE_AMOUNT;
+  const isValid =
+    amountFilled &&
+    Number.isFinite(parsedAmount) &&
+    parsedAmount > 0 &&
+    parsedAmount <= MAX_ADMIN_RECHARGE_AMOUNT;
 
   const handleSubmit = async () => {
     if (!isValid) return;
@@ -44,7 +57,12 @@ export default function RechargeWalletModal({
       onClose();
     } catch (error) {
       console.error("Error recargando RehniCoin:", error);
-      showAlert("error", "No se pudo recargar el saldo.");
+
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.detail?.message
+        : undefined;
+
+      showAlert("error", message ?? "No se pudo recargar el saldo.");
     } finally {
       setSaving(false);
     }
@@ -52,7 +70,7 @@ export default function RechargeWalletModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-card bg-white shadow-xl">
+      <div className="w-full max-w-md rounded-card bg-surface-1 shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
             <Coins size={20} className="text-primary" />
@@ -84,8 +102,21 @@ export default function RechargeWalletModal({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0"
-              className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-brand-600"
+              aria-invalid={overLimit || undefined}
+              className={`w-full rounded-xl border px-4 py-2.5 outline-none ${
+                overLimit ? "border-danger focus:border-danger" : "border-gray-300 focus:border-brand-600"
+              }`}
             />
+
+            {overLimit ? (
+              <p className="mt-1.5 text-xs font-medium text-danger">
+                {MAX_ADMIN_RECHARGE_MESSAGE}
+              </p>
+            ) : (
+              <p className="mt-1.5 text-xs text-gray-500">
+                Monto máximo de recarga: {MAX_ADMIN_RECHARGE_AMOUNT_LABEL}
+              </p>
+            )}
           </div>
 
           <div>

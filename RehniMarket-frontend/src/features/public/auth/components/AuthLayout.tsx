@@ -27,7 +27,7 @@ export default function AuthLayout({
           size === "lg" ? "max-w-xl" : "max-w-md",
         )}
       >
-        <div className="animate-fade-in rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
+        <div className="animate-fade-in rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card sm:p-8">
           {icon && (
             <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-primary">
               {icon}

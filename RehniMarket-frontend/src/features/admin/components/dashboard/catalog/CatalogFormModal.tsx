@@ -81,7 +81,7 @@ export default function CatalogFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-card bg-white shadow-xl">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-card bg-surface-1 shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
           <h2 className="text-lg font-semibold text-gray-900">
             {isEditing ? "Editar categoría" : "Nueva categoría"}
@@ -129,7 +129,7 @@ export default function CatalogFormModal({
                   <button
                     type="button"
                     onClick={handleRemoveImage}
-                    className="absolute right-2 top-2 rounded-lg bg-white/90 px-2 py-1 text-xs font-medium text-danger shadow transition hover:bg-white"
+                    className="absolute right-2 top-2 rounded-lg bg-white/90 px-2 py-1 text-xs font-medium text-danger shadow transition hover:bg-surface-1"
                   >
                     Quitar
                   </button>

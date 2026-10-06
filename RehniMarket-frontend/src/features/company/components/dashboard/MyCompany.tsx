@@ -136,7 +136,7 @@ export default function Company() {
         {company && <CompanyRatingBadge companyId={company.id} className="mt-3" />}
       </div>
 
-      <section className="mt-8 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
+      <section className="mt-8 rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card sm:p-8">
         <h2 className="text-xl font-semibold text-gray-900">
           Imagen de la empresa
         </h2>
@@ -152,7 +152,7 @@ export default function Company() {
               Logo empresa
             </h3>
 
-            <div className="h-40 w-40 overflow-hidden rounded-full border-4 border-white bg-white shadow-pop">
+            <div className="h-40 w-40 overflow-hidden rounded-full border-4 border-white bg-surface-1 shadow-pop">
               <img
                 src={previewLogo || company?.logo || defaultLogo}
                 alt="Logo empresa"
@@ -274,7 +274,7 @@ export default function Company() {
         </div>
       </section>
 
-      <section className="mt-8 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
+      <section className="mt-8 rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card sm:p-8">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
@@ -380,7 +380,7 @@ export default function Company() {
       </section>
 
       {company && (
-        <section className="mt-8 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
+        <section className="mt-8 rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card sm:p-8">
           <div className="flex items-start gap-3">
             <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-brand-50 text-primary">
               <FileText size={18} />
@@ -446,7 +446,7 @@ export default function Company() {
         </section>
       )}
 
-      <section className="mt-8 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
+      <section className="mt-8 rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex min-w-0 items-start gap-3">
             <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-brand-50 text-primary">

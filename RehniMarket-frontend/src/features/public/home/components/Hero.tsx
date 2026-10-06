@@ -137,7 +137,7 @@ export default function Hero() {
   return (
     <section className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-2 pt-2 sm:px-4 lg:px-8">
       <div
-        className="animate-hero-premium relative h-[240px] w-full overflow-hidden rounded-2xl bg-gray-100 shadow-lg sm:h-[300px] md:h-[360px] lg:h-[400px] lg:rounded-3xl"
+        className="animate-hero-premium relative h-[240px] w-full overflow-hidden rounded-2xl border-gray-100 bg-gray-100 shadow-lg dark:border dark:border-hairline dark:bg-surface-1 dark:shadow-none sm:h-[300px] md:h-[360px] lg:h-[420px] lg:rounded-3xl"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         onTouchStart={handleTouchStart}
@@ -184,7 +184,7 @@ export default function Hero() {
               type="button"
               onClick={goPrev}
               aria-label="Anuncio anterior"
-              className="absolute left-4 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/40 text-gray-800 shadow-md backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/70 lg:flex"
+              className="absolute left-4 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/40 text-gray-800 shadow-md backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/70 dark:bg-black/45 dark:text-white dark:hover:bg-black/70 lg:flex"
             >
               <ChevronLeft size={21} aria-hidden="true" />
             </button>
@@ -193,7 +193,7 @@ export default function Hero() {
               type="button"
               onClick={goNext}
               aria-label="Siguiente anuncio"
-              className="absolute right-4 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/40 text-gray-800 shadow-md backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/70 lg:flex"
+              className="absolute right-4 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/40 text-gray-800 shadow-md backdrop-blur-md transition-all duration-200 hover:scale-105 hover:bg-white/70 dark:bg-black/45 dark:text-white dark:hover:bg-black/70 lg:flex"
             >
               <ChevronRight size={21} aria-hidden="true" />
             </button>
@@ -210,7 +210,7 @@ export default function Hero() {
                   aria-current={dotIndex === index}
                   className={`h-2 rounded-full transition-all duration-300 ${
                     dotIndex === index
-                      ? "w-7 bg-[#E11D48]"
+                      ? "w-7 bg-accent"
                       : "w-2 bg-white/50 hover:bg-white/80"
                   }`}
                 />

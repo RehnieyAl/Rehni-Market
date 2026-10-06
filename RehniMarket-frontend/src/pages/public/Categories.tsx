@@ -5,7 +5,7 @@ import CategoriesGrid from "@/features/public/categories/components/CategoriesGr
 
 export default function Categories() {
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-surface-1">
       <NavBar />
 
       <main className="flex-1">

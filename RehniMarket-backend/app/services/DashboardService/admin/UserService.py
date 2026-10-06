@@ -7,12 +7,7 @@ from app.repository.admin.userRepository import (
     get_user_by_email_repository,
     update_user_repository,
     update_user_status_repository,
-    delete_admin_user_repository,
     update_user_credentials_repository,
-)
-
-from app.repository.admin.companyRepository import (
-    get_company_by_user_id_repository,
 )
 
 from app.models.ModelRole import Role
@@ -316,75 +311,3 @@ def toggle_admin_user_status_service(
         isActive=user.isActive,
         created_at=user.created_at,
     )
-
-
-def delete_admin_user_service(
-    database: Session,
-    user_id: UUID,
-    admin_id: UUID,
-    acting_role: str,
-) -> None:
-
-    if user_id == admin_id:
-        return api_error(
-            403,
-            ErrorCodes.FORBIDDEN,
-            "No puedes eliminar tu propia cuenta.",
-        )
-
-    user = get_user_by_id_repository(
-        database,
-        user_id,
-    )
-
-    if not user:
-        return api_error(
-            404,
-            ErrorCodes.USER_NOT_FOUND,
-            "Usuario no encontrado.",
-        )
-
-    if user.role and user.role.name == "owner":
-        return api_error(
-            403,
-            ErrorCodes.FORBIDDEN,
-            "No se puede eliminar la cuenta de un Owner.",
-        )
-
-    if user.role and user.role.name == "admin" and acting_role != "owner":
-        return api_error(
-            403,
-            ErrorCodes.FORBIDDEN,
-            "No se puede eliminar la cuenta de un administrador.",
-        )
-
-    company = get_company_by_user_id_repository(
-        database,
-        user_id,
-    )
-
-    if company:
-        return api_error(
-            409,
-            ErrorCodes.USER_HAS_COMPANY,
-            "No se puede eliminar este usuario porque está relacionado con una empresa.",
-        )
-
-    register_admin_activity(
-        database=database,
-        admin_id=admin_id,
-        action=AdminActivityAction.USER_DELETED,
-        target_user_id=user.id,
-    )
-
-    deleted = delete_admin_user_repository(
-        database,
-        user_id,
-    )
-
-    if not deleted:
-        return api_error(
-            404,
-            ErrorCodes.USER_NOT_FOUND,
-            "Usuario no encontrado.",
-        )

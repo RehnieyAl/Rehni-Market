@@ -70,6 +70,10 @@ export default function AdvertisementPreviewModal({
 
         <span>Orden: {advertisement.order}</span>
 
+        {advertisement.target_type === "CATEGORY" && advertisement.minimum_discount ? (
+          <span>Descuento promocional: {advertisement.minimum_discount}%</span>
+        ) : null}
+
         {advertisement.button_link && (
           <span className="truncate">Destino: {advertisement.button_link}</span>
         )}

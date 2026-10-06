@@ -1,6 +1,6 @@
 export default function PayoutRowSkeleton() {
   return (
-    <div className="flex animate-pulse flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 bg-white p-5">
+    <div className="flex animate-pulse flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 bg-surface-1 p-5">
       <div className="space-y-2">
         <div className="h-4 w-40 rounded bg-gray-200" />
         <div className="h-3 w-24 rounded bg-gray-100" />

@@ -184,25 +184,6 @@ def update_user_status_repository(
     return user
 
 
-def delete_admin_user_repository(
-    database: Session,
-    user_id: UUID,
-) -> bool:
-    user = (
-        database.query(Users)
-        .filter(Users.id == user_id)
-        .first()
-    )
-
-    if user is None:
-        return False
-
-    database.delete(user)
-    database.flush()
-
-    return True
-
-
 def update_user_credentials_repository(database: Session,user: Users,
     email: str,
     hashed_password: str,

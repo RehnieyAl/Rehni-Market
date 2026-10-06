@@ -117,7 +117,7 @@ export default function ProfileDropdown() {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="flex items-center gap-3 rounded-xl px-2 py-1.5 transition hover:bg-gray-100"
+        className="flex items-center gap-3 rounded-xl px-2 py-1.5 transition hover:bg-gray-100 dark:hover:bg-white/5"
       >
 
         <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-bold text-primary-fg">
@@ -134,26 +134,26 @@ export default function ProfileDropdown() {
 
         <div className="min-w-0 text-left">
           {user?.name ? (
-            <p className="max-w-[150px] truncate text-sm font-semibold text-gray-900">
+            <p className="max-w-[150px] truncate text-sm font-semibold text-gray-900 dark:text-ink">
               {user.name}
             </p>
           ) : (
             <Skeleton className="h-3.5 w-20" />
           )}
 
-          <p className="text-xs text-gray-500">{roleName[role]}</p>
+          <p className="text-xs text-gray-500 dark:text-ink-muted">{roleName[role]}</p>
         </div>
 
         <ChevronDown
           size={17}
-          className={`shrink-0 text-gray-500 transition-transform ${
+          className={`shrink-0 text-gray-500 transition-transform dark:text-ink-muted ${
             open ? "rotate-180" : ""
           }`}
         />
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-3 w-72 overflow-hidden rounded-2xl bg-white shadow-xl">
+        <div className="absolute right-0 z-50 mt-3 w-72 overflow-hidden rounded-2xl bg-surface-1 shadow-xl">
 
           <div className="bg-gray-50 p-4">
             <div className="flex items-center gap-3">

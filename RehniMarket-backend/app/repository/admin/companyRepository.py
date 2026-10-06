@@ -234,17 +234,3 @@ def update_company_status(
     company.CompanyStatus = status
 
     return company
-
-
-def get_company_by_user_id_repository(
-    database: Session,
-    user_id: UUID,
-) -> Company | None:
-
-    return (
-        database.query(Company)
-        .filter(
-            Company.user_id == user_id
-        )
-        .first()
-    )

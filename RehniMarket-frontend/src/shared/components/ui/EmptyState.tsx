@@ -23,20 +23,21 @@ export default function EmptyState({
     <div
       className={cn(
         "flex flex-col items-center justify-center px-6 py-12 text-center",
-        variant === "card" && "rounded-card border border-gray-200 bg-white shadow-card",
+        variant === "card" &&
+          "rounded-card border border-gray-200 bg-surface-1 shadow-card dark:border-hairline dark:bg-surface-1 dark:shadow-none",
         className,
       )}
     >
       {icon && (
-        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+        <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400 dark:bg-surface-2 dark:text-ink-muted">
           {icon}
         </div>
       )}
 
-      <p className="text-sm font-semibold text-gray-900">{title}</p>
+      <p className="text-sm font-semibold text-gray-900 dark:text-ink">{title}</p>
 
       {description && (
-        <p className="mt-1 max-w-sm text-sm text-gray-500">{description}</p>
+        <p className="mt-1 max-w-sm text-sm text-gray-500 dark:text-ink-muted">{description}</p>
       )}
 
       {action && <div className="mt-4">{action}</div>}

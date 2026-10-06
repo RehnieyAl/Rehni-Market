@@ -144,7 +144,7 @@ export default function AccountSettings() {
         </p>
       </div>
 
-      <section className="mt-6 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
+      <section className="mt-6 rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card sm:p-8">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Perfil</h2>
@@ -243,7 +243,7 @@ export default function AccountSettings() {
         )}
       </section>
 
-      <section className="mt-6 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
+      <section className="mt-6 rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card sm:p-8">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Cuenta</h2>
@@ -294,7 +294,7 @@ export default function AccountSettings() {
         )}
       </section>
 
-      <section className="mt-6 rounded-card border border-gray-200 bg-white p-6 shadow-card sm:p-8">
+      <section className="mt-6 rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card sm:p-8">
         <h2 className="text-lg font-semibold text-gray-900">Seguridad</h2>
 
         <p className="mt-1 text-sm text-gray-500">

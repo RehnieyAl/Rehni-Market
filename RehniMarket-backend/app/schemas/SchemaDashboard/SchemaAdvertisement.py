@@ -55,7 +55,7 @@ class CreateAdvertisementRequest(BaseModel):
     target_product_id: UUID | None = None
     target_catalog_id: UUID | None = None
     target_company_id: UUID | None = None
-    minimum_discount: int | None = Field(default=None, ge=0, le=100)
+    minimum_discount: int | None = Field(default=None, ge=1, le=100)
     maximum_stock: int | None = Field(default=None, ge=0)
     max_age_days: int | None = Field(default=None, ge=1)
 
@@ -109,7 +109,7 @@ class UpdateAdvertisementRequest(BaseModel):
     target_product_id: UUID | None = None
     target_catalog_id: UUID | None = None
     target_company_id: UUID | None = None
-    minimum_discount: int | None = Field(default=None, ge=0, le=100)
+    minimum_discount: int | None = Field(default=None, ge=1, le=100)
     maximum_stock: int | None = Field(default=None, ge=0)
     max_age_days: int | None = Field(default=None, ge=1)
 

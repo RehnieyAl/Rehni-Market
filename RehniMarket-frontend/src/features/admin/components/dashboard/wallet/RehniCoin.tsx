@@ -1,11 +1,21 @@
 import { useCallback, useEffect, useState } from "react";
-import { Coins } from "lucide-react";
+import { Coins, PencilLine } from "lucide-react";
 import axios from "axios";
 
-import { rechargeWalletByEmail, getRechargeHistory } from "@/features/admin/api/walletService";
+import {
+  rechargeWalletByEmail,
+  getRechargeHistory,
+  correctRecharge,
+} from "@/features/admin/api/walletService";
+import {
+  MAX_ADMIN_RECHARGE_AMOUNT,
+  MAX_ADMIN_RECHARGE_AMOUNT_LABEL,
+  MAX_ADMIN_RECHARGE_MESSAGE,
+} from "@/features/wallet/constants";
 import { formatPrice } from "@/shared/utils/formatPrice";
 import { useAlert } from "@/shared/components/alert/useAlert";
-import { Button, EmptyState, Input, TableSkeleton } from "@/shared/components/ui";
+import { Badge, Button, EmptyState, Input, TableSkeleton } from "@/shared/components/ui";
+import CorrectRechargeModal from "./CorrectRechargeModal";
 
 import type { WalletRechargeHistoryItem } from "@/features/wallet/types/response";
 
@@ -21,6 +31,9 @@ export default function RehniCoin() {
   const [historyLoading, setHistoryLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  const [correctingItem, setCorrectingItem] = useState<WalletRechargeHistoryItem | null>(null);
+  const [correcting, setCorrecting] = useState(false);
 
   const loadHistory = useCallback(async (targetPage: number) => {
     try {
@@ -45,11 +58,16 @@ export default function RehniCoin() {
   };
 
   const parsedAmount = Number(form.amount);
+  const amountOverLimit =
+    form.amount.trim() !== "" &&
+    Number.isFinite(parsedAmount) &&
+    parsedAmount > MAX_ADMIN_RECHARGE_AMOUNT;
   const isValid =
     form.email.trim() !== "" &&
     form.amount.trim() !== "" &&
     Number.isFinite(parsedAmount) &&
-    parsedAmount > 0;
+    parsedAmount > 0 &&
+    parsedAmount <= MAX_ADMIN_RECHARGE_AMOUNT;
 
   const handleSubmit = async () => {
     if (!isValid) return;
@@ -88,6 +106,39 @@ export default function RehniCoin() {
     }
   };
 
+  const handleCorrect = async (newAmount: number, reason: string) => {
+    if (!correctingItem) return;
+
+    try {
+      setCorrecting(true);
+
+      const result = await correctRecharge(correctingItem.id, newAmount, reason);
+
+      const adjustment = Number(result.adjustment);
+      const sign = adjustment > 0 ? "+" : "-";
+
+      showAlert(
+        "success",
+        `Recarga corregida para ${result.userName}. Ajuste ${sign}${formatPrice(
+          Math.abs(adjustment),
+        )} RC · nuevo saldo ${formatPrice(result.balance)} RC.`,
+      );
+
+      setCorrectingItem(null);
+      await loadHistory(page);
+    } catch (error) {
+      console.error("Error corrigiendo la recarga:", error);
+
+      const message = axios.isAxiosError(error)
+        ? error.response?.data?.detail?.message
+        : undefined;
+
+      showAlert("error", message ?? "No se pudo corregir la recarga.");
+    } finally {
+      setCorrecting(false);
+    }
+  };
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">RehniCoin</h1>
@@ -97,7 +148,7 @@ export default function RehniCoin() {
         COP — es una billetera interna simulada, no una criptomoneda real.
       </p>
 
-      <div className="mt-6 rounded-card border border-gray-200 bg-white p-6 shadow-card">
+      <div className="mt-6 rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card">
         <h2 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
           <Coins size={18} className="text-primary" />
           Recargar saldo
@@ -120,6 +171,8 @@ export default function RehniCoin() {
             value={form.amount}
             onChange={(e) => handleChange("amount", e.target.value)}
             placeholder="0"
+            hint={`Monto máximo de recarga: ${MAX_ADMIN_RECHARGE_AMOUNT_LABEL}`}
+            error={amountOverLimit ? MAX_ADMIN_RECHARGE_MESSAGE : undefined}
           />
 
           <Input
@@ -146,29 +199,33 @@ export default function RehniCoin() {
           Últimas recargas
         </h2>
 
-        <section className="overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
+        <section className="overflow-hidden rounded-card border border-gray-200 bg-surface-1 shadow-card">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px]">
-              <thead className="bg-white">
+            <table className="w-full min-w-[820px]">
+              <thead className="bg-surface-1">
                 <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-400">
                   <th className="px-5 py-3 font-medium">Fecha</th>
                   <th className="px-5 py-3 font-medium">Usuario</th>
                   <th className="px-5 py-3 font-medium">Correo</th>
                   <th className="px-5 py-3 font-medium">Monto</th>
                   <th className="px-5 py-3 font-medium">Administrador responsable</th>
+                  <th className="px-5 py-3 text-right font-medium">Acción</th>
                 </tr>
               </thead>
 
               <tbody>
                 {historyLoading ? (
                   <tr>
-                    <td colSpan={5} className="p-0">
-                      <TableSkeleton rows={4} columns={["22%", "16%", "30%", "16%", "16%"]} />
+                    <td colSpan={6} className="p-0">
+                      <TableSkeleton
+                        rows={4}
+                        columns={["20%", "15%", "26%", "14%", "15%", "10%"]}
+                      />
                     </td>
                   </tr>
                 ) : history.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="p-0">
+                    <td colSpan={6} className="p-0">
                       <EmptyState
                         variant="plain"
                         title="Todavía no se han registrado recargas"
@@ -200,6 +257,21 @@ export default function RehniCoin() {
                       <td className="px-5 py-3 text-sm text-gray-600">
                         {item.createdByName ?? "—"}
                         {item.createdByEmail ? ` (${item.createdByEmail})` : ""}
+                      </td>
+
+                      <td className="px-5 py-3 text-right">
+                        {item.isCorrected ? (
+                          <Badge tone="warning">Corregida</Badge>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            leadingIcon={<PencilLine size={15} />}
+                            onClick={() => setCorrectingItem(item)}
+                          >
+                            Corregir recarga
+                          </Button>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -235,6 +307,19 @@ export default function RehniCoin() {
           </div>
         )}
       </div>
+
+      {correctingItem && (
+        <CorrectRechargeModal
+          key={correctingItem.id}
+          isOpen
+          recharge={correctingItem}
+          loading={correcting}
+          onClose={() => {
+            if (!correcting) setCorrectingItem(null);
+          }}
+          onConfirm={handleCorrect}
+        />
+      )}
     </div>
   );
 }

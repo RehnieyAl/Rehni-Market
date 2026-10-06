@@ -1,6 +1,7 @@
 import { api } from "@/api/Client";
 
 import type {
+  CorrectRechargeResult,
   RechargeByEmailResult,
   WalletRechargeHistoryPaginated,
 } from "@/features/wallet/types/response";
@@ -25,5 +26,17 @@ export async function getRechargeHistory(
   const { data } = await api.get<WalletRechargeHistoryPaginated>("/admin/wallet/history", {
     params: { page, limit },
   });
+  return data;
+}
+
+export async function correctRecharge(
+  transactionId: string,
+  newAmount: number,
+  reason: string,
+): Promise<CorrectRechargeResult> {
+  const { data } = await api.post<CorrectRechargeResult>(
+    `/admin/wallet/recharge/${transactionId}/correction`,
+    { newAmount, reason },
+  );
   return data;
 }

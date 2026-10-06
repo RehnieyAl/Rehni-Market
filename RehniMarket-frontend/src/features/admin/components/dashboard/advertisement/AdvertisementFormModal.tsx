@@ -79,6 +79,11 @@ export default function AdvertisementFormModal({
   const [minimumDiscount, setMinimumDiscount] = useState(
     advertisement?.minimum_discount?.toString() ?? "",
   );
+  const [categoryDiscountEnabled, setCategoryDiscountEnabled] = useState(
+    advertisement?.target_type === "CATEGORY" &&
+      advertisement?.minimum_discount != null &&
+      advertisement.minimum_discount > 0,
+  );
   const [maximumStock, setMaximumStock] = useState(advertisement?.maximum_stock?.toString() ?? "");
   const [maxAgeDays, setMaxAgeDays] = useState(advertisement?.max_age_days?.toString() ?? "");
 
@@ -184,8 +189,18 @@ export default function AdvertisementFormModal({
     switch (targetType) {
       case "PRODUCT":
         return !!targetProductId;
-      case "CATEGORY":
-        return !!targetCatalogId;
+      case "CATEGORY": {
+        if (!targetCatalogId) return false;
+        if (!categoryDiscountEnabled) return true;
+
+        const discount = Number(minimumDiscount);
+        return (
+          minimumDiscount.trim() !== "" &&
+          Number.isInteger(discount) &&
+          discount >= 1 &&
+          discount <= 100
+        );
+      }
       case "COMPANY":
         return !!targetCompanyId;
       case "PROMOTION":
@@ -228,7 +243,7 @@ export default function AdvertisementFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-card bg-white shadow-xl">
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-card bg-surface-1 shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
           <h2 className="text-lg font-semibold text-gray-900">
             {isEditing ? "Editar anuncio" : "Nuevo anuncio"}
@@ -314,7 +329,7 @@ export default function AdvertisementFormModal({
                     <button
                       type="button"
                       onClick={handleRemoveMobileImage}
-                      className="absolute right-2 top-2 rounded-lg bg-white/90 px-2 py-1 text-xs font-medium text-danger shadow transition hover:bg-white"
+                      className="absolute right-2 top-2 rounded-lg bg-white/90 px-2 py-1 text-xs font-medium text-danger shadow transition hover:bg-surface-1"
                     >
                       Quitar
                     </button>
@@ -350,6 +365,7 @@ export default function AdvertisementFormModal({
                   setTargetCatalogId("");
                   setTargetCompanyId("");
                   setMinimumDiscount("");
+                  setCategoryDiscountEnabled(false);
                   setMaximumStock("");
                   setMaxAgeDays("");
                   setProductQuery("");
@@ -400,22 +416,72 @@ export default function AdvertisementFormModal({
             )}
 
             {targetType === "CATEGORY" && (
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">Categoría</label>
+              <>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Categoría</label>
 
-                <select
-                  value={targetCatalogId}
-                  onChange={(event) => setTargetCatalogId(event.target.value)}
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
-                >
-                  <option value="">Selecciona una categoría</option>
-                  {catalogs.map((catalog) => (
-                    <option key={catalog.id} value={catalog.id}>
-                      {catalog.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <select
+                    value={targetCatalogId}
+                    onChange={(event) => setTargetCatalogId(event.target.value)}
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+                  >
+                    <option value="">Selecciona una categoría</option>
+                    {catalogs.map((catalog) => (
+                      <option key={catalog.id} value={catalog.id}>
+                        {catalog.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Descuento</label>
+
+                  <label className="flex items-center gap-2.5 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={categoryDiscountEnabled}
+                      onChange={(event) => {
+                        const enabled = event.target.checked;
+                        setCategoryDiscountEnabled(enabled);
+                        if (!enabled) setMinimumDiscount("");
+                      }}
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-brand-600/20"
+                    />
+                    Habilitar descuento
+                  </label>
+
+                  {categoryDiscountEnabled && (
+                    <div className="mt-3">
+                      <label className="mb-2 block text-sm font-medium text-gray-700">
+                        Porcentaje de descuento
+                      </label>
+
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min={1}
+                          max={100}
+                          step={1}
+                          value={minimumDiscount}
+                          onChange={(event) => setMinimumDiscount(event.target.value)}
+                          placeholder="20"
+                          className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-10 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+                        />
+
+                        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+                          %
+                        </span>
+                      </div>
+
+                      <p className="mt-2 text-xs text-gray-400">
+                        Solo es información promocional del anuncio (por ejemplo «20% OFF»). No
+                        modifica el precio de los productos del catálogo.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
 
             {targetType === "COMPANY" && (

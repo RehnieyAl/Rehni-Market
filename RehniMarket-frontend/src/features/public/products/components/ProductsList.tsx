@@ -230,7 +230,7 @@ export default function ProductsList() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[264px_1fr] lg:gap-8">
-        <aside className="hidden h-fit rounded-card border border-gray-200 bg-white p-5 shadow-card lg:block">
+        <aside className="hidden h-fit rounded-card border border-gray-200 bg-surface-1 p-5 shadow-card lg:block">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Filter size={18} className="text-gray-700" />

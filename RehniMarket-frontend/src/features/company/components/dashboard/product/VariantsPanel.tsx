@@ -151,7 +151,7 @@ export default function VariantsPanel({ productId, catalogId }: VariantsPanelPro
                       {variant.options.map((option) => (
                         <span
                           key={option.attribute_id}
-                          className="flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2 py-0.5"
+                          className="flex items-center gap-1 rounded-full border border-gray-200 bg-surface-1 px-2 py-0.5"
                         >
                           {option.hex_color && (
                             <span

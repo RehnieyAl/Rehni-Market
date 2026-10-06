@@ -98,7 +98,7 @@ export default function Addresses() {
       </div>
 
       {showForm && (
-        <div className="mt-6 rounded-card border border-gray-200 bg-white p-6 shadow-card">
+        <div className="mt-6 rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card">
           <AddressForm
             onSaved={handleSaved}
             onCancel={() => setShowForm(false)}
@@ -136,7 +136,7 @@ export default function Addresses() {
           {addresses.map((address) => (
             <div
               key={address.id}
-              className="flex items-start justify-between gap-4 rounded-card border border-gray-200 bg-white p-5 shadow-card"
+              className="flex items-start justify-between gap-4 rounded-card border border-gray-200 bg-surface-1 p-5 shadow-card"
             >
               <div>
                 <div className="flex items-center gap-2">

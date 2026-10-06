@@ -1,3 +1,7 @@
+# Security.py es un archivo de utilidad que proporciona funciones para
+# el manejo seguro de contraseñas. Utiliza la biblioteca passlib para realizar hashing y 
+# verificación de contraseñas.
+
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(

@@ -74,7 +74,7 @@ export default function CatalogFilters({
               Buscar en {selectedCatalog.name}
             </label>
 
-            <div className="flex h-11 items-center rounded-control border border-gray-300 bg-white px-3 transition focus-within:border-brand-600 focus-within:ring-2 focus-within:ring-brand-600/20">
+            <div className="flex h-11 items-center rounded-control border border-gray-300 bg-surface-1 px-3 transition focus-within:border-brand-600 focus-within:ring-2 focus-within:ring-brand-600/20">
               <Search size={15} className="shrink-0 text-gray-400" aria-hidden="true" />
               <input
                 type="text"

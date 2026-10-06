@@ -8,7 +8,6 @@ from app.services.DashboardService.admin.UserService import (
     get_user_by_id_service,
     update_admin_user_service,
     toggle_admin_user_status_service,
-    delete_admin_user_service
 )
 
 router = APIRouter(
@@ -59,12 +58,3 @@ def toggle_admin_user_status(request: Request, user_id: UUID,database: Session =
     admin_id = request.state.user_id
     acting_role = request.state.role
     return toggle_admin_user_status_service(database=database,user_id=user_id,admin_id=admin_id,acting_role=acting_role)
-
-
-@router.delete("/dashboard/user/delete/{user_id}")
-def delete_admin_user(request: Request,user_id: UUID,database: Session = Depends(get_db)):
-
-    admin_id = request.state.user_id
-    acting_role = request.state.role
-
-    return delete_admin_user_service(database=database,user_id=user_id,admin_id=admin_id,acting_role=acting_role)

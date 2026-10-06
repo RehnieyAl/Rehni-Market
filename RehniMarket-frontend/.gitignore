@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 .env
 design
+scripts
+.pnpm-store

@@ -119,7 +119,7 @@ export default function Home() {
         {summaryLoading ? (
           <Skeleton className="mt-4 h-24 rounded-card" />
         ) : lastOrder ? (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 bg-white p-6 shadow-card">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card">
             <div>
               <p className="font-semibold text-gray-900">
                 {lastOrder.firstItemName}

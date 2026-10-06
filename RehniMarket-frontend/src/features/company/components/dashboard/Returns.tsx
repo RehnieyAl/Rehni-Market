@@ -128,7 +128,7 @@ export default function Returns() {
             {items.map((item) => (
               <div
                 key={item.id}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 bg-white p-5 shadow-card transition hover:shadow-pop"
+                className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 bg-surface-1 p-5 shadow-card transition hover:shadow-pop"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">

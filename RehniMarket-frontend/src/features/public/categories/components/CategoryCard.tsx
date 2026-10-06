@@ -11,7 +11,7 @@ export default function CategoryCard({ category }: CategoryCardProps) {
   return (
     <Link
       to={`/products?catalog=${category.id}`}
-      className="group flex flex-col overflow-hidden rounded-card border border-gray-200 bg-white shadow-card transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-pop"
+      className="group flex flex-col overflow-hidden rounded-card border border-gray-200 bg-surface-1 shadow-card transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-pop"
     >
       <div className="aspect-video w-full overflow-hidden bg-gray-100">
         {category.image_url ? (

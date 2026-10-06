@@ -24,6 +24,16 @@ export interface RechargeByEmailResult {
   userEmail: string;
 }
 
+export interface CorrectRechargeResult {
+  balance: string;
+  userName: string;
+  userEmail: string;
+  originalAmount: string;
+  newAmount: string;
+  adjustment: string;
+  correctionTransactionId: string;
+}
+
 export interface WalletRechargeHistoryItem {
   id: string;
   createdAt: string;
@@ -33,6 +43,7 @@ export interface WalletRechargeHistoryItem {
   description: string | null;
   createdByName: string | null;
   createdByEmail: string | null;
+  isCorrected: boolean;
 }
 
 export interface WalletRechargeHistoryPaginated {

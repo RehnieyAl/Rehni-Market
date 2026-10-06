@@ -124,7 +124,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
-      <div className="flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-card bg-white shadow-2xl">
+      <div className="flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-card bg-surface-1 shadow-2xl">
         <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-5">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Atributos y variantes</h2>

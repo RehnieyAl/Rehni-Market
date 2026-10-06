@@ -6,6 +6,11 @@ export interface PublicAdvertisement {
   is_active: boolean;
   order: number;
   created_at: string;
+
+  target_type: string | null;
+  target_catalog_id: string | null;
+  /** Descuento promocional del anuncio (%). Solo informativo: no modifica precios de productos. */
+  minimum_discount: number | null;
 }
 
 export interface PublicProductCard {

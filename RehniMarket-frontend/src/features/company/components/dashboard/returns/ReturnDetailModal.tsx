@@ -185,7 +185,7 @@ export default function ReturnDetailModal({
               <h3 className="mb-2 flex items-center gap-1.5 font-semibold text-gray-900">
                 <RotateCcw size={15} /> Motivo del comprador
               </h3>
-              <p className="rounded-card border border-gray-200 bg-white p-4 text-sm text-gray-600">
+              <p className="rounded-card border border-gray-200 bg-surface-1 p-4 text-sm text-gray-600">
                 {detail.reason}
               </p>
             </section>

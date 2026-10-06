@@ -95,7 +95,7 @@ export default function Wallet() {
       <div className="mt-8">
         <h2 className="mb-4 font-semibold text-gray-900">Movimientos</h2>
 
-        <section className="overflow-hidden rounded-card border border-gray-200 bg-white shadow-card">
+        <section className="overflow-hidden rounded-card border border-gray-200 bg-surface-1 shadow-card">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px]">
               <thead>

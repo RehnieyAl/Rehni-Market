@@ -1,51 +1,119 @@
 @import "tailwindcss";
 
-/* `dark:` se activa SOLO dentro de un contenedor con .theme-dark (detalle de producto,
-   paneles de devoluciones). No hay theme global ni switch de sistema. */
-@custom-variant dark (&:where(.theme-dark, .theme-dark *));
+/* ==========================================================================
+   RehniMarket — Design System oscuro ÚNICO Y GLOBAL.
+
+   No hay tema claro. La estética oscura es la principal (referencias en
+   `design/*.png`). Para lograrlo sin reescribir cientos de archivos, la escala
+   neutra de Tailwind (`gray-*`) está INVERTIDA en tokens: `bg-gray-50/100` son
+   superficies oscuras, `text-gray-500..900` son textos claros, `border-gray-*`
+   son bordes oscuros. Así `bg-gray-50`, `text-gray-900`, `border-gray-200`… ya
+   renderizan en oscuro en toda la app.
+
+   `bg-white` sólido se reemplazó por `bg-surface-1` (script). `text-white` se
+   conserva (blanco real sobre superficies de color: botones, badges).
+   ========================================================================== */
+
+/* `dark:` está SIEMPRE activo: el tema oscuro es el único. Se mantiene la
+   variante para no romper las clases `dark:*` ya escritas. */
+@custom-variant dark (&);
 
 @theme {
   --font-sans:
     "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji";
-  --color-brand-50: #fbf1f4;
-  --color-brand-100: #f6e0e7;
-  --color-brand-200: #ebbecd;
-  --color-brand-300: #db92a9;
+
+  /* ---- Marca (vinotinto) ---- */
+  --color-brand-50: #2a1119;   /* tinte para chips / botones secundarios */
+  --color-brand-100: #3a1622;
+  --color-brand-200: #5a1f31;
+  --color-brand-300: #db92a9;  /* claro: usado como texto sobre oscuro */
   --color-brand-400: #c25f7e;
-  --color-brand-500: #9a3355;
-  --color-brand-600: #6d0f2d;
-  --color-brand-700: #58091f;
-  --color-brand-800: #440717;
-  --color-brand-900: #320510;
+  --color-brand-500: #a51d47;
+  --color-brand-600: #8b0d35;  /* VINOTINTO PRINCIPAL */
+  --color-brand-700: #650a29;  /* VINOTINTO OSCURO */
+  --color-brand-800: #4c0a20;
+  --color-brand-900: #350614;
   --color-primary: var(--color-brand-600);
   --color-primary-hover: var(--color-brand-700);
   --color-primary-fg: #ffffff;
 
-  --color-success: #15803d;
-  --color-success-bg: #f0fdf4;
-  --color-warning: #b45309;
-  --color-warning-bg: #fffbeb;
-  --color-danger: #dc2626;
-  --color-danger-bg: #fef2f2;
-  --color-info: #1d4ed8;
-  --color-info-bg: #eff6ff;
+  /* ---- Rojo de acción (badges, precios, CTAs brillantes) ---- */
+  --color-accent: #e51d48;
+  --color-accent-hover: #b9143c;
 
-  /* Superficies oscuras: detalle de producto (ruta pública) y paneles de
-     devoluciones. NO es un theme global; se usan con clases bg-surface-* / text-ink. */
-  --color-surface-0: #17181c;
-  --color-surface-1: #1f2024;
-  --color-surface-2: #26272c;
+  /* ---- Estados (ajustados para fondo oscuro) ---- */
+  --color-success: #22c55e;
+  --color-success-bg: #10241a;
+  --color-warning: #e0a52b;
+  --color-warning-bg: #2a1f0d;
+  --color-danger: #ef4444;
+  --color-danger-bg: #2a1416;
+  --color-info: #3b82f6;
+  --color-info-bg: #101f33;
+
+  /* ---- Superficies del tema ---- */
+  --color-canvas: #0f1115;        /* fondo de página principal */
+  --color-canvas-2: #12151a;      /* fondo secundario */
+  --color-surface-0: #12151a;     /* zona hundida / imagen */
+  --color-surface-1: #171a20;     /* SURFACE — card, panel, modal, input */
+  --color-surface-2: #1e222a;     /* SURFACE ELEVATED */
+  --color-surface-3: #252a33;     /* SURFACE HOVER */
   --color-hairline: rgba(255, 255, 255, 0.08);
-  --color-ink: #f4f4f5;
-  --color-ink-muted: #a1a1aa;
+  --color-ink: #f5f5f5;           /* TEXT PRIMARY */
+  --color-ink-muted: #a5a9b3;     /* TEXT SECONDARY */
   --color-stock: #4ade80;
+
+  /* ---- Escala neutra INVERTIDA (gray-* → oscuro) ---- */
+  --color-white: #ffffff;         /* se conserva real (text-white sobre color) */
+  --color-black: #000000;         /* se conserva real (overlays bg-black/xx) */
+  --color-gray-50: #12151a;
+  --color-gray-100: #1b1f26;
+  --color-gray-200: #2a2f38;
+  --color-gray-300: #3a414d;
+  --color-gray-400: #767c88;
+  --color-gray-500: #a5a9b3;
+  --color-gray-600: #bcc0c8;
+  --color-gray-700: #d5d8de;
+  --color-gray-800: #e9eaee;
+  --color-gray-900: #f5f5f5;
+  --color-gray-950: #ffffff;
+
+  /* ---- Alias de tokens del Design System (equivalentes semánticos) ---- */
+  --color-rm-bg: var(--color-canvas);
+  --color-rm-surface: var(--color-surface-1);
+  --color-rm-surface-elevated: var(--color-surface-2);
+  --color-rm-surface-hover: var(--color-surface-3);
+  --color-rm-border: var(--color-gray-200);
+  --color-rm-border-active: var(--color-gray-300);
+  --color-rm-text: var(--color-ink);
+  --color-rm-text-secondary: var(--color-ink-muted);
+  --color-rm-text-muted: var(--color-gray-400);
+  --color-rm-primary: var(--color-brand-600);
+  --color-rm-primary-hover: var(--color-brand-700);
+  --color-rm-danger: var(--color-danger);
+  --color-rm-success: var(--color-success);
 
   --radius-control: 0.7rem;
   --radius-card: 1rem;
-  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 3px 0 rgb(0 0 0 / 0.06);
-  --shadow-pop: 0 10px 30px -12px rgb(0 0 0 / 0.22);
+  --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 1px 3px 0 rgb(0 0 0 / 0.35);
+  --shadow-pop: 0 16px 40px -12px rgb(0 0 0 / 0.55);
   --ease-out-quart: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html {
+  color-scheme: dark;
+  background-color: var(--color-canvas);
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-gray-900);
+}
+
+/* Skeletons: shimmer sobre superficie oscura (evita bloques claros). */
+.animate-pulse {
+  --tw-bg-opacity: 1;
 }
 
 @keyframes fade-in {

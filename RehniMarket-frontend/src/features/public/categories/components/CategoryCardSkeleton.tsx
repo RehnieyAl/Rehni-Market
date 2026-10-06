@@ -1,6 +1,6 @@
 export default function CategoryCardSkeleton() {
   return (
-    <div className="flex animate-pulse flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+    <div className="flex animate-pulse flex-col overflow-hidden rounded-2xl border border-gray-200 bg-surface-1 shadow-sm">
       <div className="aspect-video w-full bg-gray-200" />
 
       <div className="flex items-center justify-between gap-3 p-4">

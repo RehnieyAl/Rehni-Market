@@ -67,7 +67,3 @@ export const toggleAdminUserStatus = async (
 
   return response.data;
 };
-
-export const deleteAdminUser = async (userId: string): Promise<void> => {
-  await api.delete(`/admin/dashboard/user/delete/${userId}`);
-};
