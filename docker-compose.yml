@@ -30,6 +30,32 @@ services:
       retries: 5
       start_period: 10s
 
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: pgbouncer_pool
+    restart: unless-stopped
+    env_file:
+      - ./RehniMarket-backend/.env
+    volumes:
+      - ./RehniMarket-backend/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini
+      - ./RehniMarket-backend/userlist.txt:/etc/pgbouncer/userlist.txt
+    ports:
+      - "6432:6432"
+    environment:
+      - DB_USER=${DB_USER:-mi_usuario}
+      - DB_PASS=${DB_PASS:-mi_password}
+      - DB_NAME=${DB_NAME:-mi_base_de_datos}
+      - DB_HOST=${DB_HOST:-postgres}
+      - POOL_MODE=transaction        # CRÍTICO: Reutiliza conexiones por cada transacción SQL
+      - MAX_CLIENT_CONN=12000        # CRÍTICO: Permite que entren los 10,000 usuarios de k6
+      - DEFAULT_POOL_SIZE=100        # Conexiones reales máximas hacia Postgres
+    ulimits:                         # Abre los sockets dentro del contenedor
+      nofile:
+        soft: 65535
+        hard: 65535
+    depends_on:
+      - postgres
+
   backend:
     build:
       context: ./RehniMarket-backend

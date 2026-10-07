@@ -19,7 +19,6 @@
 > **Nota de normalización Docker (posterior a este documento):** donde el texto diga `docker-compose.prod.yml` / `Dockerfile.prod` / `.env.prod` / `.env.prod.example` / imágenes `*:prod` / contenedores `*-prod` / volumen `minio_prod_data`, léase la configuración **por defecto** ya normalizada: `docker-compose.yml`, `RehniMarket-frontend/Dockerfile`, `RehniMarket-backend/.env`, `.env.public.example`, `rehni-market-backend` / `rehni-market-frontend`, `rehni-backend` / `rehni-frontend`, `minio_data`. El modo desarrollo pasa a `docker-compose.dev.yml` / `Dockerfile.dev` / `.env.dev`. Se levanta con `docker compose up -d` (sin `-f`). La evidencia `evidencias/deployment/10_prod_compose_smoke.txt` conserva el nombre antiguo. Tabla completa en `docs/DOCUMENTACION_DESPLIEGUE_REHNIMARKET.md`.
 
 ## Matriz de criterios
-
 | # | Criterio | Estado | Evidencia (archivo real) | Documento | Pendiente |
 |---|---|:--:|---|---|---|
 | 1 | Preparación de plataforma e infraestructura | 🟢 | `evidencias/deployment/01..10`, `evidencias/hardware/entorno_medido.txt` | `DOCUMENTACION_DESPLIEGUE_REHNIMARKET.md` §2–7, §12 (hardware §3.0/3.1 con medición real) | Requisitos **oficiales** de producción (necesitan campaña de carga) — documentado como "sin especificación oficial". |

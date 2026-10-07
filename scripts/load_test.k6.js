@@ -2,7 +2,7 @@ import http from 'k6/http';
 import { check, sleep, group } from 'k6';
 import { Rate } from 'k6/metrics';
 
-const BASE = __ENV.BASE_URL || 'http://localhost:8000';
+const BASE = 'http://10.101.130.69:8000';
 const RUN_CHECKOUT = (__ENV.CHECKOUT || '1') === '1';
 
 const errors = new Rate('errores_negocio');
@@ -13,9 +13,9 @@ export const options = {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
-        { duration: '30s', target: 10 },
-        { duration: '1m', target: 30 },
-        { duration: '1m', target: 50 },
+        { duration: '5m', target: 1000 },
+        { duration: '1m', target: 1000 },
+        { duration: '1m', target: 1000 },
         { duration: '30s', target: 0 },
       ],
       exec: 'lectura',

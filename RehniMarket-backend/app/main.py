@@ -55,7 +55,7 @@ app = FastAPI(
     lifespan=lifespan,
     title="RehniMarket API",
     version="2.6.0",
-    description="API REST del marketplace RehniMarket",
+    description="API REST del marketplace RehniMarket"
 )
 
 

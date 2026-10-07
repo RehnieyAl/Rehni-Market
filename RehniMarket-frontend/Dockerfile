@@ -1,16 +1,20 @@
 FROM node:22-alpine AS build
+
 WORKDIR /app
 ENV CI=true
 
 RUN corepack enable && corepack prepare pnpm@11.15.0 --activate
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-RUN pnpm install --frozen-lockfile
+
+RUN pnpm --version
+RUN pnpm install
 
 COPY . .
 
 ARG VITE_API_URL
 ARG VITE_REHNIMARKET_WHATSAPP
+
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_REHNIMARKET_WHATSAPP=$VITE_REHNIMARKET_WHATSAPP
 

@@ -12,8 +12,6 @@ PUBLIC_ROUTES = [
     "/auth/logout",
     "/media/proxy",
     "/company/certificate/update",
-    "/docs",
-    "/openapi.json",
     "/public/catalogs",
     "/public/colors",
     "/health/database",
@@ -24,8 +22,7 @@ PUBLIC_ROUTES = [
     "/public/products/daily",
     "/public/products/offers",
     "/public/products/new",
-    "/public/products",
-
+    "/public/products"
 ]
 
 PUBLIC_CATALOG_SPECIFICATIONS_PREFIX = "/public/catalogs/"
