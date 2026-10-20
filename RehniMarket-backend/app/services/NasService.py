@@ -108,8 +108,13 @@ class NasService:
         )
 
         def iterfile():
-            for chunk in response.stream(32 * 1024):
-                yield chunk
+            try:
+                for chunk in response.stream(32 * 1024):
+                    yield chunk
+            finally:
+                # También si el cliente corta la descarga a medias.
+                response.close()
+                response.release_conn()
 
         return StreamingResponse(
             iterfile(),

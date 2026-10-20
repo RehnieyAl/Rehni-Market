@@ -16,15 +16,15 @@ router = APIRouter(prefix="/favorites", tags=["favorites"])
 
 
 @router.get("", response_model=list[FavoriteResponse])
-def get_favorites(request: Request, database: Session = Depends(get_db)):
+def get_favorites(request: Request, database: Session = Depends(get_db, scope="function")):
     return list_favorites_service(request.state.user_id, request.state.role, database)
 
 
 @router.post("")
-def add_favorite(request: Request, data: AddFavoriteRequest, database: Session = Depends(get_db)):
+def add_favorite(request: Request, data: AddFavoriteRequest, database: Session = Depends(get_db, scope="function")):
     return add_favorite_service(request.state.user_id, request.state.role, data, database)
 
 
 @router.delete("/{product_id}")
-def remove_favorite(request: Request, product_id: UUID, database: Session = Depends(get_db)):
+def remove_favorite(request: Request, product_id: UUID, database: Session = Depends(get_db, scope="function")):
     return remove_favorite_service(request.state.user_id, request.state.role, product_id, database)

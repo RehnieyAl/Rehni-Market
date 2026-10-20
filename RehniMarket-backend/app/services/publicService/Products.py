@@ -4,7 +4,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import and_, case, func, or_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.core.ErrorCodes import ErrorCodes
 from app.core.Exceptions import api_error
@@ -39,6 +39,19 @@ from app.services.variants import attributes as attrs
 from app.services.variants.images import product_display_image_url
 
 NEW_PRODUCT_WINDOW_DAYS = 30
+
+# Relaciones que lee cada tarjeta (_to_card_response): empresa, categoría,
+# imagen inicial (variantes vivas -> sus imágenes -> imágenes del padre) y
+# precio (variantes). Sin estas opciones cada tarjeta disparaba 2-3 consultas
+# perezosas (N+1). Con ellas, un listado cuesta un número fijo de consultas
+# (una por relación, con WHERE ... IN), independiente del número de tarjetas.
+# Las relaciones no definen order_by: el orden es el mismo que con carga perezosa.
+CARD_LOAD_OPTIONS = (
+    selectinload(Product.company),
+    selectinload(Product.catalog),
+    selectinload(Product.images),
+    selectinload(Product.variants).selectinload(ProductVariant.images),
+)
 
 
 def get_catalogs_service(database: Session):
@@ -209,6 +222,7 @@ def list_public_offers_service(
 
     query = (
         database.query(Product)
+        .options(*CARD_LOAD_OPTIONS)
         .join(Product.company)
         .filter(_is_publicly_visible(), _has_visible_stock(), _has_active_offer())
         .order_by(Product.created_at.desc())
@@ -237,6 +251,7 @@ def list_public_new_products_service(
 
     query = (
         database.query(Product)
+        .options(*CARD_LOAD_OPTIONS)
         .join(Product.company)
         .filter(
             _is_publicly_visible(),
@@ -264,6 +279,7 @@ def get_daily_products_service(database: Session, limit: int = 8) -> list[Public
 
     products = (
         database.query(Product)
+        .options(*CARD_LOAD_OPTIONS)
         .join(Product.company)
         .filter(_is_publicly_visible(), _has_visible_stock())
         .order_by(Product.created_at.desc())
@@ -322,7 +338,12 @@ def list_public_products_service(
         else_=Product.price,
     )
 
-    query = database.query(Product).join(Product.company).filter(_is_publicly_visible())
+    query = (
+        database.query(Product)
+        .options(*CARD_LOAD_OPTIONS)
+        .join(Product.company)
+        .filter(_is_publicly_visible())
+    )
 
     search_term = _normalize_search_term(search) if search else ""
     search_tokens = search_term.split()

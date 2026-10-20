@@ -22,13 +22,13 @@ router = APIRouter(prefix="/addresses", tags=["addresses"])
 
 
 @router.get("", response_model=list[AddressResponse])
-def get_addresses(request: Request, database: Session = Depends(get_db)):
+def get_addresses(request: Request, database: Session = Depends(get_db, scope="function")):
     return list_addresses_service(request.state.user_id, request.state.role, database)
 
 
 @router.post("", response_model=AddressResponse)
 def create_address(
-    request: Request, data: CreateAddressRequest, database: Session = Depends(get_db)
+    request: Request, data: CreateAddressRequest, database: Session = Depends(get_db, scope="function")
 ):
     return create_address_service(request.state.user_id, request.state.role, data, database)
 
@@ -38,7 +38,7 @@ def update_address(
     request: Request,
     address_id: UUID,
     data: UpdateAddressRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return update_address_service(
         request.state.user_id, request.state.role, address_id, data, database
@@ -46,12 +46,12 @@ def update_address(
 
 
 @router.delete("/{address_id}")
-def delete_address(request: Request, address_id: UUID, database: Session = Depends(get_db)):
+def delete_address(request: Request, address_id: UUID, database: Session = Depends(get_db, scope="function")):
     return delete_address_service(request.state.user_id, request.state.role, address_id, database)
 
 
 @router.patch("/{address_id}/set-default", response_model=AddressResponse)
-def set_default_address(request: Request, address_id: UUID, database: Session = Depends(get_db)):
+def set_default_address(request: Request, address_id: UUID, database: Session = Depends(get_db, scope="function")):
     return set_default_address_service(
         request.state.user_id, request.state.role, address_id, database
     )

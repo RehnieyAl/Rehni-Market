@@ -11,5 +11,5 @@ router = APIRouter(prefix="/checkout", tags=["checkout"])
 
 
 @router.post("", response_model=CheckoutSummaryResponse)
-def checkout(request: Request, data: CheckoutRequest, database: Session = Depends(get_db)):
+def checkout(request: Request, data: CheckoutRequest, database: Session = Depends(get_db, scope="function")):
     return checkout_service(request.state.user_id, request.state.role, data, database)

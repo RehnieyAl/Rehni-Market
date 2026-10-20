@@ -24,7 +24,7 @@ def get_all_users(
     cursor: UUID | None = Query(default=None),
     before_cursor: UUID | None = Query(default=None),
     search: str | None = Query(default=None),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     admin_id = request.state.user_id
 
@@ -38,13 +38,13 @@ def get_all_users(
     )
 
 @router.get("/dashboard/get-user/{user_id}")
-def get_user_by_id(user_id: UUID,database: Session = Depends(get_db)):
+def get_user_by_id(user_id: UUID,database: Session = Depends(get_db, scope="function")):
 
     return get_user_by_id_service(user_id,database)
 
 
 @router.patch("/dashboard/user/update-information/{user_id}")
-def update_admin_user(request: Request,user_id: UUID,data: UpdateAdminUserRequest,database: Session = Depends(get_db)):
+def update_admin_user(request: Request,user_id: UUID,data: UpdateAdminUserRequest,database: Session = Depends(get_db, scope="function")):
 
     admin_id = request.state.user_id
     acting_role = request.state.role
@@ -53,7 +53,7 @@ def update_admin_user(request: Request,user_id: UUID,data: UpdateAdminUserReques
 
 
 @router.patch("/dashboard/user/update-information/status/{user_id}")
-def toggle_admin_user_status(request: Request, user_id: UUID,database: Session = Depends(get_db)):
+def toggle_admin_user_status(request: Request, user_id: UUID,database: Session = Depends(get_db, scope="function")):
 
     admin_id = request.state.user_id
     acting_role = request.state.role

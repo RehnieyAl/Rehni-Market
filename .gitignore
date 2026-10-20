@@ -10,3 +10,6 @@ CLAUDE.md
 *.sha256
 *.gpg
 .env
+scripts/migracion/*.sql
+*.csv
+.csv

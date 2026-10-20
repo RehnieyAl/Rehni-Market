@@ -16,7 +16,7 @@ router = APIRouter(
 
 
 @router.get("/dashboard/statistics")
-def get_admin_dashboard_statistics(database: Session = Depends(get_db)):
+def get_admin_dashboard_statistics(database: Session = Depends(get_db, scope="function")):
     
     return get_admin_dashboard_statistics_service(database)
 
@@ -24,7 +24,7 @@ def get_admin_dashboard_statistics(database: Session = Depends(get_db)):
 
 @router.get("/dashboard/recent-activities")
 def get_recent_activities(
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return get_recent_activities_service(
         database=database,
@@ -35,7 +35,7 @@ def get_recent_activities(
 
 @router.get("/dashboard/recent-users")
 def get_recent_users(
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return get_recent_users_service(
         database=database,

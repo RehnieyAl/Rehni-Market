@@ -44,7 +44,7 @@ router = APIRouter(
 )
 
 @router.post("/register-user")
-def registerUser(user: CreateUserRequest, database: Session = Depends(get_db)):
+def registerUser(user: CreateUserRequest, database: Session = Depends(get_db, scope="function")):
     return register_user_service(user, database)
 
 @router.post("/register-company")
@@ -53,7 +53,7 @@ def registerCompany(
     company: CreateCompanyRequest = Depends(CreateCompanyRequest.as_form),
     certificate: UploadFile = File(...),
     nas: NasService = Depends(get_nas_service),
-    database: Session = Depends(get_db)):
+    database: Session = Depends(get_db, scope="function")):
 
     return register_company_service(
         user=user,
@@ -64,44 +64,44 @@ def registerCompany(
     )
 
 @router.post("/verify-email-user")
-def verify_email(code: VerifyEmailRequest, database: Session = Depends(get_db)):
+def verify_email(code: VerifyEmailRequest, database: Session = Depends(get_db, scope="function")):
     
     return verify_email_service(code, database)
 
 @router.post("/change-email")
-def change_email(changeEmail: ChangeEmailRequestOnlyRegistered, database: Session = Depends(get_db)):
+def change_email(changeEmail: ChangeEmailRequestOnlyRegistered, database: Session = Depends(get_db, scope="function")):
 
     return change_email_service(changeEmail, database)
 
 @router.post("/resend-verification-code")
-def resend_verification_code(data: ResendVerificationCodeRequest, database: Session = Depends(get_db)):
+def resend_verification_code(data: ResendVerificationCodeRequest, database: Session = Depends(get_db, scope="function")):
 
     return resend_verification_code_service(data, database)
 
 @router.post("/login-user")
-def login_user(user: LoginRequest, database: Session = Depends(get_db)):
+def login_user(user: LoginRequest, database: Session = Depends(get_db, scope="function")):
     
     return login_service(user, database)
 
 
 @router.post("/forgot-password-user")
-def forgot_password(user: ForgotPasswordRequest, database: Session = Depends(get_db)):
+def forgot_password(user: ForgotPasswordRequest, database: Session = Depends(get_db, scope="function")):
 
     return forgot_password_service(user, database)
 
 @router.post("/reset-password-user")
-def reset_password(user: ResetPasswordRequest, database: Session = Depends(get_db)):
+def reset_password(user: ResetPasswordRequest, database: Session = Depends(get_db, scope="function")):
  
     return reset_password_service(user, database)
 
 @router.post("/refresh")
-def refresh_token(data:RefreshRequest, database: Session = Depends(get_db)):
+def refresh_token(data:RefreshRequest, database: Session = Depends(get_db, scope="function")):
 
     return refresh_token_service(data, database)
 
 
 @router.get("/me")
-def get_me(request: Request, database: Session = Depends(get_db)):
+def get_me(request: Request, database: Session = Depends(get_db, scope="function")):
 
     return get_me_profile_service(
         user_id=request.state.user_id,
@@ -110,7 +110,7 @@ def get_me(request: Request, database: Session = Depends(get_db)):
 
 
 @router.patch("/me")
-def update_me(request: Request, data: UpdateMeRequest, database: Session = Depends(get_db)):
+def update_me(request: Request, data: UpdateMeRequest, database: Session = Depends(get_db, scope="function")):
 
     return update_me_profile_service(
         user_id=request.state.user_id,
@@ -124,7 +124,7 @@ def update_me_photo(
     request: Request,
     photo: UploadFile = File(...),
     nas: NasService = Depends(get_nas_service),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     return update_me_photo_service(

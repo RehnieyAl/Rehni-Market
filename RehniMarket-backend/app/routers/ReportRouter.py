@@ -20,7 +20,7 @@ def create_report(
     data: CreateReportRequest = Depends(CreateReportRequest.as_form),
     evidences: list[UploadFile] = File(default=[]),
     nas: NasService = Depends(get_nas_service),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return create_report_service(
         request.state.user_id,

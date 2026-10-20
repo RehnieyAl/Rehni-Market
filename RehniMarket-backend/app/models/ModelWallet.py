@@ -74,7 +74,7 @@ class WalletTransaction(Base):
     )
 
     wallet_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("wallets.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("wallets.id"), nullable=False, index=True
     )
 
     type: Mapped[WalletTransactionType] = mapped_column(

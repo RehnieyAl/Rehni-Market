@@ -38,7 +38,7 @@ def _require_admin_or_owner(request: Request):
 def recharge_wallet_by_email(
     request: Request,
     data: RechargeWalletByEmailRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     _require_admin_or_owner(request)
 
@@ -52,7 +52,7 @@ def get_recharge_history(
     request: Request,
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=50),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     _require_admin_or_owner(request)
 
@@ -67,7 +67,7 @@ def correct_recharge(
     request: Request,
     transaction_id: UUID,
     data: CorrectRechargeRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     _require_admin_or_owner(request)
 

@@ -22,7 +22,7 @@ router = APIRouter(prefix="/wallet", tags=["wallet"])
 
 
 @router.get("/me", response_model=WalletResponse)
-def get_my_wallet(request: Request, database: Session = Depends(get_db)):
+def get_my_wallet(request: Request, database: Session = Depends(get_db, scope="function")):
     return get_my_wallet_service(request.state.user_id, database)
 
 
@@ -31,7 +31,7 @@ def get_my_transactions(
     request: Request,
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=50),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return get_my_transactions_service(
         request.state.user_id, database, page=page, limit=limit
@@ -40,7 +40,7 @@ def get_my_transactions(
 
 @router.post("/recharge", response_model=WalletResponse)
 def recharge_wallet(
-    request: Request, data: RechargeWalletRequest, database: Session = Depends(get_db)
+    request: Request, data: RechargeWalletRequest, database: Session = Depends(get_db, scope="function")
 ):
     if request.state.role not in ("admin", "owner"):
         api_error(

@@ -112,14 +112,16 @@ class Product(Base):
     company_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("company.id"),
-        nullable=False
+        nullable=False,
+        index=True,
     )
 
 
     catalog_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("catalog.id"),
-        nullable=False
+        nullable=False,
+        index=True,
     )
 
 
@@ -212,7 +214,8 @@ class ProductImage(Base):
     product_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("products.id"),
-        nullable=False
+        nullable=False,
+        index=True,
     )
 
 

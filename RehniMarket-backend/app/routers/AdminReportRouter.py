@@ -26,7 +26,7 @@ def get_reports(
     target_type: str | None = Query(default=None),
     status: str | None = Query(default=None),
     search: str | None = Query(default=None),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return list_reports_service(
         database=database,
@@ -39,7 +39,7 @@ def get_reports(
 
 
 @router.get("/{report_id}", response_model=ReportResponse)
-def get_report(report_id: UUID, database: Session = Depends(get_db)):
+def get_report(report_id: UUID, database: Session = Depends(get_db, scope="function")):
     return get_report_detail_service(database, report_id)
 
 
@@ -48,7 +48,7 @@ def update_report_status(
     request: Request,
     report_id: UUID,
     data: UpdateReportStatusRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     admin_id = request.state.user_id
 

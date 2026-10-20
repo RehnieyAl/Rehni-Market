@@ -1,0 +1,7 @@
+# Override local (Docker Compose lo carga automáticamente junto a docker-compose.yml).
+# Publica PostgreSQL solo en esta máquina para clientes como DbSchema:
+#   Host: localhost  Puerto: 5433  BD/usuario/contraseña: RehniMarket-backend/.env
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:5433:5432"

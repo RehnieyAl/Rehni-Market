@@ -32,11 +32,11 @@ class Order(Base):
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True
     )
 
     company_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("company.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("company.id"), nullable=False, index=True
     )
 
     address_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -93,7 +93,7 @@ class OrderItem(Base):
     )
 
     order_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("orders.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("orders.id"), nullable=False, index=True
     )
 
     product_id: Mapped[uuid.UUID] = mapped_column(

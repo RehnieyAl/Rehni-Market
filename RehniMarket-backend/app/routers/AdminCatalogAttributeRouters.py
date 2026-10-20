@@ -38,7 +38,7 @@ router = APIRouter(
 def list_catalog_attributes(
     catalog_id: UUID,
     role: str | None = Query(default=None, pattern="^(product|variant)$"),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return list_catalog_attributes_service(database, catalog_id, role)
 
@@ -51,7 +51,7 @@ def list_catalog_attributes(
 def create_catalog_attribute(
     catalog_id: UUID,
     data: CreateCatalogAttributeRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return create_catalog_attribute_service(database, catalog_id, data)
 
@@ -62,7 +62,7 @@ def create_catalog_attribute(
 )
 def get_catalog_attribute(
     attribute_id: UUID,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return get_catalog_attribute_service(database, attribute_id)
 
@@ -74,7 +74,7 @@ def get_catalog_attribute(
 def update_catalog_attribute(
     attribute_id: UUID,
     data: UpdateCatalogAttributeRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return update_catalog_attribute_service(database, attribute_id, data)
 
@@ -86,7 +86,7 @@ def update_catalog_attribute(
 def set_catalog_attribute_status(
     attribute_id: UUID,
     data: CatalogAttributeStatusRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return set_catalog_attribute_status_service(database, attribute_id, data.is_active)
 
@@ -94,7 +94,7 @@ def set_catalog_attribute_status(
 @router.delete("/catalog-attributes/{attribute_id}")
 def delete_catalog_attribute(
     attribute_id: UUID,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return delete_catalog_attribute_service(database, attribute_id)
 
@@ -107,7 +107,7 @@ def delete_catalog_attribute(
 def create_attribute_option(
     attribute_id: UUID,
     data: CreateAttributeOptionRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return create_attribute_option_service(database, attribute_id, data)
 
@@ -119,7 +119,7 @@ def create_attribute_option(
 def update_attribute_option(
     option_id: UUID,
     data: UpdateAttributeOptionRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return update_attribute_option_service(database, option_id, data)
 
@@ -127,6 +127,6 @@ def update_attribute_option(
 @router.delete("/catalog-attribute-options/{option_id}")
 def delete_attribute_option(
     option_id: UUID,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return delete_attribute_option_service(database, option_id)

@@ -22,20 +22,20 @@ router = APIRouter(prefix="/reviews", tags=["reviews"])
 
 
 @router.get("/eligibility/{product_id}", response_model=ReviewEligibilityResponse)
-def get_review_eligibility(request: Request, product_id: UUID, database: Session = Depends(get_db)):
+def get_review_eligibility(request: Request, product_id: UUID, database: Session = Depends(get_db, scope="function")):
     return check_review_eligibility_service(
         request.state.user_id, request.state.role, product_id, database
     )
 
 
 @router.post("", response_model=ReviewResponse)
-def create_review(request: Request, data: CreateReviewRequest, database: Session = Depends(get_db)):
+def create_review(request: Request, data: CreateReviewRequest, database: Session = Depends(get_db, scope="function")):
     return create_review_service(request.state.user_id, request.state.role, data, database)
 
 
 @router.patch("/{review_id}", response_model=ReviewResponse)
 def update_my_review(
-    request: Request, review_id: UUID, data: UpdateReviewRequest, database: Session = Depends(get_db)
+    request: Request, review_id: UUID, data: UpdateReviewRequest, database: Session = Depends(get_db, scope="function")
 ):
     return update_my_review_service(
         request.state.user_id, request.state.role, review_id, data, database
@@ -43,6 +43,6 @@ def update_my_review(
 
 
 @router.delete("/{review_id}")
-def delete_my_review(request: Request, review_id: UUID, database: Session = Depends(get_db)):
+def delete_my_review(request: Request, review_id: UUID, database: Session = Depends(get_db, scope="function")):
     delete_my_review_service(request.state.user_id, request.state.role, review_id, database)
     return {"success": True}

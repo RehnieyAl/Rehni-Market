@@ -21,13 +21,13 @@ router = APIRouter(prefix="/company/bank-accounts", tags=["company", "bank-accou
 
 
 @router.get("", response_model=list[BankAccountResponse])
-def get_bank_accounts(request: Request, database: Session = Depends(get_db)):
+def get_bank_accounts(request: Request, database: Session = Depends(get_db, scope="function")):
     return list_bank_accounts_service(request.state.user_id, database)
 
 
 @router.post("", response_model=BankAccountResponse)
 def create_bank_account(
-    request: Request, data: CreateBankAccountRequest, database: Session = Depends(get_db)
+    request: Request, data: CreateBankAccountRequest, database: Session = Depends(get_db, scope="function")
 ):
     return create_bank_account_service(request.state.user_id, data, database)
 
@@ -37,13 +37,13 @@ def update_bank_account(
     request: Request,
     bank_account_id: UUID,
     data: UpdateBankAccountRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return update_bank_account_service(request.state.user_id, bank_account_id, data, database)
 
 
 @router.delete("/{bank_account_id}")
 def delete_bank_account(
-    request: Request, bank_account_id: UUID, database: Session = Depends(get_db)
+    request: Request, bank_account_id: UUID, database: Session = Depends(get_db, scope="function")
 ):
     return delete_bank_account_service(request.state.user_id, bank_account_id, database)

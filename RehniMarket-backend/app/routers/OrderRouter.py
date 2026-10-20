@@ -28,7 +28,7 @@ def get_my_orders(
     request: Request,
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=50),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return list_my_orders_service(
         request.state.user_id, request.state.role, database, page=page, limit=limit
@@ -36,19 +36,19 @@ def get_my_orders(
 
 
 @router.get("/{order_id}", response_model=OrderResponse)
-def get_my_order_detail(request: Request, order_id: UUID, database: Session = Depends(get_db)):
+def get_my_order_detail(request: Request, order_id: UUID, database: Session = Depends(get_db, scope="function")):
     return get_my_order_detail_service(
         request.state.user_id, request.state.role, order_id, database
     )
 
 
 @router.patch("/{order_id}/cancel", response_model=OrderResponse)
-def cancel_my_order(request: Request, order_id: UUID, database: Session = Depends(get_db)):
+def cancel_my_order(request: Request, order_id: UUID, database: Session = Depends(get_db, scope="function")):
     return cancel_my_order_service(request.state.user_id, request.state.role, order_id, database)
 
 
 @router.get("/{order_id}/returns", response_model=list[ReturnRequestResponse])
-def get_order_returns(request: Request, order_id: UUID, database: Session = Depends(get_db)):
+def get_order_returns(request: Request, order_id: UUID, database: Session = Depends(get_db, scope="function")):
     """Solicitudes de devolución del comprador para uno de sus pedidos."""
 
     return list_order_returns_service(
@@ -61,7 +61,7 @@ def create_order_return(
     request: Request,
     order_id: UUID,
     data: CreateReturnRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     """El comprador solicita la devolución de un ítem de un pedido ENTREGADO. El estado
     inicial es PENDING; la empresa dueña del pedido la evalúa después."""

@@ -40,7 +40,7 @@ def _require_owner(request: Request):
 
 @router.post("/generate", response_model=CompanyPayoutResponse)
 def generate_payout(
-    request: Request, data: GeneratePayoutRequest, database: Session = Depends(get_db)
+    request: Request, data: GeneratePayoutRequest, database: Session = Depends(get_db, scope="function")
 ):
     _require_owner(request)
 
@@ -53,7 +53,7 @@ def get_payouts(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=50),
     status: str | None = Query(None),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     _require_owner(request)
 
@@ -64,7 +64,7 @@ def get_payouts(
 def get_available_periods(
     request: Request,
     company_id: UUID = Query(...),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     _require_owner(request)
 
@@ -77,7 +77,7 @@ def get_payout_preview(
     company_id: UUID = Query(...),
     period_start: date = Query(...),
     period_end: date = Query(...),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     _require_owner(request)
 
@@ -85,14 +85,14 @@ def get_payout_preview(
 
 
 @router.get("/{payout_id}", response_model=CompanyPayoutResponse)
-def get_payout_detail(request: Request, payout_id: UUID, database: Session = Depends(get_db)):
+def get_payout_detail(request: Request, payout_id: UUID, database: Session = Depends(get_db, scope="function")):
     _require_owner(request)
 
     return get_admin_payout_detail_service(payout_id, database)
 
 
 @router.patch("/{payout_id}/pay", response_model=CompanyPayoutResponse)
-def pay_payout(request: Request, payout_id: UUID, database: Session = Depends(get_db)):
+def pay_payout(request: Request, payout_id: UUID, database: Session = Depends(get_db, scope="function")):
     _require_owner(request)
 
     return mark_payout_paid_service(payout_id, database)

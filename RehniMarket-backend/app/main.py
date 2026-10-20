@@ -1,3 +1,4 @@
+import anyio.to_thread
 from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
 from pydantic import ValidationError
@@ -40,14 +41,18 @@ from app.Config import config
 
 @asynccontextmanager
 async def lifespan(app):
+    # Hilos para endpoints síncronos, dependencias y run_in_threadpool.
+    # Explícito y acotado: debe ser <= DB_POOL_SIZE + DB_MAX_OVERFLOW (Config.py).
+    anyio.to_thread.current_default_thread_limiter().total_tokens = config.THREADPOOL_SIZE
+
     ensure_bucket()
 
-    db = SessionLocal()
-
     if config.RUN_SEED:
-        run_seed(db)
-
-    db.close()
+        db = SessionLocal()
+        try:
+            run_seed(db)
+        finally:
+            db.close()
     yield
 
 

@@ -111,7 +111,7 @@ def get_company(
         le=100,
     ),
     cursor: str | None = Query(None),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     return get_all_companies_service(
@@ -128,7 +128,7 @@ def get_company(
 )
 def get_admin_company(
     company_id: UUID,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     return get_admin_company_service(
@@ -144,7 +144,7 @@ def update_certificate_status(
     request: Request,
     company_id: UUID,
     data: UpdateCertificateStatusRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     admin_id = request.state.user_id
@@ -166,7 +166,7 @@ def update_company_status(
     request: Request,
     company_id: UUID,
     data: UpdateCompanyStatusRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     admin_id = request.state.user_id
@@ -184,7 +184,7 @@ def update_company_status(
     "/dashboard/get-colors"
 )
 def get_colors(
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     return get_colors_service(
@@ -197,7 +197,7 @@ def get_colors(
 )
 def create_color(
     data: CreateColorRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     return create_color_service(
@@ -212,7 +212,7 @@ def create_color(
 def update_color(
     color_id: UUID,
     data: UpdateColorRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     return update_color_service(
@@ -227,7 +227,7 @@ def update_color(
 )
 def delete_color(
     color_id: UUID,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     return delete_color_service(
@@ -241,7 +241,7 @@ def delete_color(
     response_model=list[CatalogResponse],
 )
 def get_catalogs(
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     return get_catalogs_service(
@@ -257,7 +257,7 @@ def create_catalog(
     data: CreateCatalogRequest = Depends(CreateCatalogRequest.as_form),
     image: UploadFile | None = File(None),
     nas: NasService = Depends(get_nas_service),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     return create_catalog_service(
@@ -277,7 +277,7 @@ def update_catalog(
     data: UpdateCatalogRequest = Depends(UpdateCatalogRequest.as_form),
     image: UploadFile | None = File(None),
     nas: NasService = Depends(get_nas_service),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     return update_catalog_service(
@@ -296,7 +296,7 @@ def update_catalog(
 def change_catalog_status(
     catalog_id: UUID,
     data: CatalogStatusRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     return change_catalog_status_service(
@@ -312,7 +312,7 @@ def change_catalog_status(
 def delete_catalog(
     catalog_id: UUID,
     nas: NasService = Depends(get_nas_service),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     return delete_catalog_service(
@@ -328,7 +328,7 @@ def delete_catalog(
 )
 def get_specifications(
     catalog_id: UUID,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     return get_specifications_service(
@@ -344,7 +344,7 @@ def get_specifications(
 def create_specification(
     catalog_id: UUID,
     data: CreateSpecificationRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     return create_specification_service(
@@ -361,7 +361,7 @@ def create_specification(
 def update_specification(
     specification_id: UUID,
     data: UpdateSpecificationRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     return update_specification_service(
@@ -376,7 +376,7 @@ def update_specification(
 )
 def delete_specification(
     specification_id: UUID,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     return delete_specification_service(
@@ -390,7 +390,7 @@ def delete_specification(
     response_model=list[AdvertisementResponse],
 )
 def get_advertisements(
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return get_advertisements_service(
         database=database,
@@ -403,7 +403,7 @@ def get_advertisements(
 )
 def get_advertisement(
     advertisement_id: UUID,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return get_advertisement_service(
         database=database,
@@ -426,7 +426,7 @@ def create_advertisement(
 
     nas: NasService = Depends(get_nas_service),
 
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return create_advertisement_service(
         database=database,
@@ -454,7 +454,7 @@ def update_advertisement(
 
     nas: NasService = Depends(get_nas_service),
 
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return update_advertisement_service(
         database=database,
@@ -475,7 +475,7 @@ def change_advertisement_status(
 
     data: AdvertisementStatusRequest,
 
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return change_advertisement_status_service(
         database=database,
@@ -492,7 +492,7 @@ def delete_advertisement(
 
     nas: NasService = Depends(get_nas_service),
 
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return delete_advertisement_service(
         database=database,

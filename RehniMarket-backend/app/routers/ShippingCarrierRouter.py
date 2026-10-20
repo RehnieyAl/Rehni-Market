@@ -21,14 +21,14 @@ router = APIRouter(prefix="/admin/dashboard/shipping-carriers", tags=["admin", "
 
 
 @router.get("", response_model=list[ShippingCarrierResponse])
-def get_shipping_carriers(database: Session = Depends(get_db)):
+def get_shipping_carriers(database: Session = Depends(get_db, scope="function")):
     return get_shipping_carriers_service(database)
 
 
 @router.post("", response_model=ShippingCarrierResponse)
 def create_shipping_carrier(
     data: CreateShippingCarrierRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return create_shipping_carrier_service(database, data)
 
@@ -37,7 +37,7 @@ def create_shipping_carrier(
 def update_shipping_carrier(
     carrier_id: UUID,
     data: UpdateShippingCarrierRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return update_shipping_carrier_service(database, carrier_id, data)
 
@@ -46,6 +46,6 @@ def update_shipping_carrier(
 def change_shipping_carrier_status(
     carrier_id: UUID,
     data: ShippingCarrierStatusRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return change_shipping_carrier_status_service(database, carrier_id, data.is_active)

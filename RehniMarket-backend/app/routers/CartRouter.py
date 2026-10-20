@@ -22,13 +22,13 @@ router = APIRouter(prefix="/cart", tags=["cart"])
 
 
 @router.get("", response_model=CartResponse)
-def get_cart(request: Request, database: Session = Depends(get_db)):
+def get_cart(request: Request, database: Session = Depends(get_db, scope="function")):
     return get_cart_service(request.state.user_id, request.state.role, database)
 
 
 @router.post("/add", response_model=CartResponse)
 def add_to_cart(
-    request: Request, data: AddCartItemRequest, database: Session = Depends(get_db)
+    request: Request, data: AddCartItemRequest, database: Session = Depends(get_db, scope="function")
 ):
     return add_to_cart_service(request.state.user_id, request.state.role, data, database)
 
@@ -38,7 +38,7 @@ def update_cart_item(
     request: Request,
     item_id: UUID,
     data: UpdateCartItemRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return update_cart_item_service(
         request.state.user_id, request.state.role, item_id, data, database
@@ -46,10 +46,10 @@ def update_cart_item(
 
 
 @router.delete("/item/{item_id}", response_model=CartResponse)
-def delete_cart_item(request: Request, item_id: UUID, database: Session = Depends(get_db)):
+def delete_cart_item(request: Request, item_id: UUID, database: Session = Depends(get_db, scope="function")):
     return remove_cart_item_service(request.state.user_id, request.state.role, item_id, database)
 
 
 @router.delete("/clear", response_model=CartResponse)
-def clear_cart(request: Request, database: Session = Depends(get_db)):
+def clear_cart(request: Request, database: Session = Depends(get_db, scope="function")):
     return clear_cart_service(request.state.user_id, request.state.role, database)

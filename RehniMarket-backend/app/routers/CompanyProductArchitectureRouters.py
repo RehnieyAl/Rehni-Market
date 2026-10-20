@@ -33,7 +33,7 @@ router = APIRouter(prefix="/company", tags=["company - product architecture"])
 def get_available_attributes(
     request: Request,
     product_id: UUID,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return get_available_attributes_service(
         database, request.state.user_id, product_id
@@ -47,7 +47,7 @@ def get_available_attributes(
 def get_product_attributes(
     request: Request,
     product_id: UUID,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return get_product_attributes_service(
         database, request.state.user_id, product_id
@@ -62,7 +62,7 @@ def set_product_attributes(
     request: Request,
     product_id: UUID,
     data: SetProductAttributesRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return set_product_attributes_service(
         database, request.state.user_id, product_id, data
@@ -74,7 +74,7 @@ def set_product_discount(
     request: Request,
     product_id: UUID,
     data: ProductDiscountRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return set_product_discount_service(
         database, request.state.user_id, product_id, data
@@ -86,7 +86,7 @@ def generate_variant_combinations(
     request: Request,
     product_id: UUID,
     data: GenerateCombinationsRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return generate_combinations_service(
         database, request.state.user_id, product_id, data.attribute_ids

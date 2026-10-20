@@ -16,8 +16,6 @@ PUBLIC_ROUTES = [
     "/public/colors",
     "/health/database",
     "/health/internet",
-    "/admin/dashboard/recent-activities",
-    "/admin/dashboard/recent-users",
     "/public/advertisements",
     "/public/products/daily",
     "/public/products/offers",

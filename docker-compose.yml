@@ -14,6 +14,11 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
 
   postgres:
     image: postgres:17-alpine
@@ -29,32 +34,50 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+          cpus: "3"
   pgbouncer:
     image: edoburu/pgbouncer:latest
     container_name: pgbouncer_pool
     restart: unless-stopped
     env_file:
       - ./RehniMarket-backend/.env
-    volumes:
-      - ./RehniMarket-backend/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini
-      - ./RehniMarket-backend/userlist.txt:/etc/pgbouncer/userlist.txt
-    ports:
-      - "6432:6432"
     environment:
-      - DB_USER=${DB_USER:-mi_usuario}
-      - DB_PASS=${DB_PASS:-mi_password}
-      - DB_NAME=${DB_NAME:-mi_base_de_datos}
-      - DB_HOST=${DB_HOST:-postgres}
-      - POOL_MODE=transaction        # CRÍTICO: Reutiliza conexiones por cada transacción SQL
-      - MAX_CLIENT_CONN=12000        # CRÍTICO: Permite que entren los 10,000 usuarios de k6
-      - DEFAULT_POOL_SIZE=100        # Conexiones reales máximas hacia Postgres
-    ulimits:                         # Abre los sockets dentro del contenedor
+      AUTH_TYPE: scram-sha-256   
+      POOL_MODE: transaction     
+                                 
+      LISTEN_PORT: "6432"        
+      DEFAULT_POOL_SIZE: "20"
+      MIN_POOL_SIZE: "5"
+      RESERVE_POOL_SIZE: "5"
+      MAX_CLIENT_CONN: "200"
+    ulimits:                         
       nofile:
         soft: 65535
         hard: 65535
+    entrypoint:
+      - sh
+      - -c
+      - |
+        export DATABASE_URL="postgresql://$${POSTGRES_USER}:$${POSTGRES_PASSWORD}@postgres:5432/$${POSTGRES_DB}"
+        exec /entrypoint.sh /usr/bin/pgbouncer /etc/pgbouncer/pgbouncer.ini
+    healthcheck:
+      test: ["CMD-SHELL", "PGPASSWORD=\"$$POSTGRES_PASSWORD\" psql -h 127.0.0.1 -p 6432 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\" -c 'SELECT 1' >/dev/null 2>&1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
   backend:
     build:
@@ -63,19 +86,19 @@ services:
     image: rehni-market-backend
     container_name: rehni-backend
     restart: unless-stopped
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
+    # Recordar DevOps, Nunca fijar un dns, ya que rompe la resolución de nombres en redes que bloquean DNS saliente a resolutores públicos 
+    # (p. ej. Wi-Fi institucional) y `uv run` no puede descargar de PyPI.
+    # Tambien bloquea el servicio STMP para 
     env_file:
       - ./RehniMarket-backend/.env
-    environment:
-      RATE_LIMIT_ENABLED: "false"
     volumes:
       - backend_venv:/app/.venv
     depends_on:
       postgres:
         condition: service_healthy
       minio:
+        condition: service_healthy
+      pgbouncer:
         condition: service_healthy
     command: sh -c "uv run alembic upgrade head && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
     ports:
@@ -86,6 +109,11 @@ services:
       timeout: 8s
       retries: 5
       start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "4"
 
   frontend:
     build:
@@ -108,7 +136,11 @@ services:
       timeout: 4s
       retries: 5
       start_period: 5s
-
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
 volumes:
   postgres_data:
   minio_data:

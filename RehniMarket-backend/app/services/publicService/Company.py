@@ -18,7 +18,11 @@ from app.schemas.SchemaPublic import (
 )
 
 from app.services.NasService import build_media_url
-from app.services.publicService.Products import _to_card_responses, _has_visible_stock
+from app.services.publicService.Products import (
+    CARD_LOAD_OPTIONS,
+    _has_visible_stock,
+    _to_card_responses,
+)
 
 
 def get_public_company_profile_service(
@@ -105,6 +109,7 @@ def get_public_company_products_service(
 
     query = (
         database.query(Product)
+        .options(*CARD_LOAD_OPTIONS)
         .filter(
             Product.company_id == company.id,
             Product.is_active.is_(True),

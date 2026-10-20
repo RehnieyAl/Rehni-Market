@@ -95,7 +95,7 @@ router = APIRouter(
 
 
 @router.get("/dashboard/me")
-def dashboard(request: Request,database: Session = Depends(get_db)):
+def dashboard(request: Request,database: Session = Depends(get_db, scope="function")):
 
     user_id = request.state.user_id
     
@@ -105,12 +105,12 @@ def dashboard(request: Request,database: Session = Depends(get_db)):
     )
 
 @router.get("/dashboard/my-profile")
-def get_info_company(request:Request, database: Session =Depends(get_db)):
+def get_info_company(request:Request, database: Session =Depends(get_db, scope="function")):
     user_id = request.state.user_id
     return company_dashboard_my_profile_service(user_id, database)
 
 @router.patch("/dashboard/upgrade-my-profile")
-def upgrade_info_company_profile(request: Request, upgrade_profile: UpdateInformationCompanyRequest,database: Session = Depends(get_db)):
+def upgrade_info_company_profile(request: Request, upgrade_profile: UpdateInformationCompanyRequest,database: Session = Depends(get_db, scope="function")):
     user_id = request.state.user_id
     return company_dashboard_upgrade_my_profile_service(user_id, upgrade_profile, database)
 
@@ -120,7 +120,7 @@ def patch_media(
     photo_profile: UploadFile = File(None),
     banner_profile: UploadFile = File(None),
     nas: NasService = Depends(get_nas_service),
-    database: Session = Depends(get_db)
+    database: Session = Depends(get_db, scope="function")
 ):
 
     user_id = request.state.user_id
@@ -138,7 +138,7 @@ def replace_certificate(
     request: Request,
     certificate: UploadFile = File(...),
     nas: NasService = Depends(get_nas_service),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     user_id = request.state.user_id
@@ -157,7 +157,7 @@ def update_certificate_with_credentials(
     password: str = Form(...),
     certificate: UploadFile = File(...),
     nas: NasService = Depends(get_nas_service),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     update_certificate_with_credentials_service(
@@ -187,7 +187,7 @@ def create_product(
     imagesProduct: list[UploadFile] = File(None),
     mainColorId: str = Form(None),
     nas: NasService = Depends(get_nas_service),
-    database: Session = Depends(get_db)
+    database: Session = Depends(get_db, scope="function")
 
 ):
     user_id = request.state.user_id
@@ -213,7 +213,7 @@ def get_my_product(
     search: str = "", 
     page: int =  1, 
     limit: int = 5,
-    database: Session = Depends(get_db)
+    database: Session = Depends(get_db, scope="function")
 ):
     user_id = request.state.user_id
 
@@ -226,7 +226,7 @@ def get_my_product(
     )
 
 @router.get("/dashboard/products-summary")
-def get_products_summary(request: Request, database: Session = Depends(get_db)):
+def get_products_summary(request: Request, database: Session = Depends(get_db, scope="function")):
 
     user_id = request.state.user_id
 
@@ -240,7 +240,7 @@ def get_products_summary(request: Request, database: Session = Depends(get_db)):
 def get_my_product_detail(
     request: Request,
     product_id: UUID,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     user_id = request.state.user_id
@@ -260,7 +260,7 @@ def upgrade_my_product(
     imagesProduct: list[UploadFile] = File(None),
     imagesToDeleted: list[str] | None = Form(None),
     nas: NasService = Depends(get_nas_service),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     user_id = request.state.user_id
@@ -281,7 +281,7 @@ def change_status_my_product(
     request: Request,
     product_id: UUID,
     data: ProductStatusRequest, 
-    database: Session = Depends(get_db)):
+    database: Session = Depends(get_db, scope="function")):
 
     user_id = request.state.user_id
 
@@ -293,7 +293,7 @@ def change_status_my_product(
     )
 
 @router.delete("/dashboard/delete-my-product/{product_id}")
-def delete_my_product(request: Request,product_id: UUID, database: Session = Depends(get_db)):
+def delete_my_product(request: Request,product_id: UUID, database: Session = Depends(get_db, scope="function")):
 
     user_id = request.state.user_id
     return delete_product_service(
@@ -308,7 +308,7 @@ def create_variant(
     request: Request,
     product_id: UUID,
     data: CreateVariantRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     user_id = request.state.user_id
 
@@ -325,7 +325,7 @@ def list_variants(
     request: Request,
     product_id: UUID,
     include_deleted: bool = Query(default=False),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     user_id = request.state.user_id
 
@@ -342,7 +342,7 @@ def get_variant_detail(
     request: Request,
     product_id: UUID,
     variant_id: UUID,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     user_id = request.state.user_id
 
@@ -360,7 +360,7 @@ def update_variant(
     product_id: UUID,
     variant_id: UUID,
     data: UpdateVariantRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     user_id = request.state.user_id
 
@@ -378,7 +378,7 @@ def delete_variant(
     request: Request,
     product_id: UUID,
     variant_id: UUID,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     user_id = request.state.user_id
 
@@ -398,7 +398,7 @@ def list_variant_images(
     request: Request,
     product_id: UUID,
     variant_id: UUID,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     user_id = request.state.user_id
 
@@ -420,7 +420,7 @@ def upload_variant_images(
     variant_id: UUID,
     imagesVariant: list[UploadFile] = File(...),
     nas: NasService = Depends(get_nas_service),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     user_id = request.state.user_id
 
@@ -444,7 +444,7 @@ def delete_variant_image(
     variant_id: UUID,
     image_id: UUID,
     nas: NasService = Depends(get_nas_service),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     user_id = request.state.user_id
 
@@ -467,7 +467,7 @@ def set_main_variant_image(
     product_id: UUID,
     variant_id: UUID,
     image_id: UUID,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     user_id = request.state.user_id
 
@@ -488,7 +488,7 @@ def list_variant_attribute_values(
     request: Request,
     product_id: UUID,
     variant_id: UUID,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     user_id = request.state.user_id
 
@@ -509,7 +509,7 @@ def set_variant_attribute_values(
     product_id: UUID,
     variant_id: UUID,
     data: list[VariantAttributeValueItem],
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     user_id = request.state.user_id
 
@@ -529,7 +529,7 @@ def get_company_orders(
     limit: int = Query(10, ge=1, le=50),
     status: list[str] | None = Query(None),
     search: str | None = Query(None),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return list_company_orders_service(
         user_id=request.state.user_id,
@@ -542,7 +542,7 @@ def get_company_orders(
 
 
 @router.get("/dashboard/orders/status-counts", response_model=OrderStatusCountsResponse)
-def get_company_orders_status_counts(request: Request, database: Session = Depends(get_db)):
+def get_company_orders_status_counts(request: Request, database: Session = Depends(get_db, scope="function")):
     return get_company_order_status_counts_service(
         user_id=request.state.user_id,
         database=database,
@@ -551,7 +551,7 @@ def get_company_orders_status_counts(request: Request, database: Session = Depen
 
 @router.get("/dashboard/orders/{order_id}", response_model=OrderResponse)
 def get_company_order_detail(
-    request: Request, order_id: UUID, database: Session = Depends(get_db)
+    request: Request, order_id: UUID, database: Session = Depends(get_db, scope="function")
 ):
     return get_company_order_detail_service(
         user_id=request.state.user_id,
@@ -565,7 +565,7 @@ def update_company_order_status(
     request: Request,
     order_id: UUID,
     data: UpdateOrderStatusRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return update_company_order_status_service(
         user_id=request.state.user_id,
@@ -576,7 +576,7 @@ def update_company_order_status(
 
 
 @router.get("/dashboard/shipping-carriers", response_model=list[ShippingCarrierResponse])
-def get_company_shipping_carriers(request: Request, database: Session = Depends(get_db)):
+def get_company_shipping_carriers(request: Request, database: Session = Depends(get_db, scope="function")):
     return get_active_shipping_carriers_service(database)
 
 
@@ -587,7 +587,7 @@ def get_company_returns(
     limit: int = Query(10, ge=1, le=50),
     status: str | None = Query(None),
     search: str | None = Query(None),
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     
 
@@ -603,7 +603,7 @@ def get_company_returns(
 
 @router.get("/dashboard/returns/{return_id}", response_model=ReturnRequestResponse)
 def get_company_return_detail(
-    request: Request, return_id: UUID, database: Session = Depends(get_db)
+    request: Request, return_id: UUID, database: Session = Depends(get_db, scope="function")
 ):
     return get_company_return_detail_service(
         user_id=request.state.user_id,
@@ -617,7 +617,7 @@ def decide_company_return(
     request: Request,
     return_id: UUID,
     data: ReturnDecisionRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
 
     return decide_return_service(
@@ -633,7 +633,7 @@ def set_company_order_shipping(
     request: Request,
     order_id: UUID,
     data: SetOrderShippingRequest,
-    database: Session = Depends(get_db),
+    database: Session = Depends(get_db, scope="function"),
 ):
     return set_company_order_shipping_service(
         user_id=request.state.user_id,

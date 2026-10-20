@@ -28,7 +28,7 @@ class Review(Base):
     )
 
     product_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("products.id"), nullable=False
+        UUID(as_uuid=True), ForeignKey("products.id"), nullable=False, index=True
     )
 
     rating: Mapped[int] = mapped_column(Integer, nullable=False)
