@@ -26,3 +26,6 @@ dist-ssr
 design
 scripts
 .pnpm-store
+
+# Reportes de cobertura (vitest --coverage)
+coverage/

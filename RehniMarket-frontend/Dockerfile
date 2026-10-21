@@ -20,14 +20,14 @@ ENV VITE_REHNIMARKET_WHATSAPP=$VITE_REHNIMARKET_WHATSAPP
 
 RUN pnpm build
 
-FROM nginx:1.27-alpine AS runtime
+FROM caddy:2.11-alpine AS runtime
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/dist /usr/share/nginx/html
+# La configuración (Caddyfile) la monta docker-compose desde ../caddy/
+COPY --from=build /app/dist /srv
 
-EXPOSE 80
+EXPOSE 80 443
 
 HEALTHCHECK --interval=15s --timeout=4s --retries=5 --start-period=5s \
   CMD wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

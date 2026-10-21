@@ -4,12 +4,11 @@ CLAUDE.md
 /backups/
 *.dump
 *.dump.toc.txt
-*.sql
-*.sql.gz
 *.tar.gz
 *.sha256
 *.gpg
 .env
-scripts/migracion/*.sql
+.env.*
+!.env*.example
 *.csv
 .csv

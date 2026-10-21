@@ -2,6 +2,7 @@ from minio import Minio
 from minio.error import S3Error
 from app.Config import config
 
+from contextvars import ContextVar
 from datetime import timedelta
 from fastapi.responses import StreamingResponse
 import logging
@@ -132,6 +133,11 @@ def get_nas_service():
 
 MEDIA_BASE_URL = (config.URL_BACKEND or "http://192.168.40.25:8001").rstrip("/")
 
+# Base pública de la petición en curso cuando llega por el proxy (la fija
+# public_base_url_middleware). Si no hay, se usa MEDIA_BASE_URL.
+request_media_base: ContextVar[str | None] = ContextVar("request_media_base", default=None)
+
 
 def build_media_url(path: str) -> str:
-    return f"{MEDIA_BASE_URL}/media/proxy?path={path}"
+    base = request_media_base.get() or MEDIA_BASE_URL
+    return f"{base}/media/proxy?path={path}"

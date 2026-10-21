@@ -4,6 +4,9 @@ dist-ssr
 .pnpm-store
 .git
 
+# Los .env de `pnpm dev` no entran al build: VITE_* llega por build args (docker-compose.yml)
+.env
+.env.*
 !.env.example
 *.log
 design

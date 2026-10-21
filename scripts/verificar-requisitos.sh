@@ -10,14 +10,15 @@
 
 set -u
 
-MIN_CPUS="${MIN_CPUS:-1}"
+MIN_CPUS="${MIN_CPUS:-2}"
 MIN_RAM_MB="${MIN_RAM_MB:-4096}"
 MIN_DISK_GB="${MIN_DISK_GB:-30}"
 DISK_PATH="${DISK_PATH:-/}"
 OS_ID="${OS_ID:-cachyos}"
+MIN_OS_VERSION="${MIN_OS_VERSION:-rolling}"   # CachyOS es rolling release: no tiene VERSION_ID
 ARCHS="${ARCHS:-x86_64 aarch64}"
 MIN_DOCKER_VERSION="${MIN_DOCKER_VERSION:-24.0}"
-PORTS="${PORTS:-8080 8000 9000 5432}"
+PORTS="${PORTS:-8080 8443 8000}"
 
 fallos=0
 
@@ -47,6 +48,7 @@ arch=$(uname -m)
 
 # shellcheck disable=SC1091
 os_id=$(. /etc/os-release && echo "$ID")
+os_version=$(. /etc/os-release && echo "${VERSION_ID:-${BUILD_ID:-}}")
 [ "$os_id" = "$OS_ID" ] && version_ge "$os_version" "$MIN_OS_VERSION"
 resultado "Sistema operativo" "$OS_ID >= $MIN_OS_VERSION" "$os_id $os_version" $?
 
@@ -59,12 +61,19 @@ else
   resultado "Docker" ">= $MIN_DOCKER_VERSION" "no instalado" 1
 fi
 
+# Puertos publicados por los contenedores de RehniMarket en marcha: no son un conflicto.
+rehni_ports=$(docker ps --filter name=rehni- --format '{{.Ports}}' 2>/dev/null)
+
 for port in $PORTS; do
   # Puertos TCP en estado LISTEN (0A), leídos de /proc para no depender de `ss`
   port_hex=$(printf '%04X' "$port")
   if awk 'FNR > 1 && $4 == "0A" {split($2, a, ":"); print a[2]}' /proc/net/tcp /proc/net/tcp6 2>/dev/null \
       | grep -qx "$port_hex"; then
-    resultado "Puerto $port" "libre" "en uso" 1
+    if grep -q ":${port}->" <<<"$rehni_ports"; then
+      resultado "Puerto $port" "libre" "RehniMarket" 0
+    else
+      resultado "Puerto $port" "libre" "en uso" 1
+    fi
   else
     resultado "Puerto $port" "libre" "libre" 0
   fi

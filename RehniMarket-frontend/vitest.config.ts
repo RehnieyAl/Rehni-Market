@@ -13,5 +13,13 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
+    coverage: {
+      provider: "v8",
+      // Todo el código de la aplicación cuenta, tenga o no pruebas.
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: ["src/**/*.test.{ts,tsx}", "src/test/**", "src/**/*.d.ts"],
+      reporter: ["text-summary", "text", "lcov", "json-summary"],
+      reportsDirectory: "coverage",
+    },
   },
 });

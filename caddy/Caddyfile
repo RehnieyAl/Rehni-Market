@@ -1,0 +1,54 @@
+# Caddy reemplaza a Nginx en el contenedor `frontend`. Dos sitios, dos URL (virtual hosts):
+#   rehnimarket       → build de React
+#   api.rehnimarket   → backend:8000 (API, Swagger en /docs si DOCS_ENABLED=true)
+#
+# Variables (docker-compose.yml):
+#   SITE_ADDRESS  dominio del frontend   (por defecto rehnimarket)
+#   API_ADDRESS   dominio de la API      (por defecto api.rehnimarket)
+#   CADDY_TLS     `internal` = CA local de laboratorio; en producción, un correo para
+#                 que Caddy pida el certificado a Let's Encrypt
+
+(frontend) {
+	encode zstd gzip
+
+	# Encabezados que antes ponía nginx.conf
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
+	root * /srv
+
+	# Archivos con hash del build de Vite: caché de un año, 404 si no existen
+	handle /assets/* {
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	# Rutas de React: si el archivo no existe, index.html y el router decide
+	handle {
+		header Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+{$SITE_ADDRESS:rehnimarket} {
+	tls {$CADDY_TLS:internal}
+	import frontend
+}
+
+# El backend arma las URL de imágenes con el host por el que llegó el cliente
+# (X-Forwarded-Host, ver PublicBaseUrlMiddleware).
+{$API_ADDRESS:api.rehnimarket} {
+	tls {$CADDY_TLS:internal}
+	encode zstd gzip
+	reverse_proxy backend:8000
+}
+
+# Frontend por IP o localhost en HTTP (red local y healthcheck del contenedor).
+# En un servidor con dominio público se puede quitar este bloque.
+:80 {
+	import frontend
+}

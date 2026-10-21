@@ -31,6 +31,7 @@ from app.routers import ShippingCarrierRouter
 import app.models
 from app.middleware.AuthMiddleware import auth_middleware
 from app.middleware.RateLimitMiddleware import rate_limit_middleware
+from app.middleware.PublicBaseUrlMiddleware import public_base_url_middleware
 from app.middleware.CorsMiddleware import setup_cors
 from app.core.ErrorCodes import ErrorCodes
 from app.database.Connection import SessionLocal
@@ -60,7 +61,10 @@ app = FastAPI(
     lifespan=lifespan,
     title="RehniMarket API",
     version="2.6.0",
-    description="API REST del marketplace RehniMarket"
+    description="API REST del marketplace RehniMarket",
+    docs_url="/docs" if config.DOCS_ENABLED else None,
+    redoc_url="/redoc" if config.DOCS_ENABLED else None,
+    openapi_url="/openapi.json" if config.DOCS_ENABLED else None,
 )
 
 
@@ -81,6 +85,7 @@ async def pydantic_validation_exception_handler(request: Request, exc: Validatio
 
 
 app.middleware("http")(auth_middleware)
+app.middleware("http")(public_base_url_middleware)
 
 if config.RATE_LIMIT_ENABLED:
     app.middleware("http")(rate_limit_middleware)

@@ -13,6 +13,7 @@ def _allowed_origins() -> list[str]:
     origins: list[str] = []
     if config.URL_FRONTEND:
         origins.append(config.URL_FRONTEND.rstrip("/"))
+    origins.extend(origin.rstrip("/") for origin in config.CORS_EXTRA_ORIGINS)
     origins.extend(dev_origins)
 
     seen = set()

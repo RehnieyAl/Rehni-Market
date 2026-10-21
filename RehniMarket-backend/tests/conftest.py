@@ -24,6 +24,27 @@ TEST_DB_URL = f"{_SERVER_URL}/{TEST_DB_NAME}"
 ROLE_NAMES = ("user", "company", "admin", "owner")
 
 
+@pytest.fixture(autouse=True)
+def outbox(monkeypatch):
+    """Sustituye la entrega SMTP: ninguna prueba envía correo real.
+
+    `send_email` sigue construyendo el mensaje y usando su cola; solo cambia
+    `_deliver`, que en lugar de conectar a smtp.gmail.com guarda el correo aquí.
+    """
+    from app.services.email import EmailService
+
+    sent = []
+
+    def fake_deliver(msg, to_email):
+        try:
+            sent.append({"to": to_email, "subject": msg["Subject"]})
+        finally:
+            EmailService._pending.release()
+
+    monkeypatch.setattr(EmailService, "_deliver", fake_deliver)
+    return sent
+
+
 @pytest.fixture(scope="session")
 def engine():
     admin_engine = create_engine(
@@ -106,6 +127,15 @@ def tokens(users):
 def client(db, engine, monkeypatch):
     Session = sessionmaker(bind=engine, autoflush=False, autocommit=False)
     monkeypatch.setattr("app.middleware.AuthMiddleware.SessionLocal", Session)
+    # Rutas /public: read_session() abre sus propias sesiones en AUTOCOMMIT.
+    monkeypatch.setattr(
+        "app.database.Connection.ReadSessionLocal",
+        sessionmaker(
+            bind=engine.execution_options(isolation_level="AUTOCOMMIT"),
+            autoflush=False,
+            autocommit=False,
+        ),
+    )
     monkeypatch.setattr(
         "app.middleware.RateLimitMiddleware.requests", defaultdict(list)
     )

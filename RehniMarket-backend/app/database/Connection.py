@@ -1,4 +1,5 @@
 import logging
+from contextlib import contextmanager
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
@@ -42,6 +43,36 @@ def get_db():
     Con el scope por defecto ("request") FastAPI la cierra después de ENVIAR la
     respuesta, y la conexión queda retenida durante el envío por la red."""
     database = SessionLocal()
+    try:
+        yield database
+    finally:
+        database.close()
+
+
+# Sesiones de SOLO LECTURA (rutas /public). FastAPI cierra una dependencia con
+# scope="function" DESPUÉS de serializar la respuesta, y en endpoints síncronos
+# esa serialización espera un hilo del threadpool. Mientras tanto la sesión
+# retiene su conexión: bajo carga, todas las conexiones (del pool de SQLAlchemy
+# y, con transacción abierta, las reales de PgBouncer) quedan retenidas por
+# respuestas que esperan hilo, mientras todos los hilos esperan una conexión,
+# y solo los timeouts rompen el ciclo.
+# Por eso read_session() se usa DENTRO del endpoint (mismo hilo, conexión
+# devuelta antes de serializar) y en AUTOCOMMIT (cada SELECT termina su
+# transacción y PgBouncer libera la conexión real al instante).
+# Comparte el pool de `engine`. NUNCA usar para escrituras: no hay atomicidad
+# entre sentencias. Los servicios deben devolver datos ya cargados (schemas o
+# columnas), no relaciones perezosas: tras cerrar la sesión no se pueden cargar.
+ReadSessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine.execution_options(isolation_level="AUTOCOMMIT"),
+)
+
+
+@contextmanager
+def read_session():
+    """with read_session() as database: return servicio(database, ...)"""
+    database = ReadSessionLocal()
     try:
         yield database
     finally:

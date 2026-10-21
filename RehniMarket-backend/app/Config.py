@@ -45,6 +45,15 @@ class config():
     RUN_SEED = os.getenv("RUN_SEED", "false").lower() == "true"
     URL_BACKEND = os.getenv("URL_BACKEND")
     RATE_LIMIT_ENABLED = os.getenv("RATE_LIMIT_ENABLED", "false").lower() == "true"
+    # Swagger (/docs), ReDoc (/redoc) y /openapi.json. En producción, false.
+    DOCS_ENABLED = os.getenv("DOCS_ENABLED", "false").lower() == "true"
+    # Orígenes extra para CORS, separados por coma (ej. el frontend en HTTPS cuando la
+    # API está en otro dominio). URL_FRONTEND se sigue usando también en los correos.
+    CORS_EXTRA_ORIGINS = [
+        origin.strip()
+        for origin in os.getenv("CORS_EXTRA_ORIGINS", "").split(",")
+        if origin.strip()
+    ]
     REQUEST_LIMIT = int(os.getenv("REQUEST_LIMIT", "100"))
     TIME_WINDOW = int(os.getenv("TIME_WINDOW", "60"))
 

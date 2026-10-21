@@ -8,6 +8,73 @@ Todos los cambios importantes de este proyecto se documentan en este archivo.
 
 ---
 
+## [Unreleased] - 2026-10-20
+### Added
+- **Swagger y ReDoc con `DOCS_ENABLED`** (por defecto `false`; en el `.env` de la
+  raíz). Con `true`, `/docs`, `/docs/oauth2-redirect`, `/redoc` y `/openapi.json`
+  existen y son públicas (`DOCS_ROUTES` en `PublicRoutes.py`); con `false`, FastAPI
+  no las genera y el `AuthMiddleware` responde `401`, como desde el 07/10. Por
+  Caddy: `https://api.rehnimarket:8443/docs`.
+- `CORS_EXTRA_ORIGINS` (lista separada por comas): orígenes extra permitidos en
+  CORS además de `URL_FRONTEND` (que se sigue usando en los enlaces de los
+  correos). Necesario porque el frontend y la API están en dominios distintos.
+
+### Changed
+- **Nginx reemplazado por Caddy** en el contenedor `frontend`. La etapa final de
+  `RehniMarket-frontend/Dockerfile` pasa de `nginx:1.27-alpine` a
+  `caddy:2.11-alpine` y copia el build de Vite en `/srv`. La configuración vive en
+  `caddy/Caddyfile` (raíz del repo), montada en `/etc/caddy`.
+- **Frontend y API en URL separadas** (virtual hosts en el mismo Caddy):
+  - `${SITE_ADDRESS:-rehnimarket}` → build de React.
+  - `${API_ADDRESS:-api.rehnimarket}` → `reverse_proxy backend:8000`,
+    con las rutas del backend tal cual (`/auth/...`, `/docs`).
+  - Bloque `:80`: el frontend sigue respondiendo por IP o `localhost` en HTTP.
+- `VITE_API_URL=https://api.rehnimarket:8443` en `.env.example`. Se graba
+  al compilar: hay que reconstruir `frontend` después de cambiarla.
+- Se conservan los encabezados de `nginx.conf` en el frontend:
+  `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`,
+  `Cache-Control: no-cache` en el HTML, caché de un año (`immutable`) en
+  `/assets/*` (404 si el archivo no existe), fallback a `index.html` para las rutas
+  de React y compresión `zstd`/`gzip`.
+- HTTPS: los dos sitios usan `tls ${CADDY_TLS:-internal}` (CA local de Caddy). Con
+  dominios públicos, `CADDY_TLS=<correo>` hace que Caddy pida los certificados a
+  Let's Encrypt. Nuevo puerto `${FRONTEND_HTTPS_PORT:-8443}:443`; el HTTP sigue en
+  `${FRONTEND_PORT:-8080}:80`. Volúmenes nuevos `caddy_data` (certificados) y
+  `caddy_config`.
+- Backend: Uvicorn arranca con `--proxy-headers --forwarded-allow-ips
+  "$FORWARDED_ALLOW_IPS"` (por defecto `172.16.0.0/12`, las redes de Docker).
+  Detrás de Caddy, `RateLimitMiddleware` (`request.client.host`) vuelve a ver la IP
+  real del cliente en lugar de la del proxy; un cliente que llega directo al
+  `:8000` no puede falsear `X-Forwarded-For`.
+
+### Fixed
+- **Imágenes de MinIO detrás de Caddy.** `build_media_url` armaba siempre las URL
+  con `URL_BACKEND` (`http://…:8000`): por HTTPS el navegador las bloqueaba como
+  contenido mixto. Nuevo `PublicBaseUrlMiddleware`: si la petición trae
+  `X-Forwarded-Host` (lo envía Caddy), la base de las URL es el esquema + host por
+  los que entró el cliente (`https://api.rehnimarket:8443/media/proxy?...`).
+  Se guarda en el `ContextVar` `request_media_base` de `NasService`, así que ningún
+  servicio cambia de firma. Sin el encabezado (app móvil directo al `:8000`, tests,
+  tareas fuera de una petición) se sigue usando `URL_BACKEND`.
+
+- **Variables de entorno por servicio.** Las credenciales de PostgreSQL salen de
+  `RehniMarket-backend/.env` a `.env.postgres` (solo `postgres` y `pgbouncer`) y las
+  de MinIO a `.env.minio` (solo `minio` y `backend`), con sus `.example`. Antes los
+  tres servicios cargaban el `.env` completo del backend y recibían también
+  `SECRET_KEY`, `GMAIL_APP_PASSWORD` y las cuentas por defecto. `.gitignore` ignora
+  `.env.*` salvo los `*.example`.
+- `RehniMarket-frontend/.dockerignore` excluye `.env` y `.env.*`: antes entraban al
+  build con `COPY . .` y, si faltaba el build arg, se compilaba en silencio con el
+  `VITE_API_URL` de desarrollo.
+
+### Removed
+- `RehniMarket-frontend/nginx.conf`.
+- Variables sin uso: `IP` en `RehniMarket-backend/.env.dev` (además mal formada,
+  `IP = …`) y `VITE_API_URL` en `RehniMarket-frontend/.env` (en `pnpm dev` la pisa
+  `.env.local`; en Docker, el build arg). `POSTGRES_*` y `MINIO_ROOT_*` dejan de
+  estar en `RehniMarket-backend/.env.example` y `.env.public.example` (el backend no
+  lee `POSTGRES_*`).
+
 ## [2.7] - 2026-09-07
 ### Added
 - **Estado de certificado `NEEDS_UPDATE`** (`CompanyCertificateEnum`, migración

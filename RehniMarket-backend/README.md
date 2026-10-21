@@ -85,12 +85,13 @@ repositorio** (servicios `minio`, `postgres`, `backend`, `frontend`). No se
 ejecuta este backend de forma aislada.
 
 > **Configuración por defecto (`../docker-compose.yml`):** endurecida — `uvicorn`
-> sin `--reload`, frontend compilado tras Nginx (`RehniMarket-frontend/Dockerfile`),
+> sin `--reload`, frontend compilado servido por Caddy (`RehniMarket-frontend/Dockerfile`, `../caddy/Caddyfile`),
 > `postgres`/`minio` sin puertos publicados, backend solo en `127.0.0.1`,
-> `RATE_LIMIT_ENABLED=true`, MinIO fijado por digest. Delante debe ir un reverse
-> proxy con TLS. Detalle en `../docs/DOCUMENTACION_DESPLIEGUE_REHNIMARKET.md`.
-> **El proyecto NO se ha desplegado en producción** (falta servidor, dominio y
-> reverse proxy con TLS).
+> `RATE_LIMIT_ENABLED=true`, MinIO fijado por digest. Caddy es el reverse proxy
+> con TLS (`api.<dominio>` → backend, `<dominio>` → frontend; `tls internal` en
+> local, Let's Encrypt con dominio real). Detalle en `../docs/DOCUMENTACION_DESPLIEGUE_REHNIMARKET.md`.
+> **El proyecto NO se ha desplegado en producción** (falta servidor y
+> dominio público).
 >
 > **Modo desarrollo (`../docker-compose.dev.yml`):** `uvicorn --reload`, dev-server
 > de Vite (`RehniMarket-frontend/Dockerfile.dev`), *bind mounts*, puertos de
@@ -109,14 +110,24 @@ cd Rehni-Market
 
 ```bash
 cp RehniMarket-backend/.env.example RehniMarket-backend/.env
+cp .env.postgres.example .env.postgres   # desde la raíz del repo
+cp .env.minio.example .env.minio
 ```
 
-Editar `RehniMarket-backend/.env` (lo consumen `postgres`, `minio` y `backend`).
-Como mínimo:
+Cada archivo lo recibe solo quien lo necesita:
 
-- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
+| Archivo | Lo reciben | Contenido |
+|---|---|---|
+| `.env.postgres` | `postgres`, `pgbouncer` | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` |
+| `.env.minio` | `minio`, `backend` | `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` |
+| `RehniMarket-backend/.env` | `backend` | Todo lo demás |
+
+En `RehniMarket-backend/.env`, como mínimo:
+
 - `URL_DATABASE=postgresql://<POSTGRES_USER>:<POSTGRES_PASSWORD>@postgres:5432/<POSTGRES_DB>`
-- `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `MINIO_URL=minio:9000`
+  (mismos valores que `.env.postgres`) y `URL_DATABASE_POOLED` igual pero con
+  `@pgbouncer:6432`
+- `MINIO_URL=minio:9000`
 - `SECRET_KEY` (valor propio, largo y aleatorio — **no** el de ejemplo), `ALGORITHM=HS256`,
   `ACCESS_TOKEN_EXPIRE_MINUTES=30`, `REFRESH_TOKEN_DAYS=15`
 - `URL_FRONTEND`, `URL_BACKEND` (URL del backend **visible desde el navegador**;

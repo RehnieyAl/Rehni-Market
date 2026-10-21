@@ -102,9 +102,11 @@ describe("AuthProvider session rebuild", () => {
     );
 
     await click("login-admin");
+    // login() fija el rol de inmediato (status "loading"); el email llega con el perfil.
     await waitFor(() =>
-      expect(screen.getByTestId("role").textContent).toBe("admin"),
+      expect(screen.getByTestId("status").textContent).toBe("authenticated"),
     );
+    expect(screen.getByTestId("role").textContent).toBe("admin");
     expect(screen.getByTestId("email").textContent).toBe("admin@rehni.test");
 
     await click("logout");
