@@ -1,0 +1,558 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.14, pytest-9.1.1, pluggy-1.6.0 -- /app/.venv/bin/python
+rootdir: /tmp/localtests
+plugins: anyio-4.14.2, cov-7.1.0, platformdirs-4.12.3
+collecting ... collected 238 items
+
+../tmp/localtests/test_advertisements.py::TestAdvertisementIsVisualOnly::test_create_without_any_text PASSED [  0%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementIsVisualOnly::test_text_fields_in_payload_are_ignored PASSED [  0%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementIsVisualOnly::test_response_shape PASSED [  1%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementIsVisualOnly::test_mobile_image_optional_and_supported PASSED [  1%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementTargeting::test_promotion_still_works PASSED [  2%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementTargeting::test_manual_advertisement_keeps_button_link PASSED [  2%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementTargeting::test_product_target PASSED [  2%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementLifecycle::test_update_order_and_status PASSED [  3%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementLifecycle::test_public_list_has_no_text PASSED [  3%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementLifecycle::test_delete_removes_row_and_images PASSED [  4%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementCategoryDiscount::test_create_category_without_discount PASSED [  4%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementCategoryDiscount::test_create_category_with_discount_carries_min_discount PASSED [  5%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementCategoryDiscount::test_discount_is_persisted_and_reloaded_on_edit PASSED [  5%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementCategoryDiscount::test_edit_discount_percentage_updates_link PASSED [  5%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementCategoryDiscount::test_disable_discount_on_edit_drops_min_discount_from_link PASSED [  6%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementCategoryDiscount::test_changing_category_keeps_the_discount_in_the_link PASSED [  6%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementCategoryDiscount::test_reject_invalid_percentage[-5] PASSED [  7%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementCategoryDiscount::test_reject_invalid_percentage[0] PASSED [  7%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementCategoryDiscount::test_reject_invalid_percentage[150] PASSED [  7%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementCategoryDiscount::test_reject_invalid_percentage[abc] PASSED [  8%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementCategoryDiscount::test_requires_admin_or_owner PASSED [  8%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementCategoryDiscount::test_discount_exposed_on_public_endpoint PASSED [  9%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementCategoryDiscount::test_clicking_the_ad_link_applies_the_existing_discount_logic PASSED [  9%]
+../tmp/localtests/test_advertisements.py::TestAdvertisementCategoryDiscount::test_ad_link_and_product_detail_show_the_same_price PASSED [ 10%]
+../tmp/localtests/test_auth_authorization.py::TestRoleIsolation::test_company_cannot_reach_admin_area PASSED [ 10%]
+../tmp/localtests/test_auth_authorization.py::TestRoleIsolation::test_user_cannot_reach_admin_area PASSED [ 10%]
+../tmp/localtests/test_auth_authorization.py::TestRoleIsolation::test_user_cannot_reach_company_area PASSED [ 11%]
+../tmp/localtests/test_auth_authorization.py::TestRoleIsolation::test_company_cannot_reach_user_area PASSED [ 11%]
+../tmp/localtests/test_auth_authorization.py::TestRoleIsolation::test_admin_reaches_admin_area PASSED [ 12%]
+../tmp/localtests/test_auth_authorization.py::TestRoleIsolation::test_owner_reaches_admin_area PASSED [ 12%]
+../tmp/localtests/test_auth_authorization.py::TestRoleIsolation::test_user_reaches_user_area PASSED [ 13%]
+../tmp/localtests/test_auth_authorization.py::TestRoleIsolation::test_missing_token_is_rejected PASSED [ 13%]
+../tmp/localtests/test_auth_authorization.py::TestDatabaseRoleIsAuthoritative::test_stale_admin_claim_does_not_grant_admin_access PASSED [ 13%]
+../tmp/localtests/test_auth_authorization.py::TestDatabaseRoleIsAuthoritative::test_stale_admin_claim_keeps_real_user_access PASSED [ 14%]
+../tmp/localtests/test_auth_authorization.py::TestDatabaseRoleIsAuthoritative::test_me_reports_database_role_not_token_claim PASSED [ 14%]
+../tmp/localtests/test_auth_authorization.py::TestMeReflectsCurrentUser::test_me_returns_role_of_token_owner PASSED [ 15%]
+../tmp/localtests/test_catalog_attributes.py::TestPermissions::test_anonymous_is_rejected PASSED [ 15%]
+../tmp/localtests/test_catalog_attributes.py::TestPermissions::test_admin_can_manage PASSED [ 15%]
+../tmp/localtests/test_catalog_attributes.py::TestPermissions::test_owner_can_manage PASSED [ 16%]
+../tmp/localtests/test_catalog_attributes.py::TestPermissions::test_company_is_forbidden PASSED [ 16%]
+../tmp/localtests/test_catalog_attributes.py::TestPermissions::test_user_is_forbidden PASSED [ 17%]
+../tmp/localtests/test_catalog_attributes.py::TestAttributeCrud::test_create_product_and_variant_attributes PASSED [ 17%]
+../tmp/localtests/test_catalog_attributes.py::TestAttributeCrud::test_get_attribute PASSED [ 18%]
+../tmp/localtests/test_catalog_attributes.py::TestAttributeCrud::test_update_attribute PASSED [ 18%]
+../tmp/localtests/test_catalog_attributes.py::TestAttributeCrud::test_activate_and_deactivate_attribute PASSED [ 18%]
+../tmp/localtests/test_catalog_attributes.py::TestAttributeCrud::test_delete_attribute_removes_its_options PASSED [ 19%]
+../tmp/localtests/test_catalog_attributes.py::TestCatalogAssociation::test_attribute_is_scoped_to_its_catalog PASSED [ 19%]
+../tmp/localtests/test_catalog_attributes.py::TestCatalogAssociation::test_list_filters_by_role PASSED [ 20%]
+../tmp/localtests/test_catalog_attributes.py::TestCatalogAssociation::test_unknown_catalog_is_404 PASSED [ 20%]
+../tmp/localtests/test_catalog_attributes.py::TestOptions::test_create_and_list_options PASSED [ 21%]
+../tmp/localtests/test_catalog_attributes.py::TestOptions::test_update_option PASSED [ 21%]
+../tmp/localtests/test_catalog_attributes.py::TestOptions::test_delete_option PASSED [ 21%]
+../tmp/localtests/test_catalog_attributes.py::TestOptions::test_color_option_stores_hex PASSED [ 22%]
+../tmp/localtests/test_catalog_attributes.py::TestValidations::test_duplicate_attribute_name_is_rejected PASSED [ 22%]
+../tmp/localtests/test_catalog_attributes.py::TestValidations::test_duplicate_option_value_is_rejected PASSED [ 23%]
+../tmp/localtests/test_catalog_attributes.py::TestValidations::test_invalid_role_is_rejected PASSED [ 23%]
+../tmp/localtests/test_catalog_attributes.py::TestValidations::test_options_not_allowed_on_text_attribute PASSED [ 23%]
+../tmp/localtests/test_catalog_attributes.py::TestValidations::test_color_option_requires_hex PASSED [ 24%]
+../tmp/localtests/test_catalog_attributes.py::TestValidations::test_cannot_switch_type_while_options_exist PASSED [ 24%]
+../tmp/localtests/test_catalog_attributes.py::TestValidations::test_unknown_attribute_is_404 PASSED [ 25%]
+../tmp/localtests/test_certification_flow.py::TestAdminRejectionRequiresReason::test_reject_without_reason_is_rejected PASSED [ 25%]
+../tmp/localtests/test_certification_flow.py::TestAdminRejectionRequiresReason::test_reject_with_blank_reason_is_rejected PASSED [ 26%]
+../tmp/localtests/test_certification_flow.py::TestAdminRejectionRequiresReason::test_reject_with_reason_stores_it PASSED [ 26%]
+../tmp/localtests/test_certification_flow.py::TestAdminRejectionRequiresReason::test_approve_clears_previous_rejection_reason PASSED [ 26%]
+../tmp/localtests/test_certification_flow.py::TestAdminNeedsUpdate::test_needs_update_without_reason_is_rejected PASSED [ 27%]
+../tmp/localtests/test_certification_flow.py::TestAdminNeedsUpdate::test_needs_update_with_blank_reason_is_rejected PASSED [ 27%]
+../tmp/localtests/test_certification_flow.py::TestAdminNeedsUpdate::test_needs_update_stores_status_and_reason PASSED [ 28%]
+../tmp/localtests/test_certification_flow.py::TestAdminNeedsUpdate::test_approve_clears_needs_update_reason PASSED [ 28%]
+../tmp/localtests/test_certification_flow.py::TestAdminNeedsUpdate::test_invalid_status_value_is_rejected PASSED [ 28%]
+../tmp/localtests/test_certification_flow.py::TestLoginByRoleAndCertificate::test_user_login_returns_jwt PASSED [ 29%]
+../tmp/localtests/test_certification_flow.py::TestLoginByRoleAndCertificate::test_admin_login_returns_jwt PASSED [ 29%]
+../tmp/localtests/test_certification_flow.py::TestLoginByRoleAndCertificate::test_owner_login_returns_jwt PASSED [ 30%]
+../tmp/localtests/test_certification_flow.py::TestLoginByRoleAndCertificate::test_company_approved_login_returns_jwt PASSED [ 30%]
+../tmp/localtests/test_certification_flow.py::TestLoginByRoleAndCertificate::test_company_rejected_login_blocked_without_jwt PASSED [ 31%]
+../tmp/localtests/test_certification_flow.py::TestLoginByRoleAndCertificate::test_company_pending_login_blocked PASSED [ 31%]
+../tmp/localtests/test_certification_flow.py::TestLoginByRoleAndCertificate::test_company_needs_update_login_blocked_without_jwt PASSED [ 31%]
+../tmp/localtests/test_certification_flow.py::TestLoginByRoleAndCertificate::test_needs_update_cannot_obtain_jwt_via_login PASSED [ 32%]
+../tmp/localtests/test_certification_flow.py::TestLoginByRoleAndCertificate::test_wrong_password_does_not_reveal_certificate_status PASSED [ 32%]
+../tmp/localtests/test_certification_flow.py::TestCompanyReadsRejectionReason::test_my_profile_shows_status_and_reason PASSED [ 33%]
+../tmp/localtests/test_certification_flow.py::TestCompanyReadsRejectionReason::test_my_profile_shows_needs_update_status_and_reason PASSED [ 33%]
+../tmp/localtests/test_certification_flow.py::TestReplaceCertificate::test_replace_requires_rejected_status_pending PASSED [ 34%]
+../tmp/localtests/test_certification_flow.py::TestReplaceCertificate::test_replace_requires_rejected_status_approved PASSED [ 34%]
+../tmp/localtests/test_certification_flow.py::TestReplaceCertificate::test_replace_blocked_when_company_terminally_rejected PASSED [ 34%]
+../tmp/localtests/test_certification_flow.py::TestReplaceCertificate::test_replace_rejects_non_pdf_file PASSED [ 35%]
+../tmp/localtests/test_certification_flow.py::TestReplaceCertificate::test_replace_updates_file_and_resets_to_pending PASSED [ 35%]
+../tmp/localtests/test_certification_flow.py::TestReplaceCertificate::test_replace_does_not_touch_another_companys_certificate PASSED [ 36%]
+../tmp/localtests/test_certification_flow.py::TestReplaceCertificate::test_company_cannot_call_admin_status_endpoint PASSED [ 36%]
+../tmp/localtests/test_certification_flow.py::TestReplaceCertificate::test_admin_reviews_resubmitted_certificate PASSED [ 36%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_requires_email PASSED [ 37%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_requires_password PASSED [ 37%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_requires_certificate_file PASSED [ 38%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_correct_credentials_rejected_company_returns_200 PASSED [ 38%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_status_moves_to_pending_and_reason_is_cleared PASSED [ 39%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_certificate_reference_is_updated PASSED [ 39%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_response_has_no_jwt PASSED [ 39%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_wrong_email_is_rejected PASSED [ 40%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_wrong_password_is_rejected PASSED [ 40%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_account_without_company_is_rejected PASSED [ 41%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_approved_company_cannot_update PASSED [ 41%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_pending_company_cannot_update PASSED [ 42%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_terminally_rejected_company_cannot_update PASSED [ 42%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_non_pdf_file_is_rejected PASSED [ 42%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_file_over_5mb_is_rejected PASSED [ 43%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_does_not_touch_another_company PASSED [ 43%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_error_during_storage_rolls_back PASSED [ 44%]
+../tmp/localtests/test_certification_flow.py::TestCertificateUpdateWithCredentials::test_no_company_id_field_accepted PASSED [ 44%]
+../tmp/localtests/test_offers_and_new.py::TestOffers::test_product_without_discount_is_excluded PASSED [ 44%]
+../tmp/localtests/test_offers_and_new.py::TestOffers::test_product_with_one_discounted_variant_appears_once PASSED [ 45%]
+../tmp/localtests/test_offers_and_new.py::TestOffers::test_deleted_variant_discount_does_not_count PASSED [ 45%]
+../tmp/localtests/test_offers_and_new.py::TestOffers::test_out_of_stock_variant_discount_does_not_count PASSED [ 46%]
+../tmp/localtests/test_offers_and_new.py::TestOffers::test_card_price_reflects_best_variant_deal PASSED [ 46%]
+../tmp/localtests/test_offers_and_new.py::TestOffers::test_product_level_discount_puts_product_in_offers PASSED [ 47%]
+../tmp/localtests/test_offers_and_new.py::TestNewProducts::test_recent_product_appears_once PASSED [ 47%]
+../tmp/localtests/test_offers_and_new.py::TestNewProducts::test_old_product_is_excluded PASSED [ 47%]
+../tmp/localtests/test_offers_and_new.py::TestNewProducts::test_descending_order_by_created_at PASSED [ 48%]
+../tmp/localtests/test_offers_and_new.py::TestSharedCardBehaviour::test_card_image_is_first_live_variant_image PASSED [ 48%]
+../tmp/localtests/test_offers_and_new.py::TestSharedCardBehaviour::test_card_image_ignores_deleted_variant PASSED [ 49%]
+../tmp/localtests/test_offers_and_new.py::TestSharedCardBehaviour::test_no_legacy_fields_in_card PASSED [ 49%]
+../tmp/localtests/test_offers_and_new.py::TestSharedCardBehaviour::test_product_detail_still_works PASSED [ 50%]
+../tmp/localtests/test_offers_and_new.py::TestSharedCardBehaviour::test_normal_catalog_still_lists_products PASSED [ 50%]
+../tmp/localtests/test_order_cancel_refund.py::TestCancelRefund::test_paid_order_cancel_refunds_the_paid_total PASSED [ 50%]
+../tmp/localtests/test_order_cancel_refund.py::TestCancelRefund::test_unpaid_zero_total_order_is_not_refunded PASSED [ 51%]
+../tmp/localtests/test_order_cancel_refund.py::TestCancelRefund::test_second_cancel_does_not_refund_again PASSED [ 51%]
+../tmp/localtests/test_order_cancel_refund.py::TestCancelRefund::test_cancel_of_another_users_order_is_rejected PASSED [ 52%]
+../tmp/localtests/test_order_cancel_refund.py::TestCancelRefund::test_final_balance_returns_to_pre_purchase_value PASSED [ 52%]
+../tmp/localtests/test_order_cancel_refund.py::TestCancelRefund::test_refund_transaction_is_recorded PASSED [ 52%]
+../tmp/localtests/test_order_cancel_refund.py::TestCancelRefund::test_failure_during_cancel_leaves_no_partial_state PASSED [ 53%]
+../tmp/localtests/test_pricing.py::test_no_discount_uses_base_price PASSED [ 53%]
+../tmp/localtests/test_pricing.py::test_variant_discount_wins_over_product_discount PASSED [ 54%]
+../tmp/localtests/test_pricing.py::test_falls_back_to_product_discount_when_variant_has_none PASSED [ 54%]
+../tmp/localtests/test_pricing.py::test_fixed_discount_type PASSED       [ 55%]
+../tmp/localtests/test_pricing.py::test_expired_variant_discount_falls_back_to_product PASSED [ 55%]
+../tmp/localtests/test_pricing.py::test_future_discount_is_not_active PASSED [ 55%]
+../tmp/localtests/test_pricing.py::test_product_only_pricing_without_variant PASSED [ 56%]
+../tmp/localtests/test_product_search.py::TestProductSearchMatching::test_exact_match_ranks_first PASSED [ 56%]
+../tmp/localtests/test_product_search.py::TestProductSearchMatching::test_partial_match_still_works PASSED [ 57%]
+../tmp/localtests/test_product_search.py::TestProductSearchMatching::test_case_insensitive PASSED [ 57%]
+../tmp/localtests/test_product_search.py::TestProductSearchMatching::test_accent_insensitive_both_directions PASSED [ 57%]
+../tmp/localtests/test_product_search.py::TestProductSearchMatching::test_single_letter_typo PASSED [ 58%]
+../tmp/localtests/test_product_search.py::TestProductSearchMatching::test_multi_letter_typo_with_words PASSED [ 58%]
+../tmp/localtests/test_product_search.py::TestProductSearchMatching::test_partially_written_and_scrambled_words PASSED [ 59%]
+../tmp/localtests/test_product_search.py::TestProductSearchMatching::test_short_fuzzy_token_matches_longer_name PASSED [ 59%]
+../tmp/localtests/test_product_search.py::TestProductSearchMatching::test_extra_whitespace_is_ignored PASSED [ 60%]
+../tmp/localtests/test_product_search.py::TestProductSearchRelevance::test_best_match_ranks_first PASSED [ 60%]
+../tmp/localtests/test_product_search.py::TestProductSearchRelevance::test_exact_ranks_above_fuzzy PASSED [ 60%]
+../tmp/localtests/test_product_search.py::TestProductSearchEdgeCases::test_empty_query_returns_all PASSED [ 61%]
+../tmp/localtests/test_product_search.py::TestProductSearchEdgeCases::test_no_match_returns_empty_without_error PASSED [ 61%]
+../tmp/localtests/test_product_search.py::TestProductSearchEdgeCases::test_search_without_param_lists_products PASSED [ 62%]
+../tmp/localtests/test_product_search.py::TestProductSearchEdgeCases::test_search_respects_other_filters PASSED [ 62%]
+../tmp/localtests/test_public_and_commerce.py::TestPublicCatalogAttributes::test_returns_product_and_variant_attributes PASSED [ 63%]
+../tmp/localtests/test_public_and_commerce.py::TestPublicCatalogAttributes::test_inactive_attribute_excluded PASSED [ 63%]
+../tmp/localtests/test_public_and_commerce.py::TestPublicCatalogAttributes::test_is_public PASSED [ 63%]
+../tmp/localtests/test_public_and_commerce.py::TestPublicProductDetail::test_exposes_product_attributes_and_variant_options PASSED [ 64%]
+../tmp/localtests/test_public_and_commerce.py::TestPublicProductDetail::test_deleted_variant_not_visible PASSED [ 64%]
+../tmp/localtests/test_public_and_commerce.py::TestProductInitialImage::test_public_card_uses_first_live_variant_image PASSED [ 65%]
+../tmp/localtests/test_public_and_commerce.py::TestProductInitialImage::test_public_card_skips_deleted_variant PASSED [ 65%]
+../tmp/localtests/test_public_and_commerce.py::TestProductInitialImage::test_public_card_falls_back_to_product_image PASSED [ 65%]
+../tmp/localtests/test_public_and_commerce.py::TestProductInitialImage::test_dashboard_list_uses_first_live_variant_image PASSED [ 66%]
+../tmp/localtests/test_public_and_commerce.py::TestCart::test_cart_line_carries_variant_options_and_prices PASSED [ 66%]
+../tmp/localtests/test_public_and_commerce.py::TestCart::test_cart_requires_variant_when_product_has_variants PASSED [ 67%]
+../tmp/localtests/test_public_and_commerce.py::TestCheckoutAndOrders::test_checkout_recomputes_price_and_snapshots_attributes PASSED [ 67%]
+../tmp/localtests/test_public_and_commerce.py::TestCheckoutAndOrders::test_checkout_rejects_deleted_variant PASSED [ 68%]
+../tmp/localtests/test_public_and_commerce.py::TestCheckoutAndOrders::test_order_snapshot_is_frozen PASSED [ 68%]
+../tmp/localtests/test_public_and_commerce.py::TestCheckoutStockDiscount::test_add_to_cart_does_not_touch_stock PASSED [ 68%]
+../tmp/localtests/test_public_and_commerce.py::TestCheckoutStockDiscount::test_checkout_decrements_only_the_bought_quantity PASSED [ 69%]
+../tmp/localtests/test_public_and_commerce.py::TestCheckoutStockDiscount::test_checkout_exact_stock_lands_on_zero PASSED [ 69%]
+../tmp/localtests/test_public_and_commerce.py::TestCheckoutStockDiscount::test_checkout_rejected_when_stock_drops_below_cart_and_nothing_persists PASSED [ 70%]
+../tmp/localtests/test_public_and_commerce.py::TestCheckoutStockDiscount::test_checkout_over_stock_is_still_blocked_at_cart PASSED [ 70%]
+../tmp/localtests/test_public_and_commerce.py::TestCheckoutStockDiscount::test_checkout_only_touches_the_selected_variant PASSED [ 71%]
+../tmp/localtests/test_public_and_commerce.py::TestCheckoutStockDiscount::test_concurrent_checkout_of_last_unit_lets_only_one_win PASSED [ 71%]
+../tmp/localtests/test_returns_flow.py::TestRequestReturn::test_buyer_requests_return_of_delivered_order PASSED [ 71%]
+../tmp/localtests/test_returns_flow.py::TestRequestReturn::test_return_requires_delivered_order PASSED [ 72%]
+../tmp/localtests/test_returns_flow.py::TestRequestReturn::test_cannot_request_return_of_another_users_order PASSED [ 72%]
+../tmp/localtests/test_returns_flow.py::TestRequestReturn::test_second_active_request_for_same_item_is_rejected PASSED [ 73%]
+../tmp/localtests/test_returns_flow.py::TestRequestReturn::test_company_account_cannot_request_return PASSED [ 73%]
+../tmp/localtests/test_returns_flow.py::TestCompanyEvaluatesReturn::test_company_sees_only_its_own_returns PASSED [ 73%]
+../tmp/localtests/test_returns_flow.py::TestCompanyEvaluatesReturn::test_approve_refunds_subtotal_plus_tax_to_wallet PASSED [ 74%]
+../tmp/localtests/test_returns_flow.py::TestCompanyEvaluatesReturn::test_reject_requires_reason PASSED [ 74%]
+../tmp/localtests/test_returns_flow.py::TestCompanyEvaluatesReturn::test_cannot_decide_already_resolved_return PASSED [ 75%]
+../tmp/localtests/test_returns_flow.py::TestCompanyEvaluatesReturn::test_company_return_detail_is_scoped PASSED [ 75%]
+../tmp/localtests/test_returns_flow.py::TestCompanyEvaluatesReturn::test_user_cannot_call_company_decide_endpoint PASSED [ 76%]
+../tmp/localtests/test_returns_flow.py::TestCompanyEvaluatesReturn::test_company_cannot_decide_another_companys_return PASSED [ 76%]
+../tmp/localtests/test_returns_flow.py::TestReturnVisibleInOrderDetail::test_order_detail_includes_return_status_and_reason PASSED [ 76%]
+../tmp/localtests/test_returns_flow.py::TestReturnVisibleInOrderDetail::test_no_stock_is_restored_on_approval PASSED [ 77%]
+../tmp/localtests/test_variants.py::TestProductAttributes::test_assign_and_read_product_attribute PASSED [ 77%]
+../tmp/localtests/test_variants.py::TestProductAttributes::test_variant_axis_rejected_as_product_attribute PASSED [ 78%]
+../tmp/localtests/test_variants.py::TestProductAttributes::test_inactive_attribute_rejected PASSED [ 78%]
+../tmp/localtests/test_variants.py::TestVariantCrud::test_create_variant_with_color_and_size PASSED [ 78%]
+../tmp/localtests/test_variants.py::TestVariantCrud::test_update_variant_options PASSED [ 79%]
+../tmp/localtests/test_variants.py::TestVariantCrud::test_duplicate_combination_rejected PASSED [ 79%]
+../tmp/localtests/test_variants.py::TestVariantCrud::test_incomplete_combination_rejected PASSED [ 80%]
+../tmp/localtests/test_variants.py::TestVariantCrud::test_product_role_option_rejected_as_axis PASSED [ 80%]
+../tmp/localtests/test_variants.py::TestVariantCrud::test_option_from_other_catalog_rejected PASSED [ 81%]
+../tmp/localtests/test_variants.py::TestVariantCrud::test_unknown_option_rejected PASSED [ 81%]
+../tmp/localtests/test_variants.py::TestVariantCrud::test_inactive_axis_rejected PASSED [ 81%]
+../tmp/localtests/test_variants.py::TestVariantCrud::test_soft_delete_hides_variant_and_allows_recreate PASSED [ 82%]
+../tmp/localtests/test_variants.py::TestVariantCrud::test_cannot_edit_deleted_variant PASSED [ 82%]
+../tmp/localtests/test_variants.py::TestVariantCrud::test_db_rejects_duplicate_active_combo PASSED [ 83%]
+../tmp/localtests/test_variants.py::TestVariantDiscounts::test_variant_discount_in_effective_price PASSED [ 83%]
+../tmp/localtests/test_variants.py::TestVariantDiscounts::test_product_discount_applies_when_variant_has_none PASSED [ 84%]
+../tmp/localtests/test_variants.py::TestGenerate::test_cartesian_product PASSED [ 84%]
+../tmp/localtests/test_variants.py::TestGenerate::test_generate_marks_existing PASSED [ 84%]
+../tmp/localtests/test_variants.py::TestGenerate::test_generate_rejects_product_role_axis PASSED [ 85%]
+../tmp/localtests/test_variants.py::TestGenerate::test_generate_rejects_inactive_axis PASSED [ 85%]
+../tmp/localtests/test_variants.py::TestAttributeGuard::test_cannot_delete_attribute_in_use PASSED [ 86%]
+../tmp/localtests/test_variants.py::TestAttributeGuard::test_can_delete_unused_attribute PASSED [ 86%]
+../tmp/localtests/test_wallet_admin.py::TestRecharge::test_admin_can_recharge PASSED [ 86%]
+../tmp/localtests/test_wallet_admin.py::TestRecharge::test_owner_can_recharge PASSED [ 87%]
+../tmp/localtests/test_wallet_admin.py::TestRecharge::test_user_and_company_cannot_recharge PASSED [ 87%]
+../tmp/localtests/test_wallet_admin.py::TestRecharge::test_user_is_notified_after_recharge PASSED [ 88%]
+../tmp/localtests/test_wallet_admin.py::TestRecharge::test_recharge_by_email_endpoint_works_and_notifies PASSED [ 88%]
+../tmp/localtests/test_wallet_admin.py::TestRechargeMaxAmount::test_at_or_below_limit_is_accepted[1] PASSED [ 89%]
+../tmp/localtests/test_wallet_admin.py::TestRechargeMaxAmount::test_at_or_below_limit_is_accepted[100000] PASSED [ 89%]
+../tmp/localtests/test_wallet_admin.py::TestRechargeMaxAmount::test_at_or_below_limit_is_accepted[10000000] PASSED [ 89%]
+../tmp/localtests/test_wallet_admin.py::TestRechargeMaxAmount::test_above_limit_is_rejected[10000001] PASSED [ 90%]
+../tmp/localtests/test_wallet_admin.py::TestRechargeMaxAmount::test_above_limit_is_rejected[20000000] PASSED [ 90%]
+../tmp/localtests/test_wallet_admin.py::TestRechargeMaxAmount::test_by_email_endpoint_also_enforces_limit PASSED [ 91%]
+../tmp/localtests/test_wallet_admin.py::TestRechargeMaxAmount::test_owner_is_also_limited PASSED [ 91%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_admin_can_correct_recharge_down PASSED [ 92%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_owner_can_correct_recharge_up PASSED [ 92%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_user_cannot_correct PASSED [ 92%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_company_cannot_correct PASSED [ 93%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_cannot_correct_a_purchase PASSED [ 93%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_cannot_correct_a_refund PASSED [ 94%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_cannot_correct_twice PASSED [ 94%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_cannot_correct_to_same_amount PASSED [ 94%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_invalid_new_amount_is_rejected[-100] PASSED [ 95%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_invalid_new_amount_is_rejected[0] PASSED [ 95%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_invalid_new_amount_is_rejected[abc] PASSED [ 96%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_empty_reason_is_rejected PASSED [ 96%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_correction_keeps_original_and_records_adjustment PASSED [ 97%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_user_sees_both_movements_in_history PASSED [ 97%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_user_is_notified_of_correction PASSED [ 97%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_correction_is_atomic_when_balance_would_go_negative PASSED [ 98%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_history_marks_recharge_as_corrected PASSED [ 98%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_correct_unknown_transaction_returns_404 PASSED [ 99%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_correction_new_amount_at_limit_is_accepted PASSED [ 99%]
+../tmp/localtests/test_wallet_admin.py::TestCorrection::test_correction_new_amount_above_limit_is_rejected PASSED [100%]
+
+=============================== warnings summary ===============================
+.venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+  /app/.venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+test_advertisements.py: 96 warnings
+test_auth_authorization.py: 35 warnings
+test_catalog_attributes.py: 92 warnings
+test_certification_flow.py: 140 warnings
+test_offers_and_new.py: 56 warnings
+test_order_cancel_refund.py: 29 warnings
+test_public_and_commerce.py: 72 warnings
+test_returns_flow.py: 60 warnings
+test_variants.py: 84 warnings
+test_wallet_admin.py: 128 warnings
+  /app/app/services/authentication/JWTService.py:16: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
+test_advertisements.py: 28 warnings
+test_catalog_attributes.py: 20 warnings
+test_offers_and_new.py: 43 warnings
+test_order_cancel_refund.py: 7 warnings
+test_product_search.py: 23 warnings
+test_public_and_commerce.py: 58 warnings
+test_returns_flow.py: 14 warnings
+test_variants.py: 66 warnings
+  /app/.venv/lib/python3.13/site-packages/sqlalchemy/sql/schema.py:3624: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+
+test_advertisements.py: 3 warnings
+test_offers_and_new.py: 11 warnings
+test_product_search.py: 24 warnings
+test_public_and_commerce.py: 6 warnings
+  /app/app/services/pricing.py:109: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    now = now or datetime.utcnow()
+
+test_certification_flow.py::TestLoginByRoleAndCertificate::test_user_login_returns_jwt
+test_certification_flow.py::TestLoginByRoleAndCertificate::test_admin_login_returns_jwt
+test_certification_flow.py::TestLoginByRoleAndCertificate::test_owner_login_returns_jwt
+test_certification_flow.py::TestLoginByRoleAndCertificate::test_company_approved_login_returns_jwt
+  /app/app/services/authentication/JWTService.py:30: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "exp": datetime.utcnow() + timedelta(days=REFRESH_TOKEN_DAYS)
+
+test_offers_and_new.py: 53 warnings
+test_order_cancel_refund.py: 14 warnings
+test_pricing.py: 5 warnings
+test_public_and_commerce.py: 62 warnings
+test_returns_flow.py: 28 warnings
+test_variants.py: 23 warnings
+  /app/app/services/pricing.py:71: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    now = now or datetime.utcnow()
+
+test_offers_and_new.py::TestOffers::test_product_without_discount_is_excluded
+test_offers_and_new.py::TestOffers::test_product_with_one_discounted_variant_appears_once
+test_offers_and_new.py::TestOffers::test_deleted_variant_discount_does_not_count
+test_offers_and_new.py::TestOffers::test_out_of_stock_variant_discount_does_not_count
+test_offers_and_new.py::TestOffers::test_card_price_reflects_best_variant_deal
+test_offers_and_new.py::TestOffers::test_product_level_discount_puts_product_in_offers
+test_offers_and_new.py::TestSharedCardBehaviour::test_no_legacy_fields_in_card
+  /app/app/services/publicService/Products.py:198: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    now = datetime.utcnow()
+
+test_offers_and_new.py::TestOffers::test_product_without_discount_is_excluded
+test_offers_and_new.py::TestOffers::test_product_with_one_discounted_variant_appears_once
+test_offers_and_new.py::TestOffers::test_deleted_variant_discount_does_not_count
+test_offers_and_new.py::TestOffers::test_out_of_stock_variant_discount_does_not_count
+test_offers_and_new.py::TestOffers::test_card_price_reflects_best_variant_deal
+test_offers_and_new.py::TestOffers::test_product_level_discount_puts_product_in_offers
+test_offers_and_new.py::TestSharedCardBehaviour::test_no_legacy_fields_in_card
+  /app/app/services/publicService/Products.py:179: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    now = datetime.utcnow()
+
+test_offers_and_new.py::TestOffers::test_deleted_variant_discount_does_not_count
+test_public_and_commerce.py::TestPublicProductDetail::test_deleted_variant_not_visible
+test_public_and_commerce.py::TestCheckoutAndOrders::test_order_snapshot_is_frozen
+test_variants.py::TestVariantCrud::test_soft_delete_hides_variant_and_allows_recreate
+test_variants.py::TestVariantCrud::test_cannot_edit_deleted_variant
+  /app/app/services/DashboardService/company/Variants.py:363: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    variant.deleted_at = datetime.utcnow()
+
+test_offers_and_new.py::TestNewProducts::test_recent_product_appears_once
+test_offers_and_new.py::TestNewProducts::test_old_product_is_excluded
+test_offers_and_new.py::TestNewProducts::test_descending_order_by_created_at
+test_offers_and_new.py::TestSharedCardBehaviour::test_card_image_is_first_live_variant_image
+test_offers_and_new.py::TestSharedCardBehaviour::test_card_image_ignores_deleted_variant
+test_offers_and_new.py::TestSharedCardBehaviour::test_no_legacy_fields_in_card
+  /app/app/services/publicService/Products.py:250: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    cutoff = datetime.utcnow() - timedelta(days=NEW_PRODUCT_WINDOW_DAYS)
+
+test_offers_and_new.py::TestNewProducts::test_old_product_is_excluded
+  /tmp/localtests/test_offers_and_new.py:158: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    old = datetime.utcnow() - timedelta(days=NEW_PRODUCT_WINDOW_DAYS + 5)
+
+test_offers_and_new.py::TestNewProducts::test_descending_order_by_created_at
+  /tmp/localtests/test_offers_and_new.py:174: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    {"created_at": datetime.utcnow() - timedelta(days=3)}
+
+test_offers_and_new.py::TestNewProducts::test_descending_order_by_created_at
+  /tmp/localtests/test_offers_and_new.py:177: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    {"created_at": datetime.utcnow()}
+
+test_offers_and_new.py::TestSharedCardBehaviour::test_card_image_ignores_deleted_variant
+  /tmp/localtests/test_offers_and_new.py:207: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    {"deleted_at": datetime.utcnow()}
+
+test_public_and_commerce.py::TestProductInitialImage::test_public_card_skips_deleted_variant
+  /tmp/localtests/test_public_and_commerce.py:161: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    ).update({"deleted_at": datetime.utcnow()})
+
+test_public_and_commerce.py::TestCheckoutAndOrders::test_checkout_rejects_deleted_variant
+  /tmp/localtests/test_public_and_commerce.py:298: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    ).update({"deleted_at": datetime.utcnow()})
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.13.14-final-0 _______________
+
+Name                                                             Stmts   Miss  Cover   Missing
+----------------------------------------------------------------------------------------------
+app/Config.py                                                       53      5    91%   12-13, 15, 77, 83
+app/core/ErrorCodes.py                                             114      0   100%
+app/core/Exceptions.py                                               6      0   100%
+app/core/PayoutConfig.py                                             3      0   100%
+app/core/TaxConfig.py                                                5      0   100%
+app/core/WalletConfig.py                                             3      0   100%
+app/core/__init__.py                                                 0      0   100%
+app/database/Connection.py                                          26      6    77%   45-49, 84-85
+app/main.py                                                         85      5    94%   52-56, 91
+app/middleware/AuthMiddleware.py                                    89     31    65%   48, 62, 80, 93, 107, 118, 129, 143, 158, 169, 182, 193-201, 216-243, 249, 283-301
+app/middleware/AuthUser.py                                           9      2    78%   16-17
+app/middleware/CorsMiddleware.py                                    15      0   100%
+app/middleware/PublicBaseUrlMiddleware.py                           10      4    60%   20-24
+app/middleware/PublicRoutes.py                                      10      1    90%   41
+app/middleware/RateLimitMiddleware.py                               17      7    59%   21-48
+app/middleware/RolePermissions.py                                    3      0   100%
+app/models/ModelAddress.py                                          22      0   100%
+app/models/ModelAdminActivity.py                                    31      0   100%
+app/models/ModelAdvertisement.py                                    32      0   100%
+app/models/ModelAttributeValue.py                                   24      0   100%
+app/models/ModelCart.py                                             25      0   100%
+app/models/ModelCatalog.py                                          28      0   100%
+app/models/ModelCatalogAttribute.py                                 33      0   100%
+app/models/ModelCode.py                                             21      0   100%
+app/models/ModelColor.py                                            12      0   100%
+app/models/ModelCompany.py                                          34      0   100%
+app/models/ModelCompanyBankAccount.py                               27      0   100%
+app/models/ModelCompanyPayout.py                                    31      0   100%
+app/models/ModelFavorite.py                                         15      0   100%
+app/models/ModelOrder.py                                            57      0   100%
+app/models/ModelProduct.py                                          42      0   100%
+app/models/ModelRefreshToken.py                                     15      0   100%
+app/models/ModelRehniCoinMovement.py                                18      0   100%
+app/models/ModelReport.py                                           43      0   100%
+app/models/ModelReturnRequest.py                                    33      0   100%
+app/models/ModelReview.py                                           19      0   100%
+app/models/ModelRole.py                                             10      0   100%
+app/models/ModelShippingCarrier.py                                  15      0   100%
+app/models/ModelSpecification.py                                    15      0   100%
+app/models/ModelUser.py                                             30      0   100%
+app/models/ModelVariant.py                                          30      0   100%
+app/models/ModelVariantImage.py                                     12      0   100%
+app/models/ModelVariantOption.py                                    16      0   100%
+app/models/ModelVariantSpecification.py                             13      0   100%
+app/models/ModelWallet.py                                           37      0   100%
+app/models/__init__.py                                              29      0   100%
+app/repository/AddressRepository.py                                 15      7    53%   8, 17, 25-27, 31, 35
+app/repository/CartRepository.py                                    22      1    95%   43
+app/repository/CatalogAttributeRepository.py                        25      0   100%
+app/repository/CodeRepository.py                                    17      9    47%   8-19, 22, 31-32, 36-37
+app/repository/CompanyBankAccountRepository.py                      20     10    50%   8, 19, 30, 41-43, 47, 51, 57-59
+app/repository/CompanyPayoutRepository.py                           38     24    37%   11, 19, 27, 37, 49-57, 63-74, 78-80, 86-95, 101-110
+app/repository/CompanyRepository.py                                 15      7    53%   11, 16, 20, 25-37
+app/repository/FavoriteRepository.py                                14      7    50%   8, 16, 25-28, 32
+app/repository/OrderRepository.py                                   56     36    36%   27, 39, 47-57, 71-104, 112-119, 128-141, 147-157
+app/repository/ProductArchitectureRepository.py                     29      2    93%   61, 69
+app/repository/RehniCoinMovementRepository.py                        6      3    50%   7-9
+app/repository/ReportRepository.py                                  35     24    31%   12-14, 18, 43-90, 101-108
+app/repository/ReturnRepository.py                                  42     15    64%   18, 79, 82-101, 113
+app/repository/ReviewRepository.py                                  33     13    61%   14, 22, 28, 42-44, 48-59, 100-107
+app/repository/RoleRepository.py                                     5      2    60%   7-8
+app/repository/UserRepository.py                                    29     14    52%   14-23, 26-28, 31-34, 42-44
+app/repository/VariantRepository.py                                  8      3    62%   8, 20, 31
+app/repository/WalletRepository.py                                  37      1    97%   47
+app/repository/admin/activityRepository.py                          12      2    83%   35-46
+app/repository/admin/companyRepository.py                           45     28    38%   25-115, 123-158, 183, 206, 223-236
+app/repository/admin/dashboardRepository.py                         17     10    41%   10-24, 40-51
+app/repository/admin/userRepository.py                              50     29    42%   12, 34-36, 45-52, 63-110, 159, 171-174, 181-184, 191-197
+app/routers/AddressRouter.py                                        22      5    77%   26, 33, 43, 50, 55
+app/routers/AdminCatalogAttributeRouters.py                         34      0   100%
+app/routers/AdminCompanyRouters.py                                  86     19    78%   117, 134, 172-174, 190, 203, 218, 233, 247, 263, 283, 302, 318, 334, 350, 367, 382, 395, 480
+app/routers/AdminDashboardRouters.py                                14      3    79%   21, 29, 40
+app/routers/AdminPayoutRouter.py                                    37     14    62%   33-34, 45-47, 58-60, 69-71, 82-84, 89-91, 96-98
+app/routers/AdminReportRouter.py                                    17      4    76%   31, 43, 53-55
+app/routers/AdminUserRouters.py                                     24      7    71%   43, 49-52, 58-60
+app/routers/AdminWalletRouter.py                                    24      1    96%   30
+app/routers/AuthRouters.py                                          54     10    81%   48, 58, 69, 74, 79, 90, 95, 100, 115, 130
+app/routers/BankAccountRouter.py                                    19      4    79%   25, 32, 42, 49
+app/routers/CartRouter.py                                           22      3    86%   43, 50, 55
+app/routers/CheckoutRouter.py                                        9      0   100%
+app/routers/CompanyPayoutRouter.py                                  16      3    81%   29, 36, 41
+app/routers/CompanyProductArchitectureRouters.py                    25      2    92%   38, 52
+app/routers/CompanyRouter.py                                       142     38    73%   100-102, 114-115, 126-128, 193-195, 231-233, 246-248, 266-268, 286-288, 298-299, 347-349, 403-405, 425-427, 449-451, 472-474, 493-495, 514-516, 534, 546, 556, 570, 580, 638
+app/routers/FavoriteRouter.py                                       16      3    81%   20, 25, 30
+app/routers/HealthRouter.py                                         16      7    56%   13-23, 27-30
+app/routers/OrderRouter.py                                          24      2    92%   33, 54
+app/routers/ReportRouter.py                                         10      1    90%   25
+app/routers/ReviewRouter.py                                         20      5    75%   26, 33, 40, 47-48
+app/routers/ShippingCarrierRouter.py                                19      4    79%   25, 33, 42, 51
+app/routers/WalletRouter.py                                         19      2    89%   26, 46
+app/routers/mediaRouter.py                                          16     11    31%   9-44
+app/routers/publicRouters.py                                        68     16    76%   46-47, 51-52, 64-65, 111-112, 145-146, 151-152, 161-162, 169-170
+app/schemas/SchemaCommerce/SchemaAddress.py                         39      0   100%
+app/schemas/SchemaCommerce/SchemaCart.py                            43      0   100%
+app/schemas/SchemaCommerce/SchemaFavorite.py                        18      0   100%
+app/schemas/SchemaCommerce/SchemaOrder.py                           83      6    93%   98-106
+app/schemas/SchemaCommerce/SchemaReport.py                          56      1    98%   28
+app/schemas/SchemaCommerce/SchemaReturn.py                          54      2    96%   22, 25
+app/schemas/SchemaCommerce/SchemaReview.py                          29      0   100%
+app/schemas/SchemaCommerce/SchemaWallet.py                          58      0   100%
+app/schemas/SchemaDashboard/SchemaAdvertisement.py                  54      0   100%
+app/schemas/SchemaDashboard/SchemaBankAccount.py                    30      0   100%
+app/schemas/SchemaDashboard/SchemaCatalog.py                        47      2    96%   24, 51
+app/schemas/SchemaDashboard/SchemaCatalogAttribute.py               45      0   100%
+app/schemas/SchemaDashboard/SchemaColor.py                          12      0   100%
+app/schemas/SchemaDashboard/SchemaPayout.py                         63      3    95%   18-21
+app/schemas/SchemaDashboard/SchemaProduct.py                        61      1    98%   104
+app/schemas/SchemaDashboard/SchemaProductArchitecture.py            37      0   100%
+app/schemas/SchemaDashboard/SchemaShippingCarrier.py                17      0   100%
+app/schemas/SchemaDashboard/SchemaVariant.py                        76      0   100%
+app/schemas/SchemaDashboard/ShemaCompany.py                         18      6    67%   24-34
+app/schemas/SchemaDashboard/admin/company.py                        33      0   100%
+app/schemas/SchemaDashboard/admin/dashboard.py                      28      0   100%
+app/schemas/SchemaDashboard/admin/user.py                           26      0   100%
+app/schemas/SchemaPublic.py                                        144      0   100%
+app/schemas/schemaAuth/SchemaForgotPassword.py                       3      0   100%
+app/schemas/schemaAuth/SchemaLogin.py                               37     16    57%   29-44, 49-64
+app/schemas/schemaAuth/SchemaRegister.py                            84     42    50%   22, 32-42, 47-67, 72-82, 99, 109-119, 124-129, 134-144, 149-159, 163-168
+app/schemas/schemaAuth/SchemaResetPassword.py                       18      9    50%   16-36
+app/schemas/schemaAuth/SchemaToken.py                                7      0   100%
+app/schemas/schemaAuth/SchemaVerifyEmail.py                          9      0   100%
+app/services/DashboardService/admin/AdvertisementService.py        155     61    61%   40, 43, 47, 50, 53-57, 67, 70, 87, 107, 154-163, 195, 207, 227, 280-290, 314-320, 351, 360, 373-396, 405-430, 438-450, 459-469, 482-493
+app/services/DashboardService/admin/AdvertisementTargeting.py       29     12    59%   38, 52, 57-71
+app/services/DashboardService/admin/CatalogAttributeService.py     106      8    92%   43, 108, 122, 125, 128, 177, 232, 240
+app/services/DashboardService/admin/CatalogService.py               98     81    17%   26-33, 37, 51-55, 65-111, 122-191, 201-213, 222-242
+app/services/DashboardService/admin/CompanyService.py              120     72    40%   30, 66-208, 220-233, 253, 282, 326, 369-487
+app/services/DashboardService/admin/DashboarService.py              82     72    12%   25-29, 62, 73-260, 265-267
+app/services/DashboardService/admin/ReportService.py                65     48    26%   35-62, 72-86, 102-107, 111-113, 147-148, 162-201
+app/services/DashboardService/admin/ShippingCarrierService.py       38     28    26%   16, 27-50, 58-86, 97-107
+app/services/DashboardService/admin/SpecificationService.py         44     35    20%   18-26, 40-74, 83-114, 122-139
+app/services/DashboardService/admin/UserService.py                  71     49    31%   99-111, 131-239, 258-304
+app/services/DashboardService/admin/colorsService.py                39     30    23%   13, 25-46, 55-84, 92-115
+app/services/DashboardService/company/BankAccountService.py         96     79    18%   27-32, 36, 50-54, 60-94, 100-141, 147-184
+app/services/DashboardService/company/Dashboard.py                 148     62    58%   49-67, 85, 117-147, 158-179, 191, 196, 206, 246-247, 252-267, 319, 332, 347, 370, 375
+app/services/DashboardService/company/ProductAttributes.py          48      9    81%   19, 23, 43-45, 56-57, 73, 83, 90
+app/services/DashboardService/company/ProductDiscount.py            24      4    83%   17, 21, 24, 35
+app/services/DashboardService/company/Products.py                  206    185    10%   28-31, 37-89, 93-170, 174-224, 258-427, 434-462, 470-496
+app/services/DashboardService/company/VariantGenerate.py            46      7    85%   20, 24, 39, 48, 54, 71, 82
+app/services/DashboardService/company/Variants.py                  222     93    58%   32, 36, 46, 77, 89-117, 128, 217-220, 306, 315-318, 331, 334, 337, 359, 375-377, 383-386, 399-421, 427-430, 441-470, 476-503, 509-528, 534-536
+app/services/NasService.py                                          64     30    53%   35, 37-38, 48-80, 85, 93-102, 106-120, 132
+app/services/PayoutService.py                                      152    106    30%   44-49, 53-58, 64-66, 72-75, 83-91, 112-146, 156, 165-167, 197-230, 236-250, 256-258, 272-300, 306-310, 322-329, 333-344, 355-365, 375-380
+app/services/authentication/CertificateUpdateService.py             19      2    89%   26, 39
+app/services/authentication/ForgotPasswordService.py                22     13    41%   20-40
+app/services/authentication/JWTService.py                           23      6    74%   50-57
+app/services/authentication/LoginService.py                         48     13    73%   36, 39, 46-61, 69, 112, 137-140
+app/services/authentication/MeService.py                            66     47    29%   35, 39-44, 53-89, 99-124
+app/services/authentication/RefreshTokenService.py                  32     23    28%   20-70
+app/services/authentication/RegisterService.py                      68     54    21%   33-66, 70-139
+app/services/authentication/ResetPasswordService.py                 30     21    30%   25-61
+app/services/authentication/VerifyEmailService.py                   70     58    17%   33-37, 42-83, 91-123, 128-163
+app/services/commerce/AddressService.py                            111     95    14%   22-23, 31, 48-52, 58-96, 106-153, 159-189, 195-218
+app/services/commerce/CartService.py                               133     57    57%   33, 143, 155, 167, 187, 206-209, 219-251, 257-279, 283-301
+app/services/commerce/CheckoutService.py                            96     10    90%   43, 46, 59, 62, 79, 143, 263-266
+app/services/commerce/FavoriteService.py                            60     45    25%   24-25, 33-64, 70-100, 106-127
+app/services/commerce/OrderService.py                              167     88    47%   57-64, 151-156, 169, 174, 185, 201, 253, 269-285, 297-306, 315-319, 334-372, 384-423, 434-461
+app/services/commerce/ReportService.py                              67     48    28%   31-60, 79-155, 162-164
+app/services/commerce/ReturnService.py                             122     21    83%   94, 105, 127, 169-172, 178-186, 201-204, 326-329
+app/services/commerce/ReviewService.py                              90     72    20%   29-30, 34-40, 55-69, 77-120, 126-155, 159-181, 187-189
+app/services/commerce/WalletService.py                             135     17    87%   67-69, 99, 131-134, 148, 188-191, 340-343, 353
+app/services/email/CodeService.py                                   79     48    39%   47, 52, 62-69, 77-86, 98-113, 121-125, 137-148, 162-183, 194-208
+app/services/email/EmailService.py                                  39     17    56%   29-41, 53-54, 58-60
+app/services/email/OrderEmailService.py                             40     28    30%   32, 36, 40-43, 53-76, 80-82, 106-144
+app/services/email/PayoutEmailService.py                            13      7    46%   17, 21-24, 30-33
+app/services/email/WalletEmailService.py                             9      3    67%   16, 26, 45
+app/services/email/template/EmailBase.py                            62     16    74%   28-29, 119, 153, 214-224, 232, 253-270, 300-314, 322-327
+app/services/email/template/EmailForgotPassword.py                   6      3    50%   15-57
+app/services/email/template/EmailOrder.py                           39     30    23%   26, 50-104, 116-137, 149-174, 186-210, 223-255
+app/services/email/template/EmailPayout.py                          10      6    40%   40-81
+app/services/email/template/EmailRegisterCompany.py                  6      3    50%   21-66
+app/services/email/template/EmailRegisterUser.py                     6      3    50%   14-43
+app/services/email/template/EmailReturnStatus.py                    14      9    36%   29-47, 60-80, 93-113
+app/services/email/template/EmailStatusCertificate.py               16      0   100%
+app/services/email/template/EmailStatusCompany.py                   11      7    36%   18-63, 74-104
+app/services/email/template/EmailUpdateUserCredentials.py            6      3    50%   17-49
+app/services/email/template/EmailWallet.py                          17     12    29%   33-56, 69-101
+app/services/pricing.py                                             67      2    97%   32, 56
+app/services/publicService/Advertisements.py                         7      0   100%
+app/services/publicService/Company.py                               35     21    40%   33-66, 81-88, 103-126
+app/services/publicService/Products.py                             151     20    87%   62-77, 89-91, 96, 280-290, 371, 377, 380, 388, 391-392, 395, 397, 399, 433, 503, 579
+app/services/publicService/ShippingCarriers.py                       4      1    75%   9
+app/services/variants/__init__.py                                    0      0   100%
+app/services/variants/attributes.py                                 28      0   100%
+app/services/variants/combo_key.py                                   7      0   100%
+app/services/variants/images.py                                     15      1    93%   37
+app/services/variants/resolver.py                                   65      5    92%   26-32, 35, 80
+app/utils/CheckNetwork.py                                            7      5    29%   4-8
+app/utils/NitValidator.py                                           14      9    36%   7, 11-16, 20-25
+app/utils/Security.py                                                6      0   100%
+app/utils/TestDatabase.py                                            9      6    33%   5-10
+app/utils/generateTemporalPassword.py                                5      2    60%   6-8
+app/utils/seed.py                                                  385    188    51%   26-34, 571, 575-581, 585-614, 618-677, 694-696, 700-702, 706-718, 725-739, 743, 755-764, 772-781, 785-797, 801-805, 809-871, 878-941, 1599-1642, 1646-1673, 1678-1691, 1695-1701
+----------------------------------------------------------------------------------------------
+TOTAL                                                             8159   2776    66%
+================ 238 passed, 1316 warnings in 250.02s (0:04:10) ================
