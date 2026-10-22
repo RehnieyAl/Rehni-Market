@@ -3,7 +3,6 @@ services:
     image: minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
     container_name: rehni-minio
     restart: unless-stopped
-    # Cada servicio recibe solo sus credenciales (no el JWT ni el correo del backend)
     env_file:
       - ./.env.minio
     volumes:
@@ -29,11 +28,7 @@ services:
       - ./.env.postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    # /dev/shm por defecto en Docker es 64MB: las consultas paralelas de
-    # Postgres fallan con "could not resize shared memory segment" bajo carga.
     shm_size: 256mb
-    # Memoria acotada al límite del contenedor: shared_buffers + work_mem ×
-    # conexiones (MAX_DB_CONNECTIONS de PgBouncer) debe caber holgado en él.
     command:
       - postgres
       - -c
@@ -61,6 +56,10 @@ services:
         limits:
           memory: 768M
           cpus: "3"
+    depends_on:
+      minio:
+        condition: service_healthy
+
   pgbouncer:
     image: edoburu/pgbouncer:latest
     container_name: pgbouncer_pool
@@ -72,27 +71,18 @@ services:
       POOL_MODE: transaction
       LISTEN_PORT: "6432"
       LISTEN_BACKLOG: "4096"
-      # Conexiones REALES a Postgres: DEFAULT_POOL_SIZE + RESERVE_POOL_SIZE por
-      # par bd/usuario, con MAX_DB_CONNECTIONS como techo duro (< max_connections
-      # de Postgres, dejando margen para alembic, psql y el healthcheck).
       DEFAULT_POOL_SIZE: "20"
       MIN_POOL_SIZE: "5"
       RESERVE_POOL_SIZE: "5"
       RESERVE_POOL_TIMEOUT: "3"
       MAX_DB_CONNECTIONS: "40"
-      # Clientes (backend) que PgBouncer acepta; el backend valida su
-      # presupuesto contra este mismo valor (PGBOUNCER_MAX_CLIENT_CONN).
       MAX_CLIENT_CONN: "${PGBOUNCER_MAX_CLIENT_CONN:-1200}"
-      # Un cliente en cola más de 30s recibe error en vez de colgar la petición
-      # hasta el timeout de k6/navegador (por defecto PgBouncer espera 120s).
       QUERY_WAIT_TIMEOUT: "30"
-      # Libera conexiones de servidor retenidas por transacciones olvidadas.
       IDLE_TRANSACTION_TIMEOUT: "60"
       SERVER_IDLE_TIMEOUT: "300"
       SERVER_CONNECT_TIMEOUT: "5"
       SERVER_LOGIN_RETRY: "2"
       TCP_KEEPALIVE: "1"
-      # Bajo carga, loguear cada conexión cuesta CPU (PgBouncer es un solo hilo).
       LOG_CONNECTIONS: "0"
       LOG_DISCONNECTIONS: "0"
       STATS_PERIOD: "30"
@@ -145,13 +135,8 @@ services:
       pgbouncer:
         condition: service_healthy
     environment:
-      # Cada worker es un proceso con su propio pool SQLAlchemy:
-      # (DB_POOL_SIZE + DB_MAX_OVERFLOW) × UVICORN_WORKERS clientes hacia PgBouncer.
       UVICORN_WORKERS: "${UVICORN_WORKERS:-3}"
-      # Caddy (en la red de Docker) envía X-Forwarded-For; solo se confía en esa red,
-      # así un cliente que llegue directo al :8000 no puede falsear su IP.
       FORWARDED_ALLOW_IPS: "${FORWARDED_ALLOW_IPS:-172.16.0.0/12}"
-      # Swagger en /docs (por Caddy: https://api.<dominio>/docs). En producción, false.
       DOCS_ENABLED: "${DOCS_ENABLED:-false}"
       # El frontend está en otro dominio que la API: su origen debe estar permitido.
       CORS_EXTRA_ORIGINS: "${CORS_EXTRA_ORIGINS:-}"
@@ -186,17 +171,21 @@ services:
         condition: service_healthy
     # Caddy: sirve el frontend y hace de reverse proxy de la API en su propio dominio
     # (caddy/Caddyfile)
+
+    # minio: sirve los archivos estáticos de la API (archivos subidos por los usuarios) en su propio dominio
+      minio:
+        condition: service_healthy
+      
+
     environment:
       SITE_ADDRESS: "${SITE_ADDRESS:-rehnimarket}"
       API_ADDRESS: "${API_ADDRESS:-api.rehnimarket}"
-      CADDY_TLS: "${CADDY_TLS:-internal}"
     volumes:
       - ./caddy:/etc/caddy:ro
       - caddy_data:/data
       - caddy_config:/config
     ports:
       - "${FRONTEND_PORT:-8080}:80"
-      - "${FRONTEND_HTTPS_PORT:-8443}:443"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost/"]
       interval: 15s

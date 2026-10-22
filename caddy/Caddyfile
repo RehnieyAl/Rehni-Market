@@ -5,8 +5,9 @@
 # Variables (docker-compose.yml):
 #   SITE_ADDRESS  dominio del frontend   (por defecto rehnimarket)
 #   API_ADDRESS   dominio de la API      (por defecto api.rehnimarket)
-#   CADDY_TLS     `internal` = CA local de laboratorio; en producción, un correo para
-#                 que Caddy pida el certificado a Let's Encrypt
+#
+# Solo HTTP: el prefijo http:// desactiva el HTTPS automático de Caddy (sin CA
+# interna ni certificados autofirmados, así el navegador no avisa de conexión insegura).
 
 (frontend) {
 	encode zstd gzip
@@ -34,15 +35,13 @@
 	}
 }
 
-{$SITE_ADDRESS:rehnimarket} {
-	tls {$CADDY_TLS:internal}
+http://{$SITE_ADDRESS:rehnimarket} {
 	import frontend
 }
 
 # El backend arma las URL de imágenes con el host por el que llegó el cliente
 # (X-Forwarded-Host, ver PublicBaseUrlMiddleware).
-{$API_ADDRESS:api.rehnimarket} {
-	tls {$CADDY_TLS:internal}
+http://{$API_ADDRESS:api.rehnimarket} {
 	encode zstd gzip
 	reverse_proxy backend:8000
 }

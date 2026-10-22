@@ -1,0 +1,340 @@
+
+ RUN  v4.1.11 /home/rehnieyal/Escritorio/Rehni-Market/RehniMarket-frontend
+      Coverage enabled with v8
+
+(node:20765) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20738) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20747) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20759) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20789) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20739) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20741) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20740) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20753) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20778) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:20771) ExperimentalWarning: localStorage is not available because --localstorage-file was not provided.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  11 passed (11)
+      Tests  69 passed (69)
+   Start at  14:41:47
+   Duration  3.29s (transform 2.08s, setup 1.84s, import 4.24s, tests 4.56s, environment 9.69s)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |    7.47 |     7.37 |    4.75 |    7.73 |                   
+ src               |       0 |      100 |       0 |       0 |                   
+  App.tsx          |       0 |      100 |       0 |       0 | 5                 
+  main.tsx         |       0 |      100 |     100 |       0 | 14                
+ src/api           |   22.58 |     6.25 |   23.52 |   22.82 |                   
+  Client.ts        |       0 |        0 |       0 |       0 | 6-28              
+  ...rorHandler.ts |       0 |        0 |       0 |       0 | 7-63              
+  session.ts       |   67.74 |       75 |   44.44 |      70 | ...17-22,74-85,89 
+  ...nterceptor.ts |       0 |        0 |       0 |       0 | 15-125            
+ .../addresses/api |       0 |      100 |       0 |       0 |                   
+  ...essService.ts |       0 |      100 |       0 |       0 | 7-31              
+ ...ses/components |       0 |        0 |       0 |       0 |                   
+  AddressForm.tsx  |       0 |        0 |       0 |       0 | 11-137            
+  ...tionModal.tsx |       0 |        0 |       0 |       0 | 22-146            
+ ...ures/admin/api |       0 |        0 |       0 |       0 |                   
+  ...entService.ts |       0 |        0 |       0 |       0 | 14-103            
+  ...uteService.ts |       0 |      100 |       0 |       0 | 14-72             
+  ...logService.ts |       0 |        0 |       0 |       0 | 11-75             
+  ...anyService.ts |       0 |        0 |       0 |       0 | 22-80             
+  ...ardService.ts |       0 |      100 |       0 |       0 | 9-33              
+  payoutService.ts |       0 |        0 |       0 |       0 | 22-61             
+  ...ierService.ts |       0 |      100 |       0 |       0 | 11-40             
+  userService.ts   |       0 |        0 |       0 |       0 | 20-68             
+  walletService.ts |       0 |        0 |       0 |       0 | 14-41             
+ ...ents/dashboard |       0 |        0 |       0 |       0 |                   
+  ...anagement.tsx |       0 |      100 |       0 |       0 | 4                 
+  Home.tsx         |       0 |        0 |       0 |       0 | 32-625            
+ .../advertisement |       0 |        0 |       0 |       0 |                   
+  ...FormModal.tsx |       0 |        0 |       0 |       0 | 17-745            
+  ...viewModal.tsx |       0 |        0 |       0 |       0 | 16-18             
+  ...tisements.tsx |       0 |        0 |       0 |       0 | 23-362            
+ ...hboard/catalog |       0 |        0 |       0 |       0 |                   
+  ...utesModal.tsx |       0 |        0 |       0 |       0 | 28-354            
+  ...FormModal.tsx |       0 |        0 |       0 |       0 | 30-209            
+  Catalogs.tsx     |       0 |        0 |       0 |       0 | 20-335            
+ ...hboard/company |   31.86 |    40.93 |   29.62 |   31.47 |                   
+  ...cateModal.tsx |   66.66 |       50 |     100 |   66.66 | 20                
+  ...viewModal.tsx |     100 |       90 |     100 |     100 | 61-76             
+  Companies.tsx    |       0 |        0 |       0 |       0 | 27-694            
+  ...tailModal.tsx |   75.75 |    68.96 |   52.63 |      80 | ...64-317,348-420 
+  ...firmModal.tsx |       0 |        0 |       0 |       0 | 17-66             
+ ...shboard/payout |       0 |        0 |       0 |       0 |                   
+  ...tailModal.tsx |       0 |        0 |       0 |       0 | 28-86             
+  AdminPayouts.tsx |       0 |        0 |       0 |       0 | 16-200            
+  ...youtModal.tsx |       0 |        0 |       0 |       0 | 26-321            
+  ...firmModal.tsx |       0 |        0 |       0 |       0 | 26                
+  ...eviewCard.tsx |       0 |      100 |       0 |       0 | 11                
+  ...wSkeleton.tsx |       0 |      100 |       0 |       0 | 2                 
+ ...shboard/report |       0 |        0 |       0 |       0 |                   
+  ...tailModal.tsx |       0 |        0 |       0 |       0 | 37-463            
+  Reports.tsx      |       0 |        0 |       0 |       0 | 17-336            
+ ...board/shipping |       0 |        0 |       0 |       0 |                   
+  ...FormModal.tsx |       0 |        0 |       0 |       0 | 26-108            
+  ...gCarriers.tsx |       0 |        0 |       0 |       0 | 20-209            
+ ...dashboard/user |    5.88 |      7.1 |    4.54 |    6.09 |                   
+  ...lletModal.tsx |   44.44 |    60.86 |      50 |      48 | 48-67,130         
+  ...tailModal.tsx |       0 |        0 |       0 |       0 | 32-570            
+  ...firmModal.tsx |       0 |        0 |       0 |       0 | 22                
+  Users.tsx        |       0 |        0 |       0 |       0 | 24-513            
+ ...shboard/wallet |   19.31 |    41.97 |   17.39 |   20.25 |                   
+  ...argeModal.tsx |     100 |    97.14 |     100 |     100 | 69                
+  RehniCoin.tsx    |       0 |        0 |       0 |       0 | 22-318            
+ ...tures/cart/api |       0 |      100 |       0 |       0 |                   
+  cartService.ts   |       0 |      100 |       0 |       0 | 7-31              
+  ...outService.ts |       0 |      100 |       0 |       0 | 15-16             
+ ...art/components |       0 |        0 |       0 |       0 |                   
+  CartView.tsx     |       0 |        0 |       0 |       0 | 16-265            
+  CheckoutView.tsx |       0 |        0 |       0 |       0 | 24-318            
+ ...s/cart/context |       0 |        0 |       0 |       0 |                   
+  CartContext.tsx  |       0 |      100 |     100 |       0 | 15                
+  CartProvider.tsx |       0 |        0 |       0 |       0 | 22-86             
+  useCart.ts       |       0 |        0 |       0 |       0 | 5-11              
+ ...res/cart/utils |       0 |        0 |       0 |       0 |                   
+  availability.ts  |       0 |        0 |       0 |       0 | 4-12              
+ ...es/company/api |       0 |        0 |       0 |       0 |                   
+  ...untService.ts |       0 |      100 |       0 |       0 | 15-38             
+  ...logService.ts |       0 |      100 |       0 |       0 | 6-14              
+  ...anyService.ts |       0 |        0 |       0 |       0 | 13-59             
+  orderService.ts  |       0 |        0 |       0 |       0 | 16-63             
+  payoutService.ts |       0 |        0 |       0 |       0 | 13-27             
+  ...uctService.ts |       0 |        0 |       0 |       0 | 17-90             
+  returnService.ts |       0 |        0 |       0 |       0 | 20-46             
+  ...antService.ts |       0 |        0 |       0 |       0 | 14-112            
+ ...any/components |   92.85 |    86.36 |   85.71 |   95.65 |                   
+  ...ctedModal.tsx |   92.85 |    86.36 |   85.71 |   95.65 | 79                
+ ...ents/dashboard |       0 |        0 |       0 |       0 |                   
+  Finance.tsx      |       0 |        0 |       0 |       0 | 9-31              
+  Home.tsx         |       0 |        0 |       0 |       0 | 39-299            
+  MyCompany.tsx    |       0 |        0 |       0 |       0 | 30-542            
+  Orders.tsx       |       0 |        0 |       0 |       0 | 18-243            
+  Profile.tsx      |       0 |      100 |       0 |       0 | 4                 
+  Returns.tsx      |       0 |        0 |       0 |       0 | 17-203            
+ ...hboard/finance |       0 |        0 |       0 |       0 |                   
+  ...dSkeleton.tsx |       0 |      100 |       0 |       0 | 2                 
+  ...countForm.tsx |       0 |        0 |       0 |       0 | 19-186            
+  ...ountsList.tsx |       0 |        0 |       0 |       0 | 17-183            
+  ...ceSummary.tsx |       0 |        0 |       0 |       0 | 14-58             
+  PayoutsList.tsx  |       0 |        0 |       0 |       0 | 14-132            
+ ...ashboard/order |       0 |        0 |       0 |       0 |                   
+  ...tailModal.tsx |       0 |        0 |       0 |       0 | 35-316            
+ ...hboard/product |       0 |        0 |       0 |       0 |                   
+  ...lueFields.tsx |       0 |        0 |       0 |       0 | 19-67             
+  ...untFields.tsx |       0 |        0 |       0 |       0 | 10-74             
+  ...antsModal.tsx |       0 |        0 |       0 |       0 | 29-292            
+  ProductEdit.tsx  |       0 |        0 |       0 |       0 | 35-251            
+  ProductForm.tsx  |       0 |        0 |       0 |       0 | 22-190            
+  Products.tsx     |       0 |        0 |       0 |       0 | 31-416            
+  VariantModal.tsx |       0 |        0 |       0 |       0 | 40-604            
+  ...antsPanel.tsx |       0 |        0 |       0 |       0 | 21-245            
+  discountForm.ts  |       0 |        0 |       0 |       0 | 20-81             
+ ...hboard/returns |       0 |        0 |       0 |       0 |                   
+  ...tailModal.tsx |       0 |        0 |       0 |       0 | 28-229            
+ .../favorites/api |       0 |      100 |       0 |       0 |                   
+  ...iteService.ts |       0 |      100 |       0 |       0 | 6-17              
+ ...orites/context |       0 |        0 |       0 |       0 |                   
+  ...esContext.tsx |       0 |      100 |     100 |       0 | 12                
+  ...sProvider.tsx |       0 |        0 |       0 |       0 | 15-77             
+  useFavorites.ts  |       0 |        0 |       0 |       0 | 5-11              
+ ...res/orders/api |       0 |        0 |       0 |       0 |                   
+  orderService.ts  |       0 |        0 |       0 |       0 | 6-17              
+ ...ers/components |       0 |        0 |       0 |       0 |                   
+  ...tailModal.tsx |       0 |        0 |       0 |       0 | 22-336            
+  ...ppingInfo.tsx |       0 |        0 |       0 |       0 | 16-29             
+  ...rTimeline.tsx |       0 |        0 |       0 |       0 | 9-39              
+ ...s/orders/utils |       0 |        0 |       0 |       0 |                   
+  orderStatus.ts   |       0 |      100 |     100 |       0 | 5-23              
+  tracking.ts      |       0 |        0 |       0 |       0 | 1-8               
+ ...uts/components |       0 |        0 |       0 |       0 |                   
+  ...erDisplay.tsx |       0 |      100 |       0 |       0 | 2                 
+  ...tailModal.tsx |       0 |        0 |       0 |       0 | 32-71             
+  ...wSkeleton.tsx |       0 |      100 |       0 |       0 | 2                 
+  ...atusBadge.tsx |       0 |      100 |       0 |       0 | 7                 
+  ...dSkeleton.tsx |       0 |      100 |       0 |       0 | 2                 
+ .../payouts/utils |       0 |      100 |       0 |       0 |                   
+  payoutStatus.ts  |       0 |      100 |     100 |       0 | 5-26              
+  period.ts        |       0 |      100 |       0 |       0 | 1-9               
+ ...ublic/auth/api |       0 |      100 |       0 |       0 |                   
+  authService.ts   |       0 |      100 |       0 |       0 | 22-111            
+  ...ateService.ts |       0 |      100 |       0 |       0 | 18-29             
+ ...uth/components |    0.79 |     6.48 |     3.7 |    0.85 |                   
+  ...tSettings.tsx |       0 |        0 |       0 |       0 | 12-322            
+  AuthLayout.tsx   |     100 |    77.77 |     100 |     100 | 27-31             
+  OtpInput.tsx     |       0 |        0 |       0 |       0 | 23-80             
+  TermsModal.tsx   |       0 |      100 |       0 |       0 | 12                
+ ...mponents/terms |       0 |      100 |       0 |       0 |                   
+  CompanyTerms.tsx |       0 |      100 |       0 |       0 | 2                 
+  UserTerms.tsx    |       0 |      100 |       0 |       0 | 2                 
+ ...c/auth/context |   75.34 |       50 |   76.92 |   79.41 |                   
+  AuthProvider.tsx |      75 |       50 |      75 |   79.36 | 65-70,81-90       
+  useAuth.ts       |      75 |       50 |     100 |      75 | 8                 
+ ...lic/auth/hooks |       0 |      100 |       0 |       0 |                   
+  ...ectToLogin.ts |       0 |      100 |       0 |       0 | 7-12              
+ ...lic/auth/pages |   19.81 |    20.58 |   15.38 |   20.73 |                   
+  ...tPassword.tsx |       0 |        0 |       0 |       0 | 13-80             
+  Login.tsx        |   90.62 |    70.83 |   66.66 |   93.54 | 72,141            
+  ...erCompany.tsx |       0 |        0 |       0 |       0 | 26-297            
+  RegisterUser.tsx |       0 |        0 |       0 |       0 | 15-203            
+  ...tPassword.tsx |       0 |        0 |       0 |       0 | 14-142            
+  ...rtificate.tsx |   91.89 |    58.13 |     100 |     100 | ...,39-65,168-173 
+  VerifyEmail.tsx  |       0 |        0 |       0 |       0 | 18-267            
+ ...ies/components |       0 |        0 |       0 |       0 |                   
+  ...sBenefits.tsx |       0 |      100 |       0 |       0 | 3-15              
+  ...FilterBar.tsx |       0 |      100 |       0 |       0 | 28-62             
+  ...oriesGrid.tsx |       0 |        0 |       0 |       0 | 16-154            
+  ...oriesHero.tsx |       0 |      100 |       0 |       0 | 2                 
+  CategoryCard.tsx |       0 |        0 |       0 |       0 | 11                
+  ...dSkeleton.tsx |       0 |      100 |       0 |       0 | 2                 
+ ...tegories/utils |       0 |      100 |     100 |       0 |                   
+  categorySort.ts  |       0 |      100 |     100 |       0 | 3                 
+ ...ic/company/api |       0 |        0 |       0 |       0 |                   
+  ...anyService.ts |       0 |        0 |       0 |       0 | 12-33             
+ ...any/components |       0 |        0 |       0 |       0 |                   
+  ...nyProfile.tsx |       0 |        0 |       0 |       0 | 35-530            
+  ...eSkeleton.tsx |       0 |      100 |       0 |       0 | 2-35              
+  ...tingBadge.tsx |       0 |        0 |       0 |       0 | 14-49             
+ ...ublic/home/api |       0 |        0 |       0 |       0 |                   
+  homeService.ts   |       0 |        0 |       0 |       0 | 6-16              
+ ...ome/components |       0 |        0 |       0 |       0 |                   
+  ...taSection.tsx |       0 |      100 |       0 |       0 | 6-46              
+  ...esSection.tsx |       0 |        0 |       0 |       0 | 12-71             
+  Hero.tsx         |       0 |        0 |       0 |       0 | 10-206            
+  HeroSkeleton.tsx |       0 |      100 |       0 |       0 | 2                 
+  ...egoryCard.tsx |       0 |        0 |       0 |       0 | 11-45             
+  ...InfoCards.tsx |       0 |      100 |       0 |       0 | 8-35              
+  ...tCarousel.tsx |       0 |        0 |       0 |       0 | 23-63             
+  ...ctSection.tsx |       0 |        0 |       0 |       0 | 28-58             
+  ...ionHeader.tsx |       0 |        0 |       0 |       0 | 22                
+  ...tsSection.tsx |       0 |      100 |       0 |       0 | 4-12              
+  ...rsSection.tsx |       0 |      100 |       0 |       0 | 6-14              
+  ProductCard.tsx  |       0 |        0 |       0 |       0 | 32-94             
+  ...dSkeleton.tsx |       0 |      100 |       0 |       0 | 4                 
+ ...c/products/api |       0 |        0 |       0 |       0 |                   
+  ...ctsService.ts |       0 |        0 |       0 |       0 | 14-77             
+ ...cts/components |       0 |        0 |       0 |       0 |                   
+  ...ogFilters.tsx |       0 |        0 |       0 |       0 | 7-153             
+  ...ctionView.tsx |       0 |      100 |       0 |       0 | 18                
+  ...uctDetail.tsx |       0 |        0 |       0 |       0 | 32-460            
+  ...lSkeleton.tsx |       0 |      100 |       0 |       0 | 2-51              
+  ProductFaq.tsx   |       0 |        0 |       0 |       0 | 9-47              
+  ...ctGallery.tsx |       0 |        0 |       0 |       0 | 18-29             
+  ProductGrid.tsx  |       0 |        0 |       0 |       0 | 23-68             
+  ProductPrice.tsx |       0 |        0 |       0 |       0 | 16-24             
+  ...tingBadge.tsx |       0 |        0 |       0 |       0 | 12-14             
+  ProductTabs.tsx  |       0 |        0 |       0 |       0 | 21-64             
+  ...ctTaxLine.tsx |       0 |        0 |       0 |       0 | 16-26             
+  ...rustCards.tsx |       0 |        0 |       0 |       0 | 22-52             
+  ProductsList.tsx |       0 |        0 |       0 |       0 | 13-301            
+  ...ollection.tsx |       0 |        0 |       0 |       0 | 8-83              
+  ...dProducts.tsx |       0 |        0 |       0 |       0 | 11-91             
+  SellerCard.tsx   |       0 |        0 |       0 |       0 | 17                
+  ...utePicker.tsx |       0 |        0 |       0 |       0 | 17-83             
+ ...products/utils |       0 |        0 |       0 |       0 |                   
+  variantAxes.ts   |       0 |        0 |       0 |       0 | 10-53             
+ ...ic/reviews/api |       0 |        0 |       0 |       0 |                   
+  reviewService.ts |       0 |        0 |       0 |       0 | 10-34             
+ ...ews/components |       0 |        0 |       0 |       0 |                   
+  ...wsSummary.tsx |       0 |        0 |       0 |       0 | 13-55             
+  ReviewForm.tsx   |       0 |        0 |       0 |       0 | 15-58             
+  ReviewsList.tsx  |       0 |        0 |       0 |       0 | 21-104            
+  ...wsSection.tsx |       0 |        0 |       0 |       0 | 16-174            
+  StarRating.tsx   |       0 |        0 |       0 |       0 | 10-19             
+ ...es/reports/api |       0 |        0 |       0 |       0 |                   
+  reportService.ts |       0 |        0 |       0 |       0 | 17-82             
+ ...rts/components |       0 |        0 |       0 |       0 |                   
+  ReportModal.tsx  |       0 |        0 |       0 |       0 | 17-291            
+ ...es/returns/api |       0 |      100 |       0 |       0 |                   
+  returnService.ts |       0 |      100 |       0 |       0 | 7-17              
+ ...rns/components |       0 |        0 |       0 |       0 |                   
+  ...turnModal.tsx |       0 |        0 |       0 |       0 | 18-89             
+  ...tatusCard.tsx |       0 |        0 |       0 |       0 | 15                
+ ...ents/dashboard |       0 |        0 |       0 |       0 |                   
+  Addresses.tsx    |       0 |        0 |       0 |       0 | 13-203            
+  Favorites.tsx    |       0 |        0 |       0 |       0 | 14-125            
+  Home.tsx         |       0 |        0 |       0 |       0 | 24-176            
+  Orders.tsx       |       0 |        0 |       0 |       0 | 17-184            
+  Wallet.tsx       |       0 |        0 |       0 |       0 | 19-175            
+ ...res/wallet/api |       0 |        0 |       0 |       0 |                   
+  walletService.ts |       0 |        0 |       0 |       0 | 6-27              
+ ...let/components |       0 |        0 |       0 |       0 |                   
+  ...uestModal.tsx |       0 |        0 |       0 |       0 | 16-126            
+ ...s/wallet/utils |       0 |        0 |       0 |       0 |                   
+  ...geWhatsapp.ts |       0 |        0 |       0 |       0 | 6-26              
+  ...actionType.ts |       0 |      100 |     100 |       0 | 5-12              
+ src/hooks         |       0 |        0 |       0 |       0 |                   
+  useRole.ts       |       0 |        0 |       0 |       0 | 4-6               
+ ...ages/dashboard |       0 |        0 |       0 |       0 |                   
+  Admin.tsx        |       0 |        0 |       0 |       0 | 22-62             
+  Company.tsx      |       0 |        0 |       0 |       0 | 14-36             
+ src/pages/public  |       0 |      100 |       0 |       0 |                   
+  Cart.tsx         |       0 |      100 |       0 |       0 | 7                 
+  Categories.tsx   |       0 |      100 |       0 |       0 | 7                 
+  Checkout.tsx     |       0 |      100 |       0 |       0 | 7                 
+  ...nyProfile.tsx |       0 |      100 |       0 |       0 | 7                 
+  Home.tsx         |       0 |      100 |       0 |       0 | 12                
+  NewProducts.tsx  |       0 |      100 |       0 |       0 | 8                 
+  Offers.tsx       |       0 |      100 |       0 |       0 | 8                 
+  Products.tsx     |       0 |      100 |       0 |       0 | 7                 
+  ...ctsDetail.tsx |       0 |      100 |       0 |       0 | 7                 
+ src/pages/user    |       0 |        0 |       0 |       0 |                   
+  Dashboard.tsx    |       0 |        0 |       0 |       0 | 13-34             
+ src/routers       |       0 |        0 |       0 |       0 |                   
+  AppRouter.tsx    |       0 |        0 |       0 |       0 | 30-33             
+ ...red/components |       0 |        0 |       0 |       0 |                   
+  ConfirmModal.tsx |       0 |        0 |       0 |       0 | 14-66             
+  Footer.tsx       |       0 |        0 |       0 |       0 | 6-120             
+  ...AppNotice.tsx |       0 |        0 |       0 |       0 | 4-27              
+  Pagination.tsx   |       0 |        0 |       0 |       0 | 12-58             
+  ScrollToTop.tsx  |       0 |        0 |       0 |       0 | 5-14              
+ ...mponents/alert |       0 |        0 |       0 |       0 |                   
+  AlertContext.tsx |       0 |      100 |     100 |       0 | 10                
+  AlertMessage.tsx |       0 |        0 |       0 |       0 | 13-35             
+  ...tProvider.tsx |       0 |        0 |       0 |       0 | 30-87             
+  alertManager.ts  |       0 |        0 |       0 |       0 | 7-23              
+  useAlert.ts      |       0 |        0 |       0 |       0 | 6-12              
+ ...ents/dashboard |       0 |        0 |       0 |       0 |                   
+  ...ardLayout.tsx |       0 |        0 |       0 |       0 | 9-119             
+  Sidebar.tsx      |       0 |        0 |       0 |       0 | 32-129            
+  StatCard.tsx     |       0 |        0 |       0 |       0 | 17-37             
+  Topbar.tsx       |       0 |        0 |       0 |       0 | 14-16             
+ ...ponents/navbar |       0 |        0 |       0 |       0 |                   
+  ...eDropdown.tsx |       0 |        0 |       0 |       0 | 17-218            
+  navbar.tsx       |       0 |        0 |       0 |       0 | 19-442            
+ .../components/ui |   67.02 |    61.48 |   60.71 |   66.66 |                   
+  EmptyState.tsx   |       0 |        0 |       0 |       0 | 22                
+  ErrorState.tsx   |       0 |        0 |       0 |       0 | 23                
+  Input.tsx        |     100 |    83.33 |     100 |     100 | 54-55             
+  Modal.tsx        |   62.29 |    47.45 |      70 |   61.11 | 59,95-118,135-136 
+  Select.tsx       |   33.33 |        0 |       0 |   33.33 | 19-27             
+  Skeleton.tsx     |       0 |      100 |       0 |       0 | 11                
+  ...eSkeleton.tsx |       0 |        0 |       0 |       0 | 14-22             
+ src/shared/config |       0 |        0 |       0 |       0 |                   
+  ...avigation.tsx |       0 |        0 |       0 |       0 | 24-86             
+ src/shared/utils  |    9.67 |     9.09 |      20 |      12 |                   
+  buildPageList.ts |       0 |        0 |       0 |       0 | 2-19              
+  ...Attributes.ts |       0 |        0 |       0 |       0 | 9-17              
+  ...mericField.ts |       0 |        0 |       0 |       0 | 5-15              
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 7.47% ( 442/5913 )
+Branches     : 7.37% ( 305/4133 )
+Functions    : 4.75% ( 79/1662 )
+Lines        : 7.73% ( 423/5470 )
+================================================================================
