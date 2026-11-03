@@ -14,7 +14,9 @@ permissions:
 
 jobs:
   backend:
-    name: Backend (lint, migraciones, pytest + cobertura)
+    # Nombre = check obligatorio en el ruleset de main: no cambiarlo sin actualizarlo allí.
+    # Pasos: lint (ruff), migraciones (alembic), pytest + cobertura.
+    name: backend
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -98,7 +100,9 @@ jobs:
           if-no-files-found: warn
 
   frontend:
-    name: Frontend (lint, typecheck, vitest + cobertura)
+    # Nombre = check obligatorio en el ruleset de main: no cambiarlo sin actualizarlo allí.
+    # Pasos: lint (eslint), typecheck (tsc), vitest + cobertura.
+    name: frontend
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
