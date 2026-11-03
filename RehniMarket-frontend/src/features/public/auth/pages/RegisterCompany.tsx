@@ -21,6 +21,7 @@ import AuthLayout from "@/features/public/auth/components/AuthLayout";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 import { Button, Input } from "@/shared/components/ui";
+import { registerCompanySchema, useFormValidation } from "@/shared/validation";
 
 export default function CompanyForm() {
   const navigate = useNavigate();
@@ -50,6 +51,10 @@ export default function CompanyForm() {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const { errors, errorFor, touch, validateAll } = useFormValidation(registerCompanySchema, form);
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => touch(e.target.name);
+
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
     setCertificate(e.target.files[0]);
@@ -58,10 +63,7 @@ export default function CompanyForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (form.password !== form.confirmPassword) {
-      showAlert("error", "Las contraseñas no coinciden.");
-      return;
-    }
+    if (!validateAll()) return;
 
     if (!certificate) {
       showAlert("error", "Debes adjuntar el certificado.");
@@ -113,9 +115,6 @@ export default function CompanyForm() {
     </button>
   );
 
-  const passwordsMismatch =
-    form.confirmPassword.length > 0 && form.password !== form.confirmPassword;
-
   return (
     <AuthLayout
       size="lg"
@@ -147,6 +146,8 @@ export default function CompanyForm() {
               placeholder="Nombre del representante"
               value={form.full_name}
               onChange={handleChange}
+              onBlur={handleBlur}
+              error={errorFor("full_name")}
             />
             <Input
               label="Teléfono"
@@ -158,6 +159,8 @@ export default function CompanyForm() {
               placeholder="Número de contacto"
               value={form.tell}
               onChange={handleChange}
+              onBlur={handleBlur}
+              error={errorFor("tell")}
             />
             <Input
               className="sm:col-span-2"
@@ -170,6 +173,8 @@ export default function CompanyForm() {
               placeholder="correo@ejemplo.com"
               value={form.email}
               onChange={handleChange}
+              onBlur={handleBlur}
+              error={errorFor("email")}
             />
           </div>
         </fieldset>
@@ -190,6 +195,9 @@ export default function CompanyForm() {
               placeholder="••••••••"
               value={form.password}
               onChange={handleChange}
+              onBlur={handleBlur}
+              error={errorFor("password")}
+              hint="Mínimo 8 caracteres, con mayúscula, minúscula y número."
               trailingSlot={eyeButton(showPassword, () => setShowPassword((v) => !v))}
             />
             <Input
@@ -202,7 +210,12 @@ export default function CompanyForm() {
               placeholder="••••••••"
               value={form.confirmPassword}
               onChange={handleChange}
-              error={passwordsMismatch ? "Las contraseñas no coinciden." : undefined}
+              onBlur={handleBlur}
+              // La no coincidencia se avisa mientras se escribe, como antes.
+              error={
+                errorFor("confirmPassword") ??
+                (form.confirmPassword ? errors.confirmPassword : undefined)
+              }
               trailingSlot={eyeButton(showConfirmPassword, () =>
                 setShowConfirmPassword((v) => !v),
               )}
@@ -224,6 +237,8 @@ export default function CompanyForm() {
               placeholder="Razón social"
               value={form.company_name}
               onChange={handleChange}
+              onBlur={handleBlur}
+              error={errorFor("company_name")}
             />
             <Input
               label="Dirección"
@@ -233,6 +248,8 @@ export default function CompanyForm() {
               placeholder="Dirección de la empresa"
               value={form.company_address}
               onChange={handleChange}
+              onBlur={handleBlur}
+              error={errorFor("company_address")}
             />
             <div className="grid grid-cols-[1fr_96px] gap-3">
               <Input
@@ -243,6 +260,8 @@ export default function CompanyForm() {
                 placeholder="900123456"
                 value={form.company_nit}
                 onChange={handleChange}
+                onBlur={handleBlur}
+                error={errorFor("company_nit")}
               />
               <Input
                 label="DV"
@@ -251,6 +270,8 @@ export default function CompanyForm() {
                 placeholder="0"
                 value={form.company_nit_dv}
                 onChange={handleChange}
+                onBlur={handleBlur}
+                error={errorFor("company_nit_dv")}
               />
             </div>
           </div>

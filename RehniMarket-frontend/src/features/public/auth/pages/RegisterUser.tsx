@@ -10,6 +10,7 @@ import AuthLayout from "@/features/public/auth/components/AuthLayout";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 import { Button, Input } from "@/shared/components/ui";
+import { registerUserSchema, useFormValidation } from "@/shared/validation";
 
 export default function UserForm() {
   const navigate = useNavigate();
@@ -28,17 +29,21 @@ export default function UserForm() {
     tell: "",
   });
 
+  const { errors, errorFor, touch, validateAll } = useFormValidation(registerUserSchema, {
+    ...form,
+    confirmPassword,
+  });
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => touch(e.target.name);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (form.password !== confirmPassword) {
-      showAlert("error", "Las contraseñas no coinciden.");
-      return;
-    }
+    if (!validateAll()) return;
 
     setLoading(true);
 
@@ -112,6 +117,8 @@ export default function UserForm() {
             placeholder="Tu nombre completo"
             value={form.full_name}
             onChange={handleChange}
+            onBlur={handleBlur}
+            error={errorFor("full_name")}
           />
 
           <Input
@@ -124,6 +131,8 @@ export default function UserForm() {
             placeholder="Número de contacto"
             value={form.tell}
             onChange={handleChange}
+            onBlur={handleBlur}
+            error={errorFor("tell")}
           />
         </fieldset>
 
@@ -142,6 +151,8 @@ export default function UserForm() {
             placeholder="correo@ejemplo.com"
             value={form.email}
             onChange={handleChange}
+            onBlur={handleBlur}
+            error={errorFor("email")}
           />
 
           <Input
@@ -154,11 +165,15 @@ export default function UserForm() {
             placeholder="••••••••"
             value={form.password}
             onChange={handleChange}
+            onBlur={handleBlur}
+            error={errorFor("password")}
+            hint="Mínimo 8 caracteres, con mayúscula, minúscula y número."
             trailingSlot={eyeButton(showPassword, () => setShowPassword((v) => !v))}
           />
 
           <Input
             label="Confirmar contraseña"
+            name="confirmPassword"
             type={showConfirmPassword ? "text" : "password"}
             required
             autoComplete="new-password"
@@ -166,11 +181,9 @@ export default function UserForm() {
             placeholder="••••••••"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            error={
-              confirmPassword && form.password !== confirmPassword
-                ? "Las contraseñas no coinciden."
-                : undefined
-            }
+            onBlur={handleBlur}
+            // La no coincidencia se avisa mientras se escribe, como antes.
+            error={errorFor("confirmPassword") ?? (confirmPassword ? errors.confirmPassword : undefined)}
             trailingSlot={eyeButton(showConfirmPassword, () =>
               setShowConfirmPassword((v) => !v),
             )}

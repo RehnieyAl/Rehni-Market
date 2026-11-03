@@ -4,6 +4,12 @@ import axios from "axios";
 import { Modal, Button, Textarea } from "@/shared/components/ui";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
+import {
+  RETURN_REASON_MAX,
+  RETURN_REASON_MIN,
+  returnRequestSchema,
+  useFormValidation,
+} from "@/shared/validation";
 
 import { requestReturn } from "../api/returnService";
 
@@ -14,8 +20,6 @@ interface RequestReturnModalProps {
   onClose: () => void;
   onSubmitted: () => void;
 }
-
-const MIN_REASON = 5;
 
 export default function RequestReturnModal({
   orderId,
@@ -29,8 +33,10 @@ export default function RequestReturnModal({
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const { errors, isValid, errorFor, touch } = useFormValidation(returnRequestSchema, { reason });
+
   const trimmed = reason.trim();
-  const canSubmit = trimmed.length >= MIN_REASON && !submitting;
+  const canSubmit = isValid && !submitting;
 
   const handleSubmit = async () => {
     if (!item || !canSubmit) return;
@@ -84,16 +90,14 @@ export default function RequestReturnModal({
         label="Motivo de la devolución"
         required
         rows={4}
-        maxLength={500}
+        maxLength={RETURN_REASON_MAX}
         value={reason}
         onChange={(e) => setReason(e.target.value)}
+        onBlur={() => touch("reason")}
         placeholder="Cuéntale a la empresa por qué quieres devolver este producto."
-        hint={`Mínimo ${MIN_REASON} caracteres. La empresa verá este mensaje.`}
-        error={
-          reason.length > 0 && trimmed.length < MIN_REASON
-            ? "Describe el motivo con un poco más de detalle."
-            : undefined
-        }
+        hint={`Mínimo ${RETURN_REASON_MIN} caracteres. La empresa verá este mensaje.`}
+        // Se avisa desde que empieza a escribir, o al salir del campo.
+        error={errorFor("reason") ?? (reason.length > 0 ? errors.reason : undefined)}
       />
 
       <p className="mt-3 text-xs text-gray-500">

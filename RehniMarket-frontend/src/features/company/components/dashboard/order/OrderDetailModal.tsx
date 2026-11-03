@@ -16,6 +16,11 @@ import { formatAttributePairs } from "@/shared/utils/formatAttributes";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { Badge, Modal, Button, Input, Select, Spinner } from "@/shared/components/ui";
 import OrderShippingInfo from "@/features/orders/components/OrderShippingInfo";
+import {
+  TRACKING_NUMBER_MAX,
+  orderShippingSchema,
+  useFormValidation,
+} from "@/shared/validation";
 
 import type { Order } from "@/features/orders/types/response";
 
@@ -112,7 +117,11 @@ export default function OrderDetailModal({
     }
   };
 
-  const shippingValid = carrierId !== "" && trackingNumber.trim().length >= 3;
+  const shipping = useFormValidation(orderShippingSchema, {
+    shippingCarrierId: carrierId,
+    trackingNumber,
+  });
+  const shippingValid = shipping.isValid;
 
   const handleSaveShipping = async () => {
     if (!order || !shippingValid || savingShipping) return;
@@ -297,11 +306,13 @@ export default function OrderDetailModal({
                   value={trackingNumber}
                   disabled={savingShipping}
                   onChange={(e) => setTrackingNumber(e.target.value)}
+                  onBlur={() => shipping.touch("trackingNumber")}
                   placeholder="Ej. 123456789"
+                  maxLength={TRACKING_NUMBER_MAX}
+                  // Se avisa desde que empieza a escribir, o al salir del campo.
                   error={
-                    trackingNumber.length > 0 && trackingNumber.trim().length < 3
-                      ? "Indica un número de guía válido."
-                      : undefined
+                    shipping.errorFor("trackingNumber") ??
+                    (trackingNumber.length > 0 ? shipping.errors.trackingNumber : undefined)
                   }
                 />
 
