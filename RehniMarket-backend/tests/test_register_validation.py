@@ -2,7 +2,8 @@
 
 La misma tabla de NIT reales se usa en el frontend
 (src/shared/validation/nit.test.ts) para garantizar la paridad del DV.
-Los xfail citan su hallazgo en docs/pruebas/REGISTRO.md.
+Los xfail citan su hallazgo en docs/pruebas/REGISTRO.md; H-04 y H-05 ya están
+corregidos y sus tests protegen el contrato.
 """
 
 import pytest
@@ -128,11 +129,8 @@ def test_register_company_wrong_dv_returns_422_validation_error(client):
     assert "El dígito de verificación no coincide con el NIT ingresado." in detail["message"]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="H-05: el mensaje llega con el prefijo 'Value error, ' de Pydantic",
-)
 def test_register_company_message_has_no_pydantic_prefix(client):
+    # H-05 (corregido)
     detail = register_company(client, company_nit_dv="5").json()["detail"]
     assert detail["message"] == "El dígito de verificación no coincide con el NIT ingresado."
 
@@ -142,13 +140,20 @@ def test_register_user_invalid_password_returns_422(client):
     assert response.status_code == 422
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="H-04: /auth/register-user devuelve el 422 por defecto de FastAPI (lista) y no {code, message}",
-)
 def test_register_user_422_follows_the_api_error_contract(client):
+    # H-04 (corregido)
     detail = client.post("/auth/register-user", json={**VALID_USER, "password": "corta"}).json()["detail"]
     assert detail == {
         "code": "VALIDATION_ERROR",
         "message": "La contraseña debe tener al menos 8 caracteres.",
     }
+
+
+def test_query_param_validation_also_follows_the_api_error_contract(client):
+    # RequestValidationError fuera del cuerpo: limit tiene ge=1 en /public/products.
+    response = client.get("/public/products", params={"limit": 0})
+
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    assert detail["code"] == "VALIDATION_ERROR"
+    assert isinstance(detail["message"], str) and detail["message"]
