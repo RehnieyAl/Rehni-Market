@@ -1,0 +1,25 @@
+# Postgres desechable para la suite de pytest del backend.
+#
+#   docker compose -f docker-compose.test.yml up -d --wait
+#   TEST_DATABASE_URL=postgresql://rehni_test:rehni_test@127.0.0.1:55433/rehnimarket_test
+#   docker compose -f docker-compose.test.yml down
+#
+# Los datos viven en tmpfs: cada `up` arranca de cero y nada toca la BD de desarrollo.
+name: rehni-test
+
+services:
+  postgres-test:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: rehni_test
+      POSTGRES_PASSWORD: rehni_test
+      POSTGRES_DB: rehnimarket_test
+    ports:
+      - "127.0.0.1:55433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rehni_test -d rehnimarket_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
