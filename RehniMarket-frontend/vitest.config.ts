@@ -17,8 +17,18 @@ export default defineConfig({
       provider: "v8",
       // Todo el código de la aplicación cuenta, tenga o no pruebas.
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/**/*.test.{ts,tsx}", "src/test/**", "src/**/*.d.ts"],
-      reporter: ["text-summary", "text", "lcov", "json-summary"],
+      // Exclusiones sin lógica (justificadas en docs/INFORME_PRUEBAS.md):
+      // - main.tsx: entrypoint, solo monta providers sobre #root.
+      // - features/**/types: solo declaraciones de tipos, no emiten JS.
+      //   (shared/types/ErrorCode.ts sí se ejecuta y sigue contando.)
+      exclude: [
+        "src/**/*.test.{ts,tsx}",
+        "src/test/**",
+        "src/**/*.d.ts",
+        "src/main.tsx",
+        "src/features/**/types/**",
+      ],
+      reporter: ["text-summary", "text", "html", "lcov", "json-summary"],
       reportsDirectory: "coverage",
     },
   },
