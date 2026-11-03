@@ -79,3 +79,22 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.coverage.run]
+# Solo el código de la aplicación. alembic/ (migraciones) y main.py (script de
+# saludo) quedan fuera por estar fuera de `app/`. No se omite nada dentro de
+# app/: seed*.py, CheckNetwork.py y TestDatabase.py se ejecutan en producción
+# (lifespan y /health), ver docs/INFORME_PRUEBAS.md.
+source = ["app"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+precision = 2
+
+[tool.coverage.json]
+output = "coverage.json"
+
+[tool.coverage.html]
+directory = "htmlcov"
