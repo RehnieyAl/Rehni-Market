@@ -3,7 +3,8 @@
 Registro de trabajo del plan de pruebas (Fases 0–6). Alimenta las secciones
 «Hallazgos» y «Brechas y trabajo futuro» de `docs/INFORME_PRUEBAS.md`.
 Regla: ningún hallazgo se corrige sin aprobación; se registra aquí y, si un test
-lo evidencia, se marca con `xfail` / `it.todo` citando su ID.
+lo evidencia, se marca con `xfail` / `it.todo` citando su ID. Al corregirse, el
+test deja de ser xfail y la fila cita el commit de la corrección.
 
 ## Hallazgos
 
@@ -12,8 +13,8 @@ lo evidencia, se marca con `xfail` / `it.todo` citando su ID.
 | H-01 | Baja | `RehniMarket-backend/alembic/versions/e7a1c9d24b30_shipping_carriers_and_order_shipping.py:30` vs `app/models/ModelShippingCarrier.py:25` | Divergencia modelo ↔ migración: el modelo declara `created_at: Mapped[datetime]` (NOT NULL) y la migración crea la columna con `nullable=True`. La BD de pruebas (`create_all`) y la de producción (Alembic) no tienen el mismo esquema. Impacto bajo: el ORM siempre rellena el valor por defecto; solo un `INSERT` SQL directo podría dejar `NULL`. | En una BD vacía: `alembic upgrade head` y luego `alembic check` → `modify_nullable ... shipping_carriers.created_at`. | Abierto (sin corregir) |
 | H-02 | Baja | `RehniMarket-backend/app/utils/NitValidator.py:11-12` y `app/schemas/schemaAuth/SchemaRegister.py:131` | El NIT no tiene longitud máxima y `calculate_nit_dv` usa `zfill(15)` + `zip`: con más de 15 dígitos solo pondera los 15 primeros. Un NIT de 16 dígitos pasa con el DV de sus primeros 15. | `CreateCompanyRequest(company_nit="1234567890123459", company_nit_dv="2", ...)` es válido (DV de `123456789012345` = 2). Test: `test_register_validation.py::test_nit_longer_than_15_digits_is_rejected` (xfail). | Abierto |
 | H-03 | Baja | `SchemaRegister.py:72`, `:134`, `:149` | `str.isdigit()` acepta dígitos no ASCII (ancho completo `３`, indo-arábigos, superíndices `²`). Teléfono y NIT se guardan con esos caracteres. | `CreateUserRequest(tell="３００１２３４５６７", ...)` es válido. Tests: `test_phone_with_non_ascii_digits_is_rejected`, `test_nit_with_non_ascii_digits_is_rejected` (xfail). El frontend usa `[0-9]` y los rechaza. | Abierto |
-| H-04 | Media | `RehniMarket-backend/app/main.py:71` | Solo hay handler para `pydantic.ValidationError`. Los cuerpos JSON inválidos lanzan `RequestValidationError` y salen con el 422 por defecto de FastAPI (`detail: [lista]`), no con el contrato `{code, message}`. `RegisterUser.tsx` lee `detail.message` → `undefined` → el usuario solo veía «Ocurrió un error.». Afecta a todo endpoint con cuerpo JSON. | `POST /auth/register-user` con `password="corta"` → `{"detail": [{"type": "value_error", ...}]}`. Test: `test_register_user_422_follows_the_api_error_contract` (xfail). Mitigado en registro por la validación en el cliente (Fase 2). | Abierto |
-| H-05 | Baja | `RehniMarket-backend/app/main.py:73` | El mensaje que se devuelve es `errors[0]["msg"]` sin limpiar: Pydantic antepone `"Value error, "` y el usuario ve «Value error, El dígito de verificación no coincide…». | `POST /auth/register-company` con DV incorrecto. Test: `test_register_company_message_has_no_pydantic_prefix` (xfail). | Abierto |
+| H-04 | Media | `RehniMarket-backend/app/main.py:71` | Solo hay handler para `pydantic.ValidationError`. Los cuerpos JSON inválidos lanzan `RequestValidationError` y salen con el 422 por defecto de FastAPI (`detail: [lista]`), no con el contrato `{code, message}`. `RegisterUser.tsx` lee `detail.message` → `undefined` → el usuario solo veía «Ocurrió un error.». Afecta a todo endpoint con cuerpo JSON. | `POST /auth/register-user` con `password="corta"` → `{"detail": [{"type": "value_error", ...}]}`. Test: `test_register_user_422_follows_the_api_error_contract`. | **Corregido** en `6bc1c81` (handler único para `ValidationError` y `RequestValidationError` en `app/main.py`; mensaje sin prefijo). Su test dejó de ser xfail. |
+| H-05 | Baja | `RehniMarket-backend/app/main.py:73` | El mensaje que se devuelve es `errors[0]["msg"]` sin limpiar: Pydantic antepone `"Value error, "` y el usuario ve «Value error, El dígito de verificación no coincide…». | `POST /auth/register-company` con DV incorrecto. Test: `test_register_company_message_has_no_pydantic_prefix`. | **Corregido** en `6bc1c81` (handler único para `ValidationError` y `RequestValidationError` en `app/main.py`; mensaje sin prefijo). Su test dejó de ser xfail. |
 
 ### Observaciones (sin impacto en producción)
 
@@ -53,7 +54,8 @@ Frontend: `RehniMarket-frontend/src/shared/validation/` (`rules.ts`, `nit.ts`, `
 
 No se agregó ningún validador: las reglas de negocio de estos schemas ya están protegidas por
 restricciones `Field(...)`/`Literal`/`EmailStr` o en el servicio. Las brechas reales encontradas
-(H-02, H-03) están en validadores existentes y corregirlas es cambiar lógica: pendiente de aprobación.
+(H-02, H-03) están en validadores existentes y corregirlas es cambiar lógica: siguen abiertas. H-04 y H-05 se
+corrigieron con aprobación en `6bc1c81`.
 
 | Schema | Decisión | Motivo |
 |---|---|---|
