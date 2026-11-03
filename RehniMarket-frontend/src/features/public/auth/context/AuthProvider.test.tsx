@@ -30,7 +30,7 @@ vi.mock("@/features/public/auth/api/authService", () => ({
 
     const profile = token ? profiles[token] : undefined;
 
-    if (!profile) {
+    if (!token || !profile) {
       return Promise.reject(new Error("sin perfil"));
     }
 
