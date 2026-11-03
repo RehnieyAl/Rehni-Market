@@ -30,6 +30,14 @@ export default defineConfig({
       ],
       reporter: ["text-summary", "text", "html", "lcov", "json-summary"],
       reportsDirectory: "coverage",
+      // Gate de CI (ratchet: solo sube). Línea base 2026-11-03: líneas 7,73 %,
+      // ramas 7,37 %, sentencias 7,47 %, funciones 4,75 %.
+      thresholds: {
+        lines: 7,
+        branches: 7,
+        statements: 7,
+        functions: 4,
+      },
     },
   },
 });
