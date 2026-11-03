@@ -59,7 +59,8 @@ jobs:
       - uses: actions/checkout@v7
 
       # Misma versión que RehniMarket-backend/Dockerfile (python:3.13-slim).
-      - uses: astral-sh/setup-uv@v10
+      # setup-uv no publica tags mayores flotantes (v10 no existe): versión completa.
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           python-version: "3.13"
           enable-cache: true
