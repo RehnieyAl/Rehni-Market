@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict
 
 import pytest
@@ -17,8 +18,15 @@ from app.models.ModelUser import Users
 from app.services.authentication.JWTService import create_access_token
 from app.utils.Security import hash_password
 
-_SERVER_URL = config.URL_DATABASE.rsplit("/", 1)[0]
-TEST_DB_NAME = "rehnimarket_test"
+# TEST_DATABASE_URL (p. ej. el Postgres de docker-compose.test.yml o el servicio
+# del CI) tiene prioridad; sin ella se deriva `rehnimarket_test` del servidor de
+# URL_DATABASE, como hasta ahora.
+_TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
+if _TEST_DATABASE_URL:
+    _SERVER_URL, TEST_DB_NAME = _TEST_DATABASE_URL.rsplit("/", 1)
+else:
+    _SERVER_URL = config.URL_DATABASE.rsplit("/", 1)[0]
+    TEST_DB_NAME = "rehnimarket_test"
 TEST_DB_URL = f"{_SERVER_URL}/{TEST_DB_NAME}"
 
 ROLE_NAMES = ("user", "company", "admin", "owner")
@@ -141,6 +149,10 @@ def client(db, engine, monkeypatch):
     )
 
     from app.main import app
+
+    # El lifespan llama a ensure_bucket() contra MinIO; sin MinIO alcanzable,
+    # urllib3 reintenta ~6 s por cada TestClient. Ninguna prueba usa MinIO real.
+    monkeypatch.setattr("app.main.ensure_bucket", lambda: None)
 
     def override_get_db():
         yield db

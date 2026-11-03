@@ -74,8 +74,46 @@ dev = [
     "pip-audit>=2.10.0",
     "pytest>=8.3.0",
     "pytest-cov>=6.0.0",
+    "ruff==0.17.3",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+
+[tool.coverage.run]
+# Solo el código de la aplicación. alembic/ (migraciones) y main.py (script de
+# saludo) quedan fuera por estar fuera de `app/`. No se omite nada dentro de
+# app/: seed*.py, CheckNetwork.py y TestDatabase.py se ejecutan en producción
+# (lifespan y /health), ver docs/INFORME_PRUEBAS.md.
+source = ["app"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+precision = 2
+# Gate de CI (ratchet: solo sube). Con branch = true este porcentaje es el
+# COMBINADO líneas+ramas de coverage.py, no el de líneas. Línea base 2026-11-03:
+# combinado 60,29 % (líneas 65,91 %, ramas 28,62 %).
+fail_under = 60
+
+[tool.coverage.json]
+output = "coverage.json"
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.ruff]
+target-version = "py313"
+
+[tool.ruff.lint]
+# Gate inicial: solo errores que fallan en runtime (sintaxis, comparaciones
+# inválidas, return/yield fuera de función, nombres no definidos). La deuda de
+# estilo (imports sin usar, etc.) se sube por escalones, ver docs/pruebas/.
+select = ["E9", "F63", "F7", "F82"]
+
+[tool.ruff.lint.per-file-ignores]
+# Mapped["Cart"], relationship("Order"): referencias adelantadas en strings que
+# resuelve el registry de SQLAlchemy al configurar los mappers, no Python.
+"app/models/*" = ["F821"]
