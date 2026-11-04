@@ -164,12 +164,14 @@ if [ "${MODE}" = "verify" ]; then
   docker run -d --name "${RMINIO}" --network "${NET}" \
     --env-file <(docker exec "${MINIO_CONTAINER}" sh -c 'printf "MINIO_ROOT_USER=%s\nMINIO_ROOT_PASSWORD=%s\n" "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"') \
     "${MN_IMAGE}" server /data >/dev/null
+  # Por TCP: durante initdb la imagen levanta un servidor temporal solo por socket
+  # (pg_isready sin -h respondería OK y fallaría al reiniciarse).
   log "esperando PostgreSQL desechable..."
   for _ in $(seq 1 60); do
-    docker exec "${RPG}" pg_isready -U "${PGUSER}" >/dev/null 2>&1 && break
+    docker exec "${RPG}" pg_isready -h 127.0.0.1 -U "${PGUSER}" >/dev/null 2>&1 && break
     sleep 1
   done
-  docker exec "${RPG}" pg_isready -U "${PGUSER}" >/dev/null 2>&1 || { echo "ERROR: PostgreSQL desechable no arranco" >&2; exit 1; }
+  docker exec "${RPG}" pg_isready -h 127.0.0.1 -U "${PGUSER}" >/dev/null 2>&1 || { echo "ERROR: PostgreSQL desechable no arranco" >&2; exit 1; }
   sleep 3
 
   line
