@@ -321,6 +321,7 @@ k6 run scripts/load_test.k6.js
 | Script | Descripción |
 |---|---|
 | `scripts/backup_rehnimarket.sh` | Respaldo de la base de datos y del almacenamiento |
+| `scripts/respaldar.sh` | Envoltorio de `backup_rehnimarket.sh` con el nombre del plan de implantación (mismos argumentos) |
 | `scripts/restore_rehnimarket.sh` | Restauración a partir de un respaldo |
 | `scripts/acceptance_smoke.sh` | Pruebas de humo sobre los flujos principales |
 | `scripts/perf_test.sh` | Pruebas de rendimiento |
@@ -340,6 +341,7 @@ Documentos en [`docs/plan de implantacion - Rehnimarket/`](<docs/plan de implant
 | 2 | Plan de migración de datos | 2 y 5 | CE-3 | [Plan de migración](<docs/plan de implantacion - Rehnimarket/2) Plan de migración de datos  Semanas 2 y 5 (CE-3).md>) |
 | 3 | Plan de respaldo | 2 y 6 | CE-4 | [Plan de respaldo](<docs/plan de implantacion - Rehnimarket/3) Plan de respaldo — Semanas 2 y 6 (CE-4).md>) |
 | 4 | Hosting y dominio | 3 | CE-1 | [Hosting y dominio](<docs/plan de implantacion - Rehnimarket/4) Hosting y dominio — Semana 3 (CE-1).md>) |
+| 5 | Plan de instalación y despliegue | 2 y 4 | CE-1, CE-5 | [Instalación y despliegue](<docs/plan de implantacion - Rehnimarket/5) Plan de instalación y despliegue — Semanas 2 y 4 (CE-1, CE-5).md>) |
 
 
 ---

@@ -1,21 +1,15 @@
-# Entregable S02 — Planes de Migración, Respaldo e Instalación (v0)
-
-<!-- 📝 Instrucción: completa cada sección con datos de TU proyecto real. Los valores en cursiva
-son ejemplos parciales del laboratorio de la biblioteca; reemplázalos. Solo datos sintéticos. -->
-
 | Campo | Valor |
 |---|---|
 | Proyecto | RehniMarket |
 | Equipo | Yeinher Algarin |
 | Fecha | 21/10/2026 |
+| Actualizado | 04/11/2026 |
 
 ---
 
-## 2. Plan de migración de datos
+## 2. Plan de migración de datos — Semanas 2 y 5 (CE-3)
 
 ### 2.1 Objetivo medible
-
-<!-- 📝 Instrucción: qué se migra, criterio de éxito, ventana máxima, qué no se puede alterar. -->
 
 Migrar a la tabla `users` (rol `user`) el 100 % de los clientes válidos del sistema anterior (`legacy-data/clientes_legado.csv`), con un reporte de rechazos en el que cada registro no migrado tenga su motivo y se cumpla `origen = migrados + rechazados`, en una ventana máxima de 2 horas, sin modificar ni eliminar ningún usuario existente.
 
@@ -28,7 +22,7 @@ Migrar a la tabla `users` (rol `user`) el 100 % de los clientes válidos del sis
 ### 2.3 Estrategia
 
 - Estrategia de corte (big bang / por fases) y justificación: big bang. Es una sola entidad (clientes) sin dependencias con otros datos; una única transacción (`transformar.sql`) permite conciliar y revertir el conjunto completo.
-- Ventana de mantenimiento propuesta: 2 horas con `frontend` y `backend` detenidos (`docker compose stop frontend backend`), después del respaldo previo. La carga medida en el ensayo del 21/10/2026 tardó 11,8 s.
+- Ventana de mantenimiento propuesta: 2 horas con `frontend` y `backend` detenidos (`docker compose stop frontend backend`), después del respaldo previo. <!-- PENDIENTE: duración real de la carga (opciones 3 a 5 de migrar.sh). No hay registro del ensayo del 21/10/2026 en el repositorio; medirlo con `time` en el próximo ensayo (escribe en `users`: hacerlo con respaldo previo y rollback) y pegar la salida aquí. -->
 
 ### 2.4 Tabla de mapeo
 
@@ -79,7 +73,7 @@ bash scripts/migracion/migrar.sh
 
 | Opción | Acción | Impacto |
 |---|---|---|
-| 1 | Respaldo previo (`backup_rehnimarket.sh`) | Respaldo de PostgreSQL y MinIO; detiene el backend menos de 1 minuto. No modifica datos |
+| 1 | Respaldo previo (`backup_rehnimarket.sh`, o su envoltorio `respaldar.sh`) | Respaldo de PostgreSQL y MinIO; detiene el backend mientras dura (1 min 58 s medidos el 04/11/2026, sección 3.5). No modifica datos |
 | 2 | Abrir ventana | Detiene `frontend` y `backend` y copia el CSV y los scripts al contenedor. La aplicación queda fuera de servicio |
 | 3 | `carga-staging.sql` | Carga las 100 filas en el esquema `migracion`. No toca `users` |
 | 4 | `transformar.sql` | Inserta los clientes válidos en `users` en una sola transacción. Único paso que escribe en `users` |
