@@ -324,7 +324,7 @@ k6 run scripts/load_test.k6.js
 | `scripts/respaldar.sh` | Envoltorio de `backup_rehnimarket.sh` con el nombre del plan de implantación (mismos argumentos) |
 | `scripts/restore_rehnimarket.sh` | Restauración a partir de un respaldo |
 | `scripts/acceptance_smoke.sh` | Pruebas de humo sobre los flujos principales |
-| `scripts/smoke-test.sh` | Envoltorio de `acceptance_smoke.sh` con el nombre del plan de implantación (mismos argumentos) |
+| `scripts/smoke-test.sh` | Prueba de humo por HTTP contra `BASE_URL` (VM, servidor o nube), con una cuenta de prueba por `SMOKE_EMAIL`/`SMOKE_PASSWORD`; no registra usuarios ni envía correos |
 | `scripts/perf_test.sh` | Pruebas de rendimiento |
 | `scripts/load_test.k6.js` | Escenario de carga con k6 |
 | `scripts/verificar-requisitos.sh` | Verificación de requisitos del entorno |

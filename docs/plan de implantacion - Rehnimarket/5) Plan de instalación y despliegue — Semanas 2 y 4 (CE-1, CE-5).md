@@ -21,7 +21,7 @@
 | 5 | Preparación | Ubuntu Server 24.04 LTS con Docker Engine y el plugin Compose instalados según la guía oficial (paso 2 de la instalación inicial), usuario de despliegue en el grupo `docker`, DNS apuntando al servidor (sección 4.3) y puertos 80/443/22 abiertos (sección 4.4) |
 | 6 | Procedimiento | Ver sección 5.2 (instalación inicial, actualización y rollback) |
 | 7 | Migración de datos | Esquema: el backend aplica `alembic upgrade head` al arrancar (`docker-compose.yml:144`). Datos del sistema anterior: sección 2 (`scripts/migracion/migrar.sh`) |
-| 8 | Verificación | `docker compose ps` con los cinco servicios `healthy`, `curl` a `/health/database` y `bash scripts/smoke-test.sh` (sección 5.2) |
+| 8 | Verificación | `docker compose ps` con los cinco servicios `healthy`, `curl` a `/health/database` y `scripts/smoke-test.sh` con `BASE_URL` (sección 5.2) |
 | 9 | Rollback | Ver sección 5.2 (rollback) y la clasificación de migraciones |
 | 10 | Cronograma | Ver tabla de abajo |
 
@@ -33,7 +33,7 @@
 | Respaldo previo (`respaldar.sh`) | 1 min 58 s (medido el 04/11/2026 en desarrollo, sección 3.5) | |
 | `git pull` + `docker compose ... up -d --build` (incluye `alembic upgrade head`) | <!-- PENDIENTE: medir en el servidor --> | |
 | Verificación (`ps`, `/health/database`, `smoke-test.sh`) | <!-- PENDIENTE: medir en el servidor --> | |
-| Migración de datos del sistema anterior (si aplica, sección 2) | <!-- PENDIENTE: no hay medición registrada (sección 2.3) --> | |
+| Migración de datos del sistema anterior (si aplica, sección 2) | Opciones 3-5 de `migrar.sh`: 12,2 s en el ensayo del 04/11/2026 sobre una copia (sección 2.9). Sin contar la apertura y el cierre de la ventana | |
 
 **Punto de no retorno:** el arranque del backend con la nueva imagen, porque ejecuta `alembic upgrade head` (`docker-compose.yml:144`). Si la versión trae una migración **no compatible hacia atrás** (tabla de clasificación de la sección 5.2), volver a la versión anterior exige restaurar el respaldo previo (sección 3.4) y se pierde lo escrito después de él.
 
@@ -115,7 +115,7 @@ Comandos de los pasos 2 y 3: guía oficial de Docker, <https://docs.docker.com/e
 | 6 | Levantar los servicios | `docker compose -f docker-compose.yml -f deploy/compose.prod.yaml up -d --build` | Termina sin errores; el backend aplica `alembic upgrade head` al arrancar |
 | 7 | Comprobar la salud | `docker compose -f docker-compose.yml -f deploy/compose.prod.yaml ps` | Los cinco servicios en `healthy` |
 | 8 | Comprobar HTTPS y la API | `curl -fsS https://api.<dominio>/health/database` y `curl -fsS -o /dev/null -w "%{http_code}\n" https://<dominio>/` | Respuesta de la base de datos y `200` |
-| 9 | Prueba de humo | `bash scripts/smoke-test.sh` | Resumen con `[FALLA]` en 0 |
+| 9 | Prueba de humo | `read -rs SMOKE_PASSWORD; export SMOKE_PASSWORD; SMOKE_EMAIL=<correo-cuenta-de-prueba> BASE_URL=https://api.<dominio> FRONTEND_URL=https://<dominio> bash scripts/smoke-test.sh` | `RESULTADO: 7 pasan, 0 fallan` y código de salida `0` |
 | 10 | Primer respaldo | `bash scripts/respaldar.sh` | `=== FIN backup <TS> — OK ===` |
 
 #### Actualización
@@ -126,7 +126,7 @@ Comandos de los pasos 2 y 3: guía oficial de Docker, <https://docs.docker.com/e
 | 2 | Revisar las migraciones nuevas | `git fetch --tags && git diff --stat <versión-actual> <versión-nueva> -- RehniMarket-backend/alembic/versions` | Lista de migraciones nuevas; clasificarlas con la tabla de abajo |
 | 3 | Cambiar de versión | `git checkout <versión-nueva>` | `git describe --tags` muestra la versión nueva |
 | 4 | Reconstruir y levantar | `docker compose -f docker-compose.yml -f deploy/compose.prod.yaml up -d --build` | Contenedores recreados; el backend aplica las migraciones nuevas |
-| 5 | Verificar | `... ps`, `curl -fsS https://api.<dominio>/health/database` y `bash scripts/smoke-test.sh` | Cinco servicios `healthy` y prueba de humo sin fallos |
+| 5 | Verificar | `... ps`, `curl -fsS https://api.<dominio>/health/database` y `scripts/smoke-test.sh` como en el paso 9 de la instalación | Cinco servicios `healthy` y prueba de humo sin fallos |
 
 #### Rollback
 
@@ -163,13 +163,52 @@ Cadena completa de `RehniMarket-backend/alembic/versions/` (16 migraciones, de l
 | `b8d1c4f7a2e9` wallet recharge correction | Columna `nullable=True` en `wallet_transactions` + FK + índice | Sí |
 | `c3e5a7f9d1b2` fk indexes hot paths | Índice | Sí |
 
-#### Evidencia
+#### Prueba de humo (`scripts/smoke-test.sh`)
+
+Solo usa HTTP contra una URL base, así que sirve igual para la VM, el servidor y la nube. No hace `docker exec`, no registra usuarios y no envía correos. Pasos:
+1. `GET /health/database`.
+2. `GET /public/products?limit=1`.
+3. `GET /cart` sin token, que debe dar 401.
+4. Login con un correo inexistente del dominio reservado `example.com`, que debe dar 400.
+5. Login con la cuenta de prueba (`SMOKE_EMAIL` y `SMOKE_PASSWORD`).
+6. `GET /auth/me` con el token.
+7. El frontend, si se define `FRONTEND_URL`.
+
+La cuenta de prueba debe existir **ya verificada** en cada entorno y sus credenciales solo viajan por variables de entorno: nunca se escriben en el repositorio ni se imprimen. Si no está verificada, el backend envía un código por correo (`LoginService.py`); el script lo detecta y lo marca como fallo.
+
+Ejecutada el 04/11/2026 contra el stack local, a través de Caddy (`api.rehnimarket` y `rehnimarket` resueltos a `127.0.0.1` en `/etc/hosts`). La cuenta de prueba fue la de administrador del `.env` local, pasada con `SMOKE_EMAIL="$(docker exec rehni-backend printenv ADMIN_DEFAULT)"` y `SMOKE_PASSWORD="$(docker exec rehni-backend printenv PASSWORD_DEFAULT)"`. Comando: `BASE_URL=http://api.rehnimarket:8080 FRONTEND_URL=http://rehnimarket:8080 bash scripts/smoke-test.sh` (código de salida `0`):
 
 ```
-<!-- PENDIENTE: salida de `bash scripts/smoke-test.sh` y de `docker compose ... ps` en el servidor
-Ubuntu Server 24.04 (/opt/rehnimarket), con fecha. No se ejecutó en esta sesión: no hay servidor, y
-acceptance_smoke.sh registra un comprador acc.<TS>@gmail.com, lo que dispararía un correo de
-verificación real. -->
+# Prueba de humo — RehniMarket
+# 2026-11-04 14:40:57 UTC
+# BASE_URL=http://api.rehnimarket:8080   FRONTEND_URL=http://rehnimarket:8080   SMOKE_EMAIL=(definido)
+------------------------------------------------------------
+1. Salud de la API y de la base de datos
+  [PASA]  GET /health/database -> 200 (Base de datos: OK)
+2. Catálogo público sin sesión
+  [PASA]  GET /public/products?limit=1 -> 200 (total=786)
+3. Ruta protegida sin token
+  [PASA]  GET /cart sin token -> 401
+4. Login con credenciales incorrectas (correo inexistente @example.com)
+  [PASA]  POST /auth/login-user -> 400 INVALID_CREDENTIALS
+5. Login con la cuenta de prueba
+  [PASA]  POST /auth/login-user -> 200 con access_token (rol: admin)
+6. Perfil con el token
+  [PASA]  GET /auth/me -> 200 (correo coincide)
+7. Frontend
+  [PASA]  GET http://rehnimarket:8080/ -> 200
+------------------------------------------------------------
+RESULTADO: 7 pasan, 0 fallan
+```
+
+Contra `BASE_URL=http://localhost:8000 FRONTEND_URL=http://localhost:8080` (sin Caddy en medio para la API) el resultado fue el mismo, 7 pasan y 0 fallan, a las 14:40:47 UTC.
+
+#### Evidencia en el servidor
+
+```
+<!-- PENDIENTE: salida de scripts/smoke-test.sh (paso 9) y de `docker compose ... ps` en el servidor
+Ubuntu Server 24.04 (/opt/rehnimarket), con fecha. Requiere crear antes, en ese entorno, una cuenta
+de comprador de prueba ya verificada (no usar la de administrador). -->
 ```
 
 Verificado el 04/11/2026 en el equipo de desarrollo, sin servidor: `docker compose -f docker-compose.yml -f deploy/compose.prod.yaml config` resuelve el montaje de `deploy/Caddyfile` y los puertos `80` y `443`, y `caddy validate` (imagen `caddy:2.11-alpine`) da `Valid configuration` para `deploy/Caddyfile`. El despliegue en sí no se probó.
@@ -193,9 +232,8 @@ Límites del plan gratuito que afectan al cliente (con fuente y fecha): <!-- PEN
 #### Evidencia
 
 ```
-<!-- PENDIENTE: salida de una prueba de humo contra la URL pública, con fecha. scripts/smoke-test.sh
-no sirve tal cual en un PaaS: lee el código de verificación con `docker exec` en el contenedor de
-PostgreSQL (variable PGC). -->
+<!-- PENDIENTE: salida de `BASE_URL=<url-publica-api> FRONTEND_URL=<url-publica> bash scripts/smoke-test.sh`
+contra la nube, con fecha y con una cuenta de prueba verificada en ese entorno. -->
 ```
 
 ### 5.4 Estimación de costos

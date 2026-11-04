@@ -46,8 +46,11 @@ Primera versión liberada del conjunto. Es la que cubre el plan de implantación
 - `caddy/Caddyfile.tls-internal` + `docker-compose.tls-local.yml`: prueba local de HTTPS
   con la CA interna de Caddy. La configuración por defecto (`caddy/Caddyfile`) sigue
   siendo solo HTTP.
-- `scripts/respaldar.sh` y `scripts/smoke-test.sh`: envoltorios de
-  `backup_rehnimarket.sh` y `acceptance_smoke.sh` con los nombres del plan.
+- `scripts/respaldar.sh`: envoltorio de `backup_rehnimarket.sh` con el nombre del plan.
+- `scripts/smoke-test.sh`: prueba de humo solo por HTTP contra `BASE_URL` (VM, servidor
+  o nube): salud, catálogo, ruta protegida, login fallido con `example.com` y login más
+  `/auth/me` con una cuenta de prueba (`SMOKE_EMAIL` y `SMOKE_PASSWORD` por el entorno).
+  No usa `docker exec`, no registra usuarios y no envía correos.
 - `scripts/verificar-requisitos.sh`: umbrales por defecto para Ubuntu Server 24.04 LTS y
   los puertos 8080 y 8000.
 
