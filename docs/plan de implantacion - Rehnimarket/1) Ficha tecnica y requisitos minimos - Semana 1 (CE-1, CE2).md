@@ -19,8 +19,8 @@ Rehni-Market es una plataforma de comercio electrónico que permite a los usuari
 
 | Servicio (contenedor) | Tecnología | Función | Puerto en el servidor |
 |---|---|---|---|
-| `rehni-frontend` | Caddy 2.11 + build de React 19 (Vite) | Sirve el frontend y actúa como reverse proxy de la API | 80 (HTTP, redirige a HTTPS) y 443 (HTTPS), `docker-compose.yml:224-226` (`HTTP_PORT` / `HTTPS_PORT`; sección 4.5) |
-| `rehni-backend` | FastAPI sobre Python 3.13 y Uvicorn | API REST; al arrancar aplica las migraciones de Alembic (`docker-compose.yml:164`) | 8000 (`docker-compose.yml:166`; en producción solo en `127.0.0.1`) |
+| `rehni-frontend` | Caddy 2.11 + build de React 19 (Vite) | Sirve el frontend y actúa como reverse proxy de la API | 80 (HTTP, redirige a HTTPS) y 443 (HTTPS), `docker-compose.yml:232-234` (`HTTP_PORT` / `HTTPS_PORT`; sección 4.5) |
+| `rehni-backend` | FastAPI sobre Python 3.13 y Uvicorn | API REST; al arrancar aplica las migraciones de Alembic (`docker-compose.yml:168`) | 8000 (`docker-compose.yml:170`; en producción solo en `127.0.0.1`) |
 | `pgbouncer_pool` | PgBouncer | Pool de conexiones entre la API y PostgreSQL | No se publica |
 | `rehni-postgres` | PostgreSQL 17 | Base de datos relacional | No se publica |
 | `rehni-minio` | MinIO | Almacenamiento de imágenes y archivos (bucket `uploads`) | No se publica |
@@ -107,14 +107,14 @@ Recomendado = consumo medido + 50 % (rango del 30-50 % de la guía del bootcamp)
 | Requisito | Mínimo | Recomendado | Justificación (cálculo) |
 |---|---|---|---|
 | CPU | 2 vCPU | 6 vCPU (**supuesto: 50 usuarios concurrentes**, sección 1.4) | Pico simultáneo medido con 50 usuarios concurrentes: 3,45 procesadores; 3,45 × 1,5 = 5,2 → 6 vCPU para esa concurrencia con p95 < 121 ms. Si la concurrencia acordada con el cliente es otra, este valor cambia. El mínimo de 2 vCPU sirve para menos concurrencia o mayor latencia. <!-- PENDIENTE: el mínimo no se midió en una VM de 2 vCPU; validarlo repitiendo k6 en la VM del laboratorio. --> |
-| RAM | 4 GB | 8 GB | Servicios (mismo supuesto de 50 usuarios): pico simultáneo de RAM + swap de 646,2 MiB; × 1,5 = 969 MiB (≈ 0,95 GB). Sistema operativo: Canonical sugiere 3 GB o más. 3 + 0,95 = 3,95 → mínimo de 4 GB. Recomendado de 8 GB: los límites de `docker-compose.yml` suman 2304 MiB (1G + 768M + 256M + 128M + 128M, L20, L57, L108, L156, L198), y 3 GB + 2,25 GB = 5,25 GB caben con margen en 8 GB |
+| RAM | 4 GB | 8 GB | Servicios (mismo supuesto de 50 usuarios): pico simultáneo de RAM + swap de 646,2 MiB; × 1,5 = 969 MiB (≈ 0,95 GB). Sistema operativo: Canonical sugiere 3 GB o más. 3 + 0,95 = 3,95 → mínimo de 4 GB. Recomendado de 8 GB: los límites de `docker-compose.yml` suman 2304 MiB (1G + 768M + 256M + 128M + 128M, L180, L77, L36, L128, L244), y 3 GB + 2,25 GB = 5,25 GB caben con margen en 8 GB |
 | Disco | 30 GB | 60 GB SSD | Sistema operativo: Canonical sugiere 25 GB o más. Proyecto medido: imágenes 1,25 GB + volúmenes 0,71 GB + respaldos 0,28 GB = 2,24 GB; × 1,5 = 3,4 GB. 25 + 3,4 = 28,4 → mínimo de 30 GB. El recomendado de 60 GB deja espacio a las imágenes que se reconstruyen en cada actualización y al crecimiento de datos |
 | Tipo de disco / IOPS | SSD | SSD NVMe | Mejora los tiempos de acceso de PostgreSQL, Docker y almacenamiento de archivos. |
 | Red | 100 Mbps | 1 Gbps | En la prueba de carga k6 recibió 187 MB en 7,5 min (415 kB/s ≈ 3,3 Mbit/s) con 50 usuarios, sin imágenes (solo JSON de `/public/*`). Las imágenes de MinIO (por `/media/proxy`) suben ese tráfico. <!-- PENDIENTE: medir el ancho de banda con imágenes si se quiere justificar el mínimo con un dato propio. --> |
 | Arquitectura | x86_64 | x86_64 | Las imágenes del proyecto se construyen y miden en x86_64. Ubuntu Server 24.04 admite amd64 y arm64, pero arm64 no se ha probado con este stack |
 | Sistema operativo | Ubuntu Server 24.04 LTS | Ubuntu Server 24.04 LTS | SO de producción elegido (sección 1.3), con soporte estándar hasta mayo de 2029 |
 | Docker / runtime | Docker 24.0 + plugin Compose | Docker Engine actual del repositorio oficial + plugin Compose | 24.0 es el umbral de `verificar-requisitos.sh` (`MIN_DOCKER_VERSION`). El desarrollo usa Docker 29.6.2 y Compose 5.3.1 |
-| Puertos | 80, 443 y 8000 libres (desarrollo); 80 y 443 libres (producción) | Igual | `docker-compose.yml` publica 80 y 443 (Caddy, L224-226) y 8000 (API, L166). En producción es el mismo compose: la API queda solo en `127.0.0.1` (`BACKEND_BIND`). PostgreSQL se publica solo en `127.0.0.1:5433` (L50), nunca en `0.0.0.0`; PgBouncer y MinIO no publican puertos |
+| Puertos | 80, 443 y 8000 libres (desarrollo); 80 y 443 libres (producción) | Igual | `docker-compose.yml` publica 80 y 443 (Caddy, L232-234) y 8000 (API, L170). En producción es el mismo compose: la API queda solo en `127.0.0.1` (`BACKEND_BIND`). PostgreSQL se publica solo en `127.0.0.1:5433` (L50), nunca en `0.0.0.0`; PgBouncer y MinIO no publican puertos |
 
 Crecimiento estimado de datos: hoy la base ocupa 16 MB y MinIO 23,09 MB, con 865 productos y 4100 variantes (sección 3.5). <!-- PENDIENTE: registros/mes esperados (pedidos, productos e imágenes nuevas) según el cliente, para calcular registros/mes × tamaño promedio × meses. -->
 

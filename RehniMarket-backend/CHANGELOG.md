@@ -18,6 +18,10 @@ Todos los cambios importantes de este proyecto se documentan en este archivo.
   80/443: CA local de Caddy en local y Let's Encrypt con un dominio público. Swagger por
   Caddy: `https://api.localhost/docs`. Las URL de imágenes por Caddy quedan como
   `https://api.localhost/media/proxy?...`.
+- **`FORWARDED_ALLOW_IPS` por defecto `172.30.0.10`** (la IP fija de Caddy) en lugar de
+  `172.16.0.0/12`. Con el rango, una petición al `:8000` desde el propio servidor entraba
+  por la pasarela de Docker, que estaba dentro, y Uvicorn aceptaba su `X-Forwarded-For`:
+  se podía falsear la IP y saltarse el rate limit. Comprobado y corregido el 2026-11-04.
 - `URL_BACKEND` de `.env.example` pasa a `http://localhost:8000` (antes `:8001`, el
   puerto de `docker-compose.dev.yml`) y `URL_FRONTEND` a `https://localhost`.
 

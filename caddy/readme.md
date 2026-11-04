@@ -285,12 +285,15 @@ http://:8081 {                          # healthcheck del contenedor (no publica
 | `.env` | `CORS_EXTRA_ORIGINS` | `https://localhost` | Origen del frontend que la API acepta. `URL_FRONTEND` sigue para los correos |
 | `.env` | `DOCS_ENABLED` | `false` | Swagger y ReDoc. Con `false`, `/docs`, `/redoc` y `/openapi.json` responden 401. Para usarlos en local: `true` y `docker compose up -d backend`. **En producción, `false`** |
 | `.env` | `POSTGRES_PORT` | `5433` | Puerto de Postgres en `127.0.0.1` |
-| `.env` (opcional) | `FORWARDED_ALLOW_IPS` | `172.16.0.0/12` | Redes de las que Uvicorn acepta `X-Forwarded-For` (las de Docker) |
+| `.env` (opcional) | `FORWARDED_ALLOW_IPS` | `172.30.0.10` | Proxy del que Uvicorn acepta `X-Forwarded-For`: solo Caddy, con IP fija en `docker-compose.yml` |
 
 **¿Por qué `--proxy-headers`?** El `RateLimitMiddleware` usa `request.client.host`. Detrás de
 Caddy, sin esa opción, todas las peticiones llegarían con la IP del proxy y el límite de un
-usuario bloquearía a todos. Solo se confía en la red de Docker: quien llega directo al `:8000`
-no puede falsear su IP.
+usuario bloquearía a todos. Solo se confía en la IP fija de Caddy (`172.30.0.10`), no en
+toda la red de Docker: la pasarela (`172.30.0.1`) es por donde entra lo que llega al `:8000`
+desde el propio equipo, y con un rango como `172.16.0.0/12` quien llegara directo al `:8000`
+desde el servidor podría falsear su IP con `X-Forwarded-For` (comprobado el 04/11/2026).
+Caddy, además, descarta el `X-Forwarded-For` que mande el cliente.
 
 **¿Por qué `PublicBaseUrlMiddleware`?** Las URL de las imágenes (MinIO, servidas por
 `/media/proxy`) las arma el backend. Cuando la petición llega por Caddy, el encabezado

@@ -20,7 +20,7 @@
 | 4 | Prerrequisitos | Ver sección 1 (ficha técnica): matriz 1.5 y `scripts/verificar-requisitos.sh` con código de salida `0` |
 | 5 | Preparación | Ubuntu Server 24.04 LTS con Docker Engine y el plugin Compose instalados según la guía oficial (paso 2 de la instalación inicial), usuario de despliegue en el grupo `docker`, DNS apuntando al servidor (sección 4.3) y puertos 80/443/22 abiertos (sección 4.4) |
 | 6 | Procedimiento | Ver sección 5.2 (instalación inicial, actualización y rollback) |
-| 7 | Migración de datos | Esquema: el backend aplica `alembic upgrade head` al arrancar (`docker-compose.yml:164`). Datos del sistema anterior: sección 2 (`scripts/migracion/migrar.sh`) |
+| 7 | Migración de datos | Esquema: el backend aplica `alembic upgrade head` al arrancar (`docker-compose.yml:168`). Datos del sistema anterior: sección 2 (`scripts/migracion/migrar.sh`) |
 | 8 | Verificación | `docker compose ps` con los cinco servicios `healthy`, `curl` a `/health/database` y `scripts/smoke-test.sh` con `BASE_URL` (sección 5.2) |
 | 9 | Rollback | Ver sección 5.2 (rollback) y la clasificación de migraciones |
 | 10 | Cronograma | Ver tabla de abajo |
@@ -35,7 +35,7 @@
 | Verificación (`ps`, `/health/database`, `smoke-test.sh`) | <!-- PENDIENTE: medir en el servidor --> | |
 | Migración de datos del sistema anterior (si aplica, sección 2) | Opciones 3-5 de `migrar.sh`: 12,2 s en el ensayo del 04/11/2026 sobre una copia (sección 2.9). Sin contar la apertura y el cierre de la ventana | |
 
-**Punto de no retorno:** el arranque del backend con la nueva imagen, porque ejecuta `alembic upgrade head` (`docker-compose.yml:164`). Si la versión trae una migración **no compatible hacia atrás** (tabla de clasificación de la sección 5.2), volver a la versión anterior exige restaurar el respaldo previo (sección 3.4) y se pierde lo escrito después de él.
+**Punto de no retorno:** el arranque del backend con la nueva imagen, porque ejecuta `alembic upgrade head` (`docker-compose.yml:168`). Si la versión trae una migración **no compatible hacia atrás** (tabla de clasificación de la sección 5.2), volver a la versión anterior exige restaurar el respaldo previo (sección 3.4) y se pierde lo escrito después de él.
 
 ### 5.1 Proceso de liberación
 
@@ -44,7 +44,7 @@
 | Pruebas en verde | CI del repositorio (`.github/workflows/ci.yml`: ruff, `alembic upgrade head` en BD vacía, pytest, lint, typecheck y vitest del frontend) | Todos los checks pasan en `main` |
 | Notas de versión | Actualizar `CHANGELOG.md` de la raíz (sección `[1.0.0]`) | Entrada de la versión con fecha |
 | Etiqueta | `git tag -a v1.0.0 -m "RehniMarket 1.0.0"` + `git push origin v1.0.0` <!-- PENDIENTE: la crea el responsable --> | Etiqueta visible en GitHub |
-| Imágenes | `git checkout v1.0.0` y `docker compose build` | `docker image ls` lista `rehni-market-backend` y `rehni-market-frontend` (nombres de `docker-compose.yml:139` y `:200`) |
+| Imágenes | `git checkout v1.0.0` y `docker compose build` | `docker image ls` lista `rehni-market-backend` y `rehni-market-frontend` (nombres de `docker-compose.yml:139` y `:204`) |
 
 Esquema de versiones: SemVer `MAJOR.MINOR.PATCH`. MAJOR: cambio incompatible de la API o una migración no compatible hacia atrás; MINOR: funcionalidad nueva compatible; PATCH: corrección sin cambios de contrato.
 
@@ -71,7 +71,7 @@ Enlace al `CHANGELOG.md`: [`CHANGELOG.md`](../../CHANGELOG.md) (raíz). El detal
 └── scripts/                      ← verificar-requisitos, respaldar, smoke-test, restore…
 ```
 
-Los volúmenes de datos (`postgres_data`, `minio_data`, `caddy_data`, `caddy_config`, `backend_venv`) los gestiona Docker (`docker-compose.yml:279-284`), no viven en `/opt`. Los cuatro `.env` están excluidos de Git (`.gitignore:10-11`, `RehniMarket-backend/.gitignore:5-7`).
+Los volúmenes de datos (`postgres_data`, `minio_data`, `caddy_data`, `caddy_config`, `backend_venv`) los gestiona Docker (`docker-compose.yml:294-299`), no viven en `/opt`. Los cuatro `.env` están excluidos de Git (`.gitignore:10-11`, `RehniMarket-backend/.gitignore:5-7`).
 
 **Por qué no hay `deploy/compose.prod.yaml` ni `deploy/Caddyfile`.** La rúbrica de la semana 4 nombra como instrumento del Producto la «carpeta `deploy/`» (`bc-implantacion/bootcamp/week-04-despliegue_local_y_nube/rubrica-evaluacion.md:64-65`), y el proyecto de la semana pide una «Carpeta `deploy/` con `compose.prod.yaml`, configuración del proxy, `env.prod.example`» (`3-proyecto/README.md:13-14`). RehniMarket cubre lo mismo con **un solo compose y un solo Caddyfile** para todos los ambientes: lo que cambia entre el equipo de desarrollo y el servidor (dominios, puertos, emisor de los certificados, interfaz de la API, CORS) son variables del `.env`, y su plantilla de producción es `deploy/env.prod.example`. Así no hay dos configuraciones que mantener en paralelo (antes el bloque del frontend estaba copiado en `caddy/Caddyfile` y `deploy/Caddyfile`), y lo que se prueba en local es exactamente lo que corre en el servidor. La «configuración del proxy» es `caddy/Caddyfile` y `deploy/README.md` explica el diseño. <!-- PENDIENTE: confirmar con el instructor que el compose único cumple el entregable deploy/ (PENDIENTES-s1-s4.md) -->
 
@@ -93,18 +93,18 @@ Solo nombres y ejemplos ficticios; los valores reales se crean en el servidor. P
 
 | Archivo | Variable | Propósito | Ejemplo (ficticio) |
 |---|---|---|---|
-| `.env` | `SITE_ADDRESS` / `API_ADDRESS` | Dominios que sirve Caddy. Obligatorios en producción: sin ellos se usan los de desarrollo, `localhost` / `api.localhost` (`docker-compose.yml:211-212`). Con un dominio público Caddy pide los certificados a Let's Encrypt (sin correo ACME) | `<dominio>` / `api.<dominio>` |
-| `.env` | `HTTP_PORT` / `HTTPS_PORT` | Puertos de Caddy en el host, iguales dentro del contenedor (`docker-compose.yml:224-226`). En producción 80 y 443: Let's Encrypt los necesita | `80` / `443` |
+| `.env` | `SITE_ADDRESS` / `API_ADDRESS` | Dominios que sirve Caddy. Obligatorios en producción: sin ellos se usan los de desarrollo, `localhost` / `api.localhost` (`docker-compose.yml:215-216`). Con un dominio público Caddy pide los certificados a Let's Encrypt (sin correo ACME) | `<dominio>` / `api.<dominio>` |
+| `.env` | `HTTP_PORT` / `HTTPS_PORT` | Puertos de Caddy en el host, iguales dentro del contenedor (`docker-compose.yml:232-234`). En producción 80 y 443: Let's Encrypt los necesita | `80` / `443` |
 | `.env` | `CADDY_LOCAL_CERTS` | `local_certs` fuerza la CA local de Caddy (solo la prueba de la sección 4.5). **En producción, vacía** | (vacía) |
 | `.env` (opcional) | `POSTGRES_PORT` | Puerto de PostgreSQL publicado **solo en `127.0.0.1`** (`docker-compose.yml:50`; por defecto `5433`), para administrarla por túnel SSH | `5433` |
-| `.env` | `BACKEND_BIND` / `BACKEND_PORT` | Interfaz y puerto del host donde se publica la API (`docker-compose.yml:166`; por defecto `127.0.0.1` / `8000`) | `127.0.0.1` / `8000` |
+| `.env` | `BACKEND_BIND` / `BACKEND_PORT` | Interfaz y puerto del host donde se publica la API (`docker-compose.yml:170`; por defecto `127.0.0.1` / `8000`) | `127.0.0.1` / `8000` |
 | `.env` | `VITE_API_URL` | URL de la API dentro del build del frontend (pública) | `https://api.<dominio>` |
 | `.env` | `VITE_REHNIMARKET_WHATSAPP` | Número de contacto mostrado en el frontend (público) | `+57**********` |
 | `.env` | `DOCS_ENABLED` | Swagger en `/docs` | `false` |
 | `.env` | `CORS_EXTRA_ORIGINS` | Orígenes permitidos por CORS, separados por comas | `https://<dominio>` |
-| `.env` (opcional) | `UVICORN_WORKERS` | Procesos de Uvicorn del backend (`docker-compose.yml:158`, por defecto `3`; `--workers` en `:164`). `app/Config.py:65` lo valida entre 1 y 16 | `3` |
-| `.env` (opcional) | `FORWARDED_ALLOW_IPS` | Redes de las que Uvicorn acepta `X-Forwarded-For` para ver la IP real del cliente (`docker-compose.yml:159`, por defecto `172.16.0.0/12`, las redes de Docker; `--forwarded-allow-ips` en `:164`) | `172.16.0.0/12` |
-| `.env` (opcional) | `PGBOUNCER_MAX_CLIENT_CONN` | Clientes que acepta PgBouncer (`docker-compose.yml:99`) y que el backend usa para validar su presupuesto (`:163`). Por defecto `1200` en compose (`200` en `app/Config.py:73`, fuera de compose). Debe ser ≥ (`DB_POOL_SIZE` + `DB_MAX_OVERFLOW`) × `UVICORN_WORKERS` = 150 con los valores por defecto, o el backend no arranca (`app/Config.py:82`) | `1200` |
+| `.env` (opcional) | `UVICORN_WORKERS` | Procesos de Uvicorn del backend (`docker-compose.yml:158`, por defecto `3`; `--workers` en `:168`). `app/Config.py:65` lo valida entre 1 y 16 | `3` |
+| `.env` | `FORWARDED_ALLOW_IPS` | Proxy del que Uvicorn acepta `X-Forwarded-For` para ver la IP real del cliente, con la que cuenta el rate limit: **solo Caddy**, con IP fija `172.30.0.10` (`docker-compose.yml`, servicio `frontend` y red `default` `172.30.0.0/24`; `--forwarded-allow-ips` en el `command` del backend). Un rango como `172.16.0.0/12` incluiría la pasarela de Docker (`172.30.0.1`), por la que entra todo lo que llega al `:8000` desde el propio servidor: cualquier proceso del servidor podría falsear su IP (comprobado el 04/11/2026, sección 4.5) | `172.30.0.10` |
+| `.env` (opcional) | `PGBOUNCER_MAX_CLIENT_CONN` | Clientes que acepta PgBouncer (`docker-compose.yml:99`) y que el backend usa para validar su presupuesto (`:167`). Por defecto `1200` en compose (`200` en `app/Config.py:73`, fuera de compose). Debe ser ≥ (`DB_POOL_SIZE` + `DB_MAX_OVERFLOW`) × `UVICORN_WORKERS` = 150 con los valores por defecto, o el backend no arranca (`app/Config.py:82`) | `1200` |
 | `.env.postgres` | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | Credenciales de PostgreSQL (también las lee PgBouncer). La contraseña se genera con `openssl rand -hex 32` | `rehni_app` / `CAMBIAR_generar_con_openssl_rand_hex_32` / `rehnimarket` |
 | `.env.minio` | `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` | Credenciales de MinIO (también las lee el backend). La contraseña se genera con `openssl rand -hex 32` | `rehni_minio` / `CAMBIAR_generar_con_openssl_rand_hex_32` |
 | `RehniMarket-backend/.env` | `URL_DATABASE` | Conexión directa a PostgreSQL (la usa Alembic); la contraseña es `POSTGRES_PASSWORD` de `.env.postgres` | `postgresql://rehni_app:CAMBIAR_generar_con_openssl_rand_hex_32@postgres:5432/rehnimarket` |

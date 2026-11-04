@@ -20,13 +20,26 @@
 	{$CADDY_LOCAL_CERTS}
 }
 
-(frontend) {
-	encode zstd gzip
-
+# Encabezados comunes al frontend y a la API. `-Server` quita el encabezado Server
+# (el de Caddy y el `uvicorn` que llega del backend); al borrar un encabezado, Caddy
+# aplica el bloque al escribir la respuesta, así que también cubre lo proxificado.
+(seguridad) {
 	header {
 		X-Content-Type-Options "nosniff"
-		X-Frame-Options "SAMEORIGIN"
 		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}
+
+(frontend) {
+	encode zstd gzip
+	import seguridad
+
+	# HSTS solo en el frontend, sin includeSubDomains: no obliga a HTTPS a otros
+	# subdominios del dominio. Un año (31536000 s).
+	header {
+		X-Frame-Options "SAMEORIGIN"
+		Strict-Transport-Security "max-age=31536000"
 	}
 
 	root * /srv
@@ -51,8 +64,19 @@
 
 # El backend arma las URL de imágenes con el host por el que llegó el cliente
 # (X-Forwarded-Host, ver PublicBaseUrlMiddleware).
+#
+# request_body: tope del cuerpo de la petición, alineado con la subida más grande
+# que el backend acepta con límite explícito: un reporte con hasta 5 imágenes de
+# 5 MB cada una (MAX_EVIDENCE_IMAGES y MAX_EVIDENCE_FILE_SIZE_BYTES,
+# RehniMarket-backend/app/services/commerce/ReportService.py:24-25) = 25 MiB, más
+# 1 MiB para los campos y los separadores del multipart. Por encima, Caddy responde
+# 413 sin llegar al backend.
 {$API_ADDRESS:api.localhost} {
 	encode zstd gzip
+	import seguridad
+	request_body {
+		max_size 26MiB
+	}
 	reverse_proxy backend:8000
 }
 
