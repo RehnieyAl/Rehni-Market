@@ -53,6 +53,13 @@ Primera versión liberada del conjunto. Es la que cubre el plan de implantación
   - PostgreSQL publicado solo en `127.0.0.1:${POSTGRES_PORT:-5433}`, también en producción.
   - Postgres de pytest como servicio `postgres-test` con `profiles: ["test"]`.
   - MinIO con la imagen de Chainguard (`minio/minio` ya no se puede descargar).
+  - Caddy endurecido: snippet `(seguridad)` en los dos sitios (`nosniff`,
+    `Referrer-Policy`, sin encabezado `Server`), HSTS de un año sin `includeSubDomains`
+    solo en el frontend y `request_body max_size 26MiB` en la API (5 evidencias de 5 MB
+    de `ReportService.py:24-25` + margen).
+  - El backend solo acepta `X-Forwarded-For` de Caddy: IP fija `172.30.0.10` en la red
+    `172.30.0.0/24` y `FORWARDED_ALLOW_IPS=172.30.0.10` (antes `172.16.0.0/12`, que
+    incluía la pasarela de Docker y permitía falsear la IP desde el propio servidor).
   - Se eliminan `docker-compose.dev.yml`, `docker-compose.override.yml`,
     `docker-compose.test.yml`, `docker-compose.tls-local.yml`, `caddy/Caddyfile.tls-internal`,
     `deploy/Caddyfile`, `deploy/compose.prod.yaml` y `RehniMarket-frontend/Dockerfile.dev`.
@@ -82,7 +89,10 @@ Desde una instalación con los compose anteriores (`docker-compose.override.yml`
 3. `docker compose up -d --build --wait` (sin `-f`).
 4. En local, confiar en la raíz de Caddy para que el navegador no avise
    (`caddy/readme.md`, 6.7.1). Las líneas `rehnimarket` de `/etc/hosts` ya no hacen falta.
-5. El Postgres de pruebas pasa al proyecto principal:
+5. Si el `.env` define `FORWARDED_ALLOW_IPS=172.16.0.0/12`, cambiarlo a `172.30.0.10`. La
+   red del proyecto cambia de subred: `docker compose down` (sin `-v`) y
+   `docker compose up -d --wait` la recrean; los volúmenes no se tocan.
+6. El Postgres de pruebas pasa al proyecto principal:
    `docker compose --profile test up -d --wait postgres-test` (mismo puerto `55433`).
 
 ### Corregido

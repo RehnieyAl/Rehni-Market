@@ -61,7 +61,7 @@ Puertos abiertos a Internet (servidor de producción):
 | 443 | Caddy (HTTPS) | Acceso al frontend y a la API |
 | 22 | SSH | Administración y transferencia de archivos; limitado por firewall |
 
-El puerto 8000 del backend no se abre: en producción se publica solo en `127.0.0.1` (`BACKEND_BIND=127.0.0.1`, `docker-compose.yml:166`). PostgreSQL tampoco: se publica en `127.0.0.1:5433` (`docker-compose.yml:50`), solo en el loopback, y se administra por túnel SSH.
+El puerto 8000 del backend no se abre: en producción se publica solo en `127.0.0.1` (`BACKEND_BIND=127.0.0.1`, `docker-compose.yml:170`). PostgreSQL tampoco: se publica en `127.0.0.1:5433` (`docker-compose.yml:50`), solo en el loopback, y se administra por túnel SSH.
 
 ## 4.5 Reverse proxy
 
@@ -126,6 +126,27 @@ PostgreSQL publicado en                  127.0.0.1:5433
 `/docs` responde 401 porque `DOCS_ENABLED=false` (Swagger cerrado, igual que en producción) y `/cart` responde 401 porque exige token. HTTP redirige a HTTPS con 308 en los dos dominios. `curl` aceptó el certificado sin `-k`, validándolo contra la raíz de Caddy. PostgreSQL queda publicado solo en el loopback.
 
 Con la configuración por defecto (`localhost` / `api.localhost`, sin `CADDY_LOCAL_CERTS`) la prueba de humo de la sección 5.2 pasa completa contra `https://localhost` y `https://api.localhost`.
+
+### Endurecimiento de producción (encabezados, tamaño del cuerpo e IP real)
+
+- **Encabezados** (snippet `(seguridad)` del `Caddyfile`, en los dos sitios): `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` y sin encabezado `Server` (ni el de Caddy ni el `uvicorn` del backend). Solo el frontend añade `X-Frame-Options: SAMEORIGIN` y `Strict-Transport-Security: max-age=31536000`, sin `includeSubDomains`.
+- **Tamaño del cuerpo** en la API: `request_body max_size 26MiB`. Es la subida más grande que el backend acepta con límite explícito, un reporte con 5 imágenes de 5 MB (`MAX_EVIDENCE_IMAGES` y `MAX_EVIDENCE_FILE_SIZE_BYTES`, `RehniMarket-backend/app/services/commerce/ReportService.py:24-25`), más 1 MiB de margen para el multipart. Comprobado el 04/11/2026 con un token válido: 27 MiB → `413` de Caddy; 4 MiB → llega al backend (`422`, faltan campos). Caddy solo corta al leer el cuerpo: si el backend responde antes (p. ej. `401` sin token), no hay `413`. Las imágenes de productos y variantes no tienen límite propio en el backend, así que para ellas el tope efectivo pasa a ser este.
+- **IP real del cliente detrás de Caddy** (`RATE_LIMIT_ENABLED=true`): Uvicorn solo acepta `X-Forwarded-For` de Caddy (`FORWARDED_ALLOW_IPS=172.30.0.10`, IP fija en `docker-compose.yml`). Con el valor anterior, `172.16.0.0/12`, una petición directa al `:8000` desde el propio equipo con `X-Forwarded-For: 203.0.113.9` quedó registrada como `203.0.113.9`: la pasarela de Docker por la que entra estaba dentro del rango. Prueba con el valor nuevo (cada petición en el access log de Uvicorn, que muestra el `request.client.host` con el que cuenta el rate limit; `:0` = IP tomada de `X-Forwarded-For`):
+
+```
+# 2026-11-04 22:15:01 UTC   RATE_LIMIT_ENABLED=true   FORWARDED_ALLOW_IPS=172.30.0.10
+1. Caddy, cliente LAN <IP-LAN> (?p=lan)                      200
+2. Caddy, localhost + XFF falso 203.0.113.7 (?p=caddy-xff)   200
+3. Directo :8000 desde LAN + XFF falso 203.0.113.8 (?p=lan-8000) 200
+4. Directo :8000 desde 127.0.0.1 + XFF falso 203.0.113.9 (?p=lo-8000) 200
+--- access log de Uvicorn:
+INFO:     <IP-LAN>:0 - "GET /health/database?p=lan HTTP/1.1" 200 OK
+INFO:     172.30.0.1:0 - "GET /health/database?p=caddy-xff HTTP/1.1" 200 OK
+INFO:     <IP-LAN>:59300 - "GET /health/database?p=lan-8000 HTTP/1.1" 200 OK
+INFO:     172.30.0.1:40438 - "GET /health/database?p=lo-8000 HTTP/1.1" 200 OK
+```
+
+Las peticiones por Caddy llegan con la IP del cliente que vio Caddy (la de la LAN, o la pasarela de Docker cuando el cliente es el propio equipo) y Caddy descarta el `X-Forwarded-For` que manda el cliente. Las directas al `:8000` llegan con su IP de origen y el `X-Forwarded-For` falso se ignora.
 
 ## 4.6 Transferencia de archivos
 

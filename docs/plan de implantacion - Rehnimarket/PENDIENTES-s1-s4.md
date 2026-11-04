@@ -32,7 +32,7 @@ Condiciones de las rúbricas:
 ### §1 Ficha técnica
 | Dato | Fuente |
 |---|---|
-| Puertos 80/443 (Caddy, HTTPS) y 8000 (API); PostgreSQL solo en `127.0.0.1:5433` | `docker-compose.yml:50,166,224-226` (compose único, 04/11/2026) |
+| Puertos 80/443 (Caddy, HTTPS) y 8000 (API); PostgreSQL solo en `127.0.0.1:5433` | `docker-compose.yml:50,170,232-234` (compose único, 04/11/2026) |
 | SO de producción: Ubuntu Server 24.04 LTS | Decisión del responsable (respuesta del 04/11/2026) |
 | Fin de soporte (mayo de 2029; ESM hasta mayo de 2034) | <https://ubuntu.com/about/release-cycle>, cita literal, consultada el 04/11/2026 |
 | Licencia de Ubuntu | <https://canonical.com/legal/intellectual-property-policy>, cita literal |
@@ -47,7 +47,7 @@ Condiciones de las rúbricas:
 | Cálculo de la matriz 1.5 (con el supuesto de 50 usuarios marcado) | Medición 1.4 × 1,5 + requisitos sugeridos de Canonical; límites de `docker-compose.yml` |
 | Tamaños en disco | `docker image ls`, `docker system df -v`, `pg_database_size`, `du -sh backups` |
 | Salida de `verificar-requisitos.sh` (3 ejecuciones) | Ejecutado el 04/11/2026 14:19 UTC |
-| Fila «Backend/Caddy» corregida | Caddy solo corre en `frontend` (`docker-compose.yml:193-255`) |
+| Fila «Backend/Caddy» corregida | Caddy solo corre en `frontend` (`docker-compose.yml:197-263`) |
 | Fila «Cloudflared / dns_tunel» quitada y PgBouncer añadido | Servicios reales de `docker-compose.yml` |
 
 ### §2 Migración
@@ -79,9 +79,9 @@ Condiciones de las rúbricas:
 | Plan v0 con 10 secciones | `docker-compose.yml`, `README.md` («Puesta en marcha»), secciones 1-4 |
 | Duración de la migración en el cronograma (12,2 s) | Ensayo de la §2.9 |
 | Comandos de instalación de Docker en Ubuntu 24.04 | <https://docs.docker.com/engine/install/ubuntu/> y <https://docs.docker.com/engine/install/linux-postinstall/>, consultadas el 04/11/2026 |
-| Tabla de variables (ampliada el 04/11/2026 con `URL_DATABASE_POOLED`, `REQUEST_LIMIT`, `TIME_WINDOW`, `UVICORN_WORKERS`, `FORWARDED_ALLOW_IPS`, `PGBOUNCER_MAX_CLIENT_CONN` y `BACKEND_PORT`; marcadores de secretos y `RATE_LIMIT_ENABLED=true` en producción) | `.env*.example`, `deploy/env.prod.example`, `RehniMarket-backend/.env.public.example`, `docker-compose.yml:99,158-166,211-226`, `app/Config.py:28,47,57-58,65,73`; inventario en `docs/plan de implantacion - Rehnimarket/evidencias/inventario-env-2026-11-04.md` |
+| Tabla de variables (ampliada el 04/11/2026 con `URL_DATABASE_POOLED`, `REQUEST_LIMIT`, `TIME_WINDOW`, `UVICORN_WORKERS`, `FORWARDED_ALLOW_IPS`, `PGBOUNCER_MAX_CLIENT_CONN` y `BACKEND_PORT`; marcadores de secretos y `RATE_LIMIT_ENABLED=true` en producción) | `.env*.example`, `deploy/env.prod.example`, `RehniMarket-backend/.env.public.example`, `docker-compose.yml:99,158-170,215-234`, `app/Config.py:28,47,57-58,65,73`; inventario en `docs/plan de implantacion - Rehnimarket/evidencias/inventario-env-2026-11-04.md` |
 | Clasificación de las 16 migraciones | `upgrade()`/`downgrade()` de cada archivo de `RehniMarket-backend/alembic/versions/` |
-| Proceso de liberación | `.github/workflows/ci.yml`, `docker-compose.yml:139,200` |
+| Proceso de liberación | `.github/workflows/ci.yml`, `docker-compose.yml:139,204` |
 | Compose único (sin `deploy/compose.prod.yaml` ni `deploy/Caddyfile`) y justificación frente a la rúbrica | `docker compose config`, `caddy adapt` (sin despliegue real); §5.2 «Por qué no hay `deploy/compose.prod.yaml`» |
 | MinIO de Chainguard: `chown -R 65532:65532` del volumen existente | Error `file access denied` reproducido y corregido el 04/11/2026 (§5.2) |
 | `scripts/smoke-test.sh` (solo HTTP, `BASE_URL`) y su salida local con HTTPS: 7 pasan, 0 fallan, contra `https://api.localhost` y `https://localhost` | Ejecutado el 04/11/2026 a las 21:51:24 UTC |
