@@ -35,15 +35,17 @@ Rehni-Market es una plataforma de comercio electrónico que permite a los usuari
 
 Versiones obtenidas el 04/11/2026 de los contenedores en marcha (`caddy version`, `postgres --version`, `pgbouncer --version`, `minio --version`, `python --version`), de `RehniMarket-backend/uv.lock` / metadatos del paquete instalado y de `RehniMarket-frontend/pnpm-lock.yaml` / `node_modules/<paquete>/package.json`.
 
+Licencias: del archivo de licencia o metadato de la imagen o paquete, o del repositorio o página oficial citados (consultados el 04/11/2026).
+
 | Componente | Función | Versión | Licencia | ¿Genera costo? |
 |---|---|---|---|---|
 | Ubuntu Server | Sistema operativo del servidor de producción | 24.04 LTS | Obra agregada: cada paquete con su propia licencia; descarga y actualizaciones gratuitas (sección 1.3) | No |
-| PostgreSQL | Base de datos relacional | 17.10 (`postgres:17-alpine`) | PostgreSQL License <!-- PENDIENTE: no verificada en esta sesión (la imagen no trae el archivo de licencia); fuente: https://www.postgresql.org/about/licence/ --> | No |
-| PgBouncer | Pool de conexiones | 1.26.0 (`edoburu/pgbouncer:latest`, `docker-compose.yml:64`) | <!-- PENDIENTE: verificar en el repositorio oficial de PgBouncer --> | No |
+| PostgreSQL | Base de datos relacional | 17.10 (`postgres:17-alpine`) | PostgreSQL License («PostgreSQL is released under the PostgreSQL License», <https://www.postgresql.org/about/licence/>) | No |
+| PgBouncer | Pool de conexiones | 1.26.0 (`edoburu/pgbouncer:latest`, `docker-compose.yml:64`) | ISC (`COPYRIGHT` del repositorio oficial, «ISC License», <https://github.com/pgbouncer/pgbouncer/blob/master/COPYRIGHT>; también el metadato `apk` de la imagen: `license: ISC`, aunque registra el paquete 1.25.2 y el binario es 1.26.0) | No |
 | MinIO | Almacenamiento de objetos/archivos | RELEASE.2025-09-07T16-13-09Z (fijado por digest, `docker-compose.yml:3`) | AGPLv3 (`/licenses/LICENSE` de la imagen) | No |
 | Caddy | Servidor web y reverse proxy (contenedor `frontend`) | v2.11.7 (`caddy:2.11-alpine`, `RehniMarket-frontend/Dockerfile:22`) | Apache-2.0 (etiqueta `org.opencontainers.image.licenses` de la imagen) | No |
-| Python | Runtime del backend | 3.13.14 (`python:3.13-slim`, `RehniMarket-backend/Dockerfile:1`) | <!-- PENDIENTE: PSF License, verificar en https://docs.python.org/3/license.html --> | No |
-| uv | Gestor de dependencias del backend | 0.11.29 (`ghcr.io/astral-sh/uv:latest`, `RehniMarket-backend/Dockerfile:5`) | <!-- PENDIENTE: verificar en el repositorio de uv --> | No |
+| Python | Runtime del backend | 3.13.14 (`python:3.13-slim`, `RehniMarket-backend/Dockerfile:1`) | PSF License v2 (`/usr/local/lib/python3.13/LICENSE.txt` de la imagen `python:3.13-slim`, L73: «PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2») | No |
+| uv | Gestor de dependencias del backend | 0.11.29 (`ghcr.io/astral-sh/uv:latest`, `RehniMarket-backend/Dockerfile:5`) | MIT o Apache-2.0, a elección («uv is licensed under either of … Apache License, Version 2.0 … MIT license … at your option», <https://github.com/astral-sh/uv>) | No |
 | FastAPI | Framework para API REST | 0.135.1 | MIT | No |
 | Uvicorn | Servidor ASGI | 0.41.0 | BSD-3-Clause | No |
 | SQLAlchemy | ORM y acceso a PostgreSQL | 2.0.48 | MIT | No |
@@ -53,10 +55,10 @@ Versiones obtenidas el 04/11/2026 de los contenedores en marcha (`caddy version`
 | TypeScript | Tipado estático del frontend | 6.0.3 | Apache-2.0 | No |
 | Vite | Herramienta de desarrollo y compilación | 8.1.0 | MIT | No |
 | Tailwind CSS | Framework de estilos | 4.3.2 | MIT | No |
-| Node.js | Runtime de compilación del frontend | 22.23.1 (`node:22-alpine`, `RehniMarket-frontend/Dockerfile:1`) | MIT <!-- PENDIENTE: no verificada en esta sesión --> | No |
-| pnpm | Gestor de paquetes | 11.15.0 (`RehniMarket-frontend/Dockerfile:6`) | MIT <!-- PENDIENTE: no verificada en esta sesión --> | No |
-| Docker Engine | Contenedorización | 29.6.2 (equipo de desarrollo, `docker version`) | Apache-2.0 <!-- PENDIENTE: no verificada en esta sesión --> | No |
-| Docker Compose | Orquestación de servicios | 5.3.1 (equipo de desarrollo, `docker compose version`) | Apache-2.0 <!-- PENDIENTE: no verificada en esta sesión --> | No |
+| Node.js | Runtime de compilación del frontend | 22.23.1 (`node:22-alpine`, `RehniMarket-frontend/Dockerfile:1`) | Texto de permiso de la licencia MIT (`LICENSE` de <https://github.com/nodejs/node>: «Node.js is licensed for use as follows: … Permission is hereby granted, free of charge…»; incluye componentes de terceros con sus licencias) | No |
+| pnpm | Gestor de paquetes | 11.15.0 (`RehniMarket-frontend/Dockerfile:6`) | MIT («The MIT License (MIT)», `LICENSE` de <https://github.com/pnpm/pnpm>) | No |
+| Docker Engine | Contenedorización | 29.6.2 (equipo de desarrollo, `docker version`) | Apache-2.0 (`LICENSE` de <https://github.com/moby/moby>: «Apache License Version 2.0») | No |
+| Docker Compose | Orquestación de servicios | 5.3.1 (equipo de desarrollo, `docker compose version`) | Apache-2.0 (`LICENSE` de <https://github.com/docker/compose>: «Apache License Version 2.0») | No |
 
 ## 1.3 Sistema operativo del servidor
 
