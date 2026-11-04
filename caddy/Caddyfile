@@ -1,18 +1,28 @@
-# Caddy reemplaza a Nginx en el contenedor `frontend`. Dos sitios, dos URL (virtual hosts):
-#   rehnimarket       → build de React
-#   api.rehnimarket   → backend:8000 (API, Swagger en /docs si DOCS_ENABLED=true)
+# Caddyfile único: desarrollo y producción. Lo monta docker-compose.yml en el servicio
+# `frontend` (Caddy sirve el build de React y hace de reverse proxy de la API).
 #
-# Variables (docker-compose.yml):
-#   SITE_ADDRESS  dominio del frontend   (por defecto rehnimarket)
-#   API_ADDRESS   dominio de la API      (por defecto api.rehnimarket)
+# Variables (.env de la raíz; docker-compose.yml las pasa al contenedor):
+#   SITE_ADDRESS       dominio del frontend   local: localhost       producción: <dominio>
+#   API_ADDRESS        dominio de la API      local: api.localhost   producción: api.<dominio>
+#   HTTP_PORT          puerto HTTP  (por defecto 80)
+#   HTTPS_PORT         puerto HTTPS (por defecto 443). En producción, 80 y 443: Let's Encrypt los necesita.
+#   CADDY_LOCAL_CERTS  opcional; "local_certs" fuerza la CA local con cualquier nombre
+#                      (prueba de la semana 3 con rehnimarket / api.rehnimarket). Vacía en producción.
 #
-# Solo HTTP: el prefijo http:// desactiva el HTTPS automático de Caddy (sin CA
-# interna ni certificados autofirmados, así el navegador no avisa de conexión insegura).
+# Sin prefijo http://, Caddy activa el HTTPS automático y elige el emisor según el nombre:
+#   - localhost, *.localhost o una IP: su CA local (equivale a `tls internal`).
+#   - un dominio público: Let's Encrypt. Requiere que el DNS apunte al servidor y que
+#     los puertos 80 y 443 estén abiertos (sección 4 del plan de implantación).
+# En los dos casos redirige HTTP → HTTPS.
+{
+	http_port {$HTTP_PORT:80}
+	https_port {$HTTPS_PORT:443}
+	{$CADDY_LOCAL_CERTS}
+}
 
 (frontend) {
 	encode zstd gzip
 
-	# Encabezados que antes ponía nginx.conf
 	header {
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "SAMEORIGIN"
@@ -21,7 +31,7 @@
 
 	root * /srv
 
-	# Archivos con hash del build de Vite: caché de un año, 404 si no existen
+	# Archivos con hash del build de Vite: caché de un año
 	handle /assets/* {
 		header Cache-Control "public, max-age=31536000, immutable"
 		file_server
@@ -35,19 +45,18 @@
 	}
 }
 
-http://{$SITE_ADDRESS:rehnimarket} {
+{$SITE_ADDRESS:localhost} {
 	import frontend
 }
 
 # El backend arma las URL de imágenes con el host por el que llegó el cliente
 # (X-Forwarded-Host, ver PublicBaseUrlMiddleware).
-http://{$API_ADDRESS:api.rehnimarket} {
+{$API_ADDRESS:api.localhost} {
 	encode zstd gzip
 	reverse_proxy backend:8000
 }
 
-# Frontend por IP o localhost en HTTP (red local y healthcheck del contenedor).
-# En un servidor con dominio público se puede quitar este bloque.
-:80 {
-	import frontend
+# Healthcheck del contenedor: puerto interno, no se publica en el host.
+http://:8081 {
+	respond "ok" 200
 }

@@ -5,11 +5,12 @@
 #   bash verificar-requisitos.sh
 #   MIN_RAM_MB=4096 bash verificar-requisitos.sh      # cambiar un umbral
 #   OS_ID=cachyos MIN_OS_VERSION=rolling bash verificar-requisitos.sh   # equipo de desarrollo
-#   PORTS="80 443" bash verificar-requisitos.sh       # servidor con FRONTEND_PORT=80
+#   PORTS="80 443" bash verificar-requisitos.sh       # sin comprobar la API directa
 #
 # Umbrales por defecto: matriz 1.5 de la ficha técnica de RehniMarket
 # (docs/plan de implantacion - Rehnimarket/1) Ficha tecnica ...). SO de producción:
-# Ubuntu Server 24.04 LTS. Puertos: los que publica docker-compose.yml (8080 y 8000).
+# Ubuntu Server 24.04 LTS. Puertos: los que publica docker-compose.yml (80, 443 de Caddy
+# y 8000 de la API; HTTP_PORT, HTTPS_PORT y BACKEND_PORT en el .env).
 # Sale con código 0 si todo cumple y 1 si algún requisito falla.
 
 set -u
@@ -22,7 +23,7 @@ OS_ID="${OS_ID:-ubuntu}"
 MIN_OS_VERSION="${MIN_OS_VERSION:-24.04}"     # CachyOS (rolling, sin VERSION_ID): MIN_OS_VERSION=rolling
 ARCHS="${ARCHS:-x86_64 aarch64}"
 MIN_DOCKER_VERSION="${MIN_DOCKER_VERSION:-24.0}"
-PORTS="${PORTS:-8080 8000}"   # + 8443 con docker-compose.tls-local.yml
+PORTS="${PORTS:-80 443 8000}"
 
 fallos=0
 

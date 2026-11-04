@@ -8,6 +8,19 @@ Todos los cambios importantes de este proyecto se documentan en este archivo.
 
 ---
 
+## [Unreleased] - 2026-11-04
+### Changed
+- **Compose y Caddyfile únicos** (detalle en el `CHANGELOG.md` de la raíz, «Infraestructura
+  de despliegue» y «Al actualizar»). Sustituye lo descrito el 2026-10-20 sobre HTTPS:
+  ya no hay `tls ${CADDY_TLS:-internal}`, ni puertos `8080`/`8443`
+  (`FRONTEND_PORT`/`FRONTEND_HTTPS_PORT`), ni `docker-compose.dev.yml`. Los sitios
+  por defecto son `localhost` (frontend) y `api.localhost` (API), con HTTPS automático en
+  80/443: CA local de Caddy en local y Let's Encrypt con un dominio público. Swagger por
+  Caddy: `https://api.localhost/docs`. Las URL de imágenes por Caddy quedan como
+  `https://api.localhost/media/proxy?...`.
+- `URL_BACKEND` de `.env.example` pasa a `http://localhost:8000` (antes `:8001`, el
+  puerto de `docker-compose.dev.yml`) y `URL_FRONTEND` a `https://localhost`.
+
 ## [Unreleased] - 2026-10-20
 ### Added
 - **Swagger y ReDoc con `DOCS_ENABLED`** (por defecto `false`; en el `.env` de la

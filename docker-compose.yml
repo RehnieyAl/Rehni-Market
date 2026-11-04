@@ -1,6 +1,22 @@
+# Compose único: desarrollo, pruebas y producción. Lo que cambia entre entornos va en
+# el .env de la raíz (.env.example para local, deploy/env.prod.example para el servidor).
+#
+#   docker compose up -d --build                                  # stack completo
+#   docker compose watch                                          # desarrollo (develop.watch)
+#   docker compose --profile test up -d --wait postgres-test      # Postgres de pytest
+#
+# Caddy (servicio `frontend`) es el único punto de entrada: HTTPS en HTTP_PORT/HTTPS_PORT
+# (caddy/Caddyfile). Postgres solo se publica en 127.0.0.1 (DbSchema / túnel SSH).
+
 services:
   minio:
-    image: minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
+    # minio/minio ya no se puede descargar de Docker Hub ("pull access denied … repository
+    # does not exist", comprobado el 04/11/2026; quay.io/minio/minio tampoco). Imagen de
+    # Chainguard (construida desde el código de MinIO, AGPLv3), fijada por digest:
+    # MinIO RELEASE.2026-10-23T20-06-51Z. Corre como uid 65532 (nonroot) y no trae curl:
+    # el healthcheck usa mc. Un volumen minio_data creado por la imagen anterior (root)
+    # necesita una vez: docker run --rm -v rehni-market_minio_data:/data alpine chown -R 65532:65532 /data
+    image: cgr.dev/chainguard/minio@sha256:3c60a2a8c4d33409a9bc7a623a7fcbfb4605adc3d89422d2f53b3f673a6e5597
     container_name: rehni-minio
     restart: unless-stopped
     env_file:
@@ -9,7 +25,7 @@ services:
       - minio_data:/data
     command: server /data
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:9000/minio/health/live"]
+      test: ["CMD-SHELL", "MC_HOST_local=http://$$MINIO_ROOT_USER:$$MINIO_ROOT_PASSWORD@localhost:9000 mc ready local >/dev/null"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -28,6 +44,10 @@ services:
       - ./.env.postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    # Solo en el loopback del host (clientes como DbSchema; en el servidor, por túnel SSH).
+    # Nunca 0.0.0.0: la base de datos no debe quedar expuesta en la red.
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
     shm_size: 256mb
     command:
       - postgres
@@ -155,39 +175,57 @@ services:
         limits:
           memory: 1G
           cpus: "4"
+    # docker compose watch: el código se copia al contenedor y se reinicia (vuelve a
+    # pasar por alembic upgrade head). Sin uvicorn --reload: no se combina con --workers.
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./RehniMarket-backend/app
+          target: /app/app
+        - action: sync+restart
+          path: ./RehniMarket-backend/alembic
+          target: /app/alembic
+        - action: rebuild
+          path: ./RehniMarket-backend/pyproject.toml
+        - action: rebuild
+          path: ./RehniMarket-backend/uv.lock
 
   frontend:
     build:
       context: ./RehniMarket-frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-}
+        VITE_API_URL: ${VITE_API_URL:-https://api.localhost}
         VITE_REHNIMARKET_WHATSAPP: ${VITE_REHNIMARKET_WHATSAPP:-}
     image: rehni-market-frontend
     container_name: rehni-frontend
     restart: unless-stopped
+    # Caddy: sirve el build de React en SITE_ADDRESS y hace de reverse proxy de la API
+    # en API_ADDRESS, los dos con HTTPS automático (caddy/Caddyfile).
     depends_on:
       backend:
         condition: service_healthy
-    # Caddy: sirve el frontend y hace de reverse proxy de la API en su propio dominio
-    # (caddy/Caddyfile)
-
-    # minio: sirve los archivos estáticos de la API (archivos subidos por los usuarios) en su propio dominio
       minio:
         condition: service_healthy
-      
-
     environment:
-      SITE_ADDRESS: "${SITE_ADDRESS:-rehnimarket}"
-      API_ADDRESS: "${API_ADDRESS:-api.rehnimarket}"
+      SITE_ADDRESS: "${SITE_ADDRESS:-localhost}"
+      API_ADDRESS: "${API_ADDRESS:-api.localhost}"
+      HTTP_PORT: "${HTTP_PORT:-80}"
+      HTTPS_PORT: "${HTTPS_PORT:-443}"
+      # Opcional: "local_certs" fuerza la CA local también con nombres que no son
+      # localhost (prueba de la semana 3 con rehnimarket / api.rehnimarket).
+      CADDY_LOCAL_CERTS: "${CADDY_LOCAL_CERTS:-}"
     volumes:
       - ./caddy:/etc/caddy:ro
       - caddy_data:/data
       - caddy_config:/config
+    # Mismo puerto dentro y fuera: la redirección HTTP → HTTPS de Caddy apunta a HTTPS_PORT.
     ports:
-      - "${FRONTEND_PORT:-8080}:80"
+      - "${HTTP_PORT:-80}:${HTTP_PORT:-80}"
+      - "${HTTPS_PORT:-443}:${HTTPS_PORT:-443}"
+      - "${HTTPS_PORT:-443}:${HTTPS_PORT:-443}/udp"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost/"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8081/"]
       interval: 15s
       timeout: 4s
       retries: 5
@@ -197,6 +235,47 @@ services:
         limits:
           memory: 128M
           cpus: "0.5"
+    # docker compose watch: el frontend es un build estático, cada cambio reconstruye
+    # la imagen (sin HMR). Para HMR: pnpm dev en el host (http://localhost:5173).
+    develop:
+      watch:
+        - action: rebuild
+          path: ./RehniMarket-frontend/src
+        - action: rebuild
+          path: ./RehniMarket-frontend/public
+        - action: rebuild
+          path: ./RehniMarket-frontend/index.html
+        - action: rebuild
+          path: ./RehniMarket-frontend/vite.config.ts
+        - action: rebuild
+          path: ./RehniMarket-frontend/package.json
+        - action: rebuild
+          path: ./RehniMarket-frontend/pnpm-lock.yaml
+        - action: restart
+          path: ./caddy/Caddyfile
+
+  # Postgres desechable para pytest (solo con --profile test). Datos en tmpfs: cada
+  # arranque empieza de cero y nada toca la BD de desarrollo.
+  #   docker compose --profile test up -d --wait postgres-test
+  #   TEST_DATABASE_URL=postgresql://rehni_test:rehni_test@127.0.0.1:55433/rehnimarket_test
+  #   docker compose --profile test rm -sf postgres-test
+  postgres-test:
+    profiles: ["test"]
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: rehni_test
+      POSTGRES_PASSWORD: rehni_test
+      POSTGRES_DB: rehnimarket_test
+    ports:
+      - "127.0.0.1:55433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rehni_test -d rehnimarket_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
 volumes:
   postgres_data:
   minio_data:

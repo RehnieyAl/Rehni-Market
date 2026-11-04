@@ -19,8 +19,8 @@ Rehni-Market es una plataforma de comercio electrónico que permite a los usuari
 
 | Servicio (contenedor) | Tecnología | Función | Puerto en el servidor |
 |---|---|---|---|
-| `rehni-frontend` | Caddy 2.11 + build de React 19 (Vite) | Sirve el frontend y actúa como reverse proxy de la API | 8080 (HTTP, `docker-compose.yml:188`). 8443 (HTTPS) solo con la variante de prueba `docker-compose.tls-local.yml`; en producción 80 y 443 (sección 4.5) |
-| `rehni-backend` | FastAPI sobre Python 3.13 y Uvicorn | API REST; al arrancar aplica las migraciones de Alembic (`docker-compose.yml:144`) | 8000 (`docker-compose.yml:146`; en producción solo en `127.0.0.1`) |
+| `rehni-frontend` | Caddy 2.11 + build de React 19 (Vite) | Sirve el frontend y actúa como reverse proxy de la API | 80 (HTTP, redirige a HTTPS) y 443 (HTTPS), `docker-compose.yml:224-226` (`HTTP_PORT` / `HTTPS_PORT`; sección 4.5) |
+| `rehni-backend` | FastAPI sobre Python 3.13 y Uvicorn | API REST; al arrancar aplica las migraciones de Alembic (`docker-compose.yml:164`) | 8000 (`docker-compose.yml:166`; en producción solo en `127.0.0.1`) |
 | `pgbouncer_pool` | PgBouncer | Pool de conexiones entre la API y PostgreSQL | No se publica |
 | `rehni-postgres` | PostgreSQL 17 | Base de datos relacional | No se publica |
 | `rehni-minio` | MinIO | Almacenamiento de imágenes y archivos (bucket `uploads`) | No se publica |
@@ -41,8 +41,8 @@ Licencias: del archivo de licencia o metadato de la imagen o paquete, o del repo
 |---|---|---|---|---|
 | Ubuntu Server | Sistema operativo del servidor de producción | 24.04 LTS | Obra agregada: cada paquete con su propia licencia; descarga y actualizaciones gratuitas (sección 1.3) | No |
 | PostgreSQL | Base de datos relacional | 17.10 (`postgres:17-alpine`) | PostgreSQL License («PostgreSQL is released under the PostgreSQL License», <https://www.postgresql.org/about/licence/>) | No |
-| PgBouncer | Pool de conexiones | 1.26.0 (`edoburu/pgbouncer:latest`, `docker-compose.yml:64`) | ISC (`COPYRIGHT` del repositorio oficial, «ISC License», <https://github.com/pgbouncer/pgbouncer/blob/master/COPYRIGHT>; también el metadato `apk` de la imagen: `license: ISC`, aunque registra el paquete 1.25.2 y el binario es 1.26.0) | No |
-| MinIO | Almacenamiento de objetos/archivos | RELEASE.2025-09-07T16-13-09Z (fijado por digest, `docker-compose.yml:3`) | AGPLv3 (`/licenses/LICENSE` de la imagen) | No |
+| PgBouncer | Pool de conexiones | 1.26.0 (`edoburu/pgbouncer:latest`, `docker-compose.yml:84`) | ISC (`COPYRIGHT` del repositorio oficial, «ISC License», <https://github.com/pgbouncer/pgbouncer/blob/master/COPYRIGHT>; también el metadato `apk` de la imagen: `license: ISC`, aunque registra el paquete 1.25.2 y el binario es 1.26.0) | No |
+| MinIO | Almacenamiento de objetos/archivos | RELEASE.2026-10-23T20-06-51Z (imagen de Chainguard `cgr.dev/chainguard/minio`, fijada por digest, `docker-compose.yml:19`; `minio/minio` ya no se puede descargar de Docker Hub) | AGPLv3 (Chainguard la construye desde el código de MinIO) | No |
 | Caddy | Servidor web y reverse proxy (contenedor `frontend`) | v2.11.7 (`caddy:2.11-alpine`, `RehniMarket-frontend/Dockerfile:22`) | Apache-2.0 (etiqueta `org.opencontainers.image.licenses` de la imagen) | No |
 | Python | Runtime del backend | 3.13.14 (`python:3.13-slim`, `RehniMarket-backend/Dockerfile:1`) | PSF License v2 (`/usr/local/lib/python3.13/LICENSE.txt` de la imagen `python:3.13-slim`, L73: «PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2») | No |
 | uv | Gestor de dependencias del backend | 0.11.29 (`ghcr.io/astral-sh/uv:latest`, `RehniMarket-backend/Dockerfile:5`) | MIT o Apache-2.0, a elección («uv is licensed under either of … Apache License, Version 2.0 … MIT license … at your option», <https://github.com/astral-sh/uv>) | No |
@@ -114,7 +114,7 @@ Recomendado = consumo medido + 50 % (rango del 30-50 % de la guía del bootcamp)
 | Arquitectura | x86_64 | x86_64 | Las imágenes del proyecto se construyen y miden en x86_64. Ubuntu Server 24.04 admite amd64 y arm64, pero arm64 no se ha probado con este stack |
 | Sistema operativo | Ubuntu Server 24.04 LTS | Ubuntu Server 24.04 LTS | SO de producción elegido (sección 1.3), con soporte estándar hasta mayo de 2029 |
 | Docker / runtime | Docker 24.0 + plugin Compose | Docker Engine actual del repositorio oficial + plugin Compose | 24.0 es el umbral de `verificar-requisitos.sh` (`MIN_DOCKER_VERSION`). El desarrollo usa Docker 29.6.2 y Compose 5.3.1 |
-| Puertos | 8080 y 8000 libres (desarrollo); 80 y 443 libres (producción) | Igual | `docker-compose.yml` publica 8080 (Caddy, L188) y 8000 (API, L146). En producción, `FRONTEND_PORT=80` y `deploy/compose.prod.yaml` publican 80 y 443, y la API queda solo en `127.0.0.1`. PostgreSQL, PgBouncer y MinIO no publican puertos: solo son accesibles dentro de la red de Docker |
+| Puertos | 80, 443 y 8000 libres (desarrollo); 80 y 443 libres (producción) | Igual | `docker-compose.yml` publica 80 y 443 (Caddy, L224-226) y 8000 (API, L166). En producción es el mismo compose: la API queda solo en `127.0.0.1` (`BACKEND_BIND`). PostgreSQL se publica solo en `127.0.0.1:5433` (L50), nunca en `0.0.0.0`; PgBouncer y MinIO no publican puertos |
 
 Crecimiento estimado de datos: hoy la base ocupa 16 MB y MinIO 23,09 MB, con 865 productos y 4100 variantes (sección 3.5). <!-- PENDIENTE: registros/mes esperados (pedidos, productos e imágenes nuevas) según el cliente, para calcular registros/mes × tamaño promedio × meses. -->
 

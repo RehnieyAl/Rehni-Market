@@ -34,25 +34,56 @@ Primera versión liberada del conjunto. Es la que cubre el plan de implantación
 |---|---|
 | PostgreSQL (`postgres:17-alpine`) | 17.10 |
 | PgBouncer (`edoburu/pgbouncer:latest`) | 1.26.0 |
-| MinIO (fijado por digest) | RELEASE.2025-09-07T16-13-09Z |
+| MinIO (`cgr.dev/chainguard/minio`, fijado por digest) | RELEASE.2026-10-23T20-06-51Z |
 | Caddy (`caddy:2.11-alpine`) | v2.11.7 |
 | Python / FastAPI / Uvicorn | 3.13.14 / 0.135.1 / 0.41.0 |
 | React / Vite / TypeScript / Tailwind CSS | 19.2.7 / 8.1.0 / 6.0.3 / 4.3.2 |
 
 ### Infraestructura de despliegue
 
-- `deploy/`: `compose.prod.yaml` (override de producción), `Caddyfile` (HTTPS automático
-  con Let's Encrypt) y `env.prod.example`.
-- `caddy/Caddyfile.tls-internal` + `docker-compose.tls-local.yml`: prueba local de HTTPS
-  con la CA interna de Caddy. La configuración por defecto (`caddy/Caddyfile`) sigue
-  siendo solo HTTP.
+- **Un único `docker-compose.yml` y un único `caddy/Caddyfile`** para desarrollo, pruebas y
+  producción; entre entornos solo cambia el `.env` de la raíz (`.env.example` y
+  `deploy/env.prod.example`, explicado en `deploy/README.md`).
+  - HTTPS automático en Caddy: CA local con `localhost` / `api.localhost` (valores por
+    defecto), Let's Encrypt con un dominio público; HTTP redirige a HTTPS. Puertos
+    `HTTP_PORT` / `HTTPS_PORT` (80/443) y volúmenes `caddy_data` y `caddy_config`.
+    `CADDY_LOCAL_CERTS=local_certs` fuerza la CA local (prueba de la semana 3).
+  - Desarrollo con `docker compose watch` (`develop.watch`): el backend se sincroniza y
+    reinicia, el frontend se reconstruye.
+  - PostgreSQL publicado solo en `127.0.0.1:${POSTGRES_PORT:-5433}`, también en producción.
+  - Postgres de pytest como servicio `postgres-test` con `profiles: ["test"]`.
+  - MinIO con la imagen de Chainguard (`minio/minio` ya no se puede descargar).
+  - Se eliminan `docker-compose.dev.yml`, `docker-compose.override.yml`,
+    `docker-compose.test.yml`, `docker-compose.tls-local.yml`, `caddy/Caddyfile.tls-internal`,
+    `deploy/Caddyfile`, `deploy/compose.prod.yaml` y `RehniMarket-frontend/Dockerfile.dev`.
 - `scripts/respaldar.sh`: envoltorio de `backup_rehnimarket.sh` con el nombre del plan.
 - `scripts/smoke-test.sh`: prueba de humo solo por HTTP contra `BASE_URL` (VM, servidor
   o nube): salud, catálogo, ruta protegida, login fallido con `example.com` y login más
   `/auth/me` con una cuenta de prueba (`SMOKE_EMAIL` y `SMOKE_PASSWORD` por el entorno).
   No usa `docker exec`, no registra usuarios y no envía correos.
 - `scripts/verificar-requisitos.sh`: umbrales por defecto para Ubuntu Server 24.04 LTS y
-  los puertos 8080 y 8000.
+  los puertos 80, 443 y 8000.
+- `RehniMarket-frontend/package.json`: `packageManager: pnpm@11.15.0`, la misma versión que
+  el CI y el Dockerfile.
+
+### Al actualizar
+
+Desde una instalación con los compose anteriores (`docker-compose.override.yml`,
+`deploy/compose.prod.yaml`, Caddy solo HTTP en `:8080`):
+
+1. **`.env` de la raíz**: quitar `FRONTEND_PORT`, `FRONTEND_HTTPS_PORT`, `ACME_EMAIL` y
+   `CADDY_TLS`. En local: `VITE_API_URL=https://api.localhost` y
+   `CORS_EXTRA_ORIGINS=https://localhost`. En el servidor: partir de
+   `deploy/env.prod.example`.
+2. **Volumen de MinIO creado por `minio/minio`** (archivos de `root`): la imagen de
+   Chainguard corre como `65532` y no arranca (`file access denied`). Una vez:
+   `docker compose stop minio` y
+   `docker run --rm -v rehni-market_minio_data:/data alpine chown -R 65532:65532 /data`.
+3. `docker compose up -d --build --wait` (sin `-f`).
+4. En local, confiar en la raíz de Caddy para que el navegador no avise
+   (`caddy/readme.md`, 6.7.1). Las líneas `rehnimarket` de `/etc/hosts` ya no hacen falta.
+5. El Postgres de pruebas pasa al proyecto principal:
+   `docker compose --profile test up -d --wait postgres-test` (mismo puerto `55433`).
 
 ### Corregido
 

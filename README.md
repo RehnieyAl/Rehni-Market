@@ -198,8 +198,9 @@ Rehni-Market/
 ├── scripts/                  # Backup, restauración, smoke tests y carga
 ├── tests/load/               # Escenarios de pruebas de carga
 ├── docs/                     # Documentación funcional y técnica
-├── docker-compose.yml        # Despliegue completo
-└── docker-compose.dev.yml    # Entorno de desarrollo
+├── caddy/Caddyfile           # Reverse proxy y HTTPS (único: desarrollo y producción)
+├── deploy/                   # Plantilla del .env de producción
+└── docker-compose.yml        # Compose único: desarrollo (watch), pruebas y producción
 ```
 
 ---
@@ -244,11 +245,26 @@ Al iniciar, el backend aplica las migraciones automáticamente (`alembic upgrade
 
 | Servicio | URL por defecto |
 |---|---|
-| Frontend | http://localhost:8080 |
-| API | http://localhost:8000 |
-| Documentación interactiva (Swagger) | http://localhost:8000/docs |
+| Frontend | https://localhost |
+| API (a través de Caddy) | https://api.localhost |
+| API directa, sin Caddy (app móvil en la red local) | http://localhost:8000 |
+| Documentación interactiva (Swagger, con `DOCS_ENABLED=true`) | https://api.localhost/docs |
+| PostgreSQL (solo en 127.0.0.1, p. ej. DbSchema) | localhost:5433 |
+
+HTTP redirige a HTTPS. Con `localhost` Caddy firma los certificados con su CA local:
+para que el navegador no avise, confía en esa raíz una vez
+([`caddy/readme.md`](caddy/readme.md), «Confiar en la CA local»). En producción se usa el
+mismo `docker-compose.yml` con otro `.env` ([`deploy/`](deploy/)) y Caddy pide los
+certificados a Let's Encrypt.
 
 ### Desarrollo local
+
+```bash
+docker compose watch        # recarga backend (sync + reinicio) y frontend (rebuild) al guardar
+```
+
+El frontend dentro de Docker es un build estático: para recarga en caliente (HMR) usa
+`pnpm dev` en el host (http://localhost:5173).
 
 <details>
 <summary><b>Backend</b></summary>
@@ -291,9 +307,10 @@ Escanea el código QR con **Expo Go**.
 ## Pruebas
 
 ```bash
-# Backend (pytest)
+# Backend (pytest) contra un Postgres desechable (servicio postgres-test, perfil "test")
+docker compose --profile test up -d --wait postgres-test
 cd RehniMarket-backend
-RUN_SEED=false uv run pytest
+RUN_SEED=false TEST_DATABASE_URL=postgresql://rehni_test:rehni_test@127.0.0.1:55433/rehnimarket_test uv run pytest
 
 # Frontend (vitest)
 cd RehniMarket-frontend
@@ -337,7 +354,7 @@ Documentos en [`docs/plan de implantacion - Rehnimarket/`](<docs/plan de implant
 | 4 | Hosting y dominio | 3 | CE-1 | [Hosting y dominio](<docs/plan de implantacion - Rehnimarket/4) Hosting y dominio — Semana 3 (CE-1).md>) |
 | 5 | Plan de instalación y despliegue | 2 y 4 | CE-1, CE-5 | [Instalación y despliegue](<docs/plan de implantacion - Rehnimarket/5) Plan de instalación y despliegue — Semanas 2 y 4 (CE-1, CE-5).md>) |
 
-Pendientes de las semanas 1 a 4 y cómo completarlos: [PENDIENTES-s1-s4.md](<docs/plan de implantacion - Rehnimarket/PENDIENTES-s1-s4.md>). Despliegue de producción: carpeta [`deploy/`](deploy/) y [`CHANGELOG.md`](CHANGELOG.md).
+Pendientes de las semanas 1 a 4 y cómo completarlos: [PENDIENTES-s1-s4.md](<docs/plan de implantacion - Rehnimarket/PENDIENTES-s1-s4.md>). Despliegue de producción: mismo `docker-compose.yml` con el `.env` de [`deploy/env.prod.example`](deploy/env.prod.example) ([`deploy/README.md`](deploy/README.md)) y [`CHANGELOG.md`](CHANGELOG.md).
 
 
 ---

@@ -28,6 +28,6 @@ COPY --from=build /app/dist /srv
 EXPOSE 80 443
 
 HEALTHCHECK --interval=15s --timeout=4s --retries=5 --start-period=5s \
-  CMD wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1
+  CMD wget -qO- http://127.0.0.1:8081/ >/dev/null 2>&1 || exit 1
 
 CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

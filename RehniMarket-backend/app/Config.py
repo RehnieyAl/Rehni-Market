@@ -20,7 +20,7 @@ class config():
     URL_DATABASE = os.getenv("URL_DATABASE")
     # Cadena de conexión que usa la app para tráfico normal: pasa por PgBouncer
     # (pool en modo transaction) cuando está configurada. Si no está definida
-    # (p.ej. en docker-compose.dev.yml, que no tiene PgBouncer), cae a
+    # (p.ej. con el backend fuera de docker-compose.yml, sin PgBouncer), cae a
     # URL_DATABASE y el backend se conecta directo a Postgres, igual que antes.
     # Alembic (alembic/env.py) sigue usando URL_DATABASE a propósito: las
     # migraciones deben ir directo a Postgres, no a través del pool de
