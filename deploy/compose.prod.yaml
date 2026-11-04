@@ -7,6 +7,15 @@
 # Ver la sección 5.2 del plan de implantación.
 
 services:
+  minio:
+    # minio/minio ya no se puede descargar de Docker Hub ("pull access denied … repository
+    # does not exist", comprobado el 04/11/2026 en la VM Ubuntu 24.04; quay.io/minio/minio
+    # tampoco). Imagen de Chainguard (construida desde el código de MinIO, AGPLv3), fijada
+    # por digest: MinIO RELEASE.2026-10-23T20-06-51Z. No trae curl: el healthcheck usa mc.
+    image: cgr.dev/chainguard/minio@sha256:3c60a2a8c4d33409a9bc7a623a7fcbfb4605adc3d89422d2f53b3f673a6e5597
+    healthcheck:
+      test: ["CMD-SHELL", "MC_HOST_local=http://$$MINIO_ROOT_USER:$$MINIO_ROOT_PASSWORD@localhost:9000 mc ready local >/dev/null"]
+
   frontend:
     # Caddyfile de producción: HTTPS automático (Let's Encrypt) en lugar de solo HTTP.
     command: ["caddy", "run", "--config", "/etc/caddy-prod/Caddyfile", "--adapter", "caddyfile"]
