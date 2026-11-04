@@ -4,8 +4,12 @@
 # Uso:
 #   bash verificar-requisitos.sh
 #   MIN_RAM_MB=4096 bash verificar-requisitos.sh      # cambiar un umbral
+#   OS_ID=cachyos MIN_OS_VERSION=rolling bash verificar-requisitos.sh   # equipo de desarrollo
+#   PORTS="80 443" bash verificar-requisitos.sh       # servidor con FRONTEND_PORT=80
 #
-# Los umbrales por defecto corresponden a la app de referencia del bootcamp.
+# Umbrales por defecto: matriz 1.5 de la ficha técnica de RehniMarket
+# (docs/plan de implantacion - Rehnimarket/1) Ficha tecnica ...). SO de producción:
+# Ubuntu Server 24.04 LTS. Puertos: los que publica docker-compose.yml (8080 y 8000).
 # Sale con código 0 si todo cumple y 1 si algún requisito falla.
 
 set -u
@@ -14,11 +18,11 @@ MIN_CPUS="${MIN_CPUS:-2}"
 MIN_RAM_MB="${MIN_RAM_MB:-4096}"
 MIN_DISK_GB="${MIN_DISK_GB:-30}"
 DISK_PATH="${DISK_PATH:-/}"
-OS_ID="${OS_ID:-cachyos}"
-MIN_OS_VERSION="${MIN_OS_VERSION:-rolling}"   # CachyOS es rolling release: no tiene VERSION_ID
+OS_ID="${OS_ID:-ubuntu}"
+MIN_OS_VERSION="${MIN_OS_VERSION:-24.04}"     # CachyOS (rolling, sin VERSION_ID): MIN_OS_VERSION=rolling
 ARCHS="${ARCHS:-x86_64 aarch64}"
 MIN_DOCKER_VERSION="${MIN_DOCKER_VERSION:-24.0}"
-PORTS="${PORTS:-8080 8443 8000}"
+PORTS="${PORTS:-8080 8000}"   # + 8443 con docker-compose.tls-local.yml
 
 fallos=0
 
