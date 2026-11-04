@@ -22,7 +22,7 @@ Migrar a la tabla `users` (rol `user`) el 100 % de los clientes válidos del sis
 ### 2.3 Estrategia
 
 - Estrategia de corte (big bang / por fases) y justificación: big bang. Es una sola entidad (clientes) sin dependencias con otros datos; una única transacción (`transformar.sql`) permite conciliar y revertir el conjunto completo.
-- Ventana de mantenimiento propuesta: 2 horas con `frontend` y `backend` detenidos (`docker compose stop frontend backend`), después del respaldo previo. <!-- PENDIENTE: duración real de la carga (opciones 3 a 5 de migrar.sh). No hay registro del ensayo del 21/10/2026 en el repositorio; medirlo con `time` en el próximo ensayo (escribe en `users`: hacerlo con respaldo previo y rollback) y pegar la salida aquí. -->
+- Ventana de mantenimiento propuesta: 2 horas con `frontend` y `backend` detenidos (`docker compose stop frontend backend`), después del respaldo previo. En el ensayo del 04/11/2026 sobre una copia restaurada, las opciones 3 a 5 tardaron **12,2 s** (sección 2.9). A eso se suman el respaldo previo (1 min 58 s, sección 3.5) y la apertura y el cierre de la ventana.
 
 ### 2.4 Tabla de mapeo
 
@@ -84,5 +84,58 @@ bash scripts/migracion/migrar.sh
 | 9 | Ver estado | Muestra el respaldo, la última validación, el número de usuarios y las ejecuciones |
 
 Orden normal: 1 → 2 → 3 → 4 → 5 → 7. Si la validación falla: 6 (y 8 si el rollback aborta).
+
+### 2.9 Ensayo sobre una copia restaurada
+
+Ejecutado el 04/11/2026 a las 14:41 UTC. Se hizo sobre una **base aparte** (`rehnimarket_ensayo`), restaurada del respaldo `2026-11-04_14-31`, y no sobre la base de desarrollo. La aplicación siguió en marcha, porque no usa esa base. Se aplicaron los mismos SQL que ejecuta `migrar.sh` (opciones 3 a 6), con `psql -d rehnimarket_ensayo`:
+
+```bash
+TS=2026-11-04_14-31; DB=rehnimarket_ensayo
+(cd backups/postgres && sha256sum -c "rehni_market_postgres_${TS}.dump.sha256")
+docker cp "backups/postgres/rehni_market_postgres_${TS}.dump" rehni-postgres:/tmp/ensayo.dump
+docker exec rehni-postgres sh -c 'createdb -U "$POSTGRES_USER" rehnimarket_ensayo && pg_restore -U "$POSTGRES_USER" -d rehnimarket_ensayo --no-owner /tmp/ensayo.dump'
+docker exec rehni-postgres mkdir -p /tmp/migracion
+docker cp legacy-data/clientes_legado.csv rehni-postgres:/tmp/migracion/clientes_legado.csv
+docker cp scripts/migracion/. rehni-postgres:/tmp/migracion/
+q(){ docker exec -i rehni-postgres sh -c 'psql -U "$POSTGRES_USER" -d rehnimarket_ensayo -v ON_ERROR_STOP=1 "$@"' psql "$@"; }
+SHA=$(sha256sum legacy-data/clientes_legado.csv | cut -d' ' -f1)
+q -f /tmp/migracion/carga-staging.sql                               # opción 3
+q -v archivo_sha256="$SHA" -f /tmp/migracion/transformar.sql        # opción 4
+ID=$(q -Atc "SELECT id_ejecucion FROM migracion.ejecuciones WHERE estado = 'APLICADA'")
+q -v id_ejecucion="$ID" -f /tmp/migracion/validar.sql               # opción 5
+q -v id_ejecucion="$ID" -f /tmp/migracion/rollback.sql              # opción 6 (ensayo del rollback)
+docker exec rehni-postgres sh -c 'dropdb -U "$POSTGRES_USER" rehnimarket_ensayo && rm -rf /tmp/migracion /tmp/ensayo.dump'
+```
+
+Resultado: extracto de la salida, con los tiempos de cada paso medidos con `date +%s.%N`. Cada control de `validar.sql` (que psql imprime como tabla) va en una sola línea; se omiten los controles 2, 6 y 7, que también dieron `OK`. La salida completa da `OK=10`:
+
+```
+== Ensayo 2026-11-04 14:41:32 UTC | respaldo 2026-11-04_14-31 | base rehnimarket_ensayo
+rehni_market_postgres_2026-11-04_14-31.dump: La suma coincide
+restauración de la copia: 1.0 s
+users antes: 26
+SHA-256 del CSV: b29efeac92531725a599418ffe9aa17e1631c47b05ecc9c4f4ce00cf4bd8e990
+--- 3) carga-staging.sql      duración: 0.1 s
+--- 4) transformar.sql        duración: 12.0 s     id_ejecucion: 1
+--- 5) validar.sql            duración: 0.1 s
+ 1. Conciliación origen = migrados + rechazados | OK | origen=100 migrados=73 rechazados=27
+ 3. users = línea base + migrados               | OK | antes=26 migrados=73 ahora=99
+ 4. Rechazos: CORREO_EXCEDE_50 1 · CORREO_INVALIDO 4 · CORREO_VACIO 2 · DUPLICADO_ORIGEN 4 ·
+    FECHA_FUTURA 1 · FECHA_INVALIDA 7 · NOMBRE_EXCEDE_50 2 · NOMBRE_VACIO 2 · TELEFONO_INVALIDO 4
+ 5. Sin duplicados de email en users             | OK | 0 correos repetidos
+ 8. Preexistentes sin alterar                    | OK | 0 usuarios preexistentes distintos de la línea base
+ 9. Checksum normalizados = destino              | OK | esperado=cbcb1b239c3f47b57c36e76a9feb6045 obtenido=cbcb1b239c3f47b57c36e76a9feb6045
+10. Hash bcrypt único por migrado                | OK | 73 migrados, 73 hashes distintos, 0 no bcrypt
+11. Migrados sin verificar                       | OK | 0 verificados de 73 migrados
+psql exit=0  OK=10  FALLA=0  CSV sin cambios: OK
+carga + transformación + validación (opciones 3-5): 12.2 s
+users después: 99
+--- 6) rollback.sql   Rollback: migrados restantes en users | OK | 0 restantes
+                      Rollback: preexistentes intactos      | OK | 0 distintos de la línea base
+rollback exit=0  duración: 0.1 s
+users tras rollback: 26
+```
+
+Casi todo el tiempo está en `transformar.sql` (12,0 s), que calcula un hash bcrypt distinto por cada uno de los 73 migrados (control 10). Después del ensayo, la base de desarrollo seguía con 26 usuarios y sin el esquema `migracion`.
 
 ---
