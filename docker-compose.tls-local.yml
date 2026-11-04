@@ -1,0 +1,21 @@
+# Override SOLO PARA PRUEBA LOCAL de HTTPS con la CA interna de Caddy (tls internal).
+# No cambia la configuración por defecto (caddy/Caddyfile, solo HTTP).
+#
+# Uso (desde la raíz del repo):
+#   docker compose -f docker-compose.yml -f docker-compose.override.yml \
+#     -f docker-compose.tls-local.yml up -d frontend backend
+# Volver a la configuración normal:
+#   docker compose up -d frontend backend
+#
+# Ver la sección 4.5 del plan de implantación para la prueba con curl --resolve.
+
+services:
+  frontend:
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile.tls-internal", "--adapter", "caddyfile"]
+    ports:
+      - "${FRONTEND_HTTPS_PORT:-8443}:443"
+
+  backend:
+    environment:
+      # Añade el origen HTTPS del frontend local a los orígenes de CORS del .env.
+      CORS_EXTRA_ORIGINS: "${CORS_EXTRA_ORIGINS:-},https://${SITE_ADDRESS:-rehnimarket}:${FRONTEND_HTTPS_PORT:-8443}"

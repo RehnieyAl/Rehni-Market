@@ -1,0 +1,57 @@
+# Caddyfile de PRODUCCIÓN (servidor con dominio público). Lo usa deploy/compose.prod.yaml.
+# No se usa en desarrollo: allí rige caddy/Caddyfile (solo HTTP).
+#
+# Sin prefijo http://: Caddy activa el HTTPS automático, pide los certificados a
+# Let's Encrypt con el correo ACME_EMAIL y redirige HTTP → HTTPS. Requiere que los
+# registros DNS de SITE_ADDRESS y API_ADDRESS apunten al servidor y que los puertos
+# 80 y 443 estén abiertos (sección 4 del plan de implantación).
+#
+# Variables (deploy/env.prod.example → .env del servidor):
+#   SITE_ADDRESS  dominio del frontend   (p. ej. <dominio>)
+#   API_ADDRESS   dominio de la API      (p. ej. api.<dominio>)
+#   ACME_EMAIL    correo del responsable para Let's Encrypt
+#
+# El bloque `frontend` es copia del de caddy/Caddyfile: si cambia allí, cambiarlo aquí.
+
+{
+	email {$ACME_EMAIL}
+}
+
+(frontend) {
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
+	root * /srv
+
+	handle /assets/* {
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	handle {
+		header Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+{$SITE_ADDRESS} {
+	import frontend
+}
+
+# El backend arma las URL de imágenes con el host por el que llegó el cliente
+# (X-Forwarded-Host, ver PublicBaseUrlMiddleware).
+{$API_ADDRESS} {
+	encode zstd gzip
+	reverse_proxy backend:8000
+}
+
+# Healthcheck del contenedor (wget http://localhost/ dentro del contenedor).
+http://localhost {
+	respond "ok" 200
+}
