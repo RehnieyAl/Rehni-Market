@@ -41,8 +41,16 @@ printf '%.0s-' {1..72}; echo
 cpus=$(nproc)
 [ "$cpus" -ge "$MIN_CPUS" ]; resultado "Procesadores" ">= $MIN_CPUS" "$cpus" $?
 
-ram_mb=$(awk '/MemTotal/ {print int($2 / 1024)}' /proc/meminfo)
-[ "$ram_mb" -ge "$MIN_RAM_MB" ]; resultado "RAM (MB)" ">= $MIN_RAM_MB" "$ram_mb" $?
+# RAM instalada: `lsmem` (bloques de memoria en /sys, sin root). MemTotal de /proc/meminfo
+# descuenta lo que reservan firmware y kernel: una VM de 4096 MB muestra ~3915 MB y no
+# pasaría el mínimo de 4 GB. Si lsmem no está disponible, se usa MemTotal.
+ram_mb=$(LC_ALL=C lsmem -b --summary=only 2>/dev/null | awk '/^Total online memory:/ {print int($4 / 1048576)}')
+ram_src="lsmem"
+if [ -z "$ram_mb" ]; then
+  ram_mb=$(awk '/MemTotal/ {print int($2 / 1024)}' /proc/meminfo)
+  ram_src="MemTotal"
+fi
+[ "$ram_mb" -ge "$MIN_RAM_MB" ]; resultado "RAM (MB, $ram_src)" ">= $MIN_RAM_MB" "$ram_mb" $?
 
 disk_gb=$(df -BG --output=avail "$DISK_PATH" | tail -n1 | tr -dc '0-9')
 [ "$disk_gb" -ge "$MIN_DISK_GB" ]; resultado "Disco libre (GB)" ">= $MIN_DISK_GB en $DISK_PATH" "$disk_gb" $?
