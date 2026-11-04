@@ -57,7 +57,7 @@ class config():
     REQUEST_LIMIT = int(os.getenv("REQUEST_LIMIT", "100"))
     TIME_WINDOW = int(os.getenv("TIME_WINDOW", "60"))
 
-    # Presupuesto de concurrencia y conexiones (docs/rendimiento-capacidad.md).
+    # Presupuesto de concurrencia y conexiones (ver «Ajustes de rendimiento» en RehniMarket-backend/.env.example).
     # Los endpoints son síncronos: corren en el threadpool de anyio
     # (THREADPOOL_SIZE hilos por proceso). Una petición puede seguir
     # reteniendo su conexión después de liberar el hilo (serialización y cierre
