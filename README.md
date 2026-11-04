@@ -25,7 +25,6 @@ Conecta **empresas vendedoras** con **compradores** en una sola plataforma: cat�
 - [Sobre el proyecto](#sobre-el-proyecto)
 - [Funcionalidades](#funcionalidades)
 - [Stack tecnológico](#stack-tecnológico)
-- [Diagramas](#diagramas)
 - [Estructura del repositorio](#estructura-del-repositorio)
 - [Puesta en marcha](#puesta-en-marcha)
 - [Pruebas](#pruebas)
@@ -168,12 +167,6 @@ El proyecto está compuesto por tres aplicaciones:
 | ![Docker](https://img.shields.io/badge/-Docker_Compose-2496ED?logo=docker&logoColor=white) | Orquestación de servicios |
 | ![Caddy](https://img.shields.io/badge/-Caddy-1F88C0?logo=caddy&logoColor=white) | Servidor del frontend, reverse proxy de la API (`api.<dominio>`) y HTTPS |
 | ![k6](https://img.shields.io/badge/-k6-7D64FF?logo=k6&logoColor=white) | Pruebas de carga |
-
----
-
-## Diagramas
-
-La arquitectura, el diagrama de casos de uso y el diagrama de clases están en [`docs/README.md`](docs/README.md).
 
 ---
 

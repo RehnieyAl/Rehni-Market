@@ -151,7 +151,6 @@ scripts/verificar-env.sh           # nuevo: claves de las plantillas vs. lo que 
 - Documentación con referencias a estas rutas:
   - `deploy/Caddyfile`, `deploy/compose.prod.yaml`, `CHANGELOG.md`, `RehniMarket-backend/CHANGELOG.md`
   - `docs/plan de implantacion - Rehnimarket/4)`, `5)` y `PENDIENTES-s1-s4.md`
-  - unos 20 archivos de `docs/docs++/`
 
 **Locales, no versionados (cada uno en su máquina):**
 - `RehniMarket-backend/.env.dev`: reducirlo a solo overrides.

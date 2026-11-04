@@ -89,7 +89,7 @@ ejecuta este backend de forma aislada.
 > `postgres`/`minio` sin puertos publicados, backend solo en `127.0.0.1`,
 > `RATE_LIMIT_ENABLED=true`, MinIO fijado por digest. Caddy es el reverse proxy
 > con TLS (`api.<dominio>` → backend, `<dominio>` → frontend; `tls internal` en
-> local, Let's Encrypt con dominio real). Detalle en `../docs/DOCUMENTACION_DESPLIEGUE_REHNIMARKET.md`.
+> local, Let's Encrypt con dominio real).
 > **El proyecto NO se ha desplegado en producción** (falta servidor y
 > dominio público).
 >
@@ -211,14 +211,6 @@ Ver `app/docs/AUDITORIA.md` para el procedimiento completo.
 
 | Documento | Contenido |
 |---|---|
-| `../docs/DOCUMENTACION_DESPLIEGUE_REHNIMARKET.md` | Preparación de plataforma, infraestructura, Docker, instalación desde cero |
-| `../docs/MANUAL_TECNICO_REHNIMARKET.md` | Manual técnico consolidado (arquitectura, modelos, endpoints, seguridad) |
-| `../docs/MANUAL_USUARIO_REHNIMARKET.md` | Manual de usuario final por rol y por canal |
-| `../docs/PLAN_MIGRACION_REHNIMARKET.md` | Plan de migración de datos y de respaldos (PostgreSQL + MinIO) |
-| `../docs/PLAN_PRUEBAS_ACEPTACION_REHNIMARKET.md` | Plan y matriz de pruebas de aceptación |
-| `../docs/INFORME_CALIDAD_REHNIMARKET.md` | Evaluación ISO/IEC 25010, hallazgos, plan de mejora continua |
-| `../docs/RehniMarket-HU.md` | Historias de usuario (fuente autoritativa) |
-| `../docs/RehniMarket-Requisitos.docx` | Requisitos funcionales (65 RF) y no funcionales (31 RNF) |
 | `app/docs/ARQUITECTURA-VARIANTES.md` | Modelo de variantes/atributos por categoría |
 | `app/docs/AUDITORIA.md` | Procedimiento de auditoría de CVE con `pip-audit` |
 | `CHANGELOG.md` | Historial de cambios |

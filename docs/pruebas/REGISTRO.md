@@ -31,6 +31,14 @@ test deja de ser xfail y la fila cita el commit de la corrección.
 | B-03 | Backend · lint | El gate de ruff cubre solo errores de runtime (`E9`, `F63`, `F7`, `F82`). Queda deuda de pyflakes fuera del gate: 70 `F401` (imports sin usar), 2 `F811`, 2 `F841`, 1 `F403` (medido el 2026-11-03 con ruff 0.17.3). | Se excluye `F821` en `app/models/*`: son 23 referencias adelantadas en strings de SQLAlchemy (`Mapped["Cart"]`) que resuelve el registry de mappers, no Python. Siguiente escalón: añadir `F` completo tras limpiar imports (parte de ellos son re-exportaciones intencionales en `app/models/__init__.py`). |
 | B-04 | Frontend · lint | `--max-warnings 11`: los 11 warnings son `react-hooks/exhaustive-deps`. El ratchet impide que aparezcan nuevos, pero no elimina los existentes. | Corregirlos cambia cuándo se disparan los efectos (lógica de componentes): queda fuera del alcance de pruebas. |
 
+## Entregables pendientes
+
+| Entregable | Estado | Referenciado desde |
+|---|---|---|
+| `docs/INFORME_PRUEBAS.md` (informe de pruebas: hallazgos, brechas y trabajo futuro a partir de este registro) | Pendiente de escribir | Este registro, `RehniMarket-backend/pyproject.toml:88` (`[tool.coverage]`), `RehniMarket-frontend/vitest.config.ts:20` (exclusiones de cobertura) |
+
+Las evidencias de cobertura (líneas base del 2026-10-21 y del 2026-11-03) están en `docs/pruebas/evidencias/`.
+
 ## Paridad de validación front ↔ back (Fase 2)
 
 Frontend: `RehniMarket-frontend/src/shared/validation/` (`rules.ts`, `nit.ts`, `schemas.ts`, hook `useFormValidation`).

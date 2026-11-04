@@ -79,7 +79,7 @@ Condiciones de las rúbricas:
 | Plan v0 con 10 secciones | `docker-compose.yml`, `README.md` («Puesta en marcha»), secciones 1-4 |
 | Duración de la migración en el cronograma (12,2 s) | Ensayo de la §2.9 |
 | Comandos de instalación de Docker en Ubuntu 24.04 | <https://docs.docker.com/engine/install/ubuntu/> y <https://docs.docker.com/engine/install/linux-postinstall/>, consultadas el 04/11/2026 |
-| Tabla de variables (ampliada el 04/11/2026 con `URL_DATABASE_POOLED`, `REQUEST_LIMIT`, `TIME_WINDOW`, `UVICORN_WORKERS`, `FORWARDED_ALLOW_IPS`, `PGBOUNCER_MAX_CLIENT_CONN` y `BACKEND_PORT`; marcadores de secretos y `RATE_LIMIT_ENABLED=true` en producción) | `.env*.example`, `deploy/env.prod.example`, `RehniMarket-backend/.env.public.example`, `docker-compose.yml:79,138-146,181-182`, `app/Config.py:28,47,57-58,65,73`; inventario en `docs/docs++/evidencias/inventario-env-2026-11-04.md` |
+| Tabla de variables (ampliada el 04/11/2026 con `URL_DATABASE_POOLED`, `REQUEST_LIMIT`, `TIME_WINDOW`, `UVICORN_WORKERS`, `FORWARDED_ALLOW_IPS`, `PGBOUNCER_MAX_CLIENT_CONN` y `BACKEND_PORT`; marcadores de secretos y `RATE_LIMIT_ENABLED=true` en producción) | `.env*.example`, `deploy/env.prod.example`, `RehniMarket-backend/.env.public.example`, `docker-compose.yml:79,138-146,181-182`, `app/Config.py:28,47,57-58,65,73`; inventario en `docs/plan de implantacion - Rehnimarket/evidencias/inventario-env-2026-11-04.md` |
 | Clasificación de las 16 migraciones | `upgrade()`/`downgrade()` de cada archivo de `RehniMarket-backend/alembic/versions/` |
 | Proceso de liberación | `.github/workflows/ci.yml`, `docker-compose.yml:119,166` |
 | Validación de `deploy/` | `docker compose ... config` y `caddy validate` (sin despliegue real) |
@@ -110,7 +110,7 @@ Condiciones de las rúbricas:
 | `5)` | 5.1 | Si se etiquetan las imágenes con la versión o se publican en GHCR | Decisión (semana 7) |
 | `5)` | 5.2 Variables | Valor de `URL_DATABASE_POOLED` en el `.env` real | `.env` del servidor |
 | `5)` | 5.2 Variables | Generar secretos propios de producción (`SECRET_KEY`, `POSTGRES_PASSWORD`, `MINIO_ROOT_PASSWORD`, `GMAIL_APP_PASSWORD`) y no reutilizar los de desarrollo | `openssl rand -hex 32` en el servidor; `GMAIL_APP_PASSWORD`, contraseña de aplicación nueva emitida por Google. Inventario del 04/11/2026: hoy `RehniMarket-backend/.env` y `.env.dev` comparten `SECRET_KEY` y `GMAIL_APP_PASSWORD` |
-| Todos | — | Reestructurar los `.env` según el inventario del 04/11/2026: después de la entrega | `docs/docs++/evidencias/inventario-env-2026-11-04.md` (propuesta y lista de archivos) |
+| Todos | — | Reestructurar los `.env` según el inventario del 04/11/2026: después de la entrega | `docs/plan de implantacion - Rehnimarket/evidencias/inventario-env-2026-11-04.md` (propuesta y lista de archivos) |
 | `5)` | 5.2 Prueba de humo | Crear en cada entorno (servidor y nube) una **cuenta de comprador de prueba ya verificada**, para no usar la de administrador | Tú, desde el panel o con el flujo normal de registro y verificación |
 | `5)` | 5.2 Evidencia | Salida de `smoke-test.sh` y `ps` en `/opt/rehnimarket` | Servidor Ubuntu |
 | `5)` | 5.3 | Proveedor y plan, región, almacenamiento de imágenes (MinIO o S3), URL pública, procedimiento, rollback, límites del free tier con fuente y fecha, y prueba de humo con `BASE_URL` público | Tus cuentas (Render, Neon o Supabase) |

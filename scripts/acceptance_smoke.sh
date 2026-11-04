@@ -26,7 +26,6 @@ psql_q(){ docker exec "$PGC" sh -c "PGPASSWORD=\"\$POSTGRES_PASSWORD\" psql -U \
 echo "# Pruebas de aceptación (muestra técnica) — RehniMarket"
 echo "# $(date -u '+%Y-%m-%d %H:%M:%S UTC')   API=$API"
 echo "# Cuenta de prueba: $EMAIL"
-echo "# Fuente de casos: docs/PLAN_PRUEBAS_ACEPTACION_REHNIMARKET.md §7-§8"
 hr
 
 echo "AC-AUTH-01  Registro de comprador (HU-004)"
