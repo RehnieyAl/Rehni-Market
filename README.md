@@ -324,6 +324,7 @@ k6 run scripts/load_test.k6.js
 | `scripts/respaldar.sh` | Envoltorio de `backup_rehnimarket.sh` con el nombre del plan de implantación (mismos argumentos) |
 | `scripts/restore_rehnimarket.sh` | Restauración a partir de un respaldo |
 | `scripts/acceptance_smoke.sh` | Pruebas de humo sobre los flujos principales |
+| `scripts/smoke-test.sh` | Envoltorio de `acceptance_smoke.sh` con el nombre del plan de implantación (mismos argumentos) |
 | `scripts/perf_test.sh` | Pruebas de rendimiento |
 | `scripts/load_test.k6.js` | Escenario de carga con k6 |
 | `scripts/verificar-requisitos.sh` | Verificación de requisitos del entorno |
@@ -342,6 +343,8 @@ Documentos en [`docs/plan de implantacion - Rehnimarket/`](<docs/plan de implant
 | 3 | Plan de respaldo | 2 y 6 | CE-4 | [Plan de respaldo](<docs/plan de implantacion - Rehnimarket/3) Plan de respaldo — Semanas 2 y 6 (CE-4).md>) |
 | 4 | Hosting y dominio | 3 | CE-1 | [Hosting y dominio](<docs/plan de implantacion - Rehnimarket/4) Hosting y dominio — Semana 3 (CE-1).md>) |
 | 5 | Plan de instalación y despliegue | 2 y 4 | CE-1, CE-5 | [Instalación y despliegue](<docs/plan de implantacion - Rehnimarket/5) Plan de instalación y despliegue — Semanas 2 y 4 (CE-1, CE-5).md>) |
+
+Pendientes de las semanas 1 a 4 y cómo completarlos: [PENDIENTES-s1-s4.md](<docs/plan de implantacion - Rehnimarket/PENDIENTES-s1-s4.md>). Despliegue de producción: carpeta [`deploy/`](deploy/) y [`CHANGELOG.md`](CHANGELOG.md).
 
 
 ---

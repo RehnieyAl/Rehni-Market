@@ -1,0 +1,19 @@
+# Override de PRODUCCIÓN. Se usa junto al docker-compose.yml de la raíz, sin el
+# docker-compose.override.yml de desarrollo (que publica PostgreSQL en 127.0.0.1:5433):
+#
+#   docker compose -f docker-compose.yml -f deploy/compose.prod.yaml up -d --build
+#
+# Requiere el .env de la raíz creado a partir de deploy/env.prod.example.
+# Ver la sección 5.2 del plan de implantación.
+
+services:
+  frontend:
+    # Caddyfile de producción: HTTPS automático (Let's Encrypt) en lugar de solo HTTP.
+    command: ["caddy", "run", "--config", "/etc/caddy-prod/Caddyfile", "--adapter", "caddyfile"]
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy-prod/Caddyfile:ro
+    environment:
+      ACME_EMAIL: "${ACME_EMAIL:?Definir ACME_EMAIL en el .env (deploy/env.prod.example)}"
+    ports:
+      # El puerto 80 lo publica docker-compose.yml con FRONTEND_PORT=80.
+      - "443:443"
