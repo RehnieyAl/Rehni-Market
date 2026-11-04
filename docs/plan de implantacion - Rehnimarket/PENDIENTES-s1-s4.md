@@ -32,7 +32,7 @@ Condiciones de las rúbricas:
 ### §1 Ficha técnica
 | Dato | Fuente |
 |---|---|
-| Puertos 8080/8000 (se quitó 8443) | `docker-compose.yml:146,188`; 8443 solo con `docker-compose.tls-local.yml` |
+| Puertos 80/443 (Caddy, HTTPS) y 8000 (API); PostgreSQL solo en `127.0.0.1:5433` | `docker-compose.yml:50,166,224-226` (compose único, 04/11/2026) |
 | SO de producción: Ubuntu Server 24.04 LTS | Decisión del responsable (respuesta del 04/11/2026) |
 | Fin de soporte (mayo de 2029; ESM hasta mayo de 2034) | <https://ubuntu.com/about/release-cycle>, cita literal, consultada el 04/11/2026 |
 | Licencia de Ubuntu | <https://canonical.com/legal/intellectual-property-policy>, cita literal |
@@ -47,7 +47,7 @@ Condiciones de las rúbricas:
 | Cálculo de la matriz 1.5 (con el supuesto de 50 usuarios marcado) | Medición 1.4 × 1,5 + requisitos sugeridos de Canonical; límites de `docker-compose.yml` |
 | Tamaños en disco | `docker image ls`, `docker system df -v`, `pg_database_size`, `du -sh backups` |
 | Salida de `verificar-requisitos.sh` (3 ejecuciones) | Ejecutado el 04/11/2026 14:19 UTC |
-| Fila «Backend/Caddy» corregida | Caddy solo corre en `frontend` (`docker-compose.yml:159-188`) |
+| Fila «Backend/Caddy» corregida | Caddy solo corre en `frontend` (`docker-compose.yml:193-255`) |
 | Fila «Cloudflared / dns_tunel» quitada y PgBouncer añadido | Servicios reales de `docker-compose.yml` |
 
 ### §2 Migración
@@ -68,10 +68,10 @@ Condiciones de las rúbricas:
 ### §4 Hosting y dominio
 | Dato | Fuente |
 |---|---|
-| Motivo del paso a solo HTTP | Commit `926d421` (diff de `caddy/Caddyfile`, `docker-compose.yml`, `.env.example`) y comentario en `caddy/Caddyfile:9-10` |
-| Tres configuraciones de Caddy y para qué sirve cada una | `caddy/Caddyfile`, `caddy/Caddyfile.tls-internal` (nuevo), `deploy/Caddyfile` (nuevo) |
-| Evidencia HTTP y evidencia `tls internal` | `curl --resolve` ejecutado el 04/11/2026 14:21 UTC |
-| Variables de producción (se quitaron `CADDY_TLS` y `FRONTEND_HTTPS_PORT`, que ya no existen) | `deploy/env.prod.example`, `deploy/compose.prod.yaml` |
+| Caddyfile único con HTTPS automático (reemplaza las tres configuraciones anteriores y el paso a solo HTTP del commit `926d421`) | `caddy/Caddyfile`; `caddy adapt` con `localhost`, `rehnimarket` y `ejemplo.com`, con y sin `CADDY_LOCAL_CERTS` |
+| Evidencia `tls internal` con `rehnimarket` / `api.rehnimarket` (`CADDY_LOCAL_CERTS=local_certs`, `curl --resolve --cacert`) | Ejecutada el 04/11/2026 21:51 UTC |
+| PostgreSQL en `127.0.0.1:5433` también en producción (nunca `0.0.0.0`) | `docker-compose.yml:50`; `docker compose port postgres 5432` → `127.0.0.1:5433` |
+| Variables de producción (sin `CADDY_TLS`, `ACME_EMAIL`, `FRONTEND_PORT` ni `FRONTEND_HTTPS_PORT`) | `deploy/env.prod.example` |
 
 ### §5 Instalación y despliegue (nueva)
 | Dato | Fuente |
@@ -79,11 +79,12 @@ Condiciones de las rúbricas:
 | Plan v0 con 10 secciones | `docker-compose.yml`, `README.md` («Puesta en marcha»), secciones 1-4 |
 | Duración de la migración en el cronograma (12,2 s) | Ensayo de la §2.9 |
 | Comandos de instalación de Docker en Ubuntu 24.04 | <https://docs.docker.com/engine/install/ubuntu/> y <https://docs.docker.com/engine/install/linux-postinstall/>, consultadas el 04/11/2026 |
-| Tabla de variables (ampliada el 04/11/2026 con `URL_DATABASE_POOLED`, `REQUEST_LIMIT`, `TIME_WINDOW`, `UVICORN_WORKERS`, `FORWARDED_ALLOW_IPS`, `PGBOUNCER_MAX_CLIENT_CONN` y `BACKEND_PORT`; marcadores de secretos y `RATE_LIMIT_ENABLED=true` en producción) | `.env*.example`, `deploy/env.prod.example`, `RehniMarket-backend/.env.public.example`, `docker-compose.yml:79,138-146,181-182`, `app/Config.py:28,47,57-58,65,73`; inventario en `docs/plan de implantacion - Rehnimarket/evidencias/inventario-env-2026-11-04.md` |
+| Tabla de variables (ampliada el 04/11/2026 con `URL_DATABASE_POOLED`, `REQUEST_LIMIT`, `TIME_WINDOW`, `UVICORN_WORKERS`, `FORWARDED_ALLOW_IPS`, `PGBOUNCER_MAX_CLIENT_CONN` y `BACKEND_PORT`; marcadores de secretos y `RATE_LIMIT_ENABLED=true` en producción) | `.env*.example`, `deploy/env.prod.example`, `RehniMarket-backend/.env.public.example`, `docker-compose.yml:99,158-166,211-226`, `app/Config.py:28,47,57-58,65,73`; inventario en `docs/plan de implantacion - Rehnimarket/evidencias/inventario-env-2026-11-04.md` |
 | Clasificación de las 16 migraciones | `upgrade()`/`downgrade()` de cada archivo de `RehniMarket-backend/alembic/versions/` |
-| Proceso de liberación | `.github/workflows/ci.yml`, `docker-compose.yml:119,166` |
-| Validación de `deploy/` | `docker compose ... config` y `caddy validate` (sin despliegue real) |
-| `scripts/smoke-test.sh` reescrito (solo HTTP, `BASE_URL`) y su salida local: 7 pasan, 0 fallan, a través de Caddy y directo contra la API | Ejecutado el 04/11/2026 a las 14:40:47 y a las 14:40:57 UTC |
+| Proceso de liberación | `.github/workflows/ci.yml`, `docker-compose.yml:139,200` |
+| Compose único (sin `deploy/compose.prod.yaml` ni `deploy/Caddyfile`) y justificación frente a la rúbrica | `docker compose config`, `caddy adapt` (sin despliegue real); §5.2 «Por qué no hay `deploy/compose.prod.yaml`» |
+| MinIO de Chainguard: `chown -R 65532:65532` del volumen existente | Error `file access denied` reproducido y corregido el 04/11/2026 (§5.2) |
+| `scripts/smoke-test.sh` (solo HTTP, `BASE_URL`) y su salida local con HTTPS: 7 pasan, 0 fallan, contra `https://api.localhost` y `https://localhost` | Ejecutado el 04/11/2026 a las 21:51:24 UTC |
 | `CHANGELOG.md` (raíz) | README («Funcionalidades») y versiones medidas |
 
 ---
@@ -112,7 +113,8 @@ Condiciones de las rúbricas:
 | `5)` | 5.2 Variables | Generar secretos propios de producción (`SECRET_KEY`, `POSTGRES_PASSWORD`, `MINIO_ROOT_PASSWORD`, `GMAIL_APP_PASSWORD`) y no reutilizar los de desarrollo | `openssl rand -hex 32` en el servidor; `GMAIL_APP_PASSWORD`, contraseña de aplicación nueva emitida por Google. Inventario del 04/11/2026: hoy `RehniMarket-backend/.env` y `.env.dev` comparten `SECRET_KEY` y `GMAIL_APP_PASSWORD` |
 | Todos | — | Reestructurar los `.env` según el inventario del 04/11/2026: después de la entrega | `docs/plan de implantacion - Rehnimarket/evidencias/inventario-env-2026-11-04.md` (propuesta y lista de archivos) |
 | `5)` | 5.2 Prueba de humo | Crear en cada entorno (servidor y nube) una **cuenta de comprador de prueba ya verificada**, para no usar la de administrador | Tú, desde el panel o con el flujo normal de registro y verificación |
-| `5)` | 5.2 Evidencia | Salida de `smoke-test.sh` y `ps` en `/opt/rehnimarket` | Servidor Ubuntu |
+| `5)` | 5.2 Evidencia | Salida de `smoke-test.sh` y `ps` en `/opt/rehnimarket`, repetida con el compose único | Servidor Ubuntu |
+| `5)` | 5.2 Estructura | **Confirmar con el instructor que el compose único cumple el entregable `deploy/`** (rúbrica de la semana 4 `:64-65` y `3-proyecto/README.md:13-14` piden `deploy/compose.prod.yaml` y la configuración del proxy; aquí son el `docker-compose.yml` y el `caddy/Caddyfile` únicos más `deploy/env.prod.example`) | Instructor |
 | `5)` | 5.3 | Proveedor y plan, región, almacenamiento de imágenes (MinIO o S3), URL pública, procedimiento, rollback, límites del free tier con fuente y fecha, y prueba de humo con `BASE_URL` público | Tus cuentas (Render, Neon o Supabase) |
 | `5)` | 5.4 | Precios mensuales y anuales de las dos alternativas, horas de administración, dominio y recomendación | Páginas de precios con fecha de consulta |
 | `CHANGELOG.md` | `[1.0.0]` | Fecha de la versión | Fecha de la etiqueta |
@@ -128,7 +130,7 @@ Condiciones de las rúbricas:
 | D-3 | Mínimo de 2 vCPU sin medir | §1.5 | Se mantuvo el valor que ya tenía el plan | k6 en una VM de 2 vCPU |
 | D-4 | Frecuencias de la §4.6: «en cada liberación» y «en la instalación inicial y al rotar un secreto» | §4.6 | Se deducen del procedimiento de la §5, no de un acuerdo | Tu política de despliegue y de rotación de secretos |
 | D-5 | Criterio SemVer: MAJOR con migración no compatible hacia atrás o cambio incompatible de la API; MINOR con funcionalidad compatible; PATCH con corrección | §5.1 | Hacía falta un criterio y el proyecto no tenía uno escrito | Tu criterio de versionado |
-| D-6 | Estructura `/opt/rehnimarket/` = clon del repositorio, con los volúmenes gestionados por Docker | §5.2 | Es lo que permite el `git pull` / `git checkout` de la actualización y el rollback | Si prefieres copiar solo `deploy/` y usar imágenes publicadas (semana 7) |
+| D-6 | Estructura `/opt/rehnimarket/` = clon del repositorio, con los volúmenes gestionados por Docker | §5.2 | Es lo que permite el `git pull` / `git checkout` de la actualización y el rollback | Si prefieres copiar solo `docker-compose.yml`, `caddy/` y el `.env`, y usar imágenes publicadas (semana 7) |
 | D-7 | No usar `alembic downgrade` como rollback; con migraciones no compatibles, restaurar el respaldo | §5.2 | `d4e5f6a7b8c9` recrea vacías las columnas borradas y `b6f8fd31fbe` borra filas al bajar | — |
 | D-8 | `a7c4e1f9b2d8` (valor nuevo del enum) clasificada como «Condicional» | §5.2 | La versión anterior no conoce `NEEDS_UPDATE` si alguna empresa tiene ese estado | Probar el rollback con una empresa en `NEEDS_UPDATE` |
 | D-9 | Pasos de la prueba de humo (health, catálogo, `/cart` sin token, login fallido con `smoke-no-existe@example.com`, login + `/auth/me`, frontend) | `scripts/smoke-test.sh` | Cubren lo que pediste sin escribir datos ni enviar correos. El login fallido usa un correo inexistente: el backend responde antes de cualquier envío | Si quieres añadir más rutas de solo lectura |
@@ -143,7 +145,7 @@ Condiciones de las rúbricas:
 
 | Qué | Por qué no se verificó | Cómo comprobarlo |
 |---|---|---|
-| `deploy/Caddyfile` con Let's Encrypt | Necesita un dominio público que apunte al servidor y los puertos 80 y 443 abiertos | En el servidor: `docker compose -f docker-compose.yml -f deploy/compose.prod.yaml up -d` y `curl -I http://<dominio>/`, que debe dar `308` hacia `https://`; luego `curl -fsS https://api.<dominio>/health/database` y `curl -v https://<dominio>/ 2>&1 \| grep issuer`, con el emisor de Let's Encrypt |
+| `caddy/Caddyfile` con Let's Encrypt (dominio público en el `.env`) | Necesita un dominio público que apunte al servidor y los puertos 80 y 443 abiertos | En el servidor: `docker compose up -d` con el `.env` de `deploy/env.prod.example` y `curl -I http://<dominio>/`, que debe dar `308` hacia `https://`; luego `curl -fsS https://api.<dominio>/health/database` y `curl -v https://<dominio>/ 2>&1 \| grep issuer`, con el emisor de Let's Encrypt |
 | Instalación completa en Ubuntu 24.04 (`/opt/rehnimarket`) | No hay VM ni VPS en esta sesión | Seguir la tabla «Instalación inicial» de la §5.2 paso a paso y pegar la salida de los pasos 4, 7, 8 y 9 |
 | `smoke-test.sh` en el servidor y en la nube | Solo se ejecutó contra el stack local | `BASE_URL=https://api.<dominio> FRONTEND_URL=https://<dominio> SMOKE_EMAIL=... SMOKE_PASSWORD=... bash scripts/smoke-test.sh`: debe dar `7 pasan, 0 fallan` y código `0` |
 | Actualización y rollback «probados» (exigidos por la rúbrica de la semana 4) | Hacen falta dos versiones etiquetadas y el servidor | Tras crear `v1.0.0`, desplegar una versión posterior y volver con las tablas de la §5.2 |
