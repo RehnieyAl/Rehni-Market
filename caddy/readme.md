@@ -393,7 +393,7 @@ sudo sed -i '/rehnimarket/d' /etc/hosts
    equipo no resuelve `api.rehnimarket`. Con dominios públicos (DNS real) desaparece.
 5. **Documentación:** la ficha técnica
    (`docs/plan de implantacion - Rehnimarket/1) Ficha tecnica y requisitos minimos - Semana 1 (CE-1, CE2).md`,
-   secciones 1.4 y 1.5) y los documentos de `docs/docs++/` aún mencionan Nginx.
+   secciones 1.4 y 1.5) aún menciona Nginx.
 
 ### 6.9 Paso a producción (para la sección 4 del plan)
 
