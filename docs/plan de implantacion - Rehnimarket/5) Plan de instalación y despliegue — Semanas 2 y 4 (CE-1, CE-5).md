@@ -66,7 +66,7 @@ Enlace al `CHANGELOG.md`: [`CHANGELOG.md`](../../CHANGELOG.md) (raíz). El detal
 ├── .env                          ← de deploy/env.prod.example (chmod 600, fuera de Git)
 ├── .env.postgres                 ← de .env.postgres.example (chmod 600)
 ├── .env.minio                    ← de .env.minio.example (chmod 600)
-├── RehniMarket-backend/.env      ← de RehniMarket-backend/.env.example (chmod 600)
+├── RehniMarket-backend/.env      ← de RehniMarket-backend/.env.public.example (chmod 600)
 ├── backups/                      ← respaldos (copia 1, sección 3.3; excluido de Git)
 └── scripts/                      ← verificar-requisitos, respaldar, smoke-test, restore…
 ```
@@ -75,31 +75,38 @@ Los volúmenes de datos (`postgres_data`, `minio_data`, `caddy_data`, `caddy_con
 
 #### Variables de entorno
 
-Solo nombres y ejemplos ficticios; los valores reales se crean en el servidor.
+Solo nombres y ejemplos ficticios; los valores reales se crean en el servidor. Plantillas de producción: `deploy/env.prod.example` (`.env`), `.env.postgres.example`, `.env.minio.example` y `RehniMarket-backend/.env.public.example` (`RehniMarket-backend/.env`). `RehniMarket-backend/.env.example` es la plantilla de desarrollo local (`RATE_LIMIT_ENABLED=false`, URL de `localhost`).
+
+**Secretos:** en las plantillas de producción cada secreto lleva el marcador `CAMBIAR_generar_con_openssl_rand_hex_32` y se genera con `openssl rand -hex 32`, un valor distinto por secreto y por entorno (nunca los de desarrollo). La excepción es `GMAIL_APP_PASSWORD`, que la emite Google (contraseña de aplicación, marcador `CAMBIAR_contrasena_de_aplicacion_de_Google`). El backend arranca aunque quede un marcador, así que hay que revisarlos antes del paso 6: `grep -nE 'CAMBIA|<dominio>|<correo|tu-dominio' .env .env.postgres .env.minio RehniMarket-backend/.env | grep -v ':#'` no debe mostrar nada (cubre también los marcadores `CAMBIA_USUARIO`, `CAMBIA_BD` y `CAMBIA_MINIO_USER` y los dominios de ejemplo).
 
 | Archivo | Variable | Propósito | Ejemplo (ficticio) |
 |---|---|---|---|
-| `.env` | `SITE_ADDRESS` / `API_ADDRESS` | Dominios que sirve Caddy | `<dominio>` / `api.<dominio>` |
+| `.env` | `SITE_ADDRESS` / `API_ADDRESS` | Dominios que sirve Caddy. Obligatorios en producción: `deploy/Caddyfile:43,49` no tiene valor por defecto (los de `docker-compose.yml:181-182`, `rehnimarket` / `api.rehnimarket`, son de local) | `<dominio>` / `api.<dominio>` |
 | `.env` | `ACME_EMAIL` | Correo para Let's Encrypt (`deploy/compose.prod.yaml`) | `<correo-del-responsable>` |
 | `.env` | `FRONTEND_PORT` | Puerto HTTP publicado por Caddy (`docker-compose.yml:188`) | `80` |
-| `.env` | `BACKEND_BIND` / `BACKEND_PORT` | Interfaz y puerto donde se publica la API (`docker-compose.yml:146`) | `127.0.0.1` / `8000` |
+| `.env` | `BACKEND_BIND` / `BACKEND_PORT` | Interfaz y puerto del host donde se publica la API (`docker-compose.yml:146`; por defecto `127.0.0.1` / `8000`) | `127.0.0.1` / `8000` |
 | `.env` | `VITE_API_URL` | URL de la API dentro del build del frontend (pública) | `https://api.<dominio>` |
 | `.env` | `VITE_REHNIMARKET_WHATSAPP` | Número de contacto mostrado en el frontend (público) | `+57**********` |
 | `.env` | `DOCS_ENABLED` | Swagger en `/docs` | `false` |
 | `.env` | `CORS_EXTRA_ORIGINS` | Orígenes permitidos por CORS, separados por comas | `https://<dominio>` |
-| `.env` | `UVICORN_WORKERS` / `PGBOUNCER_MAX_CLIENT_CONN` | Procesos de la API y clientes que acepta PgBouncer (opcionales, `docker-compose.yml:79,138`) | `3` / `1200` |
-| `.env.postgres` | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | Credenciales de PostgreSQL (también las lee PgBouncer) | `rehni_app` / `<secreto>` / `rehnimarket` |
-| `.env.minio` | `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` | Credenciales de MinIO (también las lee el backend) | `rehni_minio` / `<secreto>` |
-| `RehniMarket-backend/.env` | `URL_DATABASE` | Cadena de conexión a PostgreSQL; la contraseña debe coincidir con `.env.postgres` (README, «Configurar variables de entorno») | `postgresql://rehni_app:<secreto>@postgres:5432/rehnimarket` |
-| `RehniMarket-backend/.env` | `SECRET_KEY` / `ALGORITHM` / `ACCESS_TOKEN_EXPIRE_MINUTES` / `REFRESH_TOKEN_DAYS` | Firma y vigencia de los JWT | `<secreto>` / `HS256` / `30` / `15` (valores de `RehniMarket-backend/.env.example:4-6`) |
-| `RehniMarket-backend/.env` | `GMAIL_USERNAME` / `GMAIL_APP_PASSWORD` | Cuenta que envía los correos transaccionales | `<cuenta>` / `<secreto>` |
+| `.env` (opcional) | `UVICORN_WORKERS` | Procesos de Uvicorn del backend (`docker-compose.yml:138`, por defecto `3`; `--workers` en `:144`). `app/Config.py:65` lo valida entre 1 y 16 | `3` |
+| `.env` (opcional) | `FORWARDED_ALLOW_IPS` | Redes de las que Uvicorn acepta `X-Forwarded-For` para ver la IP real del cliente (`docker-compose.yml:139`, por defecto `172.16.0.0/12`, las redes de Docker; `--forwarded-allow-ips` en `:144`) | `172.16.0.0/12` |
+| `.env` (opcional) | `PGBOUNCER_MAX_CLIENT_CONN` | Clientes que acepta PgBouncer (`docker-compose.yml:79`) y que el backend usa para validar su presupuesto (`:143`). Por defecto `1200` en compose (`200` en `app/Config.py:73`, fuera de compose). Debe ser ≥ (`DB_POOL_SIZE` + `DB_MAX_OVERFLOW`) × `UVICORN_WORKERS` = 150 con los valores por defecto, o el backend no arranca (`app/Config.py:82`) | `1200` |
+| `.env.postgres` | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | Credenciales de PostgreSQL (también las lee PgBouncer). La contraseña se genera con `openssl rand -hex 32` | `rehni_app` / `CAMBIAR_generar_con_openssl_rand_hex_32` / `rehnimarket` |
+| `.env.minio` | `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` | Credenciales de MinIO (también las lee el backend). La contraseña se genera con `openssl rand -hex 32` | `rehni_minio` / `CAMBIAR_generar_con_openssl_rand_hex_32` |
+| `RehniMarket-backend/.env` | `URL_DATABASE` | Conexión directa a PostgreSQL (la usa Alembic); la contraseña es `POSTGRES_PASSWORD` de `.env.postgres` | `postgresql://rehni_app:CAMBIAR_generar_con_openssl_rand_hex_32@postgres:5432/rehnimarket` |
+| `RehniMarket-backend/.env` | `URL_DATABASE_POOLED` | Conexión de la app en tiempo de ejecución a través de PgBouncer (`app/database/Connection.py:16`). Si no se define, usa `URL_DATABASE` (`app/Config.py:28`) y se salta PgBouncer. Misma contraseña que `URL_DATABASE` <!-- PENDIENTE: confirmar el valor en el .env real del servidor (con PgBouncer debe apuntar a pgbouncer:6432) --> | `postgresql://rehni_app:CAMBIAR_generar_con_openssl_rand_hex_32@pgbouncer:6432/rehnimarket` |
+| `RehniMarket-backend/.env` | `SECRET_KEY` / `ALGORITHM` / `ACCESS_TOKEN_EXPIRE_MINUTES` / `REFRESH_TOKEN_DAYS` | Firma y vigencia de los JWT. `SECRET_KEY` se genera con `openssl rand -hex 32` | `CAMBIAR_generar_con_openssl_rand_hex_32` / `HS256` / `30` / `15` (`RehniMarket-backend/.env.public.example:17-20`) |
+| `RehniMarket-backend/.env` | `GMAIL_USERNAME` / `GMAIL_APP_PASSWORD` | Cuenta que envía los correos transaccionales. La contraseña de aplicación la emite Google; crear una propia para producción | `<cuenta>` / `CAMBIAR_contrasena_de_aplicacion_de_Google` |
 | `RehniMarket-backend/.env` | `URL_FRONTEND` / `URL_BACKEND` | URL públicas para enlaces de correo e imágenes | `https://<dominio>` / `https://api.<dominio>` |
-| `RehniMarket-backend/.env` | `MINIO_URL` | Dirección de MinIO dentro de la red de Docker | `minio:9000` (`.env.example:14`) |
-| `RehniMarket-backend/.env` | `RATE_LIMIT_ENABLED` | Activa el límite de peticiones (`false` en `.env.example:16`) | `true` |
-| `RehniMarket-backend/.env` | `USER_NAME_ADMIN` / `ADMIN_DEFAULT` / `PASSWORD_DEFAULT` y `USER_NAME_OWNER` / `OWNER_DEFAULT` / `OWNER_PASSWORD_DEFAULT` | Cuentas iniciales de administrador y owner | `<nombre>` / `<correo>` / `<secreto>` |
+| `RehniMarket-backend/.env` | `MINIO_URL` | Dirección de MinIO dentro de la red de Docker | `minio:9000` |
+| `RehniMarket-backend/.env` | `RATE_LIMIT_ENABLED` | Activa el límite de peticiones por IP (`app/main.py:110`; por defecto `false`, `app/Config.py:47`). **En producción, `true`** (`RehniMarket-backend/.env.public.example:33`) | `true` |
+| `RehniMarket-backend/.env` (opcional) | `REQUEST_LIMIT` / `TIME_WINDOW` | Peticiones por IP permitidas dentro de una ventana de `TIME_WINDOW` segundos; al superarlas responde `429` (`app/Config.py:57-58`, por defecto `100` / `60`; `app/middleware/RateLimitMiddleware.py:32,35`). El contador es en memoria y por proceso: con `UVICORN_WORKERS=3`, una IP puede llegar a 3 × `REQUEST_LIMIT` | `100` / `60` |
+| `RehniMarket-backend/.env` | `USER_NAME_ADMIN` / `ADMIN_DEFAULT` / `PASSWORD_DEFAULT` y `USER_NAME_OWNER` / `OWNER_DEFAULT` / `OWNER_PASSWORD_DEFAULT` | Cuentas iniciales de administrador y owner. Solo se usan con `RUN_SEED=true` (`app/main.py:52`); en producción quedan vacías, sin marcador, para que el seed no cree una cuenta con una contraseña conocida (`app/utils/seed.py:1655`). Si se usan: `openssl rand -hex 32` | `""` |
 | `RehniMarket-backend/.env` | `RUN_SEED` | Carga de datos de ejemplo al arrancar | `false` |
 
-Opcional: `URL_DATABASE_POOLED` (`RehniMarket-backend/.env`), la conexión a través de PgBouncer (`pgbouncer:6432`) que usa el backend en tiempo de ejecución (`app/database/Connection.py:16`). Si no se define, usa `URL_DATABASE` (`app/Config.py:28`). El README la menciona, pero no aparece en `RehniMarket-backend/.env.example`. <!-- PENDIENTE: confirmar el valor en el .env real del servidor (con PgBouncer debe apuntar a pgbouncer:6432) -->
+`CADDY_TLS` ya no se usa: ningún Caddyfile ni compose la lee (solo aparece en el ejemplo de `caddy/readme.md:243`). En producción la reemplaza `ACME_EMAIL`.
+
 
 #### Instalación inicial
 
@@ -111,7 +118,7 @@ Comandos de los pasos 2 y 3: guía oficial de Docker, <https://docs.docker.com/e
 | 2 | Instalar Docker Engine y Compose | Repositorio `apt` de Docker según la guía oficial y `sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin` | `sudo docker run hello-world` muestra el mensaje de prueba |
 | 3 | Usar Docker sin `sudo` | `sudo groupadd docker` (si no existe), `sudo usermod -aG docker $USER` y volver a iniciar sesión (o `newgrp docker`) | `docker run hello-world` funciona sin `sudo`. La guía advierte que el grupo `docker` da privilegios equivalentes a root |
 | 4 | Verificar requisitos | `PORTS="80 443" bash scripts/verificar-requisitos.sh` | Tabla con todo en `CUMPLE` y código de salida `0` |
-| 5 | Crear la configuración | `cp deploy/env.prod.example .env`, `cp .env.postgres.example .env.postgres`, `cp .env.minio.example .env.minio`, `cp RehniMarket-backend/.env.example RehniMarket-backend/.env`, editar los valores y `chmod 600 .env .env.postgres .env.minio RehniMarket-backend/.env` | Cuatro archivos con permisos `-rw-------`; `git status` no los muestra |
+| 5 | Crear la configuración | `cp deploy/env.prod.example .env`, `cp .env.postgres.example .env.postgres`, `cp .env.minio.example .env.minio`, `cp RehniMarket-backend/.env.public.example RehniMarket-backend/.env`, reemplazar cada `CAMBIAR_*` (secretos con `openssl rand -hex 32`, ver «Variables de entorno») y `chmod 600 .env .env.postgres .env.minio RehniMarket-backend/.env` | Cuatro archivos con permisos `-rw-------`; `git status` no los muestra |
 | 6 | Levantar los servicios | `docker compose -f docker-compose.yml -f deploy/compose.prod.yaml up -d --build` | Termina sin errores; el backend aplica `alembic upgrade head` al arrancar |
 | 7 | Comprobar la salud | `docker compose -f docker-compose.yml -f deploy/compose.prod.yaml ps` | Los cinco servicios en `healthy` |
 | 8 | Comprobar HTTPS y la API | `curl -fsS https://api.<dominio>/health/database` y `curl -fsS -o /dev/null -w "%{http_code}\n" https://<dominio>/` | Respuesta de la base de datos y `200` |
