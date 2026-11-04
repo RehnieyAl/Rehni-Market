@@ -156,7 +156,11 @@ services:
         condition: service_healthy
     environment:
       UVICORN_WORKERS: "${UVICORN_WORKERS:-3}"
-      FORWARDED_ALLOW_IPS: "${FORWARDED_ALLOW_IPS:-172.16.0.0/12}"
+      # Solo Caddy (IP fija de abajo) puede fijar la IP del cliente con X-Forwarded-For.
+      # Un rango como 172.16.0.0/12 incluiría la pasarela de Docker (172.30.0.1), por
+      # la que llega todo lo que entra al :8000 desde el propio host: cualquiera en el
+      # servidor podría falsear su IP y saltarse el rate limit.
+      FORWARDED_ALLOW_IPS: "${FORWARDED_ALLOW_IPS:-172.30.0.10}"
       DOCS_ENABLED: "${DOCS_ENABLED:-false}"
       # El frontend está en otro dominio que la API: su origen debe estar permitido.
       CORS_EXTRA_ORIGINS: "${CORS_EXTRA_ORIGINS:-}"
@@ -219,6 +223,10 @@ services:
       - ./caddy:/etc/caddy:ro
       - caddy_data:/data
       - caddy_config:/config
+    # IP fija: el backend confía en X-Forwarded-For solo si viene de aquí (FORWARDED_ALLOW_IPS).
+    networks:
+      default:
+        ipv4_address: 172.30.0.10
     # Mismo puerto dentro y fuera: la redirección HTTP → HTTPS de Caddy apunta a HTTPS_PORT.
     ports:
       - "${HTTP_PORT:-80}:${HTTP_PORT:-80}"
@@ -275,6 +283,13 @@ services:
       interval: 2s
       timeout: 3s
       retries: 15
+
+# Subred fija para poder dar a Caddy una IP conocida (servicio frontend).
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
 
 volumes:
   postgres_data:
