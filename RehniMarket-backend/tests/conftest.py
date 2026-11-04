@@ -18,9 +18,9 @@ from app.models.ModelUser import Users
 from app.services.authentication.JWTService import create_access_token
 from app.utils.Security import hash_password
 
-# TEST_DATABASE_URL (p. ej. el Postgres de docker-compose.test.yml o el servicio
-# del CI) tiene prioridad; sin ella se deriva `rehnimarket_test` del servidor de
-# URL_DATABASE, como hasta ahora.
+# TEST_DATABASE_URL (p. ej. el servicio postgres-test de docker-compose.yml con
+# --profile test, o el servicio del CI) tiene prioridad; sin ella se deriva
+# `rehnimarket_test` del servidor de URL_DATABASE, como hasta ahora.
 _TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 if _TEST_DATABASE_URL:
     _SERVER_URL, TEST_DB_NAME = _TEST_DATABASE_URL.rsplit("/", 1)
