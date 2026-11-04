@@ -14,7 +14,7 @@
 |---|---|---|---|
 | Base de datos PostgreSQL 17 | Contenedor `rehni-postgres`, base `rehnimarket` | `pg_dump -F c -Z 6` con `bash scripts/backup_rehnimarket.sh` | Sí |
 | Archivos de MinIO (imágenes, logos, banners, certificados PDF) | Contenedor `rehni-minio`, bucket `uploads` | `mc mirror` + `.tar.gz` con `bash scripts/backup_rehnimarket.sh` (mismo `TS` que la base) | Sí |
-| Configuración (`.env`, `.env.postgres`, `.env.minio`) | Raíz del proyecto y `RehniMarket-backend/` | Copia manual cifrada con GPG (propuesta, no implementada) | No (contiene credenciales) |
+| Configuración (`.env`, `.env.postgres`, `.env.minio`) | Raíz del proyecto y `RehniMarket-backend/` | Copia cifrada con `age` (decisión del 04/11/2026; implementación: semana 6) | No (contiene credenciales) |
 
 **Script.** El bootcamp pide `scripts/respaldar.sh`. En RehniMarket es un envoltorio de una línea que ejecuta `scripts/backup_rehnimarket.sh` con los mismos argumentos y variables (`exec bash .../backup_rehnimarket.sh "$@"`), sin lógica propia: `bash scripts/respaldar.sh` y `bash scripts/backup_rehnimarket.sh` son equivalentes. Comprobado el 04/11/2026: `bash scripts/respaldar.sh --no-stop` terminó con `=== FIN backup 2026-11-04_14-31 — OK ===` en 1 min 33 s, y el log no registra `deteniendo backend`, así que el argumento llegó al script original.
 
@@ -22,19 +22,19 @@
 
 | RPO | RTO | Justificación (acordada con el cliente) |
 |---|---|---|
-| 24 horas | 1 hora (mismo servidor) / 4 horas (servidor nuevo) | Propuesta: con un respaldo diario se pierde como máximo el trabajo de un día; en un servidor nuevo se suma preparar el equipo, Docker y validar la aplicación. La restauración medida de la base tarda 1,0 s y la verificación completa 12,8 s (sección 3.5), muy por debajo del RTO. <!-- PENDIENTE: acuerdo del RPO/RTO con el cliente (acta o correo con fecha). --> |
+| 24 horas | 4 horas | **Decisión del responsable (04/11/2026).** Con un respaldo diario se pierde como máximo el trabajo de un día. Las 4 horas cubren el peor caso, restaurar en un servidor nuevo (preparar el equipo, Docker y validar la aplicación). La restauración medida de la base tarda 1,0 s y la verificación completa 12,8 s (sección 3.5), muy por debajo del RTO |
 
 ### 3.3 Política
 
 | Aspecto | Decisión |
 |---|---|
 | Tipo (completo / incremental / diferencial) | Completo |
-| Frecuencia y hora | Diaria a las 02:00 UTC (propuesta; hoy se ejecuta a mano) <!-- PENDIENTE: programarlo con cron/systemd en el servidor (semana 6) --> |
+| Frecuencia y hora | Diaria a las 02:00 UTC (propuesta; hoy se ejecuta a mano). Programación con cron/systemd en el servidor: semana 6 |
 | Retención | Los 7 respaldos más recientes (`KEEP_DAILY=7`, `scripts/backup_rehnimarket.sh:8`) |
 | Copia 1 — ubicación y medio | Disco local del servidor, carpeta `backups/` del proyecto (excluida de Git en `.gitignore:4`) |
-| Copia 2 — ubicación y medio | <!-- PENDIENTE: segundo medio distinto del disco del servidor (decisión del responsable). --> |
-| Copia 3 (fuera del sitio) | <!-- PENDIENTE: destino externo; se transfiere con rsync/SFTP por llave (sección 4.6). --> |
-| Cifrado | <!-- PENDIENTE: método de cifrado (propuesta: GPG) y custodia de la llave (semana 6). --> |
+| Copia 2 — ubicación y medio | Disco externo (decisión del responsable, 04/11/2026). Implementación y procedimiento de copia: semana 6 |
+| Copia 3 (fuera del sitio) | Almacenamiento en la nube: Backblaze B2 (decisión del responsable, 04/11/2026). Precio en la sección 5.4. Implementación (subida del archivo cifrado): semana 6 |
+| Cifrado | `age` (decisión del responsable, 04/11/2026): las copias 2 y 3 salen del servidor cifradas. Implementación y custodia de la llave privada: semana 6 |
 | Responsable (rol) | Responsable técnico del proyecto (Yeinher Algarin) |
 
 ### 3.4 Procedimiento de restauración
