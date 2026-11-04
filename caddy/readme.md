@@ -3,11 +3,12 @@
 Hosting, dominio y transferencia de archivos. Guía paso a paso basada en
 `bc-implantacion/bootcamp/week-03-hosting_dominio_y_transferencia/`. Los pasos 0-5 son las
 prácticas del curso; el paso 6 aplica la semana a **RehniMarket**, donde Caddy ya reemplazó a
-Nginx: frontend en `rehnimarket` y API en `api.rehnimarket`.
+Nginx: frontend en `localhost` y API en `api.localhost` (en producción, `<dominio>` y
+`api.<dominio>`), con HTTPS automático.
 
 > **Ojo con el puerto HTTP:** en tu copia, `compose.yaml` publica el HTTP del proxy en **8081**
-> (los documentos del curso dicen 8080). En esta guía se usa 8081. RehniMarket usa 8080 y 8443:
-> el `8443` choca con el laboratorio, así que no levantes los dos a la vez.
+> (los documentos del curso dicen 8080). En esta guía se usa 8081. RehniMarket usa 80 y 443
+> (y el 8081 dentro del contenedor, sin publicar): no levantes los dos a la vez.
 
 Carpeta de la semana (la usan todos los pasos):
 
@@ -188,89 +189,102 @@ cd ~/Escritorio/Rehni-Market
 
 | URL | Qué es |
 |---|---|
-| `https://rehnimarket:8443/` | **Frontend** (React) |
-| `https://api.rehnimarket:8443/` | **API** (FastAPI). Swagger en `/docs` y ReDoc en `/redoc`, solo con `DOCS_ENABLED=true` |
-| `http://localhost:8080/` o `http://<IP-de-tu-equipo>:8080/` | Frontend por HTTP, sin dominio |
-| `http://localhost:8000/` | API directa al backend (sin Caddy; la usa la app móvil) |
+| `https://localhost/` | **Frontend** (React) |
+| `https://api.localhost/` | **API** (FastAPI). Swagger en `/docs` y ReDoc en `/redoc`, solo con `DOCS_ENABLED=true` |
+| `http://localhost:8000/` | API directa al backend (sin Caddy; la usa la app móvil en la red local) |
 
-Es la técnica de la práctica 02: **virtual hosts**. Las dos URL llegan al mismo puerto del mismo
-Caddy, y Caddy decide por el nombre (`Host` / SNI).
+HTTP (`:80`) redirige a HTTPS (`:443`) con 308. Es la técnica de la práctica 02: **virtual
+hosts**. Las dos URL llegan al mismo puerto del mismo Caddy, y Caddy decide por el nombre
+(`Host` / SNI). `*.localhost` resuelve a `127.0.0.1` sin tocar `/etc/hosts`.
 
 ### 6.2 Servicios del proyecto
 
 | Servicio | Qué es | Puerto publicado | ¿Accesible desde fuera? |
 |---|---|---|---|
-| `frontend` | **Caddy**: sirve el build de React y hace de reverse proxy de la API | `8080` (HTTP) y `8443` (HTTPS) | ✅ Es el punto de entrada |
-| `backend` | FastAPI + Uvicorn en el `8000` | `${BACKEND_BIND}:8000` | Debería ser solo por Caddy (ver 6.8) |
-| `postgres` | PostgreSQL 17 | `127.0.0.1:5433` (solo por `docker-compose.override.yml`) | ❌ Nunca |
+| `frontend` | **Caddy**: sirve el build de React y hace de reverse proxy de la API | `${HTTP_PORT:-80}` y `${HTTPS_PORT:-443}` (TCP y UDP para HTTP/3) | ✅ Es el punto de entrada |
+| `backend` | FastAPI + Uvicorn en el `8000` | `${BACKEND_BIND:-127.0.0.1}:8000` | Solo en local (app móvil); en producción `127.0.0.1` |
+| `postgres` | PostgreSQL 17 | `127.0.0.1:${POSTGRES_PORT:-5433}` | ❌ Nunca (solo loopback; túnel SSH en el servidor) |
 | `pgbouncer` | Pool de conexiones a Postgres | ninguno | ❌ Nunca |
 | `minio` | Almacén de imágenes | ninguno | ❌ Nunca |
+| `postgres-test` | Postgres desechable de pytest (`--profile test`) | `127.0.0.1:55433` | ❌ Nunca |
 
 ### 6.3 Camino de una petición
 
 ```
-                       ┌─ Host: rehnimarket      → archivos del build (/srv)
-Navegador ──► Caddy ───┤                                      /assets/* caché 1 año · resto → index.html
-  (:80/:443)           └─ Host: api.rehnimarket  → backend:8000 ──► pgbouncer ──► postgres
-                                                                         └──► minio
+                       ┌─ Host: localhost       → archivos del build (/srv)
+Navegador ──► Caddy ───┤                                     /assets/* caché 1 año · resto → index.html
+  (:80→:443)           └─ Host: api.localhost   → backend:8000 ──► pgbouncer ──► postgres
+                                                                        └──► minio
 ```
 
-1. El navegador abre `https://rehnimarket:8443/` y recibe el frontend.
-2. El JavaScript del frontend llama a `https://api.rehnimarket:8443/...`
-   (`VITE_API_URL`). Es **otro origen**, así que el navegador pregunta antes por CORS y el
-   backend responde que ese origen está permitido (`CORS_EXTRA_ORIGINS`).
+1. El navegador abre `https://localhost/` y recibe el frontend.
+2. El JavaScript del frontend llama a `https://api.localhost/...` (`VITE_API_URL`). Es
+   **otro origen**, así que el navegador pregunta antes por CORS y el backend responde que
+   ese origen está permitido (`CORS_EXTRA_ORIGINS`).
 3. Caddy reenvía la petición al backend **sin cambiar la ruta**: `/auth/login-user` llega
    igual. Con `DOCS_ENABLED=true`, Swagger funciona en `/docs` sin ningún ajuste.
+
+En producción es lo mismo con `<dominio>` y `api.<dominio>`.
 
 ### 6.4 Archivos que intervienen
 
 | Archivo | Qué tiene |
 |---|---|
-| `caddy/Caddyfile` | Los dos sitios. Se monta en `/etc/caddy` (por eso esta guía también aparece dentro del contenedor; no afecta) |
+| `caddy/Caddyfile` | **Único** (desarrollo y producción): los dos sitios y el healthcheck. Se monta en `/etc/caddy` (por eso esta guía también aparece dentro del contenedor; no afecta) |
 | `RehniMarket-frontend/Dockerfile` | Etapa 1: `pnpm build`. Etapa 2: `caddy:2.11-alpine` con el build en `/srv` |
-| `docker-compose.yml` | Servicio `frontend` con Caddy; `backend` con `--proxy-headers`, `DOCS_ENABLED` y `CORS_EXTRA_ORIGINS` |
-| `.env` | `VITE_API_URL`, `DOCS_ENABLED`, `CORS_EXTRA_ORIGINS` |
+| `docker-compose.yml` | **Único**: servicio `frontend` con Caddy (80/443, `caddy_data`, `caddy_config`); `backend` con `--proxy-headers`, `DOCS_ENABLED` y `CORS_EXTRA_ORIGINS` |
+| `.env` | `SITE_ADDRESS`, `API_ADDRESS`, `HTTP_PORT`, `HTTPS_PORT`, `VITE_API_URL`, `CORS_EXTRA_ORIGINS`, `DOCS_ENABLED` (`.env.example` / `deploy/env.prod.example`) |
 | `RehniMarket-backend/app/middleware/PublicBaseUrlMiddleware.py` | Arma las URL de imágenes con el host por el que entró el cliente (6.5) |
 
 El `Caddyfile` en resumen (léelo completo en `caddy/Caddyfile`):
 
 ```
+{
+	http_port {$HTTP_PORT:80}
+	https_port {$HTTPS_PORT:443}
+	{$CADDY_LOCAL_CERTS}                  # opcional: local_certs
+}
+
 (frontend) {
 	# encabezados de seguridad, caché de /assets y try_files {path} /index.html
 }
 
-{$SITE_ADDRESS:rehnimarket} {          # frontend
-	tls {$CADDY_TLS:internal}
+{$SITE_ADDRESS:localhost} {             # frontend
 	import frontend
 }
 
-{$API_ADDRESS:api.rehnimarket} {       # API
-	tls {$CADDY_TLS:internal}
+{$API_ADDRESS:api.localhost} {          # API
 	reverse_proxy backend:8000
 }
 
-:80 {                                           # frontend por IP o localhost, en HTTP
-	import frontend
+http://:8081 {                          # healthcheck del contenedor (no publicado)
+	respond "ok" 200
 }
 ```
 
+- **Sin `tls` ni prefijo `http://` en los sitios**: Caddy activa el HTTPS automático y elige el
+  emisor por el nombre. `localhost`, `*.localhost` o una IP → su CA local (como `tls internal`);
+  un dominio público → Let's Encrypt. En los dos casos redirige HTTP → HTTPS.
+- **`CADDY_LOCAL_CERTS=local_certs`**: fuerza la CA local con cualquier nombre. Solo para probar
+  en local con los nombres elegidos (`rehnimarket` / `api.rehnimarket`, 6.7). Vacía en producción.
 - **Snippet `(frontend)`**: la configuración del frontend se escribe una vez y se reutiliza
   con `import`.
 - **`{$VARIABLE:valor}`**: Caddy lee variables de entorno. Para producción no hay que tocar el
-  archivo, solo las variables (6.9).
-- **Bloque `:80`**: deja entrar al frontend por IP en HTTP, como se hacía con Nginx. Lo usa
-  también el healthcheck del contenedor. En un servidor con dominio público se puede quitar.
+  archivo, solo el `.env` (6.9).
+- **Mismo puerto dentro y fuera** (`${HTTPS_PORT}:${HTTPS_PORT}`): la redirección HTTP → HTTPS
+  apunta a `https_port`; si se publicara `8443:443`, redirigiría a un puerto equivocado.
 
 ### 6.5 Variables
 
-| Archivo | Variable | Valor actual | Para qué |
+| Archivo | Variable | Valor por defecto | Para qué |
 |---|---|---|---|
-| `.env` | `VITE_API_URL` | `https://api.rehnimarket:8443` | URL de la API que usa el frontend. **Se graba al compilar**: tras cambiarla, `docker compose up -d --build frontend` |
-| `.env` | `CORS_EXTRA_ORIGINS` | `https://rehnimarket:8443` | Origen del frontend que la API acepta. `URL_FRONTEND` sigue para los correos |
+| `.env` | `SITE_ADDRESS` / `API_ADDRESS` | `localhost` / `api.localhost` | Dominios de los dos sitios. En producción, `<dominio>` / `api.<dominio>` |
+| `.env` | `HTTP_PORT` / `HTTPS_PORT` | `80` / `443` | Puertos de Caddy en el host. En producción, 80 y 443 (Let's Encrypt) |
+| `.env` | `CADDY_LOCAL_CERTS` | vacía | `local_certs` para la prueba de 6.7 |
+| `.env` | `VITE_API_URL` | `https://api.localhost` | URL de la API que usa el frontend. **Se graba al compilar**: tras cambiarla, `docker compose up -d --build frontend` |
+| `.env` | `CORS_EXTRA_ORIGINS` | `https://localhost` | Origen del frontend que la API acepta. `URL_FRONTEND` sigue para los correos |
 | `.env` | `DOCS_ENABLED` | `false` | Swagger y ReDoc. Con `false`, `/docs`, `/redoc` y `/openapi.json` responden 401. Para usarlos en local: `true` y `docker compose up -d backend`. **En producción, `false`** |
-| `.env` (opcional) | `SITE_ADDRESS` / `API_ADDRESS` | `rehnimarket` / `api.rehnimarket` | Dominios de los dos sitios |
-| `.env` (opcional) | `CADDY_TLS` | `internal` | CA local; en producción, un correo para Let's Encrypt |
-| `.env` (opcional) | `FRONTEND_PORT` / `FRONTEND_HTTPS_PORT` | `8080` / `8443` | Puertos en el host |
+| `.env` | `POSTGRES_PORT` | `5433` | Puerto de Postgres en `127.0.0.1` |
 | `.env` (opcional) | `FORWARDED_ALLOW_IPS` | `172.16.0.0/12` | Redes de las que Uvicorn acepta `X-Forwarded-For` (las de Docker) |
 
 **¿Por qué `--proxy-headers`?** El `RateLimitMiddleware` usa `request.client.host`. Detrás de
@@ -284,7 +298,7 @@ no puede falsear su IP.
 
 | Cómo entra el cliente | URL de imagen que recibe |
 |---|---|
-| `https://api.rehnimarket:8443` (el frontend) | `https://api.rehnimarket:8443/media/proxy?path=…` |
+| `https://api.localhost` (el frontend) | `https://api.localhost/media/proxy?path=…` |
 | App móvil directo al `:8000` | `URL_BACKEND/media/proxy?path=…` (sin cambios) |
 
 ### 6.6 Levantar
@@ -292,11 +306,13 @@ no puede falsear su IP.
 ```bash
 docker compose up -d --build --wait
 docker compose ps        # los 5 servicios en "healthy"
+docker compose watch     # desarrollo: recarga al guardar (develop.watch)
 ```
 
-> El laboratorio de la semana 3 también usa el `8443`: **no levantes los dos a la vez**.
+> El laboratorio de la semana 3 publica puertos propios (`8081`, `8443`): **no levantes los dos a la vez**.
 
-Si solo editas `caddy/Caddyfile`, recárgalo sin reiniciar ni reconstruir:
+Si solo editas `caddy/Caddyfile`, recárgalo sin reiniciar ni reconstruir (con
+`docker compose watch` se reinicia solo):
 
 ```bash
 docker compose exec frontend caddy reload --config /etc/caddy/Caddyfile
@@ -306,106 +322,59 @@ Si la nueva configuración tiene un error, Caddy lo rechaza y sigue con la anter
 
 ### 6.7 Probar (evidencia del entregable)
 
-Ejecútalo con `bash` (en fish, la variable `R` no se separa en argumentos). Con `--resolve`
-funciona aunque todavía no hayas tocado `/etc/hosts`:
+La prueba con los nombres elegidos (`rehnimarket` / `api.rehnimarket`, CA local forzada con
+`CADDY_LOCAL_CERTS` y `curl --resolve`) y su salida están en la §4.5 del plan
+(`docs/plan de implantacion - Rehnimarket/4) Hosting y dominio — Semana 3 (CE-1).md`). La
+prueba de humo contra `https://localhost` está en la §5.2.
+
+### 6.7.1 Confiar en la CA local
+
+Caddy firma los certificados de `localhost` con su propia CA (volumen `caddy_data`). Para que
+el navegador y `curl` no avisen, confía en su raíz **una vez** (en tu terminal: `sudo` pide la
+contraseña). En CachyOS / Arch:
 
 ```bash
-bash -c '
-R="--resolve rehnimarket:8443:127.0.0.1 --resolve api.rehnimarket:8443:127.0.0.1 --resolve api.rehnimarket:8080:127.0.0.1"
-F=https://rehnimarket:8443; A=https://api.rehnimarket:8443
-c(){ printf "%-40s " "$1"; shift; curl -sk -o /dev/null -w "%{http_code}\n" $R "$@"; }
-c "Frontend /"                 $F/
-c "Frontend /admin/dashboard"  $F/admin/dashboard
-c "Frontend por HTTP"          http://127.0.0.1:8080/
-c "API /health/database"       $A/health/database
-c "API /docs (Swagger)"        $A/docs
-c "API /cart sin token"        $A/cart
-c "API HTTP → HTTPS"           http://api.rehnimarket:8080/
-curl -sk $R -o /dev/null -D - -X OPTIONS $A/auth/login-user \
-  -H "Origin: $F" -H "Access-Control-Request-Method: POST" | grep -i "^access-control-allow-origin"
-'
+docker compose cp frontend:/data/caddy/pki/authorities/local/root.crt /tmp/caddy-root.crt
+sudo trust anchor --store /tmp/caddy-root.crt
+trust list | grep -i caddy          # «Caddy Local Authority - 2026 ECC Root»
+curl -I https://localhost           # sin -k: responde sin error de certificado
 ```
 
-Resultado obtenido el 20/10/2026:
+En Arch, `p11-kit` hace que Firefox y Chromium lean el almacén del sistema: reinicia el
+navegador si estaba abierto. La raíz dura 10 años y vive en `caddy_data`: si borras el volumen,
+se genera otra y hay que repetirlo. Para quitarla: `sudo trust anchor --remove /tmp/caddy-root.crt`.
 
-| Prueba | Esperado | Obtenido |
-|---|---|---|
-| Frontend `/` (HTTPS y HTTP) | 200 | ✅ 200 |
-| `/admin/dashboard` (ruta de React, recarga de página) | 200, no 404 | ✅ 200 |
-| `/assets/no-existe.js` | 404 | ✅ 404 |
-| API `/health/database` | 200 JSON | ✅ 200 |
-| API `/docs`, `/redoc`, `/openapi.json` | 200 con `DOCS_ENABLED=true`; 401 con `false` | ✅ 200 (`true`) |
-| API `/cart` sin token | 401 | ✅ 401 |
-| HTTP → HTTPS en los dos dominios | 308 | ✅ 308 |
-| CORS desde `https://rehnimarket:8443` y `http://localhost:8080` | Permitido | ✅ |
-| CORS desde un origen cualquiera | Sin permiso | ✅ |
-| Imagen de MinIO por la API (`/public/catalogs` → `image_url`) | `https://api…:8443/media/proxy…`, 200 `image/webp` | ✅ |
-| App móvil (`:8000` directo) | URL de imagen con `URL_BACKEND` | ✅ |
-| Encabezados del frontend (`X-Frame-Options`, `Cache-Control`…) | Presentes; en la API no | ✅ |
-| IP vista por el backend | La del cliente, no la de Caddy | ✅ |
-| Tests del backend (`pytest`) | Todos pasan | ✅ 238 |
+Sin instalarla, `curl` acepta la raíz por variable: `CURL_CA_BUNDLE=/tmp/caddy-root.crt curl https://localhost`.
 
-Repetido el 21/10/2026 con `DOCS_ENABLED=false`: frontend 200 (HTTPS, ruta de React y HTTP),
-API `/health/database` 200, `/docs` **401** (esperado con `false`), `/cart` sin token 401,
-HTTP → HTTPS 308 y `access-control-allow-origin: https://rehnimarket:8443`.
+**Usar Swagger con endpoints protegidos** (requiere `DOCS_ENABLED=true` en `.env` y
+`docker compose up -d backend`): en `https://api.localhost/docs`, `POST /auth/login-user` →
+**Try it out** → **Execute**; copia el `access_token`, pulsa **Authorize** y pégalo.
 
-### 6.7.1 Acceder desde el navegador
-
-**1. Que los dos nombres apunten a tu equipo.** En tu terminal (no en Claude Code: `sudo` pide
-la contraseña). Si ya tenías la línea de `rehnimarket`, esto agrega solo la de la API:
-
-```bash
-grep -q "api.rehnimarket" /etc/hosts \
-  || echo "127.0.0.1 api.rehnimarket" | sudo tee -a /etc/hosts
-grep -q " rehnimarket" /etc/hosts \
-  || echo "127.0.0.1 rehnimarket" | sudo tee -a /etc/hosts
-
-getent hosts rehnimarket api.rehnimarket   # ambos → 127.0.0.1
-```
-
-> Si Firefox dice "Servidor no encontrado", usa DNS sobre HTTPS y no lee `/etc/hosts`: en
-> `about:config`, `network.dns.localDomains` = `rehnimarket,api.rehnimarket`.
-
-**2. Aceptar el certificado de los dos dominios** (CA interna de Caddy). Firefox lo pide **por
-dominio**, y el de la API no lo verás nunca si solo abres el frontend: las llamadas fallarían
-en silencio. En este orden:
-
-1. Abre `https://api.rehnimarket:8443/health/database` → **Avanzado → Aceptar el riesgo y continuar**.
-2. Abre `https://rehnimarket:8443/` → lo mismo.
-
-**3. Usar Swagger con endpoints protegidos** (requiere `DOCS_ENABLED=true` en `.env` y
-`docker compose up -d backend`): en `/docs`, `POST /auth/login-user` → **Try it out** →
-**Execute**; copia el `access_token`, pulsa **Authorize** y pégalo.
-
-**Quitar los nombres** cuando ya no los necesites:
-
-```bash
-sudo sed -i '/rehnimarket/d' /etc/hosts
-```
+Las líneas `rehnimarket` / `api.rehnimarket` de `/etc/hosts` ya no hacen falta (`curl --resolve`
+las sustituye en la prueba de 6.7). Para quitarlas: `sudo sed -i '/rehnimarket/d' /etc/hosts`.
 
 ### 6.8 Pendientes antes de producción
 
 1. **App móvil.** Sigue entrando directo al `:8000` con `URL_BACKEND`. En producción debería
    usar `https://api.<dominio>` (`EXPO_PUBLIC_API_URL` y `URL_BACKEND`).
-2. **Cerrar el `:8000`.** Cuando la app móvil use la API por Caddy, `BACKEND_BIND=127.0.0.1`.
-3. **`URL_FRONTEND`** (enlaces de los correos y CORS) con el dominio real: `https://<dominio>`.
-4. **Frontend por IP desde otro equipo:** carga, pero no puede llamar a la API, porque ese
-   equipo no resuelve `api.rehnimarket`. Con dominios públicos (DNS real) desaparece.
-5. **Documentación:** la ficha técnica
+2. **Cerrar el `:8000`.** En producción, `BACKEND_BIND=127.0.0.1` (ya en `deploy/env.prod.example`).
+3. **`URL_FRONTEND`** (enlaces de los correos) con el dominio real: `https://<dominio>`.
+4. **Documentación:** la ficha técnica
    (`docs/plan de implantacion - Rehnimarket/1) Ficha tecnica y requisitos minimos - Semana 1 (CE-1, CE2).md`,
    secciones 1.4 y 1.5) aún menciona Nginx.
 
 ### 6.9 Paso a producción (para la sección 4 del plan)
 
-Solo cambian variables y puertos; el `Caddyfile` es el mismo:
+Mismo `docker-compose.yml` y mismo `Caddyfile`; solo cambia el `.env` (plantilla completa en
+`deploy/env.prod.example`):
 
 ```bash
 # .env en el servidor
 SITE_ADDRESS=<dominio>
 API_ADDRESS=api.<dominio>
-CADDY_TLS=<correo-del-responsable>     # Let's Encrypt en lugar de la CA interna
-FRONTEND_PORT=80
-FRONTEND_HTTPS_PORT=443
+HTTP_PORT=80
+HTTPS_PORT=443
+CADDY_LOCAL_CERTS=
 VITE_API_URL=https://api.<dominio>
 CORS_EXTRA_ORIGINS=https://<dominio>
 DOCS_ENABLED=false
@@ -413,7 +382,8 @@ BACKEND_BIND=127.0.0.1
 ```
 
 Requisitos: los dos registros DNS ya deben apuntar al servidor y los puertos 80 y 443 deben
-estar abiertos en el firewall, para que Let's Encrypt verifique cada dominio.
+estar abiertos en el firewall, para que Let's Encrypt verifique cada dominio. No hace falta
+correo ACME: Let's Encrypt no lo exige.
 
 ### 6.10 Qué escribir en la sección 4 del plan
 
@@ -450,7 +420,7 @@ servidor o a un PaaS, solo cambiaría el registro de `api` (a otra `A` o a un `C
 
 ### 6.11 Checklist del entregable
 
-- [x] `caddy/Caddyfile` en el repo, probado en local con `tls internal` y `curl --resolve`
+- [x] `caddy/Caddyfile` en el repo, probado en local con la CA local (`CADDY_LOCAL_CERTS`) y `curl --resolve`
 - [x] Frontend y API en URL separadas, detrás de un solo punto de entrada (Caddy), con HTTPS
 - [x] Uvicorn con `--proxy-headers` (IP real para el rate limit)
 - [ ] Pendientes de 6.8 resueltos o documentados en el plan
@@ -475,14 +445,13 @@ backend ──► pgbouncer:6432 ──► postgres:5432        (red privada de 
 
 Por eso **no lleva registro DNS ni ruta en el `Caddyfile`**. Lo mismo aplica a MinIO: las
 imágenes las entrega el backend en `/media/proxy` (por Caddy,
-`https://api.rehnimarket:8443/media/proxy`), nunca el puerto 9000.
+`https://api.<dominio>/media/proxy`), nunca el puerto 9000.
 
 ### Estado actual en el compose
 
-- `postgres`, `pgbouncer` y `minio` **no tienen `ports:`** en `docker-compose.yml`. ✅
-- `docker-compose.override.yml` publica Postgres en `127.0.0.1:5433` para DbSchema. Es solo
-  local, y está bien en tu equipo. **En el servidor no copies el override**, o déjalo igual de
-  limitado a `127.0.0.1`.
+- `pgbouncer` y `minio` **no tienen `ports:`** en `docker-compose.yml`. ✅
+- `postgres` se publica en `127.0.0.1:${POSTGRES_PORT:-5433}` para DbSchema, **también en el
+  servidor**: solo en el loopback, nunca `0.0.0.0`. Desde fuera solo se llega por túnel SSH. ✅
 - Los datos viven en el volumen `postgres_data` y las imágenes en `minio_data`.
   `docker compose down -v` **los borra**: nunca lo ejecutes en el servidor.
 - Las credenciales están en `RehniMarket-backend/.env`, ignorado por Git. ✅
@@ -500,7 +469,7 @@ permitidas. No lo agregas a tu DNS.
 
 ### Administrarla en el servidor sin abrir el puerto
 
-Con el override limitado a `127.0.0.1:5433`, usa un **túnel SSH**:
+Postgres está publicado solo en `127.0.0.1:5433` del servidor; usa un **túnel SSH**:
 
 ```bash
 ssh -L 5433:127.0.0.1:5433 usuario@servidor    # tu equipo:5433 → servidor:5433

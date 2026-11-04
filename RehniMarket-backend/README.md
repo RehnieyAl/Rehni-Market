@@ -84,20 +84,21 @@ El stack completo se orquesta desde el **`docker-compose.yml` de la raíz del
 repositorio** (servicios `minio`, `postgres`, `backend`, `frontend`). No se
 ejecuta este backend de forma aislada.
 
-> **Configuración por defecto (`../docker-compose.yml`):** endurecida — `uvicorn`
-> sin `--reload`, frontend compilado servido por Caddy (`RehniMarket-frontend/Dockerfile`, `../caddy/Caddyfile`),
-> `postgres`/`minio` sin puertos publicados, backend solo en `127.0.0.1`,
-> `RATE_LIMIT_ENABLED=true`, MinIO fijado por digest. Caddy es el reverse proxy
-> con TLS (`api.<dominio>` → backend, `<dominio>` → frontend; `tls internal` en
-> local, Let's Encrypt con dominio real).
+> **Compose único (`../docker-compose.yml`)** para desarrollo, pruebas y producción:
+> `uvicorn` sin `--reload`, frontend compilado servido por Caddy
+> (`RehniMarket-frontend/Dockerfile`, `../caddy/Caddyfile`), `minio` sin puertos
+> publicados, `postgres` solo en `127.0.0.1:5433`, backend en `${BACKEND_BIND}:8000`,
+> MinIO fijado por digest. Caddy es el reverse proxy con HTTPS automático
+> (`api.<dominio>` → backend, `<dominio>` → frontend; CA local con `localhost`,
+> Let's Encrypt con dominio real). Entre entornos solo cambia el `.env` de la raíz
+> (`../.env.example` / `../deploy/env.prod.example`).
 > **El proyecto NO se ha desplegado en producción** (falta servidor y
 > dominio público).
 >
-> **Modo desarrollo (`../docker-compose.dev.yml`):** `uvicorn --reload`, dev-server
-> de Vite (`RehniMarket-frontend/Dockerfile.dev`), *bind mounts*, puertos de
-> `postgres`/`minio` publicados. (Anteriormente la configuración por defecto era
-> `docker-compose.prod.yml` y la de desarrollo era `docker-compose.yml`; se
-> normalizaron los nombres.)
+> **Desarrollo:** `docker compose watch` copia `app/` y `alembic/` al contenedor y lo
+> reinicia al guardar (sin `--reload`: no se combina con `--workers`). Para recarga
+> inmediata, `uv run uvicorn app.main:app --reload` fuera de Docker (README raíz,
+> «Desarrollo local»).
 
 ### 1. Clonar
 
@@ -140,7 +141,7 @@ En `RehniMarket-backend/.env`, como mínimo:
 ```bash
 docker compose build
 docker compose up -d
-docker compose ps            # los 4 contenedores deben quedar "Up"
+docker compose ps            # los 5 contenedores deben quedar "healthy"
 ```
 
 Las migraciones se aplican solas en el arranque del backend. Comando del servicio
@@ -150,18 +151,19 @@ Las migraciones se aplican solas en el arranque del backend. Comando del servici
 sh -c "uv run alembic upgrade head && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
 ```
 
-Con `docker-compose.dev.yml` el comando añade `--reload` y el backend se publica
-en `localhost:8001` en lugar de `127.0.0.1:8000`.
+El backend se publica en `${BACKEND_BIND:-127.0.0.1}:${BACKEND_PORT:-8000}` y, a
+través de Caddy, en `https://api.localhost`.
 
 ### 4. Verificar
 
 ```bash
-# Configuración por defecto (docker-compose.yml): backend en 127.0.0.1:8000
+# API directa (sin Caddy)
 curl http://127.0.0.1:8000/health/database        # {"Base de datos":"OK"}
 curl http://127.0.0.1:8000/health/internet
-xdg-open http://127.0.0.1:8000/docs               # Swagger UI
+xdg-open http://127.0.0.1:8000/docs               # Swagger UI (DOCS_ENABLED=true)
 
-# Con docker-compose.dev.yml sería http://localhost:8001/...
+# A través de Caddy (HTTPS con la CA local; ver ../caddy/readme.md)
+curl https://api.localhost/health/database
 ```
 
 ### 5. Datos iniciales (seed) — opcional
