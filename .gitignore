@@ -12,3 +12,4 @@ CLAUDE.md
 !.env*.example
 *.csv
 .csv
+.ruff_cache/
