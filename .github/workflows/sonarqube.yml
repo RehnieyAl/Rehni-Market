@@ -1,10 +1,10 @@
 name: SonarCloud
 
-# push a main: actualiza el análisis de la rama principal (base del "New Code").
+# push a main/develop: actualiza el análisis de las ramas de larga duración (base del "New Code").
 # pull_request: analiza el PR y decora el PR con el resultado del Quality Gate.
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
     types: [opened, synchronize, reopened]
 
