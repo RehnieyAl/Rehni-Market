@@ -1,132 +1,22 @@
-name: SonarCloud
+name: SonarCloud Analysis
 
-# push a main/develop: actualiza el análisis de las ramas de larga duración (base del "New Code").
-# pull_request: analiza el PR y decora el PR con el resultado del Quality Gate.
 on:
   push:
     branches: [main, develop]
   pull_request:
     types: [opened, synchronize, reopened]
-
-# Un push nuevo al mismo PR cancela el análisis anterior, que ya no sirve.
-concurrency:
-  group: sonarcloud-${{ github.ref }}
-  cancel-in-progress: true
-
-permissions:
-  contents: read
+  workflow_dispatch: # Permite ejecutarlo a mano desde la pestaña Actions
 
 jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
-    timeout-minutes: 25
-
-    # Mismo Postgres que ci.yml: los tests del backend necesitan una BD real
-    # (los modelos usan tipos propios de Postgres). conftest.py crea y recrea
-    # la BD de TEST_DATABASE_URL con create_all; MinIO y SMTP se sustituyen
-    # en conftest.py, así que no hacen falta como servicios.
-    services:
-      postgres:
-        image: postgres:17-alpine
-        env:
-          POSTGRES_USER: rehni_test
-          POSTGRES_PASSWORD: rehni_test
-          POSTGRES_DB: rehnimarket_migrations
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U rehni_test -d rehnimarket_migrations"
-          --health-interval 2s
-          --health-timeout 3s
-          --health-retries 15
-
     steps:
-      # fetch-depth: 0 = historial completo. Sonar usa git blame para saber
-      # qué líneas son "New Code" y a quién asignar cada issue; con el clon
-      # superficial por defecto (1 commit) todo parecería código nuevo.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Historial completo: Sonar lo necesita para detectar el código nuevo
 
-      # ---------------------------------------------------------------------
-      # Backend: pytest + coverage.xml
-      # ---------------------------------------------------------------------
-      - uses: astral-sh/setup-uv@v10.3.3
-        with:
-          python-version: "3.13"
-          enable-cache: true
-          cache-dependency-glob: RehniMarket-backend/uv.lock
-
-      - name: Backend - instalar dependencias
-        working-directory: RehniMarket-backend
-        run: uv sync --group dev --frozen
-
-      # Valores exclusivos de CI (los mismos de ci.yml); app/Config.py los lee
-      # al importarse. No son secretos.
-      - name: Backend - pruebas con cobertura (coverage.xml)
-        working-directory: RehniMarket-backend
-        env:
-          URL_DATABASE: postgresql://rehni_test:rehni_test@localhost:5432/rehnimarket_migrations
-          TEST_DATABASE_URL: postgresql://rehni_test:rehni_test@localhost:5432/rehnimarket_test
-          SECRET_KEY: ci-only-not-a-secret
-          ALGORITHM: HS256
-          ACCESS_TOKEN_EXPIRE_MINUTES: "15"
-          REFRESH_TOKEN_DAYS: "7"
-          URL_FRONTEND: http://localhost:5173
-          URL_BACKEND: http://localhost:8001
-          MINIO_URL: 127.0.0.1:1
-          MINIO_ROOT_USER: ci
-          MINIO_ROOT_PASSWORD: ci-password
-          RUN_SEED: "false"
-          RATE_LIMIT_ENABLED: "false"
-        # --cov sin argumento usa [tool.coverage.run] source = ["app"] de
-        # pyproject.toml: una sola fuente de verdad para local, CI y Sonar.
-        run: uv run --no-sync pytest --cov --cov-report=xml
-
-      # ---------------------------------------------------------------------
-      # Frontend: vitest + lcov
-      # !cancelled(): si fallan los tests del backend se sigue igual, para que
-      # Sonar analice el código. El job queda en rojo de todos modos.
-      # ---------------------------------------------------------------------
-      - uses: pnpm/action-setup@v6
-        if: ${{ !cancelled() }}
-        with:
-          version: 11.15.0
-
-      - uses: actions/setup-node@v7
-        if: ${{ !cancelled() }}
-        with:
-          node-version: 22
-          cache: pnpm
-          cache-dependency-path: RehniMarket-frontend/pnpm-lock.yaml
-
-      - name: Frontend - instalar dependencias
-        if: ${{ !cancelled() }}
-        working-directory: RehniMarket-frontend
-        run: pnpm install --frozen-lockfile
-
-      - name: Frontend - pruebas con cobertura (lcov)
-        if: ${{ !cancelled() }}
-        working-directory: RehniMarket-frontend
-        run: pnpm test:coverage
-
-      # Vitest escribe en lcov rutas relativas a RehniMarket-frontend/
-      # (SF:src/App.tsx), pero Sonar las resuelve desde la raíz del repo
-      # (RehniMarket-frontend/src/App.tsx). Se antepone el prefijo del paquete.
-      # Paso aparte: si un umbral de vitest falla, el lcov existe igual.
-      - name: Frontend - rutas del lcov relativas a la raíz
-        if: ${{ !cancelled() && hashFiles('RehniMarket-frontend/coverage/lcov.info') != '' }}
-        working-directory: RehniMarket-frontend
-        run: sed -i 's|^SF:|SF:RehniMarket-frontend/|' coverage/lcov.info
-
-      # ---------------------------------------------------------------------
-      # Análisis. La configuración vive en sonar-project.properties.
-      # Solo necesita SONAR_TOKEN: la action ya no requiere GITHUB_TOKEN
-      # (la decoración del PR la hace la app de SonarCloud en GitHub).
-      # ---------------------------------------------------------------------
       - name: SonarCloud Scan
-        if: ${{ !cancelled() }}
         uses: SonarSource/sonarqube-scan-action@v8.4.1
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
