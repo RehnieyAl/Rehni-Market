@@ -153,3 +153,5 @@ Condiciones de las rúbricas:
 | Medición con el SO de producción | Se midió en CachyOS con swap en `zram` | Repetir la §1.4 en el servidor: `docker stats` durante `k6 run -e BASE_URL=http://localhost:8000 -e VUS=<concurrencia acordada> scripts/load_test.k6.js` |
 | Migración en producción | El ensayo fue sobre una copia en el equipo de desarrollo | Ejecutar `migrar.sh` en la ventana (orden 1 → 2 → 3 → 4 → 5 → 7) y comparar el tiempo con los 12,2 s del ensayo |
 | Despliegue en la nube | No hay cuentas en esta sesión | Ver §5.3 |
+
+scripts/datos-base.sh: probar en la VM antes de usar en producción (commiteado sin ejecutar)
