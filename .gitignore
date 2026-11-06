@@ -17,3 +17,7 @@ CLAUDE.md
 docs/Manuales/*.pdf
 docs/Manuales/scripts/.venv/
 docs/Manuales/scripts/__pycache__/
+docs/Manuales/**/.~lock.*
+docs/Manuales/.~lock.*
+docs/Manuales/_generados-descartados/
+docs/Manuales/_piloto/
