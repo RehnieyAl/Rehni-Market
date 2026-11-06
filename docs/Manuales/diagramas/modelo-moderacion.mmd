@@ -1,0 +1,47 @@
+erDiagram
+  direction TB
+  reports {
+    uuid id PK
+    uuid reporter_id FK
+    report_target_type target_type
+    uuid product_id FK
+    uuid company_id FK
+    varchar_150 reason
+    text description
+    report_status status
+    text admin_response
+    uuid resolved_by FK
+    timestamptz created_at
+    timestamptz updated_at
+    timestamptz resolved_at
+  }
+  report_evidences {
+    uuid id PK
+    uuid report_id FK
+    varchar_255 url
+    timestamptz created_at
+  }
+  advertisements {
+    uuid id PK
+    varchar_255 image_url
+    varchar_255 mobile_image_url
+    varchar_255 button_link
+    boolean is_active
+    integer order
+    timestamp created_at
+    advertisementtargettype target_type
+    uuid target_product_id FK
+    uuid target_catalog_id FK
+    uuid target_company_id FK
+    integer minimum_discount
+    integer maximum_stock
+    integer max_age_days
+  }
+  catalog |o--o{ advertisements : "target_catalog_id"
+  company |o--o{ advertisements : "target_company_id"
+  company |o--o{ reports : "company_id"
+  products |o--o{ advertisements : "target_product_id"
+  products |o--o{ reports : "product_id"
+  reports ||--o{ report_evidences : "report_id"
+  users ||--o{ reports : "reporter_id"
+  users |o--o{ reports : "resolved_by"

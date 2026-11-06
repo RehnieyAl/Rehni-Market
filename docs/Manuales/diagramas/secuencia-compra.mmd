@@ -1,7 +1,7 @@
 sequenceDiagram
   autonumber
   actor C as Comprador
-  participant F as Frontend (web o móvil)
+  participant F as Frontend web
   participant A as API FastAPI
   participant P as PostgreSQL
   participant M as MinIO
@@ -23,7 +23,7 @@ sequenceDiagram
   F->>A: POST /checkout
   A->>P: Valida dirección, stock y saldo RehniCoin
   alt Saldo, stock o dirección no válidos
-    A-->>F: Error 400, 402 o 409 con code y message
+    A-->>F: Error 400, 402, 404 o 409 con code y message
     F-->>C: Muestra el mensaje de error
   else Validación correcta
     A->>P: Crea pedidos por empresa, descuenta stock y saldo, vacía el carrito
