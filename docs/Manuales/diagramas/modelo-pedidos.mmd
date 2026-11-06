@@ -1,0 +1,68 @@
+erDiagram
+  direction LR
+  carts {
+    uuid id PK
+    uuid user_id FK,UK
+    timestamptz created_at
+  }
+  cart_items {
+    uuid id PK
+    uuid cart_id FK
+    uuid product_id FK
+    uuid variant_id FK
+    integer quantity
+    timestamptz created_at
+  }
+  orders {
+    uuid id PK
+    integer order_number UK
+    uuid user_id FK
+    uuid company_id FK
+    uuid address_id FK
+    varchar_60 delivery_label
+    varchar_150 delivery_full_name
+    varchar_20 delivery_phone
+    varchar_150 delivery_address
+    varchar_60 delivery_city
+    varchar_60 delivery_department
+    orderstatusenum status
+    numeric_12_2 subtotal
+    numeric_12_2 tax
+    numeric_12_2 total
+    timestamptz created_at
+    timestamptz updated_at
+    uuid shipping_carrier_id FK
+    varchar_80 tracking_number
+  }
+  order_items {
+    uuid id PK
+    uuid order_id FK
+    uuid product_id FK
+    uuid variant_id FK
+    varchar_150 product_name
+    varchar_150 variant_name
+    numeric_10_2 unit_price
+    numeric_10_2 original_unit_price
+    integer quantity
+    numeric_12_2 subtotal
+    jsonb attributes_snapshot
+  }
+  shipping_carriers {
+    uuid id PK
+    varchar_80 name UK
+    varchar_255 tracking_url
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  addresses |o--o{ orders : "address_id"
+  carts ||--o{ cart_items : "cart_id"
+  company ||--o{ orders : "company_id"
+  orders ||--o{ order_items : "order_id"
+  product_variants |o--o{ cart_items : "variant_id"
+  product_variants |o--o{ order_items : "variant_id"
+  products ||--o{ cart_items : "product_id"
+  products ||--o{ order_items : "product_id"
+  shipping_carriers |o--o{ orders : "shipping_carrier_id"
+  users ||--o| carts : "user_id"
+  users ||--o{ orders : "user_id"

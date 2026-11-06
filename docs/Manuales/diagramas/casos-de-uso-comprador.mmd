@@ -1,7 +1,7 @@
 flowchart LR
   V(["Visitante"]):::actor
   C(["Comprador"]):::actor
-  subgraph S["Sistema RehniMarket: tienda (web y móvil)"]
+  subgraph S["Sistema RehniMarket: tienda web"]
     direction TB
     U1(["Consultar inicio, categorías, ofertas y novedades"])
     U2(["Buscar y filtrar productos"])
@@ -12,11 +12,11 @@ flowchart LR
     U7(["Gestionar el carrito"])
     U8(["Confirmar la compra con RehniCoin"])
     U9(["Consultar, seguir y cancelar pedidos"])
-    U10(["Solicitar devolución (solo web)"])
+    U10(["Solicitar devolución"])
     U11(["Gestionar direcciones y favoritos"])
     U12(["Consultar billetera y solicitar recarga por WhatsApp"])
-    U13(["Reseñar productos entregados (solo web)"])
-    U14(["Reportar producto o empresa (solo web)"])
+    U13(["Reseñar productos entregados"])
+    U14(["Reportar producto o empresa"])
     U15(["Configurar la cuenta"])
   end
   V --> U1 & U2 & U3 & U4 & U5 & U7

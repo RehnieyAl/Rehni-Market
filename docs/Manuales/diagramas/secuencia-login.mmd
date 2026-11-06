@@ -1,7 +1,7 @@
 sequenceDiagram
   autonumber
   actor U as Usuario
-  participant F as Frontend (web o móvil)
+  participant F as Frontend web
   participant A as API FastAPI
   participant P as PostgreSQL
   participant S as Correo SMTP
@@ -23,6 +23,6 @@ sequenceDiagram
     A-->>F: Access token y refresh token
     F->>A: GET /auth/me
     A-->>F: Perfil y rol
-    F-->>U: Inicio de la tienda según el rol
+    F-->>U: Inicio de la tienda (/)
   end
   Note over F,A: Si el access token expira, el cliente usa POST /auth/refresh
