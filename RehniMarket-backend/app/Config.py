@@ -91,4 +91,21 @@ class config():
     EMAIL_MAX_WORKERS = _int_env("EMAIL_MAX_WORKERS", 4, 1, 32)
     SMTP_TIMEOUT = _int_env("SMTP_TIMEOUT", 10, 1, 120)
 
+    # Servidor SMTP. Sin definir nada = Gmail por 587 con STARTTLS (comportamiento
+    # anterior). Se puede cambiar de proveedor o de puerto cuando la red bloquea
+    # alguno (Oracle Cloud bloquea el 25 de salida; algunas redes, el 587):
+    #   587 + starttls · 465 + ssl · 2525 + starttls (Brevo, SendGrid, Mailgun…)
+    SMTP_HOST = os.getenv("SMTP_HOST") or "smtp.gmail.com"
+    SMTP_PORT = _int_env("SMTP_PORT", 587, 1, 65535)
+    # "starttls" (conexión en claro que se cifra) o "ssl" (TLS desde el inicio, el 465).
+    SMTP_SECURITY = (os.getenv("SMTP_SECURITY") or ("ssl" if SMTP_PORT == 465 else "starttls")).lower()
+    if SMTP_SECURITY not in ("starttls", "ssl"):
+        raise RuntimeError(f"SMTP_SECURITY debe ser 'starttls' o 'ssl' (recibido: {SMTP_SECURITY!r})")
+    # Credenciales SMTP; si no se definen, las de Gmail de siempre.
+    SMTP_USERNAME = os.getenv("SMTP_USERNAME") or GMAIL_USERNAME
+    SMTP_PASSWORD = os.getenv("SMTP_PASSWORD") or GMAIL_APP_PASSWORD
+    # Remitente visible. Hace falta cuando el usuario SMTP no es una dirección de
+    # correo (Brevo, SendGrid, OCI Email Delivery); por defecto, SMTP_USERNAME.
+    EMAIL_FROM = os.getenv("EMAIL_FROM") or SMTP_USERNAME
+
 config = config()
