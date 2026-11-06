@@ -1,0 +1,28 @@
+sequenceDiagram
+  autonumber
+  actor U as Usuario
+  participant F as Frontend (web o móvil)
+  participant A as API FastAPI
+  participant P as PostgreSQL
+  participant S as Correo SMTP
+  U->>F: Digita correo y contraseña e inicia sesión
+  F->>A: POST /auth/login-user
+  A->>P: Busca el usuario con su rol y empresa
+  P-->>A: Usuario
+  alt Credenciales incorrectas
+    A-->>F: 400 INVALID_CREDENTIALS
+  else Cuenta bloqueada
+    A-->>F: 403 USER_BLOCKED
+  else Correo sin verificar
+    A->>S: Envía código de verificación
+    A-->>F: 400 EMAIL_NOT_VERIFIED
+  else Empresa sin aprobar o suspendida
+    A-->>F: 403 COMPANY_PENDING, COMPANY_REJECTED, COMPANY_CERTIFICATE_INVALID o COMPANY_SUSPENDED
+  else Datos válidos
+    A->>P: Guarda el refresh token
+    A-->>F: Access token y refresh token
+    F->>A: GET /auth/me
+    A-->>F: Perfil y rol
+    F-->>U: Inicio de la tienda según el rol
+  end
+  Note over F,A: Si el access token expira, el cliente usa POST /auth/refresh

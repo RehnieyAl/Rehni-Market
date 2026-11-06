@@ -1,0 +1,434 @@
+classDiagram
+  direction LR
+  class Address {
+    +uuid id
+    +uuid user_id
+    +varchar label
+    +varchar full_name
+    +varchar country
+    +varchar department
+    +varchar city
+    +varchar address
+    +varchar postal_code
+    +varchar phone
+    +varchar additional_instructions
+    +boolean is_default
+    +timestamptz created_at
+  }
+  class AdminActivity {
+    +uuid id
+    +uuid admin_id
+    +admin_activity_action action
+    +uuid target_user_id
+    +uuid target_company_id
+    +text reason
+    +timestamptz created_at
+  }
+  class Advertisement {
+    +uuid id
+    +varchar image_url
+    +varchar mobile_image_url
+    +varchar button_link
+    +boolean is_active
+    +integer order
+    +timestamp created_at
+    +advertisementtargettype target_type
+    +uuid target_product_id
+    +uuid target_catalog_id
+    +uuid target_company_id
+    +integer minimum_discount
+    +integer maximum_stock
+    +integer max_age_days
+  }
+  class CartItem {
+    +uuid id
+    +uuid cart_id
+    +uuid product_id
+    +uuid variant_id
+    +integer quantity
+    +timestamptz created_at
+  }
+  class Cart {
+    +uuid id
+    +uuid user_id
+    +timestamptz created_at
+  }
+  class Catalog {
+    +uuid id
+    +varchar name
+    +varchar description
+    +varchar image_url
+    +integer display_order
+    +boolean is_active
+  }
+  class CatalogAttributeOption {
+    +uuid id
+    +uuid attribute_id
+    +varchar value
+    +varchar hex_color
+    +integer position
+  }
+  class CatalogAttribute {
+    +uuid id
+    +uuid catalog_id
+    +varchar name
+    +varchar role
+    +varchar input_type
+    +varchar unit
+    +boolean is_active
+    +integer position
+    +timestamp created_at
+  }
+  class ColorVariant {
+    +uuid id
+    +varchar name
+    +varchar hex_color
+  }
+  class Company {
+    +uuid id
+    +varchar nameCompany
+    +varchar addressCompany
+    +text description
+    +varchar CompanyNIT
+    +varchar CompanyNITDV
+    +varchar CompanyLogo
+    +varchar CompanyBanner
+    +varchar CompanyCertificate
+    +companycertificateenum CompanyCertificateStatus
+    +boolean CompanyStatus
+    +text suspension_reason
+    +timestamptz created_at
+    +uuid user_id
+    +text rejection_reason
+  }
+  class CompanyBankAccount {
+    +uuid id
+    +uuid company_id
+    +varchar account_holder
+    +varchar document_number
+    +varchar bank_name
+    +bankaccounttypeenum account_type
+    +varchar account_number
+    +boolean is_default
+    +timestamptz created_at
+    +timestamptz updated_at
+  }
+  class CompanyPayout {
+    +uuid id
+    +uuid company_id
+    +date period_start
+    +date period_end
+    +numeric gross_sales
+    +numeric commission_percentage
+    +numeric commission_amount
+    +numeric net_amount
+    +payoutstatusenum payout_status
+    +uuid bank_account_id
+    +timestamptz paid_at
+    +timestamptz created_at
+  }
+  class Codes {
+    +uuid id
+    +varchar code
+    +type_code_enum type
+    +timestamp created_at
+    +timestamp expires_at
+    +uuid user_id
+  }
+  class Favorite {
+    +uuid id
+    +uuid user_id
+    +uuid product_id
+    +timestamptz created_at
+  }
+  class OrderItem {
+    +uuid id
+    +uuid order_id
+    +uuid product_id
+    +uuid variant_id
+    +varchar product_name
+    +varchar variant_name
+    +numeric unit_price
+    +numeric original_unit_price
+    +integer quantity
+    +numeric subtotal
+    +jsonb attributes_snapshot
+  }
+  class Order {
+    +uuid id
+    +integer order_number
+    +uuid user_id
+    +uuid company_id
+    +uuid address_id
+    +varchar delivery_label
+    +varchar delivery_full_name
+    +varchar delivery_phone
+    +varchar delivery_address
+    +varchar delivery_city
+    +varchar delivery_department
+    +orderstatusenum status
+    +numeric subtotal
+    +numeric tax
+    +numeric total
+    +timestamptz created_at
+    +timestamptz updated_at
+    +uuid shipping_carrier_id
+    +varchar tracking_number
+  }
+  class ProductAttributeValue {
+    +uuid id
+    +uuid product_id
+    +uuid attribute_id
+    +text value
+  }
+  class ProductImage {
+    +uuid id
+    +varchar url
+    +boolean is_main
+    +uuid product_id
+  }
+  class ProductSpecification {
+    +uuid id
+    +text value
+    +uuid product_id
+    +uuid specification_template_id
+  }
+  class ProductVariantImage {
+    +uuid id
+    +varchar url
+    +boolean is_main
+    +uuid variant_id
+  }
+  class ProductVariant {
+    +uuid id
+    +varchar name
+    +numeric price
+    +integer stock
+    +boolean discount_enable
+    +numeric discount_value
+    +uuid product_id
+    +uuid color_id
+    +varchar discount_type
+    +timestamp discount_starts_at
+    +timestamp discount_ends_at
+    +varchar sku
+    +varchar combo_key
+    +timestamp deleted_at
+  }
+  class Product {
+    +uuid id
+    +varchar name
+    +numeric price
+    +boolean discount_enable
+    +numeric discount_value
+    +integer stock
+    +boolean has_variants
+    +text descripcion
+    +boolean is_active
+    +timestamp created_at
+    +timestamp deleted_at
+    +uuid company_id
+    +uuid catalog_id
+    +uuid main_color_id
+    +varchar discount_type
+    +timestamp discount_starts_at
+    +timestamp discount_ends_at
+    +boolean applies_tax
+  }
+  class RefreshToken {
+    +uuid id
+    +varchar token
+    +boolean revoked
+    +timestamp created_at
+    +timestamp expires_at
+    +uuid user_id
+  }
+  class RehniCoinMovement {
+    +uuid id
+    +uuid company_id
+    +uuid payout_id
+    +numeric amount_cop
+    +numeric rehni_coins
+    +numeric conversion_rate
+    +timestamptz created_at
+  }
+  class ReportEvidence {
+    +uuid id
+    +uuid report_id
+    +varchar url
+    +timestamptz created_at
+  }
+  class Report {
+    +uuid id
+    +uuid reporter_id
+    +report_target_type target_type
+    +uuid product_id
+    +uuid company_id
+    +varchar reason
+    +text description
+    +report_status status
+    +text admin_response
+    +uuid resolved_by
+    +timestamptz created_at
+    +timestamptz updated_at
+    +timestamptz resolved_at
+  }
+  class ReturnRequest {
+    +uuid id
+    +uuid order_id
+    +uuid order_item_id
+    +uuid user_id
+    +uuid company_id
+    +text reason
+    +return_status status
+    +text company_response
+    +uuid reviewed_by
+    +numeric refund_amount
+    +timestamptz created_at
+    +timestamptz updated_at
+    +timestamptz resolved_at
+  }
+  class Review {
+    +uuid id
+    +uuid user_id
+    +uuid product_id
+    +integer rating
+    +text comment
+    +boolean is_active
+    +timestamptz created_at
+    +timestamptz updated_at
+  }
+  class Role {
+    +uuid id
+    +varchar name
+  }
+  class ShippingCarrier {
+    +uuid id
+    +varchar name
+    +varchar tracking_url
+    +boolean is_active
+    +timestamptz created_at
+    +timestamptz updated_at
+  }
+  class SpecificationTemplate {
+    +uuid id
+    +varchar name
+    +varchar type
+    +boolean required
+    +uuid catalog_id
+  }
+  class Users {
+    +uuid id
+    +varchar fullName
+    +varchar email
+    +varchar hashed_password
+    +varchar tell
+    +varchar profileImagen
+    +boolean verified
+    +boolean isActive
+    +timestamptz created_at
+    +uuid role_id
+  }
+  class VariantAttributeValue {
+    +uuid id
+    +uuid variant_id
+    +uuid attribute_id
+    +text value
+  }
+  class VariantOption {
+    +uuid id
+    +uuid variant_id
+    +uuid attribute_id
+    +uuid option_id
+  }
+  class VariantSpecification {
+    +uuid id
+    +text value
+    +uuid variant_id
+    +uuid specification_template_id
+  }
+  class WalletTransaction {
+    +uuid id
+    +uuid wallet_id
+    +wallettransactiontype type
+    +numeric amount
+    +varchar description
+    +uuid created_by
+    +uuid order_id
+    +timestamptz created_at
+    +uuid corrects_transaction_id
+  }
+  class Wallet {
+    +uuid id
+    +uuid user_id
+    +numeric balance
+    +timestamptz created_at
+    +timestamptz updated_at
+  }
+  Users "1" --> "0..*" RefreshToken : user_id
+  Users "1" --> "0..*" Address : user_id
+  Users "1" --> "0..*" AdminActivity : admin_id
+  Company "0..1" --> "0..*" AdminActivity : target_company_id
+  Users "0..1" --> "0..*" AdminActivity : target_user_id
+  Catalog "0..1" --> "0..*" Advertisement : target_catalog_id
+  Company "0..1" --> "0..*" Advertisement : target_company_id
+  Product "0..1" --> "0..*" Advertisement : target_product_id
+  Cart "1" --> "0..1" CartItem : cart_id
+  Product "1" --> "0..1" CartItem : product_id
+  ProductVariant "0..1" --> "0..1" CartItem : variant_id
+  Users "1" --> "0..1" Cart : user_id
+  CatalogAttribute "1" --> "0..1" CatalogAttributeOption : attribute_id
+  Catalog "1" --> "0..1" CatalogAttribute : catalog_id
+  Users "1" --> "0..1" Company : user_id
+  Company "1" --> "0..*" CompanyBankAccount : company_id
+  CompanyBankAccount "1" --> "0..*" CompanyPayout : bank_account_id
+  Company "1" --> "0..1" CompanyPayout : company_id
+  Users "1" --> "0..*" Codes : user_id
+  Product "1" --> "0..1" Favorite : product_id
+  Users "1" --> "0..1" Favorite : user_id
+  Order "1" --> "0..*" OrderItem : order_id
+  Product "1" --> "0..*" OrderItem : product_id
+  ProductVariant "0..1" --> "0..*" OrderItem : variant_id
+  Address "0..1" --> "0..*" Order : address_id
+  Company "1" --> "0..*" Order : company_id
+  ShippingCarrier "0..1" --> "0..*" Order : shipping_carrier_id
+  Users "1" --> "0..*" Order : user_id
+  CatalogAttribute "1" --> "0..1" ProductAttributeValue : attribute_id
+  Product "1" --> "0..1" ProductAttributeValue : product_id
+  Product "1" --> "0..*" ProductImage : product_id
+  Product "1" --> "0..*" ProductSpecification : product_id
+  SpecificationTemplate "1" --> "0..*" ProductSpecification : specification_template_id
+  ProductVariant "1" --> "0..*" ProductVariantImage : variant_id
+  ColorVariant "0..1" --> "0..*" ProductVariant : color_id
+  Product "1" --> "0..*" ProductVariant : product_id
+  Catalog "1" --> "0..*" Product : catalog_id
+  Company "1" --> "0..*" Product : company_id
+  ColorVariant "0..1" --> "0..*" Product : main_color_id
+  Company "1" --> "0..*" RehniCoinMovement : company_id
+  CompanyPayout "1" --> "0..1" RehniCoinMovement : payout_id
+  Report "1" --> "0..*" ReportEvidence : report_id
+  Company "0..1" --> "0..*" Report : company_id
+  Product "0..1" --> "0..*" Report : product_id
+  Users "1" --> "0..*" Report : reporter_id
+  Users "0..1" --> "0..*" Report : resolved_by
+  Company "1" --> "0..*" ReturnRequest : company_id
+  Order "1" --> "0..*" ReturnRequest : order_id
+  OrderItem "1" --> "0..*" ReturnRequest : order_item_id
+  Users "0..1" --> "0..*" ReturnRequest : reviewed_by
+  Users "1" --> "0..*" ReturnRequest : user_id
+  Product "1" --> "0..1" Review : product_id
+  Users "1" --> "0..1" Review : user_id
+  Catalog "1" --> "0..*" SpecificationTemplate : catalog_id
+  Role "1" --> "0..*" Users : role_id
+  CatalogAttribute "1" --> "0..1" VariantAttributeValue : attribute_id
+  ProductVariant "1" --> "0..1" VariantAttributeValue : variant_id
+  CatalogAttribute "1" --> "0..1" VariantOption : attribute_id
+  CatalogAttributeOption "1" --> "0..*" VariantOption : option_id
+  ProductVariant "1" --> "0..1" VariantOption : variant_id
+  SpecificationTemplate "1" --> "0..*" VariantSpecification : specification_template_id
+  ProductVariant "1" --> "0..*" VariantSpecification : variant_id
+  WalletTransaction "0..1" --> "0..*" WalletTransaction : corrects_transaction_id
+  Users "0..1" --> "0..*" WalletTransaction : created_by
+  Order "0..1" --> "0..*" WalletTransaction : order_id
+  Wallet "1" --> "0..*" WalletTransaction : wallet_id
+  Users "1" --> "0..1" Wallet : user_id

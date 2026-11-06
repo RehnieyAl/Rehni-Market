@@ -1,0 +1,24 @@
+flowchart LR
+  subgraph Clientes
+    W["Aplicación web<br/>React 19 + Vite"]
+    M["Aplicación móvil<br/>Expo 54 + React Native"]
+  end
+  subgraph Servidor["Servidor (Docker Compose, un solo docker-compose.yml)"]
+    C["Caddy 2.11 · rehni-frontend<br/>HTTPS automático, IP 172.30.0.10<br/>&lt;dominio&gt; → build de React<br/>api.&lt;dominio&gt; → reverse_proxy"]
+    B["API REST FastAPI · rehni-backend<br/>Uvicorn, 3 workers"]
+    G["PgBouncer · pgbouncer_pool<br/>modo transaction"]
+    P[("PostgreSQL 17 · rehni-postgres<br/>solo 127.0.0.1")]
+    O[("MinIO (Chainguard) · rehni-minio<br/>bucket uploads")]
+  end
+  LE["Let's Encrypt<br/>(producción)"]
+  Mail["Servidor SMTP configurable<br/>587 STARTTLS · 465 SSL · 2525"]
+  W -->|"HTTPS https://&lt;dominio&gt;"| C
+  W -->|"HTTPS https://api.&lt;dominio&gt;"| C
+  M -->|"HTTPS https://api.&lt;dominio&gt;<br/>(local: HTTP :8000)"| C
+  C -->|"backend:8000<br/>X-Forwarded-For/Host"| B
+  C -. "certificados" .- LE
+  B -->|"URL_DATABASE_POOLED"| G
+  G --> P
+  B -->|"Alembic: URL_DATABASE"| P
+  B -->|"archivos e imágenes<br/>/media/proxy"| O
+  B -->|"SMTP_HOST:SMTP_PORT"| Mail

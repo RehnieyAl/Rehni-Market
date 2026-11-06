@@ -1,0 +1,433 @@
+erDiagram
+  addresses {
+    uuid id PK
+    uuid user_id FK
+    varchar label
+    varchar full_name
+    varchar country
+    varchar department
+    varchar city
+    varchar address
+    varchar postal_code
+    varchar phone
+    varchar additional_instructions
+    boolean is_default
+    timestamptz created_at
+  }
+  admin_activities {
+    uuid id PK
+    uuid admin_id FK
+    admin_activity_action action
+    uuid target_user_id FK
+    uuid target_company_id FK
+    text reason
+    timestamptz created_at
+  }
+  advertisements {
+    uuid id PK
+    varchar image_url
+    varchar mobile_image_url
+    varchar button_link
+    boolean is_active
+    integer order
+    timestamp created_at
+    advertisementtargettype target_type
+    uuid target_product_id FK
+    uuid target_catalog_id FK
+    uuid target_company_id FK
+    integer minimum_discount
+    integer maximum_stock
+    integer max_age_days
+  }
+  cart_items {
+    uuid id PK
+    uuid cart_id FK,UK
+    uuid product_id FK,UK
+    uuid variant_id FK,UK
+    integer quantity
+    timestamptz created_at
+  }
+  carts {
+    uuid id PK
+    uuid user_id FK,UK
+    timestamptz created_at
+  }
+  catalog {
+    uuid id PK
+    varchar name UK
+    varchar description
+    varchar image_url
+    integer display_order
+    boolean is_active
+  }
+  catalog_attribute_options {
+    uuid id PK
+    uuid attribute_id FK,UK
+    varchar value UK
+    varchar hex_color
+    integer position
+  }
+  catalog_attributes {
+    uuid id PK
+    uuid catalog_id FK,UK
+    varchar name UK
+    varchar role
+    varchar input_type
+    varchar unit
+    boolean is_active
+    integer position
+    timestamp created_at
+  }
+  color_variants {
+    uuid id PK
+    varchar name UK
+    varchar hex_color
+  }
+  company {
+    uuid id PK
+    varchar nameCompany
+    varchar addressCompany
+    text description
+    varchar CompanyNIT
+    varchar CompanyNITDV
+    varchar CompanyLogo
+    varchar CompanyBanner
+    varchar CompanyCertificate
+    companycertificateenum CompanyCertificateStatus
+    boolean CompanyStatus
+    text suspension_reason
+    timestamptz created_at
+    uuid user_id FK,UK
+    text rejection_reason
+  }
+  company_bank_accounts {
+    uuid id PK
+    uuid company_id FK
+    varchar account_holder
+    varchar document_number
+    varchar bank_name
+    bankaccounttypeenum account_type
+    varchar account_number
+    boolean is_default
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  company_payouts {
+    uuid id PK
+    uuid company_id FK,UK
+    date period_start UK
+    date period_end UK
+    numeric gross_sales
+    numeric commission_percentage
+    numeric commission_amount
+    numeric net_amount
+    payoutstatusenum payout_status
+    uuid bank_account_id FK
+    timestamptz paid_at
+    timestamptz created_at
+  }
+  event_codes {
+    uuid id PK
+    varchar code
+    type_code_enum type
+    timestamp created_at
+    timestamp expires_at
+    uuid user_id FK
+  }
+  favorites {
+    uuid id PK
+    uuid user_id FK,UK
+    uuid product_id FK,UK
+    timestamptz created_at
+  }
+  order_items {
+    uuid id PK
+    uuid order_id FK
+    uuid product_id FK
+    uuid variant_id FK
+    varchar product_name
+    varchar variant_name
+    numeric unit_price
+    numeric original_unit_price
+    integer quantity
+    numeric subtotal
+    jsonb attributes_snapshot
+  }
+  orders {
+    uuid id PK
+    integer order_number UK
+    uuid user_id FK
+    uuid company_id FK
+    uuid address_id FK
+    varchar delivery_label
+    varchar delivery_full_name
+    varchar delivery_phone
+    varchar delivery_address
+    varchar delivery_city
+    varchar delivery_department
+    orderstatusenum status
+    numeric subtotal
+    numeric tax
+    numeric total
+    timestamptz created_at
+    timestamptz updated_at
+    uuid shipping_carrier_id FK
+    varchar tracking_number
+  }
+  product_attribute_values {
+    uuid id PK
+    uuid product_id FK,UK
+    uuid attribute_id FK,UK
+    text value
+  }
+  product_images {
+    uuid id PK
+    varchar url
+    boolean is_main
+    uuid product_id FK
+  }
+  product_specifications {
+    uuid id PK
+    text value
+    uuid product_id FK
+    uuid specification_template_id FK
+  }
+  product_variant_images {
+    uuid id PK
+    varchar url
+    boolean is_main
+    uuid variant_id FK
+  }
+  product_variants {
+    uuid id PK
+    varchar name
+    numeric price
+    integer stock
+    boolean discount_enable
+    numeric discount_value
+    uuid product_id FK
+    uuid color_id FK
+    varchar discount_type
+    timestamp discount_starts_at
+    timestamp discount_ends_at
+    varchar sku
+    varchar combo_key
+    timestamp deleted_at
+  }
+  products {
+    uuid id PK
+    varchar name
+    numeric price
+    boolean discount_enable
+    numeric discount_value
+    integer stock
+    boolean has_variants
+    text descripcion
+    boolean is_active
+    timestamp created_at
+    timestamp deleted_at
+    uuid company_id FK
+    uuid catalog_id FK
+    uuid main_color_id FK
+    varchar discount_type
+    timestamp discount_starts_at
+    timestamp discount_ends_at
+    boolean applies_tax
+  }
+  refreshToken {
+    uuid id PK
+    varchar token
+    boolean revoked
+    timestamp created_at
+    timestamp expires_at
+    uuid user_id FK
+  }
+  rehnicoin_movements {
+    uuid id PK
+    uuid company_id FK
+    uuid payout_id FK,UK
+    numeric amount_cop
+    numeric rehni_coins
+    numeric conversion_rate
+    timestamptz created_at
+  }
+  report_evidences {
+    uuid id PK
+    uuid report_id FK
+    varchar url
+    timestamptz created_at
+  }
+  reports {
+    uuid id PK
+    uuid reporter_id FK
+    report_target_type target_type
+    uuid product_id FK
+    uuid company_id FK
+    varchar reason
+    text description
+    report_status status
+    text admin_response
+    uuid resolved_by FK
+    timestamptz created_at
+    timestamptz updated_at
+    timestamptz resolved_at
+  }
+  return_requests {
+    uuid id PK
+    uuid order_id FK
+    uuid order_item_id FK
+    uuid user_id FK
+    uuid company_id FK
+    text reason
+    return_status status
+    text company_response
+    uuid reviewed_by FK
+    numeric refund_amount
+    timestamptz created_at
+    timestamptz updated_at
+    timestamptz resolved_at
+  }
+  reviews {
+    uuid id PK
+    uuid user_id FK,UK
+    uuid product_id FK,UK
+    integer rating
+    text comment
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  roles {
+    uuid id PK
+    varchar name UK
+  }
+  shipping_carriers {
+    uuid id PK
+    varchar name UK
+    varchar tracking_url
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  specification_templates {
+    uuid id PK
+    varchar name
+    varchar type
+    boolean required
+    uuid catalog_id FK
+  }
+  users {
+    uuid id PK
+    varchar fullName
+    varchar email UK
+    varchar hashed_password
+    varchar tell
+    varchar profileImagen
+    boolean verified
+    boolean isActive
+    timestamptz created_at
+    uuid role_id FK
+  }
+  variant_attribute_values {
+    uuid id PK
+    uuid variant_id FK,UK
+    uuid attribute_id FK,UK
+    text value
+  }
+  variant_options {
+    uuid id PK
+    uuid variant_id FK,UK
+    uuid attribute_id FK,UK
+    uuid option_id FK
+  }
+  variant_specifications {
+    uuid id PK
+    text value
+    uuid variant_id FK
+    uuid specification_template_id FK
+  }
+  wallet_transactions {
+    uuid id PK
+    uuid wallet_id FK
+    wallettransactiontype type
+    numeric amount
+    varchar description
+    uuid created_by FK
+    uuid order_id FK
+    timestamptz created_at
+    uuid corrects_transaction_id FK
+  }
+  wallets {
+    uuid id PK
+    uuid user_id FK,UK
+    numeric balance
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  users ||--o{ refreshToken : "user_id"
+  users ||--o{ addresses : "user_id"
+  users ||--o{ admin_activities : "admin_id"
+  company |o--o{ admin_activities : "target_company_id"
+  users |o--o{ admin_activities : "target_user_id"
+  catalog |o--o{ advertisements : "target_catalog_id"
+  company |o--o{ advertisements : "target_company_id"
+  products |o--o{ advertisements : "target_product_id"
+  carts ||--o| cart_items : "cart_id"
+  products ||--o| cart_items : "product_id"
+  product_variants |o--o| cart_items : "variant_id"
+  users ||--o| carts : "user_id"
+  catalog_attributes ||--o| catalog_attribute_options : "attribute_id"
+  catalog ||--o| catalog_attributes : "catalog_id"
+  users ||--o| company : "user_id"
+  company ||--o{ company_bank_accounts : "company_id"
+  company_bank_accounts ||--o{ company_payouts : "bank_account_id"
+  company ||--o| company_payouts : "company_id"
+  users ||--o{ event_codes : "user_id"
+  products ||--o| favorites : "product_id"
+  users ||--o| favorites : "user_id"
+  orders ||--o{ order_items : "order_id"
+  products ||--o{ order_items : "product_id"
+  product_variants |o--o{ order_items : "variant_id"
+  addresses |o--o{ orders : "address_id"
+  company ||--o{ orders : "company_id"
+  shipping_carriers |o--o{ orders : "shipping_carrier_id"
+  users ||--o{ orders : "user_id"
+  catalog_attributes ||--o| product_attribute_values : "attribute_id"
+  products ||--o| product_attribute_values : "product_id"
+  products ||--o{ product_images : "product_id"
+  products ||--o{ product_specifications : "product_id"
+  specification_templates ||--o{ product_specifications : "specification_template_id"
+  product_variants ||--o{ product_variant_images : "variant_id"
+  color_variants |o--o{ product_variants : "color_id"
+  products ||--o{ product_variants : "product_id"
+  catalog ||--o{ products : "catalog_id"
+  company ||--o{ products : "company_id"
+  color_variants |o--o{ products : "main_color_id"
+  company ||--o{ rehnicoin_movements : "company_id"
+  company_payouts ||--o| rehnicoin_movements : "payout_id"
+  reports ||--o{ report_evidences : "report_id"
+  company |o--o{ reports : "company_id"
+  products |o--o{ reports : "product_id"
+  users ||--o{ reports : "reporter_id"
+  users |o--o{ reports : "resolved_by"
+  company ||--o{ return_requests : "company_id"
+  orders ||--o{ return_requests : "order_id"
+  order_items ||--o{ return_requests : "order_item_id"
+  users |o--o{ return_requests : "reviewed_by"
+  users ||--o{ return_requests : "user_id"
+  products ||--o| reviews : "product_id"
+  users ||--o| reviews : "user_id"
+  catalog ||--o{ specification_templates : "catalog_id"
+  roles ||--o{ users : "role_id"
+  catalog_attributes ||--o| variant_attribute_values : "attribute_id"
+  product_variants ||--o| variant_attribute_values : "variant_id"
+  catalog_attributes ||--o| variant_options : "attribute_id"
+  catalog_attribute_options ||--o{ variant_options : "option_id"
+  product_variants ||--o| variant_options : "variant_id"
+  specification_templates ||--o{ variant_specifications : "specification_template_id"
+  product_variants ||--o{ variant_specifications : "variant_id"
+  wallet_transactions |o--o{ wallet_transactions : "corrects_transaction_id"
+  users |o--o{ wallet_transactions : "created_by"
+  orders |o--o{ wallet_transactions : "order_id"
+  wallets ||--o{ wallet_transactions : "wallet_id"
+  users ||--o| wallets : "user_id"
