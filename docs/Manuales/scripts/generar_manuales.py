@@ -92,10 +92,10 @@ def expandir(bloques: list) -> list:
     for b in bloques:
         if b[0] == "clases":
             for k, (titulo, _) in dm.MODULOS.items():
-                out.append(("img", f"diagramas/png/clases-{k}.png", f"Diagrama de clases: {titulo.lower()}", None))
+                out.append(("img", f"diagramas/png/clases-{k}.png", f"Diagrama de clases: {titulo[0].lower() + titulo[1:]}", None))
         elif b[0] == "modelos":
             for k, (titulo, _) in dm.MODULOS.items():
-                out.append(("img", f"diagramas/png/modelo-{k}.png", f"Modelo entidad-relación: {titulo.lower()}",
+                out.append(("img", f"diagramas/png/modelo-{k}.png", f"Modelo entidad-relación: {titulo[0].lower() + titulo[1:]}",
                             f"modelo-{k}"))
         else:
             out.append(b)
