@@ -101,7 +101,7 @@ Generado por `docs/Manuales/scripts/generar_manuales.py`: no editar a mano. Las 
 | 3.9 | Diagrama de clases: variantes de producto | diagrama | insertada | `docs/Manuales/diagramas/png/clases-variantes.png` |
 | 3.10 | Diagrama de clases: carrito y pedidos | diagrama | insertada | `docs/Manuales/diagramas/png/clases-pedidos.png` |
 | 3.11 | Diagrama de clases: devoluciones, favoritos y reseñas | diagrama | insertada | `docs/Manuales/diagramas/png/clases-posventa.png` |
-| 3.12 | Diagrama de clases: billetera rehnicoin | diagrama | insertada | `docs/Manuales/diagramas/png/clases-billetera.png` |
+| 3.12 | Diagrama de clases: billetera RehniCoin | diagrama | insertada | `docs/Manuales/diagramas/png/clases-billetera.png` |
 | 3.13 | Diagrama de clases: reportes y anuncios | diagrama | insertada | `docs/Manuales/diagramas/png/clases-moderacion.png` |
 | 3.14 | Secuencia del inicio de sesión | diagrama | insertada | `docs/Manuales/diagramas/png/secuencia-login.png` |
 | 3.15 | Secuencia del proceso de compra | diagrama | insertada | `docs/Manuales/diagramas/png/secuencia-compra.png` |
@@ -125,7 +125,7 @@ Generado por `docs/Manuales/scripts/generar_manuales.py`: no editar a mano. Las 
 | 2.7 | Modelo entidad-relación: variantes de producto | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-variantes.png` |
 | 2.8 | Modelo entidad-relación: carrito y pedidos | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-pedidos.png` |
 | 2.9 | Modelo entidad-relación: devoluciones, favoritos y reseñas | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-posventa.png` |
-| 2.10 | Modelo entidad-relación: billetera rehnicoin | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-billetera.png` |
+| 2.10 | Modelo entidad-relación: billetera RehniCoin | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-billetera.png` |
 | 2.11 | Modelo entidad-relación: reportes y anuncios | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-moderacion.png` |
 
 ## Datos por verificar
