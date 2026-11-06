@@ -13,11 +13,12 @@ def PASO(n, titulo, texto=""): return ("paso", n, titulo, texto)
 def UL(*items): return ("ul", list(items))
 def OL(*items): return ("ol", list(items))
 def CODE(t): return ("code", t)
-def NOTA(t): return ("nota", t)
 def TABLA(enc, filas, anchos=None): return ("tabla", enc, filas, anchos)
-def IMG(ruta, titulo): return ("img", ruta, titulo)
-def CAP(pantalla, estado, archivo, titulo): return ("captura", pantalla, estado, archivo, titulo)
-def REF(t): return ("ref", t)
+def IMG(ruta, titulo, clave=None): return ("img", ruta, titulo, clave)
+
+
+def CAP(titulo, ruta, estado, resaltar, perfil="Equipo local con la CA de Caddy instalada (sin iniciar sesión)", clave=None):
+    return ("captura", titulo, ruta, estado, resaltar, perfil, clave)
 
 
 INTRO = [
@@ -87,7 +88,7 @@ REQUISITOS = [
      "propietario gestiona cuentas owner (/admin/dashboard/user/...).", "Administrador"),
     ("RF-29", "Gestionar catálogo", "Administrar categorías, atributos, valores, colores y especificaciones "
      "(/admin/dashboard/catalogs, /catalog-attributes).", "Administrador"),
-    ("RF-30", "Gestionar anuncios", "Crear anuncios visuales con imagen web y móvil y tipo de destino "
+    ("RF-30", "Gestionar anuncios", "Crear anuncios visuales con imagen principal, imagen opcional para pantallas pequeñas y tipo de destino "
      "(/admin/dashboard/create-advertisement...).", "Administrador"),
     ("RF-31", "Gestionar transportadoras", "Crear, editar y activar transportadoras con URL de seguimiento "
      "(/admin/dashboard/shipping-carriers).", "Administrador"),
@@ -105,12 +106,12 @@ REQUISITOS = [
 
 SECCIONES_INICIO = [
     (1, "1", "Alcance", [
-        P("En este manual se describen los detalles técnicos de RehniMarket, que permiten al personal técnico "
+        P("Este manual describe los detalles técnicos de RehniMarket, que permiten al personal técnico "
           "suministrar soporte y mantener la aplicación. Corresponde a la API versión 2.6.0 y a la revisión de "
           "base de datos c3e5a7f9d1b2."),
         SUB("Objetivo general"),
-        P("Proveer un marketplace multiempresa con pago interno en RehniCoin, accesible por web y móvil, "
-          "desplegado con HTTPS en un servidor propio."),
+        P("Proveer un marketplace multiempresa con pago interno en RehniCoin, accesible por web y desplegado con "
+          "HTTPS en un servidor propio."),
         SUB("Objetivos específicos"),
         OL("Gestionar usuarios, roles, sesiones y verificación de empresas.",
            "Publicar productos con variantes, atributos por categoría, descuentos e IVA.",
@@ -123,20 +124,22 @@ SECCIONES_INICIO = [
         P(f"La plataforma se aloja en una máquina virtual de Oracle Cloud Infrastructure, forma VM.Standard.A1.Flex "
           f"(ARM64, Ampere A1) con Ubuntu 24.04, dentro del nivel gratuito Always Free. El frontend se publica en "
           f"{SOPORTE['url_produccion']} y la API en {SOPORTE['url_api_produccion']}. El procedimiento completo está "
-          f"en el numeral 6.9."),
+          f"en el numeral 6.8."),
         SUB("Qué NO cubre este documento"),
         UL("El uso funcional de la aplicación por perfil: se describe en el Manual de usuario.",
+           "El detalle de cada tabla de la base de datos: se describe en el documento «Diccionario de datos».",
+           "La aplicación móvil (RehniMarket-mobile): no está cubierta por este documento.",
            "La compra y administración del dominio, ni la configuración de la cuenta de Oracle Cloud más allá de "
            "lo necesario para el despliegue.",
            "La configuración de proveedores externos de correo (Google Workspace, Brevo u otros) más allá de las "
            "variables SMTP de RehniMarket.",
-           "La publicación de la aplicación móvil en Google Play o App Store.",
            "El detalle de las pruebas y su informe de resultados, que se documentan en docs/pruebas/.",
            "El plan de implantación (capacitación, cronograma y migración), que se documenta en "
            "«docs/plan de implantacion - Rehnimarket/»."),
     ]),
     (1, "2", "Descripción de procesos", [
-        P("El sistema soporta los siguientes procesos de negocio:"),
+        P("El sistema soporta los siguientes procesos de negocio. Los actores y sus casos de uso se representan "
+          "en los diagramas del numeral 3.1."),
         TABLA(["Proceso", "Descripción", "Actores"], [
             ["Registro y acceso", "Registro, verificación por correo, inicio de sesión, renovación de sesión y "
              "recuperación", "Todos"],
@@ -145,25 +148,28 @@ SECCIONES_INICIO = [
             ["Publicación", "Productos, variantes, atributos, descuentos e IVA", "Empresa"],
             ["Compra", "Carrito, checkout con validación de stock y saldo, y creación de pedidos por empresa",
              "Comprador"],
-            ["Cumplimiento", "Pendiente o pagado → en proceso → enviado → entregado", "Empresa"],
+            ["Cumplimiento", "Pendiente o pagado → en preparación → enviado → entregado", "Empresa"],
             ["Posventa", "Cancelación con reembolso, devoluciones por ítem, reseñas y reportes",
              "Comprador, empresa, administrador"],
             ["Billetera", "Recarga manual, corrección y reembolsos", "Comprador, administrador"],
             ["Liquidación", "Generación mensual sobre pedidos entregados, comisión del 5 % y pago",
              "Propietario, empresa"],
         ], [3.2, 6.0, 2.6]),
-        P("La navegación de cada perfil se representa en el Manual de usuario (numeral 6, «Mapa de navegación»)."),
+        P("La navegación de cada perfil se muestra en la {fig:nav-tec}; su descripción detallada está en el Manual "
+          "de usuario (numeral 6)."),
+        IMG("diagramas/png/navegacion.png", "Mapa de navegación por perfil", "nav-tec"),
     ]),
     (2, "2.1", "Requisitos funcionales", [
         P("Los requisitos funcionales se obtuvieron del código del backend (routers, servicios y permisos de "
-          "RehniMarket-backend/app/middleware/RolePermissions.py) y de las pantallas del frontend."),
-        P(f"Se identificaron {len(REQUISITOS)} requisitos funcionales, que se relacionan en la tabla siguiente."),
-        ("ancha", "Tabla de requisitos funcionales", ["ID", "Nombre", "Descripción", "Rol"],
-         [list(r) for r in REQUISITOS], [1.6, 3.2, 9.4, 2.3]),
+          "RehniMarket-backend/app/middleware/RolePermissions.py) y de las pantallas del frontend. Se "
+          f"identificaron {len(REQUISITOS)} requisitos, que se relacionan en la tabla siguiente."),
+        TABLA(["ID", "Nombre", "Descripción", "Rol"], [list(r) for r in REQUISITOS], [1.4, 2.6, 5.8, 2.0]),
     ]),
     (1, "3", "Diagramas UML", [
         P("Los diagramas se mantienen en Mermaid en docs/Manuales/diagramas/ y se exportan a PNG en "
-          "docs/Manuales/diagramas/png/ con docs/Manuales/scripts/exportar_diagramas.sh."),
+          "docs/Manuales/diagramas/png/ con docs/Manuales/scripts/exportar_diagramas.sh. Los diagramas de "
+          "clases y del modelo de datos se generan desde la base de datos en ejecución con "
+          "docs/Manuales/scripts/diagramas_modelo.py."),
     ]),
     (2, "3.1", "Diagramas de casos de uso", [
         P("Se presenta un diagrama por perfil. El propietario hereda los casos de uso del administrador."),
@@ -171,9 +177,13 @@ SECCIONES_INICIO = [
         IMG("diagramas/png/casos-de-uso-empresa.png", "Casos de uso de la empresa"),
         IMG("diagramas/png/casos-de-uso-administrador.png", "Casos de uso del administrador y el propietario"),
     ]),
-    (2, "3.2", "Diagrama de clases", [
-        P("Generado desde los modelos SQLAlchemy de RehniMarket-backend/app/models/."),
-        IMG("diagramas/png/clases.png", "Diagrama de clases"),
+    (2, "3.2", "Diagramas de clases", [
+        P("Las clases corresponden a los modelos SQLAlchemy de RehniMarket-backend/app/models/, con sus atributos "
+          "tal como existen en la base de datos. Con 37 clases el diagrama completo no se lee en una página, por "
+          "lo que se divide por módulo; las clases de otro módulo a las que apunta una llave foránea aparecen con "
+          "el estereotipo «externa» y sin atributos. La multiplicidad 1 indica una llave foránea obligatoria y "
+          "0..1, una opcional."),
+        ("clases",),
     ]),
     (2, "3.3", "Diagramas de secuencia", [
         IMG("diagramas/png/secuencia-login.png", "Secuencia del inicio de sesión"),
@@ -184,7 +194,7 @@ SECCIONES_INICIO = [
           "en api.<dominio>, los dos con HTTPS. El backend usa PgBouncer para el tráfico normal y conexión "
           "directa a PostgreSQL para las migraciones, guarda archivos en MinIO y envía correos por un servidor "
           "SMTP configurable."),
-        IMG("diagramas/png/arquitectura.png", "Arquitectura del sistema"),
+        IMG("diagramas/png/arquitectura.png", "Arquitectura del sistema", "arquitectura"),
     ]),
     (1, "4", "Administración de usuarios", [
         SUB("Creación, modificación y retiro de usuarios"),
@@ -201,19 +211,20 @@ SECCIONES_INICIO = [
            "reembolsan."),
         SUB("Aprobación de vendedores"),
         OL("La empresa se registra con su certificado; queda en CompanyCertificateStatus = PENDING.",
-           "Mientras no esté en APPROVED, el middleware solo le permite /auth/me, /company/dashboard/me, "
-           "/company/dashboard/my-profile y /company/certificate (COMPANY_UNAPPROVED_ALLOWED_ROUTES).",
+           "Mientras no esté en APPROVED, el inicio de sesión responde 403 (COMPANY_PENDING, "
+           "COMPANY_CERTIFICATE_INVALID o COMPANY_REJECTED) y no emite tokens. Si el estado cambia con una sesión "
+           "abierta, el middleware solo le permite /auth/me, /company/dashboard/me, /company/dashboard/my-profile "
+           "y /company/certificate (COMPANY_UNAPPROVED_ALLOWED_ROUTES).",
            "El administrador revisa el PDF en «Empresas» y lo deja en APPROVED, REJECTED (con motivo) o "
            "NEEDS_UPDATE (certificado inválido, con motivo).",
-           "Con NEEDS_UPDATE la empresa sube otro PDF y vuelve a PENDING. Con REJECTED solo un administrador "
-           "puede intervenir.",
+           "Con NEEDS_UPDATE la empresa sube otro PDF, sin sesión, por POST /company/certificate/update (correo y "
+           "contraseña) y vuelve a PENDING. Con REJECTED solo un administrador puede intervenir.",
            "Cada decisión queda en admin_activities y se notifica por correo."),
         SUB("Roles y perfiles"),
         P("Los roles se insertan con el seed. No existe una interfaz para crear roles."),
         TABLA(["Rol", "Permisos"], [
             ["user", "Carrito, checkout, pedidos, favoritos, direcciones, billetera, reseñas y reportes."],
-            ["company", "Panel de empresa. Sin certificado aprobado solo accede a /auth/me, "
-             "/company/dashboard/me, /company/dashboard/my-profile y /company/certificate."],
+            ["company", "Panel de empresa, solo con el certificado aprobado."],
             ["admin", "Panel administrativo (FULL_ACCESS_ROLES en el middleware), salvo liquidaciones."],
             ["owner", "Subperfil del administrador: lo mismo que admin, más liquidaciones y gestión de "
              "cuentas owner."],
@@ -223,8 +234,9 @@ SECCIONES_INICIO = [
           "petición, no del token. La autenticación usa JWT HS256 con access token y refresh token, y las "
           "contraseñas se cifran con bcrypt. En el frontend, /auth/me es la única fuente del rol y las rutas se "
           "protegen con RequireAuth (RehniMarket-frontend/src/routers/AppRouter.tsx)."),
-        CAP("Panel administrativo, opción Usuarios", "con la lista de cuentas, roles y acciones",
-            "t-admin-usuarios.png", "Administración de usuarios"),
+        CAP("Administración de usuarios", "https://<dominio>/admin/dashboard?tab=users",
+            "Lista de usuarios con roles distintos y la ventana «Detalle de usuario» abierta",
+            "Columna «Rol» y acciones de la fila", "Propietario — cuenta owner del seed (OWNER_DEFAULT)"),
     ]),
 ]
 
@@ -243,10 +255,6 @@ STACK = [
     ["Web", "Axios / Zod", "^1.20.0 / ^4.6.7"],
     ["Web (pruebas)", "Vitest / Testing Library", "^4.1.11 / ^16.3.3"],
     ["Web", "pnpm", "11.15.0"],
-    ["Móvil", "Expo / Expo Router", "^54.0.1 / ~6.0.0"],
-    ["Móvil", "React Native / React", "0.81.5 / 19.1.0"],
-    ["Móvil", "Axios / expo-secure-store", "^1.19.0 / ^15.0.8"],
-    ["Móvil (pruebas)", "Jest / jest-expo", "^29.2.1 / ~54.0.10"],
     ["Infraestructura", "PostgreSQL", "postgres:17-alpine"],
     ["Infraestructura", "PgBouncer", "edoburu/pgbouncer:latest"],
     ["Infraestructura", "MinIO", "cgr.dev/chainguard/minio fijada por digest (RELEASE.2026-10-23T20-06-51Z)"],
@@ -277,13 +285,13 @@ VARIABLES = [
      "localhost; vacía en producción (Let's Encrypt)", "local_certs"],
     ["VITE_API_URL", ".env (raíz) y RehniMarket-frontend/.env", "URL de la API; se graba en el build",
      "https://api.localhost"],
-    ["VITE_REHNIMARKET_WHATSAPP", ".env (raíz) y RehniMarket-frontend/.env", "WhatsApp de recargas (web)",
+    ["VITE_REHNIMARKET_WHATSAPP", ".env (raíz) y RehniMarket-frontend/.env", "WhatsApp de recargas",
      "+57…"],
     ["CORS_EXTRA_ORIGINS", ".env (raíz)", "Orígenes del frontend permitidos por CORS, separados por coma",
-     "https://rehnimarket"],
+     "https://localhost (plantilla); https://rehnimarket con los dominios locales"],
     ["DOCS_ENABLED", ".env (raíz)", "Activa Swagger (/docs), ReDoc y /openapi.json", "false"],
-    ["BACKEND_BIND / BACKEND_PORT", ".env (raíz)", "Interfaz y puerto de la API directa sin Caddy",
-     "127.0.0.1 / 8000 (0.0.0.0 para la app móvil en la red local)"],
+    ["BACKEND_BIND / BACKEND_PORT", ".env (raíz)", "Interfaz y puerto de la API directa sin Caddy; "
+     "docker-compose.yml usa 127.0.0.1 si no se define", "0.0.0.0 en la plantilla local; 127.0.0.1 en producción / 8000"],
     ["POSTGRES_PORT", ".env (raíz)", "Puerto de PostgreSQL en 127.0.0.1 del host", "5433"],
     ["UVICORN_WORKERS", ".env (raíz)", "Procesos de Uvicorn (1 a 16)", "3"],
     ["FORWARDED_ALLOW_IPS", ".env (raíz)", "IP de la que se acepta X-Forwarded-For: solo Caddy",
@@ -331,82 +339,17 @@ VARIABLES = [
      "PgBouncer", "usuario / *** / bd"],
     ["MINIO_ROOT_USER / MINIO_ROOT_PASSWORD", ".env.minio", "Credenciales de MinIO (las lee también el "
      "backend)", "usuario / ***"],
-    ["EXPO_PUBLIC_API_URL", "RehniMarket-mobile/.env", "URL de la API para la app móvil",
-     "http://<IP-LAN>:8000; producción https://api.<dominio>"],
-    ["EXPO_PUBLIC_REHNIMARKET_WHATSAPP", "RehniMarket-mobile/.env", "WhatsApp de recargas (móvil)", "+57…"],
 ]
 
 SECCIONES_PLATAFORMA = [
     (1, "6", "Descripción de la plataforma", [
-        P("RehniMarket es una aplicación cliente-servidor por capas, ejecutada en contenedores Docker. Los "
-          "clientes (web y móvil) consumen una API REST. La arquitectura se muestra en el numeral 3.4."),
-        REF("Ver la figura «Arquitectura del sistema» del numeral 3.4."),
-    ]),
-    (2, "6.1", "Tecnologías y versiones", [
-        P("Versiones tomadas de RehniMarket-backend/pyproject.toml, RehniMarket-frontend/package.json, "
-          "RehniMarket-mobile/package.json, los Dockerfile y docker-compose.yml."),
+        P("RehniMarket es una aplicación cliente-servidor por capas, ejecutada en contenedores Docker. El cliente "
+          "web consume una API REST. Los componentes y sus conexiones se muestran en la {fig:arquitectura} "
+          "(numeral 3.4). Versiones tomadas de RehniMarket-backend/pyproject.toml, "
+          "RehniMarket-frontend/package.json, los Dockerfile y docker-compose.yml."),
         TABLA(["Componente", "Tecnología", "Versión"], STACK, [3.0, 4.2, 4.6]),
     ]),
-    (2, "6.2", "Servicios de Docker Compose", [
-        P("Un solo docker-compose.yml sirve para desarrollo, pruebas y producción: lo que cambia entre entornos "
-          "va en los archivos .env. Ya no existen docker-compose.dev.yml ni RehniMarket-backend/.env.dev."),
-        TABLA(["Servicio (contenedor)", "Función", "Publicación", "Límite"], SERVICIOS, [3.4, 4.4, 2.4, 1.6]),
-        SUB("MinIO"),
-        UL("La imagen minio/minio ya no se puede descargar de Docker Hub; se usa la imagen de Chainguard, "
-           "construida desde el código de MinIO (AGPLv3), fijada por digest: "
-           "`cgr.dev/chainguard/minio@sha256:3c60a2a8c4d3…` (RELEASE.2026-10-23T20-06-51Z).",
-           "El contenedor corre sin root, con el uid 65532 (nonroot). Un volumen minio_data creado por la imagen "
-           "anterior necesita una vez `docker run --rm -v rehni-market_minio_data:/data alpine chown -R "
-           "65532:65532 /data`.",
-           "La imagen no trae curl: el healthcheck usa `mc ready local` con las credenciales de .env.minio.",
-           "MinIO no se publica en el host; el backend sirve los archivos por GET /media/proxy."),
-        SUB("Modos de uso"),
-        CODE("docker compose up -d --build --wait                  # stack completo\n"
-             "docker compose watch                                 # desarrollo: sincroniza y reinicia\n"
-             "docker compose --profile test up -d --wait postgres-test   # PostgreSQL de pytest"),
-        P("Con `docker compose watch`, los cambios en RehniMarket-backend/app y RehniMarket-backend/alembic se "
-          "copian al contenedor y lo reinician; los cambios del frontend o de pyproject.toml/uv.lock "
-          "reconstruyen la imagen; un cambio en caddy/Caddyfile reinicia Caddy. Para recarga en caliente del "
-          "frontend se usa `pnpm dev` en el host (http://localhost:5173)."),
-        CAP("Terminal", "docker compose ps con los cinco servicios en estado healthy", "t-compose-ps.png",
-            "Servicios en ejecución"),
-    ]),
-    (2, "6.3", "Variables de entorno", [
-        P("Los archivos reales no se versionan; las plantillas *.example no contienen secretos. La variable "
-          "FRONTEND_PORT ya no existe: Caddy usa HTTP_PORT y HTTPS_PORT."),
-        P("Las variables se relacionan en la tabla siguiente."),
-        ("ancha", "Variables de entorno", ["Variable", "Archivo", "Descripción", "Ejemplo"], VARIABLES,
-         [4.6, 3.2, 4.6, 4.1]),
-        P("Reglas que valida el backend al arrancar (RehniMarket-backend/app/Config.py): "
-          "DB_POOL_SIZE + DB_MAX_OVERFLOW ≥ THREADPOOL_SIZE, y (DB_POOL_SIZE + DB_MAX_OVERFLOW) × "
-          "UVICORN_WORKERS ≤ PGBOUNCER_MAX_CLIENT_CONN. SMTP_SECURITY solo admite starttls o ssl."),
-    ]),
-    (2, "6.4", "Correo SMTP configurable", [
-        P("El backend envía los códigos de verificación y recuperación y las notificaciones de pedidos, "
-          "devoluciones y liquidaciones por SMTP, en hilos propios (RehniMarket-backend/app/services/email/"
-          "EmailService.py). Sin variables SMTP_* se usa Gmail por 587 con STARTTLS y las credenciales GMAIL_*."),
-        TABLA(["Puerto", "Cifrado (SMTP_SECURITY)", "Uso", "Oracle Cloud"], [
-            ["587", "starttls", "Envío autenticado estándar; el valor por defecto", "Abierto"],
-            ["465", "ssl (se deduce)", "Envío con TLS desde el inicio; para redes que bloquean el 587", "Abierto"],
-            ["2525", "starttls", "Relays como Brevo, SendGrid o Mailgun", "Abierto"],
-            ["25", "—", "Entre servidores de correo; no se usa", "Bloqueado de salida"],
-        ], [1.6, 3.0, 5.2, 2.0]),
-        SUB("Ejemplos (RehniMarket-backend/.env)"),
-        CODE("# A · Gmail por 587 (por defecto): solo GMAIL_USERNAME y GMAIL_APP_PASSWORD\n"
-             "# B · Gmail por 465\n"
-             "SMTP_PORT=465\n"
-             "# C · Relay por 2525 (Brevo)\n"
-             "SMTP_HOST=smtp-relay.brevo.com\n"
-             "SMTP_PORT=2525\n"
-             "SMTP_SECURITY=starttls\n"
-             "SMTP_USERNAME=\"usuario SMTP de Brevo\"\n"
-             "SMTP_PASSWORD=\"clave SMTP de Brevo\"\n"
-             "EMAIL_FROM=\"notificaciones@<dominio>\""),
-        P("Tras cambiar las variables: `docker compose up -d backend`. Un envío fallido aparece en "
-          "`docker compose logs backend` como «Error al enviar correo»: TimeoutError o ConnectionRefusedError "
-          "indican puerto bloqueado; SMTPAuthenticationError, credenciales incorrectas."),
-    ]),
-    (2, "6.5", "Instalación local", [
+    (2, "6.1", "Instalación", [
         P("Instalación con los dominios locales rehnimarket (frontend) y api.rehnimarket (API), con HTTPS. "
           "Todos los comandos se ejecutan desde la raíz del repositorio. Requisitos: Git y Docker con Compose "
           "v2.22 o superior; scripts/verificar-requisitos.sh los comprueba."),
@@ -440,18 +383,17 @@ SECCIONES_PLATAFORMA = [
         CODE("curl -sS -o /dev/null -w 'site %{http_code}\\n' https://rehnimarket/          # 200\n"
              "curl -sS https://api.rehnimarket/health/database                            # {\"Base de datos\":\"OK\"}\n"
              "curl -sS -o /dev/null -w '%{http_code}\\n' http://rehnimarket/              # 308 → https"),
+        CAP("Aplicación con HTTPS", "https://rehnimarket", "Página de inicio abierta en el navegador con el "
+            "candado de conexión segura y el certificado de la CA local de Caddy reconocido como válido",
+            "Candado y detalle del certificado"),
         P("Guía detallada y problemas frecuentes: caddy/caddy-configuracion.md."),
         SUB("Desarrollo sin Docker (opcional)"),
         UL("Backend: `cd RehniMarket-backend && uv sync && uv run alembic upgrade head && uv run uvicorn "
            "app.main:app --reload` (sin URL_DATABASE_POOLED, conecta directo a PostgreSQL).",
            "Frontend: `cd RehniMarket-frontend && pnpm install && pnpm dev` (http://localhost:5173, con "
-           "RehniMarket-frontend/.env).",
-           "Móvil: `cd RehniMarket-mobile && pnpm install && pnpm start`, con EXPO_PUBLIC_API_URL apuntando a "
-           "http://<IP-LAN>:8000 y BACKEND_BIND=0.0.0.0 en el .env de la raíz."),
-        CAP("Terminal", "la ejecución de docker compose up -d --build --wait terminada", "t-compose-up.png",
-            "Instalación con Docker"),
+           "RehniMarket-frontend/.env)."),
     ]),
-    (2, "6.6", "Migraciones de Alembic", [
+    (2, "6.2", "Migraciones de Alembic", [
         P("Alembic administra el esquema. La cadena es lineal y su revisión final es c3e5a7f9d1b2. Las "
           "migraciones usan URL_DATABASE directo a PostgreSQL y no pasan por PgBouncer. Se ejecutan dentro del "
           "contenedor (`docker compose exec backend uv run alembic …`) o en RehniMarket-backend/ con uv."),
@@ -478,7 +420,76 @@ SECCIONES_PLATAFORMA = [
             ["16", "c3e5a7f9d1b2", "fk indexes hot paths - índices de claves foráneas en rutas calientes"],
         ], [1.2, 3.0, 7.6]),
     ]),
-    (2, "6.7", "Pruebas", [
+    (2, "6.3", "Variables de entorno", [
+        P("Los archivos reales no se versionan; las plantillas *.example no contienen secretos. La variable "
+          "FRONTEND_PORT ya no existe: Caddy usa HTTP_PORT y HTTPS_PORT."),
+        P("Las variables se relacionan en la tabla siguiente."),
+        TABLA(["Variable", "Archivo", "Descripción", "Ejemplo"], VARIABLES,
+         [4.6, 3.2, 4.6, 4.1]),
+        P("Reglas que valida el backend al arrancar (RehniMarket-backend/app/Config.py): "
+          "DB_POOL_SIZE + DB_MAX_OVERFLOW ≥ THREADPOOL_SIZE, y (DB_POOL_SIZE + DB_MAX_OVERFLOW) × "
+          "UVICORN_WORKERS ≤ PGBOUNCER_MAX_CLIENT_CONN. SMTP_SECURITY solo admite starttls o ssl."),
+    ]),
+    (2, "6.4", "Servicios de Docker Compose", [
+        P("Un solo docker-compose.yml sirve para desarrollo, pruebas y producción: lo que cambia entre entornos "
+          "va en los archivos .env. Ya no existen docker-compose.dev.yml ni RehniMarket-backend/.env.dev."),
+        TABLA(["Servicio (contenedor)", "Función", "Publicación", "Límite"], SERVICIOS, [3.4, 4.4, 2.4, 1.6]),
+        SUB("MinIO"),
+        UL("La imagen minio/minio ya no se puede descargar de Docker Hub; se usa la imagen de Chainguard, "
+           "construida desde el código de MinIO (AGPLv3), fijada por digest: "
+           "`cgr.dev/chainguard/minio@sha256:3c60a2a8c4d3…` (RELEASE.2026-10-23T20-06-51Z).",
+           "El contenedor corre sin root, con el uid 65532 (nonroot). Un volumen minio_data creado por la imagen "
+           "anterior necesita una vez `docker run --rm -v rehni-market_minio_data:/data alpine chown -R "
+           "65532:65532 /data`.",
+           "La imagen no trae curl: el healthcheck usa `mc ready local` con las credenciales de .env.minio.",
+           "MinIO no se publica en el host; el backend sirve los archivos por GET /media/proxy."),
+        SUB("Modos de uso"),
+        CODE("docker compose up -d --build --wait                  # stack completo\n"
+             "docker compose watch                                 # desarrollo: sincroniza y reinicia\n"
+             "docker compose --profile test up -d --wait postgres-test   # PostgreSQL de pytest"),
+        P("Con `docker compose watch`, los cambios en RehniMarket-backend/app y RehniMarket-backend/alembic se "
+          "copian al contenedor y lo reinician; los cambios del frontend o de pyproject.toml/uv.lock "
+          "reconstruyen la imagen; un cambio en caddy/Caddyfile reinicia Caddy. Para recarga en caliente del "
+          "frontend se usa `pnpm dev` en el host (http://localhost:5173)."),
+        SUB("Comprobación de los servicios"),
+        P("Salida esperada de `docker compose ps` con el stack completo en ejecución (se omiten las columnas "
+          "IMAGE, COMMAND y CREATED; los tiempos cambian en cada equipo). Todos los servicios deben quedar en "
+          "«healthy»; pgbouncer y minio no publican puertos en el host. [VERIFICAR: comparar con la salida real "
+          "del servidor]"),
+        CODE("NAME             SERVICE     STATUS                    PORTS\n"
+             "pgbouncer_pool   pgbouncer   Up 2 minutes (healthy)    5432/tcp, 6432/tcp\n"
+             "rehni-backend    backend     Up 2 minutes (healthy)    127.0.0.1:8000->8000/tcp\n"
+             "rehni-frontend   frontend    Up 2 minutes (healthy)    0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp,\n"
+             "                                                       0.0.0.0:443->443/udp\n"
+             "rehni-minio      minio       Up 2 minutes (healthy)    9000/tcp\n"
+             "rehni-postgres   postgres    Up 2 minutes (healthy)    127.0.0.1:5433->5432/tcp"),
+    ]),
+    (2, "6.5", "Correo SMTP configurable", [
+        P("El backend envía los códigos de verificación y recuperación y las notificaciones de pedidos, "
+          "devoluciones y liquidaciones por SMTP, en hilos propios (RehniMarket-backend/app/services/email/"
+          "EmailService.py). Sin variables SMTP_* se usa Gmail por 587 con STARTTLS y las credenciales GMAIL_*."),
+        TABLA(["Puerto", "Cifrado (SMTP_SECURITY)", "Uso", "Oracle Cloud"], [
+            ["587", "starttls", "Envío autenticado estándar; el valor por defecto", "Abierto"],
+            ["465", "ssl (se deduce)", "Envío con TLS desde el inicio; para redes que bloquean el 587", "Abierto"],
+            ["2525", "starttls", "Relays como Brevo, SendGrid o Mailgun", "Abierto"],
+            ["25", "—", "Entre servidores de correo; no se usa", "Bloqueado de salida"],
+        ], [1.6, 3.0, 5.2, 2.0]),
+        SUB("Ejemplos (RehniMarket-backend/.env)"),
+        CODE("# A · Gmail por 587 (por defecto): solo GMAIL_USERNAME y GMAIL_APP_PASSWORD\n"
+             "# B · Gmail por 465\n"
+             "SMTP_PORT=465\n"
+             "# C · Relay por 2525 (Brevo)\n"
+             "SMTP_HOST=smtp-relay.brevo.com\n"
+             "SMTP_PORT=2525\n"
+             "SMTP_SECURITY=starttls\n"
+             "SMTP_USERNAME=\"usuario SMTP de Brevo\"\n"
+             "SMTP_PASSWORD=\"clave SMTP de Brevo\"\n"
+             "EMAIL_FROM=\"notificaciones@<dominio>\""),
+        P("Tras cambiar las variables: `docker compose up -d backend`. Un envío fallido aparece en "
+          "`docker compose logs backend` como «Error al enviar correo»: TimeoutError o ConnectionRefusedError "
+          "indican puerto bloqueado; SMTPAuthenticationError, credenciales incorrectas."),
+    ]),
+    (2, "6.6", "Pruebas", [
         SUB("Backend (pytest)"),
         P("Las pruebas usan una base de datos propia (TEST_DATABASE_URL) que se crea y se borra en cada "
           "ejecución; nunca tocan la base de desarrollo. Se debe ejecutar con RUN_SEED=false: con el seed "
@@ -489,15 +500,14 @@ SECCIONES_PLATAFORMA = [
              "  uv run pytest\n"
              "uv run pytest --cov            # con cobertura (fail_under = 60 en pyproject.toml)\n"
              "docker compose --profile test rm -sf postgres-test"),
-        SUB("Frontend y móvil"),
-        UL("Web: `cd RehniMarket-frontend && pnpm test` (Vitest); `pnpm test:coverage` para cobertura.",
-           "Móvil: `cd RehniMarket-mobile && pnpm test` (Jest con jest-expo)."),
+        SUB("Frontend"),
+        UL("Web: `cd RehniMarket-frontend && pnpm test` (Vitest); `pnpm test:coverage` para cobertura."),
         SUB("Carga y humo"),
         UL("Pruebas de carga con k6 en tests/load/ (01-smoke.js a 06-recovery.js; ver tests/load/README.md).",
            "Prueba de humo contra un entorno levantado: `bash scripts/smoke-test.sh` con FRONTEND_URL, BASE_URL, "
            "SMOKE_EMAIL y SMOKE_PASSWORD."),
     ]),
-    (2, "6.8", "Requisitos del servidor", [
+    (2, "6.7", "Requisitos del servidor", [
         TABLA(["Elemento", "Mínimo", "Recomendado (producción)"], [
             ["CPU", "4 vCPU (el backend tiene límite cpus: \"4\" y Docker no crea el contenedor con menos)",
              "4 OCPU Ampere A1 (ARM64)"],
@@ -513,7 +523,7 @@ SECCIONES_PLATAFORMA = [
         P("Todas las imágenes usadas publican linux/arm64 y todas las dependencias de uv.lock tienen paquete "
           "aarch64 para Python 3.13 (comprobado el 06/11/2026)."),
     ]),
-    (2, "6.9", "Despliegue en producción (Oracle Cloud A1)", [
+    (2, "6.8", "Despliegue en producción (Oracle Cloud A1)", [
         P("Procedimiento integrado desde deploy/guia-oracle-cloud-a1.html. Producción usa el mismo "
           "docker-compose.yml y caddy/Caddyfile que el desarrollo: solo cambian los .env."),
         PASO(1, "Crear la clave SSH en el equipo del administrador.", ""),
@@ -574,7 +584,7 @@ SECCIONES_PLATAFORMA = [
              "coinciden, o límite de CPU."],
             ["La web carga pero no llega a la API", "VITE_API_URL (exige --build), CORS_EXTRA_ORIGINS y "
              "URL_FRONTEND."],
-            ["No llegan los correos", "Numeral 6.4: diagnóstico de puertos y variables SMTP."],
+            ["No llegan los correos", "Numeral 6.5: diagnóstico de puertos y variables SMTP."],
         ], [4.0, 7.8]),
         PASO(10, "Llevar los datos (opcional).", "En el equipo local: `bash scripts/backup_rehnimarket.sh` y "
              "`rsync -avz backups/ rehni-oci:Rehni-Market/backups/`. En el servidor: `bash "
@@ -588,19 +598,21 @@ SECCIONES_PLATAFORMA = [
            "localhost:5433.",
            "Respaldos diarios con cron: `0 3 * * * cd $HOME/Rehni-Market && bash scripts/backup_rehnimarket.sh`, "
            "y copia de backups/ fuera del servidor.",
-           "App móvil: EXPO_PUBLIC_API_URL=https://api.<dominio>.",
            "Oracle puede reclamar instancias Always Free con uso de CPU muy bajo durante 7 días seguidos."),
     ]),
-    (2, "6.10", "Integración continua (SonarCloud)", [
+    (2, "6.9", "Integración continua (SonarCloud)", [
         P("El repositorio tiene un único workflow, .github/workflows/sonarqube.yml, que ejecuta SonarCloud en "
           "cada push a main y develop, en cada pull request y a mano (workflow_dispatch). SonarCloud se usa "
           "solo para calidad de código: confiabilidad, seguridad, mantenibilidad, duplicación y security "
           "hotspots."),
-        UL("El CI no ejecuta pruebas ni mide cobertura: las pruebas se ejecutan localmente (numeral 6.7).",
+        UL("El CI no ejecuta pruebas ni mide cobertura: las pruebas se ejecutan localmente (numeral 6.6).",
            "sonar-project.properties excluye la cobertura de todo el código (`sonar.coverage.exclusions=**`), "
            "por lo que el quality gate no la evalúa.",
            "Se excluyen del análisis dependencias, builds, migraciones generadas y pruebas (sonar.exclusions).",
            "El token se guarda en el secreto SONAR_TOKEN del repositorio."),
+        CAP("Panel de SonarCloud", "https://sonarcloud.io (proyecto RehniMarket)", "Resumen del último análisis "
+            "de develop con el quality gate y las métricas de confiabilidad, seguridad y mantenibilidad",
+            "Estado del quality gate", "Cuenta con acceso al proyecto en SonarCloud"),
     ]),
 ]
 
@@ -625,10 +637,6 @@ ESTRUCTURA = [
     ["RehniMarket-frontend/src/routers", "Rutas web y guardas por perfil"],
     ["RehniMarket-frontend/src/shared", "Componentes, configuración de navegación, tipos, utilidades y "
      "validación compartida"],
-    ["RehniMarket-mobile/src/app", "Rutas de Expo Router: (auth), (user) y (tabs)"],
-    ["RehniMarket-mobile/src/screens", "Pantallas de la app móvil"],
-    ["RehniMarket-mobile/src/features", "Módulos móviles por dominio"],
-    ["RehniMarket-mobile/src/api", "Servicios HTTP de la app móvil"],
     ["caddy", "Caddyfile único y guía de configuración"],
     ["deploy", "Plantilla .env de producción y guía de Oracle Cloud A1"],
     ["scripts", "Respaldo, restauración, verificación de requisitos, humo y rendimiento"],
@@ -668,30 +676,28 @@ ARCHIVOS_CLAVE = [
     ["RehniMarket-frontend/src/shared/config/dashboardNavigation.tsx", "TypeScript", "Menú lateral de cada "
      "panel, con Inicio y las opciones exclusivas del propietario"],
     ["RehniMarket-frontend/src/shared/validation/", "TypeScript", "Validación compartida de formularios "
-     "(numeral 7.3)"],
-    ["RehniMarket-mobile/src/app/_layout.tsx", "TypeScript", "Raíz de navegación de Expo Router"],
-    ["RehniMarket-mobile/src/config/env.ts", "TypeScript", "EXPO_PUBLIC_API_URL y WhatsApp"],
-    ["RehniMarket-mobile/src/api/client.ts", "TypeScript", "Cliente HTTP de la app móvil"],
+     "(numeral 7.5)"],
     ["sonar-project.properties", "Properties", "Configuración de SonarCloud"],
     ["deploy/env.prod.example", "Env", "Plantilla del .env de la raíz en producción"],
 ]
 
 SECCIONES_CODIGO = [
     (1, "7", "Documentación del código fuente", [
-        P("El repositorio es un monorepositorio con tres paquetes (backend, web y móvil) más la infraestructura. "
-          "El backend separa routers, servicios, repositorios, modelos y esquemas."),
-        CAP("Editor de código", "la estructura de carpetas del monorepositorio expandida en el primer nivel",
-            "t-estructura.png", "Estructura del proyecto"),
+        P("El repositorio es un monorepositorio con el backend, el frontend web y la aplicación móvil (no cubierta "
+          "por este documento), más la infraestructura. El backend separa routers, servicios, repositorios, "
+          "modelos y esquemas."),
+        P("Estructura del monorepositorio en sus dos primeros niveles (sin dependencias ni archivos generados):"),
+        ("arbol",),
     ]),
     (2, "7.1", "Estructura de directorios", [
         TABLA(["Directorio", "Descripción"], ESTRUCTURA, [5.6, 6.2]),
     ]),
-    (2, "7.2", "Archivos clave", [
+    (2, "7.2", "Relación de archivos", [
         P("Se relacionan los archivos que conviene conocer primero; los demás siguen la estructura del "
           "numeral 7.1."),
-        ("ancha", "Archivos clave", ["Ruta", "Lenguaje", "Descripción"], ARCHIVOS_CLAVE, [7.2, 2.0, 7.3]),
+        TABLA(["Ruta", "Lenguaje", "Descripción"], ARCHIVOS_CLAVE, [5.6, 1.8, 4.4]),
     ]),
-    (2, "7.3", "Validación compartida de formularios", [
+    (2, "7.5", "Validación compartida de formularios", [
         P("El módulo RehniMarket-frontend/src/shared/validation/ valida los formularios mientras se escribe con "
           "las mismas reglas y los mismos mensajes que el backend, para que el usuario vea un solo texto. Usa Zod "
           "e informa solo el primer fallo de cada campo, en el mismo orden que Pydantic."),
@@ -711,12 +717,12 @@ SECCIONES_CODIGO = [
         P("Las reglas tienen pruebas unitarias en rules.test.ts, nit.test.ts y schemas.test.ts. El backend sigue "
           "siendo la autoridad: valida de nuevo cada petición."),
     ]),
-    (2, "7.4", "Documentación de la API (Swagger)", [
+    (2, "7.6", "Documentación de la API (Swagger)", [
         P("FastAPI publica la documentación interactiva en /docs (Swagger UI), /redoc y /openapi.json cuando "
           "DOCS_ENABLED=true en el .env de la raíz; en local queda en https://api.localhost/docs (o "
           "https://api.rehnimarket/docs) y en http://localhost:8000/docs. En producción debe quedar en false."),
-        CAP("Swagger de la API en /docs", "los grupos de endpoints con DOCS_ENABLED=true", "t-swagger.png",
-            "Documentación de la API"),
+        CAP("Documentación de la API", "https://api.rehnimarket/docs", "Swagger UI con DOCS_ENABLED=true y los "
+            "grupos de endpoints desplegados", "Título «RehniMarket API 2.6.0» y la lista de grupos"),
     ]),
 ]
 
@@ -745,7 +751,7 @@ ANS = [
         OL("El nivel 1 registra el caso con perfil, pasos, mensaje exacto y captura, y asigna la prioridad.",
            "Si no se resuelve desde el panel, se escala al nivel 2 con la etiqueta de prioridad en GitHub "
            "Issues.",
-           "El nivel 2 responde dentro del tiempo de primera respuesta, corrige y despliega (numeral 6.9, "
+           "El nivel 2 responde dentro del tiempo de primera respuesta, corrige y despliega (numeral 6.8, "
            "«Operación»).",
            "El nivel 1 confirma la solución con el usuario y cierra el caso."),
     ]),
@@ -753,13 +759,18 @@ ANS = [
 
 LIMITACIONES = [
     "Los enlaces «Guía de vendedores», «Comisiones», «Centro de ayuda», «Términos y condiciones» y «Política "
-    "de privacidad» del pie de página no tienen destino (funcionalidad en desarrollo).",
+    "de privacidad» y los iconos de redes sociales del pie de página no tienen destino (funcionalidad en "
+    "desarrollo; RehniMarket-frontend/src/shared/components/Footer.tsx).",
+    "No existe una ruta comodín (*) en RehniMarket-frontend/src/routers/AppRouter.tsx: una dirección inexistente "
+    "muestra una página en blanco en lugar de una página 404.",
     "PUBLIC_ROUTES (RehniMarket-backend/app/middleware/PublicRoutes.py) contiene /auth/login-company y "
     "/auth/logout, que no tienen endpoint. El cierre de sesión ocurre en el cliente, que borra los tokens.",
     "No existe un endpoint para eliminar usuarios, aunque el enumerado admin_activity_action incluye "
     "user_deleted. El retiro se hace bloqueando la cuenta.",
     "El seed no crea la cuenta admin: USER_NAME_ADMIN, ADMIN_DEFAULT y PASSWORD_DEFAULT se leen pero no se usan. "
     "Un administrador se obtiene cambiando el rol desde una cuenta owner.",
+    "Los endpoints de colores (/admin/dashboard/create-color y relacionados) no tienen pantalla en el panel "
+    "administrativo; los colores se gestionan como atributos de tipo «Color» del catálogo.",
     "RehniMarket-backend/pyproject.toml declara la versión 0.1.0 (proyecto better-backend), mientras la API "
     "declara 2.6.0.",
     "PgBouncer usa la etiqueta edoburu/pgbouncer:latest, sin versión fija.",
@@ -767,7 +778,6 @@ LIMITACIONES = [
     "ejecutarlo una sola vez.",
     "La contraseña de las empresas de prueba del seed está en el código (SEED_COMPANY_PASSWORD en "
     "RehniMarket-backend/app/utils/seed.py). RUN_SEED debe estar en false en producción.",
-    "La aplicación móvil no incluye devoluciones, reseñas ni reportes, ni paneles de empresa o administración.",
 ]
 
 GLOSARIO = [
