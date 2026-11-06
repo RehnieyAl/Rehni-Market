@@ -21,9 +21,6 @@ PORTADA = {
 
 SOPORTE = {
     "correo": "[VERIFICAR: correo de soporte]",
-    "whatsapp": ("el número configurado en `VITE_REHNIMARKET_WHATSAPP` (web) y "
-                 "`EXPO_PUBLIC_REHNIMARKET_WHATSAPP` (móvil); se usa para las recargas de RehniCoin "
-                 "[VERIFICAR: número de WhatsApp que se publica, o «no aplica» para soporte]"),
     "horario": "lunes a viernes, de 8:00 a 17:00 (hora de Colombia), excepto festivos",
     "issues": "https://github.com/RehnieyAl/Rehni-Market/issues",
     "url_produccion": "[VERIFICAR: URL de producción, https://<dominio>]",
@@ -35,7 +32,8 @@ CONTROL_VERSIONES = [
     ("2.0", "30/10/2026", "Yeinher Algarin",
      "Reestructuración según la guía FAVA-SENA y actualización contra la API 2.6.0."),
     (VERSION, FECHA_CORTA, "Yeinher Algarin",
-     "Actualización contra el código de develop: paneles Inicio, Ofertas y Novedades, "
-     "HTTPS con Caddy en dos dominios, SMTP configurable, despliegue en Oracle Cloud, "
-     "validaciones en vivo, diagramas por rol y generación desde docs/Manuales/scripts."),
+     "Actualización contra el código de develop: paneles Inicio, Ofertas y Novedades, mapa de "
+     "navegación con menús e iconos por perfil, validaciones en vivo y mensajes de la interfaz, "
+     "HTTPS con Caddy en dos dominios, SMTP configurable, despliegue en Oracle Cloud, diagramas "
+     "por rol y por módulo, y Diccionario de datos aparte. Se retira la aplicación móvil del alcance."),
 ]
