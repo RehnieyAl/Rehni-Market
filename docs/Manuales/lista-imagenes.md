@@ -1,128 +1,155 @@
-# Imágenes y pendientes de los manuales
+# Figuras y datos por verificar de los manuales
 
-Archivo generado por `docs/Manuales/scripts/generar_manuales.py`: no editar a mano.
+Generado por `docs/Manuales/scripts/generar_manuales.py`: no editar a mano. Las capturas pendientes, con sus instrucciones, están en `docs/Manuales/capturas/LISTA-CAPTURAS.md`.
 
-## Capturas pendientes
+## Manual de usuario
 
-En el .docx cada captura aparece como un marcador amarillo `[CAPTURA PENDIENTE: …]`. Reemplazar el marcador por la imagen y conservar el pie de figura. Nombre sugerido: guardar en `docs/Manuales/capturas/`.
-
-| Manual | Figura | Pantalla | Estado que debe mostrar | Archivo sugerido |
+| Figura | Título | Tipo | Estado | Archivo |
 |---|---|---|---|---|
-| Usuario | Figura 5.1 | Página de inicio de la tienda (/) | con el menú superior, los anuncios, las categorías y las secciones de ofertas y novedades | `u-inicio-tienda.png` |
-| Usuario | Figura 5.2 | Menú superior de la página de inicio | con el botón «Registrarse» señalado | `u-menu-registrarse.png` |
-| Usuario | Figura 5.3 | Formulario «Crear una cuenta» (/register-user) | con los campos diligenciados y un mensaje de validación en vivo visible | `u-registro-comprador.png` |
-| Usuario | Figura 5.4 | Página «Verifica tu correo» (/verify-email) | con el código digitado y el contador de reenvío | `u-verificar-correo.png` |
-| Usuario | Figura 5.5 | Sección «¿Tienes una empresa?» de la página de inicio | con el botón «Registrar mi empresa» | `u-acceso-registro-empresa.png` |
-| Usuario | Figura 5.6 | Formulario «Crear cuenta empresarial» (/register-company) | con los datos, el NIT con su DV y el PDF adjunto | `u-registro-empresa.png` |
-| Usuario | Figura 5.7 | Formulario de inicio de sesión (/login) | con correo y contraseña diligenciados | `u-login.png` |
-| Usuario | Figura 5.8 | Menú superior con la sesión iniciada | con el menú de la cuenta desplegado | `u-menu-cuenta.png` |
-| Usuario | Figura 5.9 | Página «¿Olvidaste tu contraseña?» (/forgot-password) | con el correo digitado | `u-olvide-contrasena.png` |
-| Usuario | Figura 5.10 | Página de restablecimiento (/reset-password) | con el código y la nueva contraseña | `u-restablecer-contrasena.png` |
-| Usuario | Figura 5.11 | Menú lateral de un panel | con la opción «Cerrar sesión» al final | `u-cerrar-sesion.png` |
-| Usuario | Figura 6.2 | Menú superior de la tienda | con todas sus opciones visibles, incluidas «Ofertas» y «Novedades» | `u-menu-tienda.png` |
-| Usuario | Figura 6.3 | Aplicación móvil | con la barra inferior de navegación | `u-movil-barra.png` |
-| Usuario | Figura 7.1 | Panel Inicio del comprador (/user/dashboard) | con saldo, pedidos pendientes, favoritos, último pedido y recomendados | `u-inicio-comprador.png` |
-| Usuario | Figura 7.2 | Barra de búsqueda del menú superior | con sugerencias de productos | `u-busqueda.png` |
-| Usuario | Figura 7.3 | Página Productos (/products) | con filtros aplicados | `u-productos-filtros.png` |
-| Usuario | Figura 7.4 | Detalle de un producto (/products/:id) | con variantes y stock | `u-detalle-producto.png` |
-| Usuario | Figura 7.5 | Perfil público de una empresa (/company/:companyId) | con productos y calificación | `u-perfil-empresa.png` |
-| Usuario | Figura 7.6 | Página Ofertas (/offers) | con productos con descuento y el precio rebajado | `u-ofertas.png` |
-| Usuario | Figura 7.7 | Página Novedades (/new) | con los productos más recientes | `u-novedades.png` |
-| Usuario | Figura 7.8 | Detalle de un producto | con la variante y la cantidad seleccionadas | `u-agregar-carrito.png` |
-| Usuario | Figura 7.9 | Página Mi carrito (/cart) | con productos y resumen | `u-carrito.png` |
-| Usuario | Figura 7.10 | Página Checkout (/checkout) | con la selección de dirección | `u-checkout-direccion.png` |
-| Usuario | Figura 7.11 | Página Checkout | con el resumen y el botón «Confirmar compra» | `u-checkout-resumen.png` |
-| Usuario | Figura 7.12 | Confirmación de compra | con el mensaje «¡Tu compra fue confirmada!» | `u-compra-confirmada.png` |
-| Usuario | Figura 7.13 | Opción Mis pedidos del panel del comprador | con la lista de pedidos | `u-mis-pedidos.png` |
-| Usuario | Figura 7.14 | Detalle de un pedido | con la línea de estados y los productos | `u-detalle-pedido.png` |
-| Usuario | Figura 7.15 | Detalle de un pedido enviado | con el botón «Consultar seguimiento» | `u-seguimiento.png` |
-| Usuario | Figura 7.16 | Detalle de un pedido pendiente | con el botón «Cancelar pedido» | `u-cancelar-pedido.png` |
-| Usuario | Figura 7.17 | Detalle de un pedido entregado | con el formulario «Solicitar devolución» | `u-solicitar-devolucion.png` |
-| Usuario | Figura 7.18 | Opción RehniCoins del panel del comprador | con el saldo y los movimientos | `u-billetera.png` |
-| Usuario | Figura 7.19 | Ventana «Recargar RehniCoins» | con una cantidad seleccionada | `u-recarga.png` |
-| Usuario | Figura 7.20 | Opción Direcciones del panel del comprador | con el formulario diligenciado | `u-direcciones.png` |
-| Usuario | Figura 7.21 | Opción Favoritos del panel del comprador | con productos guardados | `u-favoritos.png` |
-| Usuario | Figura 7.22 | Opción Configuración de cuenta | con las secciones «Perfil», «Cuenta» y «Seguridad» | `u-configuracion-comprador.png` |
-| Usuario | Figura 7.23 | Sección Opiniones de compradores del detalle del producto | con el formulario de reseña | `u-resena.png` |
-| Usuario | Figura 7.24 | Ventana de reporte | con el motivo y una evidencia | `u-reporte.png` |
-| Usuario | Figura 7.25 | Pantalla Iniciar sesión de la aplicación móvil | con los datos diligenciados | `u-movil-login.png` |
-| Usuario | Figura 7.26 | Pantalla «Recuperar contraseña» de la aplicación móvil | con el correo digitado | `u-movil-recuperar.png` |
-| Usuario | Figura 7.27 | Pantalla de búsqueda de la aplicación móvil | con resultados para un texto de búsqueda | `u-movil-busqueda.png` |
-| Usuario | Figura 7.28 | Pantalla Inicio de la aplicación móvil | con productos destacados, ofertas especiales y novedades | `u-movil-inicio.png` |
-| Usuario | Figura 7.29 | Pantalla de ofertas de la aplicación móvil | con la lista completa de productos con descuento | `u-movil-ofertas.png` |
-| Usuario | Figura 7.30 | Pantalla de novedades de la aplicación móvil | con la lista de productos recientes | `u-movil-novedades.png` |
-| Usuario | Figura 7.31 | Pantalla Checkout de la aplicación móvil | con dirección, resumen y saldo | `u-movil-checkout.png` |
-| Usuario | Figura 7.32 | Pantalla RehniCoin de la aplicación móvil | con saldo y movimientos | `u-movil-billetera.png` |
-| Usuario | Figura 7.33 | Panel Inicio de la empresa (/company/dashboard) | con la etiqueta «Empresa verificada», los indicadores y los productos recientes | `u-inicio-empresa.png` |
-| Usuario | Figura 7.34 | Panel Inicio de la empresa | con la etiqueta «Empresa pendiente de verificación» | `u-inicio-empresa-pendiente.png` |
-| Usuario | Figura 7.35 | Formulario «Crear nuevo producto» | con los datos diligenciados | `u-nuevo-producto.png` |
-| Usuario | Figura 7.36 | Ventana «Generar combinaciones» | con ejes seleccionados | `u-generar-variantes.png` |
-| Usuario | Figura 7.37 | Formulario de variante | con precio, stock e imágenes | `u-variante.png` |
-| Usuario | Figura 7.38 | Campos de descuento en la edición del producto | con un descuento diligenciado | `u-descuento.png` |
-| Usuario | Figura 7.39 | Opción Productos del panel de empresa | con la lista y sus acciones | `u-lista-productos.png` |
-| Usuario | Figura 7.40 | Opción Pedidos del panel de empresa | con la lista de pedidos | `u-pedidos-empresa.png` |
-| Usuario | Figura 7.41 | Detalle de un pedido de la empresa | con los datos de envío | `u-envio.png` |
-| Usuario | Figura 7.42 | Detalle de un pedido de la empresa | con el botón «Iniciar procesamiento» | `u-estado-pedido.png` |
-| Usuario | Figura 7.43 | Opción Devoluciones del panel de empresa | con las pestañas «Todas», «En revisión», «Aprobadas» y «Rechazadas» | `u-devoluciones-pestanas.png` |
-| Usuario | Figura 7.44 | Detalle de una solicitud de devolución | con los botones aprobar y rechazar | `u-devolucion-detalle.png` |
-| Usuario | Figura 7.45 | Opción Finanzas del panel de empresa | con el resumen financiero | `u-finanzas.png` |
-| Usuario | Figura 7.46 | Formulario de cuenta bancaria | con los datos diligenciados | `u-cuenta-bancaria.png` |
-| Usuario | Figura 7.47 | Opción Mi tienda del panel de empresa | con logo, banner e información | `u-mi-tienda.png` |
-| Usuario | Figura 7.48 | Página Actualizar certificado (/actualizar-certificado) | con el PDF seleccionado | `u-actualizar-certificado.png` |
-| Usuario | Figura 7.49 | Configuración de cuenta del panel de empresa | con las secciones «Perfil», «Cuenta» y «Seguridad» | `u-configuracion-empresa.png` |
-| Usuario | Figura 7.50 | Panel Inicio del administrador (/admin/dashboard) | con los indicadores de usuarios y empresas, usuarios recientes y actividad reciente | `u-inicio-admin.png` |
-| Usuario | Figura 7.51 | Opción Empresas del panel administrativo | con los filtros y la lista | `u-empresas.png` |
-| Usuario | Figura 7.52 | Ventana «Revisar certificado» | con las opciones y el motivo | `u-revisar-certificado.png` |
-| Usuario | Figura 7.53 | Ventana «Suspender empresa» | con el motivo diligenciado | `u-suspender-empresa.png` |
-| Usuario | Figura 7.54 | Opción Usuarios del panel administrativo | con la lista y sus acciones | `u-usuarios.png` |
-| Usuario | Figura 7.55 | Ventana «Atributos y variantes» | con atributos de una categoría | `u-atributos.png` |
-| Usuario | Figura 7.56 | Opción Transportadoras del panel administrativo | con el formulario | `u-transportadoras.png` |
-| Usuario | Figura 7.57 | Formulario de anuncio | con el «Tipo de anuncio» desplegado y una imagen cargada | `u-anuncio-tipos.png` |
-| Usuario | Figura 7.58 | Ventana «Detalle del reporte» | con evidencias y acciones | `u-reporte-detalle.png` |
-| Usuario | Figura 7.59 | Opción RehniCoin del panel administrativo | con el formulario y las últimas recargas | `u-recarga-admin.png` |
-| Usuario | Figura 7.60 | Ventana «Corregir recarga» | con la nueva cantidad | `u-corregir-recarga.png` |
-| Usuario | Figura 7.61 | Opción Liquidaciones del panel administrativo (propietario) | con los filtros «Todas», «Pendientes», «Procesando», «Pagadas» y «Fallidas» | `u-liquidaciones-filtros.png` |
-| Usuario | Figura 7.62 | Ventana «Generar liquidación» | con la vista previa | `u-generar-liquidacion.png` |
-| Usuario | Figura 7.63 | Ventana «Marcar liquidación como pagada» | con el valor y la cuenta destino | `u-pagar-liquidacion.png` |
-| Usuario | Figura 7.64 | Configuración de cuenta del panel administrativo | con las secciones «Perfil», «Cuenta» y «Seguridad» | `u-configuracion-admin.png` |
-| Técnico | Figura 4.1 | Panel administrativo, opción Usuarios | con la lista de cuentas, roles y acciones | `t-admin-usuarios.png` |
-| Técnico | Figura 5.2 | Cliente de base de datos (pgAdmin, DbSchema o psql por túnel SSH) | las tablas de la base de datos en el esquema public | `t-tablas-postgres.png` |
-| Técnico | Figura 6.1 | Terminal | docker compose ps con los cinco servicios en estado healthy | `t-compose-ps.png` |
-| Técnico | Figura 6.2 | Terminal | la ejecución de docker compose up -d --build --wait terminada | `t-compose-up.png` |
-| Técnico | Figura 7.1 | Editor de código | la estructura de carpetas del monorepositorio expandida en el primer nivel | `t-estructura.png` |
-| Técnico | Figura 7.2 | Swagger de la API en /docs | los grupos de endpoints con DOCS_ENABLED=true | `t-swagger.png` |
+| 5.1 | Página de inicio | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-1-pagina-de-inicio.png` |
+| 5.2 | Opción para registrarse | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-2-opcion-para-registrarse.png` |
+| 5.3 | Registro de comprador | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-3-registro-de-comprador.png` |
+| 5.4 | Verificación del correo | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-4-verificacion-del-correo.png` |
+| 5.5 | Acceso al registro de empresa | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-5-acceso-al-registro-de-empresa.png` |
+| 5.6 | Registro de empresa | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-6-registro-de-empresa.png` |
+| 5.7 | Certificado no válido | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-7-certificado-no-valido.png` |
+| 5.8 | Inicio de sesión | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-8-inicio-de-sesion.png` |
+| 5.9 | Menú de la cuenta | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-9-menu-de-la-cuenta.png` |
+| 5.10 | Solicitud de recuperación | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-10-solicitud-de-recuperacion.png` |
+| 5.11 | Nueva contraseña | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-11-nueva-contrasena.png` |
+| 5.12 | Cierre de sesión | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-12-cierre-de-sesion.png` |
+| 6.1 | Mapa de navegación por perfil | diagrama | insertada | `docs/Manuales/diagramas/png/navegacion.png` |
+| 6.2 | Elementos de la interfaz | captura | pendiente | `docs/Manuales/capturas/usuario/fig-6-2-elementos-de-la-interfaz.png` |
+| 6.3 | Menú de la tienda | captura | pendiente | `docs/Manuales/capturas/usuario/fig-6-3-menu-de-la-tienda.png` |
+| 6.4 | Menú del panel del comprador | captura | pendiente | `docs/Manuales/capturas/usuario/fig-6-4-menu-del-panel-del-comprador.png` |
+| 6.5 | Menú del panel de empresa | captura | pendiente | `docs/Manuales/capturas/usuario/fig-6-5-menu-del-panel-de-empresa.png` |
+| 6.6 | Menú del panel administrativo | captura | pendiente | `docs/Manuales/capturas/usuario/fig-6-6-menu-del-panel-administrativo.png` |
+| 7.1 | Panel Inicio del comprador | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-1-panel-inicio-del-comprador.png` |
+| 7.2 | Búsqueda de productos | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-2-busqueda-de-productos.png` |
+| 7.3 | Filtros del catálogo | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-3-filtros-del-catalogo.png` |
+| 7.4 | Detalle del producto | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-4-detalle-del-producto.png` |
+| 7.5 | Perfil de la empresa | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-5-perfil-de-la-empresa.png` |
+| 7.6 | Ofertas | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-6-ofertas.png` |
+| 7.7 | Novedades | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-7-novedades.png` |
+| 7.8 | Agregar al carrito | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-8-agregar-al-carrito.png` |
+| 7.9 | Carrito de compras | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-9-carrito-de-compras.png` |
+| 7.10 | Dirección de envío | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-10-direccion-de-envio.png` |
+| 7.11 | Resumen de la compra | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-11-resumen-de-la-compra.png` |
+| 7.12 | Compra confirmada | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-12-compra-confirmada.png` |
+| 7.13 | Lista de pedidos | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-13-lista-de-pedidos.png` |
+| 7.14 | Detalle del pedido | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-14-detalle-del-pedido.png` |
+| 7.15 | Seguimiento del envío | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-15-seguimiento-del-envio.png` |
+| 7.16 | Cancelación del pedido | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-16-cancelacion-del-pedido.png` |
+| 7.17 | Solicitud de devolución | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-17-solicitud-de-devolucion.png` |
+| 7.18 | Billetera RehniCoin | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-18-billetera-rehnicoin.png` |
+| 7.19 | Solicitud de recarga | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-19-solicitud-de-recarga.png` |
+| 7.20 | Direcciones | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-20-direcciones.png` |
+| 7.21 | Favoritos | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-21-favoritos.png` |
+| 7.22 | Configuración de cuenta | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-22-configuracion-de-cuenta.png` |
+| 7.23 | Reseña del producto | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-23-resena-del-producto.png` |
+| 7.24 | Reporte de producto | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-24-reporte-de-producto.png` |
+| 7.25 | Panel Inicio de la empresa | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-25-panel-inicio-de-la-empresa.png` |
+| 7.26 | Nuevo producto | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-26-nuevo-producto.png` |
+| 7.27 | Generación de variantes | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-27-generacion-de-variantes.png` |
+| 7.28 | Variante | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-28-variante.png` |
+| 7.29 | Descuento | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-29-descuento.png` |
+| 7.30 | Lista de productos | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-30-lista-de-productos.png` |
+| 7.31 | Pedidos de la empresa | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-31-pedidos-de-la-empresa.png` |
+| 7.32 | Información de envío | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-32-informacion-de-envio.png` |
+| 7.33 | Cambio de estado | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-33-cambio-de-estado.png` |
+| 7.34 | Pestañas de devoluciones | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-34-pestanas-de-devoluciones.png` |
+| 7.35 | Resolución de devolución | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-35-resolucion-de-devolucion.png` |
+| 7.36 | Resumen financiero | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-36-resumen-financiero.png` |
+| 7.37 | Cuenta bancaria | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-37-cuenta-bancaria.png` |
+| 7.38 | Mi tienda | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-38-mi-tienda.png` |
+| 7.39 | Actualización del certificado | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-39-actualizacion-del-certificado.png` |
+| 7.40 | Configuración de cuenta de la empresa | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-40-configuracion-de-cuenta-de-la-empresa.png` |
+| 7.41 | Panel Inicio del administrador | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-41-panel-inicio-del-administrador.png` |
+| 7.42 | Empresas | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-42-empresas.png` |
+| 7.43 | Revisión del certificado | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-43-revision-del-certificado.png` |
+| 7.44 | Suspensión de empresa | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-44-suspension-de-empresa.png` |
+| 7.45 | Usuarios | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-45-usuarios.png` |
+| 7.46 | Atributos de categoría | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-46-atributos-de-categoria.png` |
+| 7.47 | Transportadoras | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-47-transportadoras.png` |
+| 7.48 | Tipos de anuncio | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-48-tipos-de-anuncio.png` |
+| 7.49 | Vista previa del anuncio | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-49-vista-previa-del-anuncio.png` |
+| 7.50 | Detalle del reporte | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-50-detalle-del-reporte.png` |
+| 7.51 | Recarga de RehniCoin | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-51-recarga-de-rehnicoin.png` |
+| 7.52 | Corrección de recarga | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-52-correccion-de-recarga.png` |
+| 7.53 | Filtros de liquidaciones | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-53-filtros-de-liquidaciones.png` |
+| 7.54 | Generación de liquidación | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-54-generacion-de-liquidacion.png` |
+| 7.55 | Pago de liquidación | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-55-pago-de-liquidacion.png` |
+| 7.56 | Configuración de cuenta del administrador | captura | pendiente | `docs/Manuales/capturas/usuario/fig-7-56-configuracion-de-cuenta-del-administrador.png` |
+| 9.1 | Mensaje del servidor | captura | pendiente | `docs/Manuales/capturas/usuario/fig-9-1-mensaje-del-servidor.png` |
+| 9.2 | Validación en vivo | captura | pendiente | `docs/Manuales/capturas/usuario/fig-9-2-validacion-en-vivo.png` |
+| 9.3 | Sesión expirada | captura | pendiente | `docs/Manuales/capturas/usuario/fig-9-3-sesion-expirada.png` |
+| 9.4 | Estado vacío | captura | pendiente | `docs/Manuales/capturas/usuario/fig-9-4-estado-vacio.png` |
 
-## Diagramas insertados
+## Manual técnico
 
-| Manual | Figura | Título | Archivo |
-|---|---|---|---|
-| Usuario | Figura 6.1 | Mapa de navegación por perfil | `docs/Manuales/diagramas/png/navegacion.png` |
-| Técnico | Figura 3.1 | Casos de uso del visitante y el comprador | `docs/Manuales/diagramas/png/casos-de-uso-comprador.png` |
-| Técnico | Figura 3.2 | Casos de uso de la empresa | `docs/Manuales/diagramas/png/casos-de-uso-empresa.png` |
-| Técnico | Figura 3.3 | Casos de uso del administrador y el propietario | `docs/Manuales/diagramas/png/casos-de-uso-administrador.png` |
-| Técnico | Figura 3.4 | Diagrama de clases | `docs/Manuales/diagramas/png/clases.png` |
-| Técnico | Figura 3.5 | Secuencia del inicio de sesión | `docs/Manuales/diagramas/png/secuencia-login.png` |
-| Técnico | Figura 3.6 | Secuencia del proceso de compra | `docs/Manuales/diagramas/png/secuencia-compra.png` |
-| Técnico | Figura 3.7 | Arquitectura del sistema | `docs/Manuales/diagramas/png/arquitectura.png` |
-| Técnico | Figura 5.1 | Modelo relacional de la base de datos | `docs/Manuales/diagramas/png/modelo-relacional.png` |
+| Figura | Título | Tipo | Estado | Archivo |
+|---|---|---|---|---|
+| 2.1 | Mapa de navegación por perfil | diagrama | insertada | `docs/Manuales/diagramas/png/navegacion.png` |
+| 3.1 | Casos de uso del visitante y el comprador | diagrama | insertada | `docs/Manuales/diagramas/png/casos-de-uso-comprador.png` |
+| 3.2 | Casos de uso de la empresa | diagrama | insertada | `docs/Manuales/diagramas/png/casos-de-uso-empresa.png` |
+| 3.3 | Casos de uso del administrador y el propietario | diagrama | insertada | `docs/Manuales/diagramas/png/casos-de-uso-administrador.png` |
+| 3.4 | Diagrama de clases: usuarios y acceso | diagrama | insertada | `docs/Manuales/diagramas/png/clases-usuarios.png` |
+| 3.5 | Diagrama de clases: empresas y cuentas bancarias | diagrama | insertada | `docs/Manuales/diagramas/png/clases-empresas.png` |
+| 3.6 | Diagrama de clases: liquidaciones | diagrama | insertada | `docs/Manuales/diagramas/png/clases-liquidaciones.png` |
+| 3.7 | Diagrama de clases: catálogo y atributos | diagrama | insertada | `docs/Manuales/diagramas/png/clases-catalogo.png` |
+| 3.8 | Diagrama de clases: productos | diagrama | insertada | `docs/Manuales/diagramas/png/clases-productos.png` |
+| 3.9 | Diagrama de clases: variantes de producto | diagrama | insertada | `docs/Manuales/diagramas/png/clases-variantes.png` |
+| 3.10 | Diagrama de clases: carrito y pedidos | diagrama | insertada | `docs/Manuales/diagramas/png/clases-pedidos.png` |
+| 3.11 | Diagrama de clases: devoluciones, favoritos y reseñas | diagrama | insertada | `docs/Manuales/diagramas/png/clases-posventa.png` |
+| 3.12 | Diagrama de clases: billetera rehnicoin | diagrama | insertada | `docs/Manuales/diagramas/png/clases-billetera.png` |
+| 3.13 | Diagrama de clases: reportes y anuncios | diagrama | insertada | `docs/Manuales/diagramas/png/clases-moderacion.png` |
+| 3.14 | Secuencia del inicio de sesión | diagrama | insertada | `docs/Manuales/diagramas/png/secuencia-login.png` |
+| 3.15 | Secuencia del proceso de compra | diagrama | insertada | `docs/Manuales/diagramas/png/secuencia-compra.png` |
+| 3.16 | Arquitectura del sistema | diagrama | insertada | `docs/Manuales/diagramas/png/arquitectura.png` |
+| 4.1 | Administración de usuarios | captura | pendiente | `docs/Manuales/capturas/tecnico/fig-4-1-administracion-de-usuarios.png` |
+| 5.1 | Modelo relacional por módulos | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-relacional.png` |
+| 6.1 | Aplicación con HTTPS | captura | pendiente | `docs/Manuales/capturas/tecnico/fig-6-1-aplicacion-con-https.png` |
+| 6.2 | Panel de SonarCloud | captura | pendiente | `docs/Manuales/capturas/tecnico/fig-6-2-panel-de-sonarcloud.png` |
+| 7.1 | Documentación de la API | captura | pendiente | `docs/Manuales/capturas/tecnico/fig-7-1-documentacion-de-la-api.png` |
+
+## Diccionario de datos
+
+| Figura | Título | Tipo | Estado | Archivo |
+|---|---|---|---|---|
+| 2.1 | Modelo relacional por módulos | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-relacional.png` |
+| 2.2 | Modelo entidad-relación: usuarios y acceso | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-usuarios.png` |
+| 2.3 | Modelo entidad-relación: empresas y cuentas bancarias | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-empresas.png` |
+| 2.4 | Modelo entidad-relación: liquidaciones | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-liquidaciones.png` |
+| 2.5 | Modelo entidad-relación: catálogo y atributos | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-catalogo.png` |
+| 2.6 | Modelo entidad-relación: productos | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-productos.png` |
+| 2.7 | Modelo entidad-relación: variantes de producto | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-variantes.png` |
+| 2.8 | Modelo entidad-relación: carrito y pedidos | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-pedidos.png` |
+| 2.9 | Modelo entidad-relación: devoluciones, favoritos y reseñas | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-posventa.png` |
+| 2.10 | Modelo entidad-relación: billetera rehnicoin | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-billetera.png` |
+| 2.11 | Modelo entidad-relación: reportes y anuncios | diagrama | insertada | `docs/Manuales/diagramas/png/modelo-moderacion.png` |
 
 ## Datos por verificar
 
-Resaltados en amarillo como `[VERIFICAR: …]` en el .docx.
+Resaltados en amarillo como `[VERIFICAR: …]`.
 
-| Manual | Sección | Pendiente |
+| Documento | Sección | Pendiente |
 |---|---|---|
-| Usuario | Portada | VERIFICAR: centro de formación |
-| Usuario | Portada | VERIFICAR: número de ficha |
-| Usuario | Portada | VERIFICAR: nombre de la competencia |
-| Usuario | Portada | VERIFICAR: nombre del instructor |
-| Usuario | 1 | VERIFICAR: correo de soporte |
-| Usuario | 1 | VERIFICAR: número de WhatsApp que se publica, o «no aplica» para soporte |
-| Usuario | 5 | VERIFICAR: URL de producción, https://<dominio> |
-| Técnico | Portada | VERIFICAR: centro de formación |
-| Técnico | Portada | VERIFICAR: número de ficha |
-| Técnico | Portada | VERIFICAR: nombre de la competencia |
-| Técnico | Portada | VERIFICAR: nombre del instructor |
-| Técnico | 1 | VERIFICAR: URL de producción, https://<dominio> |
-| Técnico | 1 | VERIFICAR: URL de la API en producción, https://api.<dominio> |
-| Técnico | 8 | VERIFICAR: correo de soporte |
+| Manual de usuario | Portada | [VERIFICAR: centro de formación] |
+| Manual de usuario | Portada | [VERIFICAR: número de ficha] |
+| Manual de usuario | Portada | [VERIFICAR: nombre de la competencia] |
+| Manual de usuario | Portada | [VERIFICAR: nombre del instructor] |
+| Manual de usuario | 1 | [VERIFICAR: correo de soporte] |
+| Manual de usuario | 5 | [VERIFICAR: URL de producción, https://<dominio>] |
+| Manual de usuario | 8 | [VERIFICAR: correo de soporte] |
+| Manual técnico | Portada | [VERIFICAR: centro de formación] |
+| Manual técnico | Portada | [VERIFICAR: número de ficha] |
+| Manual técnico | Portada | [VERIFICAR: nombre de la competencia] |
+| Manual técnico | Portada | [VERIFICAR: nombre del instructor] |
+| Manual técnico | 1 | [VERIFICAR: URL de producción, https://<dominio>] |
+| Manual técnico | 1 | [VERIFICAR: URL de la API en producción, https://api.<dominio>] |
+| Manual técnico | 6.4 | [VERIFICAR: comparar con la salida real del servidor] |
+| Manual técnico | 8 | [VERIFICAR: correo de soporte] |
+| Diccionario de datos | Portada | [VERIFICAR: centro de formación] |
+| Diccionario de datos | Portada | [VERIFICAR: número de ficha] |
+| Diccionario de datos | Portada | [VERIFICAR: nombre de la competencia] |
+| Diccionario de datos | Portada | [VERIFICAR: nombre del instructor] |
