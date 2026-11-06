@@ -1,0 +1,61 @@
+flowchart TB
+  R["/"]
+  subgraph Pub["Público"]
+    P1["/categories"]
+    P2["/products"]
+    P3["/offers"]
+    P4["/new"]
+    P5["/products/:id"]
+    P6["/company/:companyId"]
+    P7["/cart"]
+  end
+  subgraph Acc["Acceso"]
+    A1["/login"]
+    A2["/register-user"]
+    A3["/register-company"]
+    A4["/verify-email"]
+    A5["/forgot-password"]
+    A6["/reset-password"]
+    A7["/actualizar-certificado"]
+  end
+  subgraph Com["Comprador: /user/dashboard"]
+    U1["Inicio"]
+    U2["Mis pedidos"]
+    U3["Favoritos"]
+    U4["RehniCoins"]
+    U5["Direcciones"]
+    U6["Configuración de cuenta"]
+    U7["/checkout"]
+  end
+  subgraph Emp["Empresa: /company/dashboard"]
+    E1["Inicio"]
+    E2["Productos"]
+    E3["Pedidos"]
+    E4["Devoluciones"]
+    E5["Finanzas"]
+    E6["Mi tienda"]
+    E7["Configuración de cuenta"]
+  end
+  subgraph Adm["Administrador y Owner: /admin/dashboard"]
+    D1["Inicio"]
+    D2["Empresas"]
+    D3["Usuarios"]
+    D4["Catálogo"]
+    D5["Anuncios"]
+    D6["Reportes"]
+    D7["Transportadoras"]
+    D8["Liquidaciones (solo Owner)"]
+    D9["RehniCoin"]
+    D10["Configuración de cuenta"]
+  end
+  R --> Pub
+  R --> Acc
+  A1 --> Com
+  A1 --> Emp
+  A1 --> Adm
+  P7 --> U7
+  P1 ~~~ P2 ~~~ P3 ~~~ P4 ~~~ P5 ~~~ P6 ~~~ P7
+  A1 ~~~ A2 ~~~ A3 ~~~ A4 ~~~ A5 ~~~ A6 ~~~ A7
+  U1 ~~~ U2 ~~~ U3 ~~~ U4 ~~~ U5 ~~~ U6 ~~~ U7
+  E1 ~~~ E2 ~~~ E3 ~~~ E4 ~~~ E5 ~~~ E6 ~~~ E7
+  D1 ~~~ D2 ~~~ D3 ~~~ D4 ~~~ D5 ~~~ D6 ~~~ D7 ~~~ D8 ~~~ D9 ~~~ D10
