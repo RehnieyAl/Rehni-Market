@@ -13,3 +13,7 @@ CLAUDE.md
 *.csv
 .csv
 .ruff_cache/
+# Manuales: el PDF se exporta desde OnlyOffice a partir del .docx (no se versiona)
+docs/Manuales/*.pdf
+docs/Manuales/scripts/.venv/
+docs/Manuales/scripts/__pycache__/
