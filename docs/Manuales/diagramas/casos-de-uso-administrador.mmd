@@ -1,0 +1,21 @@
+flowchart LR
+  A(["Administrador"]):::actor
+  O(["Propietario (subperfil de Administrador)"]):::actor
+  subgraph S["Sistema RehniMarket: panel administrativo (solo web)"]
+    direction TB
+    U1(["Consultar el panel Inicio: estadísticas y actividad"])
+    U2(["Revisar certificados y suspender empresas"])
+    U3(["Gestionar usuarios: editar, bloquear y cambiar rol"])
+    U4(["Gestionar catálogo, atributos y valores"])
+    U5(["Gestionar anuncios por tipo"])
+    U6(["Atender reportes"])
+    U7(["Gestionar transportadoras"])
+    U8(["Recargar y corregir RehniCoin"])
+    U9(["Configurar la cuenta"])
+    U10(["Generar y pagar liquidaciones"])
+    U11(["Gestionar cuentas de propietario"])
+  end
+  A --> U1 & U2 & U3 & U4 & U5 & U6 & U7 & U8 & U9
+  O --> U1 & U2 & U3 & U4 & U5 & U6 & U7 & U8 & U9 & U10 & U11
+  O -. "hereda" .-> A
+  classDef actor fill:#fff,stroke:#000,stroke-width:2px;

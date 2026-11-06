@@ -1,0 +1,25 @@
+erDiagram
+  direction TB
+  wallets {
+    uuid id PK
+    uuid user_id FK,UK
+    numeric_12_2 balance
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  wallet_transactions {
+    uuid id PK
+    uuid wallet_id FK
+    wallettransactiontype type
+    numeric_12_2 amount
+    varchar_255 description
+    uuid created_by FK
+    uuid order_id FK
+    timestamptz created_at
+    uuid corrects_transaction_id FK
+  }
+  orders |o--o{ wallet_transactions : "order_id"
+  users |o--o{ wallet_transactions : "created_by"
+  users ||--o| wallets : "user_id"
+  wallet_transactions |o--o{ wallet_transactions : "corrects_transaction_id"
+  wallets ||--o{ wallet_transactions : "wallet_id"

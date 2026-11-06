@@ -1,0 +1,62 @@
+classDiagram
+  direction TB
+  class ProductVariant {
+    +uuid id
+    +varchar name
+    +numeric price
+    +integer stock
+    +boolean discount_enable
+    +numeric discount_value
+    +uuid product_id
+    +uuid color_id
+    +varchar discount_type
+    +timestamp discount_starts_at
+    +timestamp discount_ends_at
+    +varchar sku
+    +varchar combo_key
+    +timestamp deleted_at
+  }
+  class ProductVariantImage {
+    +uuid id
+    +varchar url
+    +boolean is_main
+    +uuid variant_id
+  }
+  class VariantOption {
+    +uuid id
+    +uuid variant_id
+    +uuid attribute_id
+    +uuid option_id
+  }
+  class VariantAttributeValue {
+    +uuid id
+    +uuid variant_id
+    +uuid attribute_id
+    +text value
+  }
+  class VariantSpecification {
+    +uuid id
+    +text value
+    +uuid variant_id
+    +uuid specification_template_id
+  }
+  CatalogAttributeOption "1" --> "0..*" VariantOption : option_id
+  CatalogAttribute "1" --> "0..*" VariantAttributeValue : attribute_id
+  CatalogAttribute "1" --> "0..*" VariantOption : attribute_id
+  ColorVariant "0..1" --> "0..*" ProductVariant : color_id
+  ProductVariant "1" --> "0..*" ProductVariantImage : variant_id
+  ProductVariant "1" --> "0..*" VariantAttributeValue : variant_id
+  ProductVariant "1" --> "0..*" VariantOption : variant_id
+  ProductVariant "1" --> "0..*" VariantSpecification : variant_id
+  Product "1" --> "0..*" ProductVariant : product_id
+  SpecificationTemplate "1" --> "0..*" VariantSpecification : specification_template_id
+  class CatalogAttributeOption
+  <<externa>> CatalogAttributeOption
+  class CatalogAttribute
+  <<externa>> CatalogAttribute
+  class ColorVariant
+  <<externa>> ColorVariant
+  class Product
+  <<externa>> Product
+  class SpecificationTemplate
+  <<externa>> SpecificationTemplate

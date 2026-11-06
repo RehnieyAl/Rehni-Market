@@ -1,0 +1,32 @@
+flowchart TB
+  usuarios["<b>Usuarios y acceso</b><br/>users<br/>roles<br/>refreshToken<br/>event_codes<br/>addresses<br/>admin_activities"]
+  empresas["<b>Empresas y cuentas bancarias</b><br/>company<br/>company_bank_accounts"]
+  liquidaciones["<b>Liquidaciones</b><br/>company_payouts<br/>rehnicoin_movements"]
+  catalogo["<b>Catálogo y atributos</b><br/>catalog<br/>catalog_attributes<br/>catalog_attribute_options<br/>specification_templates<br/>color_variants"]
+  productos["<b>Productos</b><br/>products<br/>product_images<br/>product_specifications<br/>product_attribute_values"]
+  variantes["<b>Variantes de producto</b><br/>product_variants<br/>product_variant_images<br/>variant_options<br/>variant_attribute_values<br/>variant_specifications"]
+  pedidos["<b>Carrito y pedidos</b><br/>carts<br/>cart_items<br/>orders<br/>order_items<br/>shipping_carriers"]
+  posventa["<b>Devoluciones, favoritos y reseñas</b><br/>return_requests<br/>favorites<br/>reviews"]
+  billetera["<b>Billetera RehniCoin</b><br/>wallets<br/>wallet_transactions"]
+  moderacion["<b>Reportes y anuncios</b><br/>reports<br/>report_evidences<br/>advertisements"]
+  catalogo -->|"1 FK"| moderacion
+  catalogo -->|"4 FK"| productos
+  catalogo -->|"5 FK"| variantes
+  empresas -->|"3 FK"| liquidaciones
+  empresas -->|"2 FK"| moderacion
+  empresas -->|"1 FK"| pedidos
+  empresas -->|"1 FK"| posventa
+  empresas -->|"1 FK"| productos
+  empresas -->|"1 FK"| usuarios
+  pedidos -->|"1 FK"| billetera
+  pedidos -->|"2 FK"| posventa
+  productos -->|"2 FK"| moderacion
+  productos -->|"2 FK"| pedidos
+  productos -->|"2 FK"| posventa
+  productos -->|"1 FK"| variantes
+  usuarios -->|"2 FK"| billetera
+  usuarios -->|"1 FK"| empresas
+  usuarios -->|"2 FK"| moderacion
+  usuarios -->|"3 FK"| pedidos
+  usuarios -->|"4 FK"| posventa
+  variantes -->|"2 FK"| pedidos

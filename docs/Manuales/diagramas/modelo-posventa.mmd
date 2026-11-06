@@ -1,0 +1,42 @@
+erDiagram
+  direction LR
+  return_requests {
+    uuid id PK
+    uuid order_id FK
+    uuid order_item_id FK
+    uuid user_id FK
+    uuid company_id FK
+    text reason
+    return_status status
+    text company_response
+    uuid reviewed_by FK
+    numeric_12_2 refund_amount
+    timestamptz created_at
+    timestamptz updated_at
+    timestamptz resolved_at
+  }
+  favorites {
+    uuid id PK
+    uuid user_id FK
+    uuid product_id FK
+    timestamptz created_at
+  }
+  reviews {
+    uuid id PK
+    uuid user_id FK
+    uuid product_id FK
+    integer rating
+    text comment
+    boolean is_active
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  company ||--o{ return_requests : "company_id"
+  order_items ||--o{ return_requests : "order_item_id"
+  orders ||--o{ return_requests : "order_id"
+  products ||--o{ favorites : "product_id"
+  products ||--o{ reviews : "product_id"
+  users ||--o{ favorites : "user_id"
+  users |o--o{ return_requests : "reviewed_by"
+  users ||--o{ return_requests : "user_id"
+  users ||--o{ reviews : "user_id"

@@ -1,0 +1,1555 @@
+[
+ {
+  "code": "ADDRESS_NOT_FOUND",
+  "status": 404,
+  "message": "Dirección no encontrada.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/AddressService.py",
+   "RehniMarket-backend/app/services/commerce/CheckoutService.py"
+  ]
+ },
+ {
+  "code": "ADDRESS_REQUIRED",
+  "status": 400,
+  "message": "Debes registrar una dirección para continuar con la compra.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/CheckoutService.py"
+  ]
+ },
+ {
+  "code": "ADVERTISEMENT_IMAGE_REQUIRED",
+  "status": 400,
+  "message": "La imagen del anuncio es obligatoria.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/AdvertisementService.py"
+  ]
+ },
+ {
+  "code": "ADVERTISEMENT_NOT_FOUND",
+  "status": 404,
+  "message": "Anuncio no encontrado.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/AdvertisementService.py"
+  ]
+ },
+ {
+  "code": "BANK_ACCOUNT_IN_USE",
+  "status": 409,
+  "message": "Esta cuenta ya tiene liquidaciones asociadas y no se puede eliminar.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/BankAccountService.py"
+  ]
+ },
+ {
+  "code": "BANK_ACCOUNT_NOT_FOUND",
+  "status": 404,
+  "message": "Cuenta bancaria no encontrada.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/BankAccountService.py"
+  ]
+ },
+ {
+  "code": "CART_EMPTY",
+  "status": 400,
+  "message": "Tu carrito está vacío.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/CheckoutService.py"
+  ]
+ },
+ {
+  "code": "CART_ITEM_NOT_FOUND",
+  "status": 404,
+  "message": "Producto no encontrado en el carrito.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/CartService.py"
+  ]
+ },
+ {
+  "code": "CATALOG_ATTRIBUTE_ALREADY_EXISTS",
+  "status": 409,
+  "message": "Ya existe otro atributo con ese nombre en este catálogo.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/CatalogAttributeService.py"
+  ]
+ },
+ {
+  "code": "CATALOG_ATTRIBUTE_ALREADY_EXISTS",
+  "status": 409,
+  "message": "Ya existe un atributo con ese nombre en este catálogo.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/CatalogAttributeService.py"
+  ]
+ },
+ {
+  "code": "CATALOG_ATTRIBUTE_CATALOG_MISMATCH",
+  "status": 409,
+  "message": "'{attribute.name}' no pertenece al catálogo de este producto.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/ProductAttributes.py",
+   "RehniMarket-backend/app/services/DashboardService/company/VariantGenerate.py",
+   "RehniMarket-backend/app/services/DashboardService/company/Variants.py"
+  ]
+ },
+ {
+  "code": "CATALOG_ATTRIBUTE_CATALOG_MISMATCH",
+  "status": 409,
+  "message": "El atributo seleccionado no pertenece al catálogo del producto.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Products.py"
+  ]
+ },
+ {
+  "code": "CATALOG_ATTRIBUTE_INACTIVE",
+  "status": 409,
+  "message": "El atributo '{attribute.name}' está inactivo.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/ProductAttributes.py",
+   "RehniMarket-backend/app/services/DashboardService/company/Products.py",
+   "RehniMarket-backend/app/services/DashboardService/company/VariantGenerate.py",
+   "RehniMarket-backend/app/services/DashboardService/company/Variants.py",
+   "RehniMarket-backend/app/services/variants/resolver.py"
+  ]
+ },
+ {
+  "code": "CATALOG_ATTRIBUTE_INACTIVE",
+  "status": 409,
+  "message": "No puedes agregar valores a un atributo inactivo.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/CatalogAttributeService.py"
+  ]
+ },
+ {
+  "code": "CATALOG_ATTRIBUTE_IN_USE",
+  "status": 409,
+  "message": "No puedes eliminar un atributo que está siendo utilizado por productos o variantes.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/CatalogAttributeService.py"
+  ]
+ },
+ {
+  "code": "CATALOG_ATTRIBUTE_NOT_FOUND",
+  "status": 404,
+  "message": "Atributo no encontrado",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Products.py"
+  ]
+ },
+ {
+  "code": "CATALOG_ATTRIBUTE_NOT_FOUND",
+  "status": 404,
+  "message": "Atributo no encontrado.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/CatalogAttributeService.py",
+   "RehniMarket-backend/app/services/DashboardService/company/ProductAttributes.py",
+   "RehniMarket-backend/app/services/DashboardService/company/VariantGenerate.py",
+   "RehniMarket-backend/app/services/DashboardService/company/Variants.py"
+  ]
+ },
+ {
+  "code": "CATALOG_ATTRIBUTE_OPTION_ALREADY_EXISTS",
+  "status": 409,
+  "message": "Ya existe ese valor en el atributo.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/CatalogAttributeService.py"
+  ]
+ },
+ {
+  "code": "CATALOG_ATTRIBUTE_OPTION_ALREADY_EXISTS",
+  "status": 409,
+  "message": "Ya existe otro valor igual en el atributo.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/CatalogAttributeService.py"
+  ]
+ },
+ {
+  "code": "CATALOG_ATTRIBUTE_OPTION_NOT_FOUND",
+  "status": 404,
+  "message": "Una de las opciones seleccionadas no existe.",
+  "files": [
+   "RehniMarket-backend/app/services/variants/resolver.py"
+  ]
+ },
+ {
+  "code": "CATALOG_ATTRIBUTE_OPTION_NOT_FOUND",
+  "status": 404,
+  "message": "Valor de atributo no encontrado.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/CatalogAttributeService.py"
+  ]
+ },
+ {
+  "code": "CATALOG_ATTRIBUTE_TYPE_MISMATCH",
+  "status": 400,
+  "message": "Este atributo no admite valores predefinidos.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/CatalogAttributeService.py"
+  ]
+ },
+ {
+  "code": "CATALOG_ATTRIBUTE_TYPE_MISMATCH",
+  "status": 409,
+  "message": "No puedes cambiar a un tipo sin valores mientras el atributo tenga valores.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/CatalogAttributeService.py"
+  ]
+ },
+ {
+  "code": "CATALOG_NOT_FOUND",
+  "status": 404,
+  "message": "Catálogo no encontrado",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Products.py",
+   "RehniMarket-backend/app/services/publicService/Products.py"
+  ]
+ },
+ {
+  "code": "CATALOG_NOT_FOUND",
+  "status": 404,
+  "message": "Catálogo no encontrado.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/CatalogAttributeService.py"
+  ]
+ },
+ {
+  "code": "CATALOG_NOT_FOUND",
+  "status": 404,
+  "message": "La categoría seleccionada no existe.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/AdvertisementService.py"
+  ]
+ },
+ {
+  "code": "CODE_EXPIRED",
+  "status": 400,
+  "message": "El codigo expiro. Se ha enviado uno nuevo a tu correo electronico",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/ResetPasswordService.py"
+  ]
+ },
+ {
+  "code": "CODE_EXPIRED",
+  "status": 400,
+  "message": "El código de verificación ha expirado. Solicita un nuevo código.",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/VerifyEmailService.py"
+  ]
+ },
+ {
+  "code": "COLOR_NOT_FOUND",
+  "status": 404,
+  "message": "Color no encontrado",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Products.py"
+  ]
+ },
+ {
+  "code": "COMPANY_APPROVED",
+  "status": 409,
+  "message": "Tu certificado ya fue aprobado, no es necesario reemplazarlo.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Dashboard.py"
+  ]
+ },
+ {
+  "code": "COMPANY_CERTIFICATE_INVALID",
+  "status": 403,
+  "message": "El certificado que presentaste no es válido. Debes subir uno nuevo para que tu empresa vuelva a revisión.",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/LoginService.py"
+  ]
+ },
+ {
+  "code": "COMPANY_NOT_FOUND",
+  "status": 404,
+  "message": "Empresa no encontrada",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Dashboard.py",
+   "RehniMarket-backend/app/services/DashboardService/company/ProductAttributes.py",
+   "RehniMarket-backend/app/services/DashboardService/company/ProductDiscount.py",
+   "RehniMarket-backend/app/services/DashboardService/company/Products.py",
+   "RehniMarket-backend/app/services/DashboardService/company/VariantGenerate.py",
+   "RehniMarket-backend/app/services/DashboardService/company/Variants.py"
+  ]
+ },
+ {
+  "code": "COMPANY_NOT_FOUND",
+  "status": 404,
+  "message": "Empresa no encontrada.",
+  "files": [
+   "RehniMarket-backend/app/services/PayoutService.py",
+   "RehniMarket-backend/app/services/commerce/OrderService.py",
+   "RehniMarket-backend/app/services/commerce/ReportService.py",
+   "RehniMarket-backend/app/services/publicService/Company.py"
+  ]
+ },
+ {
+  "code": "COMPANY_NOT_FOUND",
+  "status": 404,
+  "message": "Empresa no encontrada...",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/CompanyService.py"
+  ]
+ },
+ {
+  "code": "COMPANY_NOT_FOUND",
+  "status": 404,
+  "message": "La empresa seleccionada no existe.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/AdvertisementService.py"
+  ]
+ },
+ {
+  "code": "COMPANY_NOT_FOUND",
+  "status": 404,
+  "message": "No se encontró una empresa para este usuario.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/BankAccountService.py",
+   "RehniMarket-backend/app/services/PayoutService.py"
+  ]
+ },
+ {
+  "code": "COMPANY_PENDING",
+  "status": 403,
+  "message": "Tu empresa esta en revision",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/LoginService.py"
+  ]
+ },
+ {
+  "code": "COMPANY_PENDING",
+  "status": 409,
+  "message": "Tu certificado ya está en revisión. Espera a que el administrador lo apruebe o lo rechace antes de volver a subirlo.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Dashboard.py"
+  ]
+ },
+ {
+  "code": "COMPANY_REJECTED",
+  "status": 403,
+  "message": "Tu empresa fue rechazada. Para volver a operar debe intervenir un administrador.",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/LoginService.py"
+  ]
+ },
+ {
+  "code": "COMPANY_REJECTED",
+  "status": 409,
+  "message": "Tu empresa fue rechazada. No es posible actualizar el certificado; contacta con un administrador.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Dashboard.py"
+  ]
+ },
+ {
+  "code": "COMPANY_SUSPENDED",
+  "status": 403,
+  "message": "Tu empresa se encuentra suspendida.",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/CertificateUpdateService.py",
+   "RehniMarket-backend/app/services/authentication/LoginService.py",
+   "RehniMarket-backend/app/services/authentication/RefreshTokenService.py"
+  ]
+ },
+ {
+  "code": "DATABASE_ERROR",
+  "status": 503,
+  "message": "Servicio temporalmente no disponible. Intenta de nuevo.",
+  "files": [
+   "RehniMarket-backend/app/middleware/AuthMiddleware.py"
+  ]
+ },
+ {
+  "code": "EMAIL_ALREADY_EXISTS",
+  "status": 409,
+  "message": "El correo electrónico ya está registrado.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/UserService.py",
+   "RehniMarket-backend/app/services/authentication/MeService.py"
+  ]
+ },
+ {
+  "code": "EMAIL_ALREADY_EXISTS",
+  "status": 409,
+  "message": "El correo ya se encuentra registrado",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/RegisterService.py"
+  ]
+ },
+ {
+  "code": "EMAIL_ALREADY_VERIFIED",
+  "status": 400,
+  "message": "El correo electronico ya ha sido verificado.",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/VerifyEmailService.py"
+  ]
+ },
+ {
+  "code": "EMAIL_ALREADY_VERIFIED",
+  "status": 400,
+  "message": "El correo ya fue verificado y no puede modificarse",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/VerifyEmailService.py"
+  ]
+ },
+ {
+  "code": "EMAIL_NOT_FOUND",
+  "status": 404,
+  "message": "No existe una cuenta registrada con ese correo.",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/ForgotPasswordService.py"
+  ]
+ },
+ {
+  "code": "EMAIL_NOT_FOUND",
+  "status": 404,
+  "message": "No existe una cuenta registrada con este correo",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/ResetPasswordService.py"
+  ]
+ },
+ {
+  "code": "EMAIL_NOT_VERIFIED",
+  "status": 400,
+  "message": "Tu correo no ha sido verificado. Te enviamos un código de verificación a tu correo electrónico.",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/LoginService.py"
+  ]
+ },
+ {
+  "code": "FAVORITE_ALREADY_EXISTS",
+  "status": 409,
+  "message": "Este producto ya está en tus favoritos.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/FavoriteService.py"
+  ]
+ },
+ {
+  "code": "FAVORITE_NOT_FOUND",
+  "status": 404,
+  "message": "Favorito no encontrado.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/FavoriteService.py"
+  ]
+ },
+ {
+  "code": "FILE_UPLOAD_FAILED",
+  "status": 500,
+  "message": "No se pudo subir el certificado",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Dashboard.py"
+  ]
+ },
+ {
+  "code": "FILE_UPLOAD_FAILED",
+  "status": 500,
+  "message": "No se pudo subir la imagen.",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/MeService.py"
+  ]
+ },
+ {
+  "code": "FILE_UPLOAD_FAILED",
+  "status": 500,
+  "message": "No se pudo subir una de las imágenes de evidencia.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReportService.py"
+  ]
+ },
+ {
+  "code": "FORBIDDEN",
+  "status": 403,
+  "message": "No puedes editar la reseña de otro usuario.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReviewService.py"
+  ]
+ },
+ {
+  "code": "FORBIDDEN",
+  "status": 403,
+  "message": "No puedes eliminar la reseña de otro usuario.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReviewService.py"
+  ]
+ },
+ {
+  "code": "FORBIDDEN",
+  "status": 403,
+  "message": "No tienes permiso para acceder a este recurso",
+  "files": [
+   "RehniMarket-backend/app/middleware/AuthMiddleware.py"
+  ]
+ },
+ {
+  "code": "FORBIDDEN",
+  "status": 403,
+  "message": "No tienes permisos para bloquear o desbloquear una cuenta Owner.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/UserService.py"
+  ]
+ },
+ {
+  "code": "FORBIDDEN",
+  "status": 403,
+  "message": "No tienes permisos para modificar una cuenta Owner.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/UserService.py"
+  ]
+ },
+ {
+  "code": "FORBIDDEN",
+  "status": 403,
+  "message": "Rol inválido",
+  "files": [
+   "RehniMarket-backend/app/middleware/AuthMiddleware.py"
+  ]
+ },
+ {
+  "code": "FORBIDDEN",
+  "status": 403,
+  "message": "Solo el propietario puede gestionar liquidaciones.",
+  "files": [
+   "RehniMarket-backend/app/routers/AdminPayoutRouter.py"
+  ]
+ },
+ {
+  "code": "FORBIDDEN",
+  "status": 403,
+  "message": "Solo un Owner puede asignar el rol Owner.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/UserService.py"
+  ]
+ },
+ {
+  "code": "FORBIDDEN",
+  "status": 403,
+  "message": "Solo un administrador puede recargar saldo de RehniCoin.",
+  "files": [
+   "RehniMarket-backend/app/routers/AdminWalletRouter.py",
+   "RehniMarket-backend/app/routers/WalletRouter.py"
+  ]
+ },
+ {
+  "code": "INSUFFICIENT_BALANCE",
+  "status": 402,
+  "message": "Saldo de RehniCoin insuficiente para completar la compra.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/WalletService.py"
+  ]
+ },
+ {
+  "code": "INSUFFICIENT_BALANCE",
+  "status": 402,
+  "message": "Tu saldo de RehniCoin no alcanza para completar la compra.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/CheckoutService.py"
+  ]
+ },
+ {
+  "code": "INSUFFICIENT_STOCK",
+  "status": 409,
+  "message": "'{product_name}' ya no tiene suficiente stock disponible.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/CheckoutService.py"
+  ]
+ },
+ {
+  "code": "INSUFFICIENT_STOCK",
+  "status": 409,
+  "message": "Solo hay {available_stock} unidades disponibles.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/CartService.py"
+  ]
+ },
+ {
+  "code": "INTERNAL_SERVER_ERROR",
+  "status": 500,
+  "message": "Error del servidor",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Products.py"
+  ]
+ },
+ {
+  "code": "INTERNAL_SERVER_ERROR",
+  "status": 500,
+  "message": "Error interno del servidor",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Dashboard.py",
+   "RehniMarket-backend/app/services/authentication/ForgotPasswordService.py",
+   "RehniMarket-backend/app/services/authentication/RegisterService.py",
+   "RehniMarket-backend/app/services/authentication/ResetPasswordService.py"
+  ]
+ },
+ {
+  "code": "INTERNAL_SERVER_ERROR",
+  "status": 500,
+  "message": "Error interno del servidor.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/ReportService.py",
+   "RehniMarket-backend/app/services/DashboardService/company/BankAccountService.py",
+   "RehniMarket-backend/app/services/PayoutService.py",
+   "RehniMarket-backend/app/services/authentication/LoginService.py",
+   "RehniMarket-backend/app/services/authentication/MeService.py",
+   "RehniMarket-backend/app/services/authentication/RefreshTokenService.py",
+   "RehniMarket-backend/app/services/authentication/RegisterService.py",
+   "RehniMarket-backend/app/services/commerce/AddressService.py",
+   "RehniMarket-backend/app/services/commerce/CartService.py",
+   "RehniMarket-backend/app/services/commerce/CheckoutService.py",
+   "RehniMarket-backend/app/services/commerce/FavoriteService.py",
+   "RehniMarket-backend/app/services/commerce/OrderService.py",
+   "RehniMarket-backend/app/services/commerce/ReportService.py",
+   "RehniMarket-backend/app/services/commerce/ReturnService.py",
+   "RehniMarket-backend/app/services/commerce/ReviewService.py",
+   "RehniMarket-backend/app/services/commerce/WalletService.py"
+  ]
+ },
+ {
+  "code": "INTERNAL_SERVER_ERROR",
+  "status": 500,
+  "message": "Error interno del servidor..",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/VerifyEmailService.py"
+  ]
+ },
+ {
+  "code": "INTERNAL_SERVER_ERROR",
+  "status": 500,
+  "message": "Ha ocurrido un error interno del servidor",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/VerifyEmailService.py"
+  ]
+ },
+ {
+  "code": "INTERNAL_SERVER_ERROR",
+  "status": 500,
+  "message": "No se pudo subir el certificado",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/RegisterService.py"
+  ]
+ },
+ {
+  "code": "INVALID_AMOUNT",
+  "status": 400,
+  "message": "La cantidad corregida es igual a la original: no hay nada que ajustar.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/WalletService.py"
+  ]
+ },
+ {
+  "code": "INVALID_AMOUNT",
+  "status": 400,
+  "message": "La corrección dejaría el saldo del usuario en negativo.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/WalletService.py"
+  ]
+ },
+ {
+  "code": "INVALID_CODE",
+  "status": 400,
+  "message": "El codigo de recuperacion es incorrecto",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/ResetPasswordService.py"
+  ]
+ },
+ {
+  "code": "INVALID_CODE",
+  "status": 400,
+  "message": "El código de verificación es incorrecto.",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/VerifyEmailService.py"
+  ]
+ },
+ {
+  "code": "INVALID_CREDENTIALS",
+  "status": 400,
+  "message": "Correo o contraseña incorrecta",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/LoginService.py"
+  ]
+ },
+ {
+  "code": "INVALID_CREDENTIALS",
+  "status": 400,
+  "message": "Correo o contraseña incorrecta.",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/LoginService.py"
+  ]
+ },
+ {
+  "code": "INVALID_CREDENTIALS",
+  "status": 400,
+  "message": "Correo o contraseña incorrectos.",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/CertificateUpdateService.py"
+  ]
+ },
+ {
+  "code": "INVALID_DATA",
+  "status": 400,
+  "message": "Cursor inválido.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/CompanyService.py"
+  ]
+ },
+ {
+  "code": "INVALID_FILE",
+  "status": 400,
+  "message": "Cada imagen debe pesar como máximo 5 MB.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReportService.py"
+  ]
+ },
+ {
+  "code": "INVALID_FILE",
+  "status": 400,
+  "message": "Debe enviar al menos una imagen",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Variants.py"
+  ]
+ },
+ {
+  "code": "INVALID_FILE",
+  "status": 400,
+  "message": "El certificado debe pesar como máximo 5 MB.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Dashboard.py"
+  ]
+ },
+ {
+  "code": "INVALID_FILE",
+  "status": 400,
+  "message": "El certificado debe ser un archivo PDF.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Dashboard.py"
+  ]
+ },
+ {
+  "code": "INVALID_FILE",
+  "status": 400,
+  "message": "Puedes adjuntar como máximo {MAX_EVIDENCE_IMAGES} imágenes.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReportService.py"
+  ]
+ },
+ {
+  "code": "INVALID_FILE",
+  "status": 400,
+  "message": "Solo se permiten imágenes en formato JPEG, PNG o WEBP.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReportService.py"
+  ]
+ },
+ {
+  "code": "INVALID_ORDER_STATUS_TRANSITION",
+  "status": 409,
+  "message": "Este pedido ya está en preparación y no se puede cancelar.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/OrderService.py"
+  ]
+ },
+ {
+  "code": "INVALID_ORDER_STATUS_TRANSITION",
+  "status": 409,
+  "message": "No se puede pasar de '{order.status.value}' a '{target.value}'.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/OrderService.py"
+  ]
+ },
+ {
+  "code": "INVALID_REPORT_TARGET",
+  "status": 400,
+  "message": "Tipo de reporte inválido.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/ReportService.py"
+  ]
+ },
+ {
+  "code": "INVALID_ROLE",
+  "status": 400,
+  "message": "Una empresa no puede cambiar de rol.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/UserService.py"
+  ]
+ },
+ {
+  "code": "INVALID_STATUS",
+  "status": 400,
+  "message": "Estado de certificado inválido.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/CompanyService.py"
+  ]
+ },
+ {
+  "code": "INVALID_TOKEN",
+  "status": 401,
+  "message": "Access token requerido",
+  "files": [
+   "RehniMarket-backend/app/middleware/AuthMiddleware.py"
+  ]
+ },
+ {
+  "code": "INVALID_TOKEN",
+  "status": 401,
+  "message": "Formato de autorización inválido",
+  "files": [
+   "RehniMarket-backend/app/middleware/AuthMiddleware.py"
+  ]
+ },
+ {
+  "code": "INVALID_TOKEN",
+  "status": 401,
+  "message": "No hay usuario o rol en el token",
+  "files": [
+   "RehniMarket-backend/app/middleware/AuthMiddleware.py"
+  ]
+ },
+ {
+  "code": "INVALID_TOKEN",
+  "status": 401,
+  "message": "Token inválido",
+  "files": [
+   "RehniMarket-backend/app/middleware/AuthMiddleware.py"
+  ]
+ },
+ {
+  "code": "INVALID_TOKEN",
+  "status": 401,
+  "message": "Usuario no encontrado",
+  "files": [
+   "RehniMarket-backend/app/middleware/AuthMiddleware.py"
+  ]
+ },
+ {
+  "code": "INVALID_USER",
+  "status": 400,
+  "message": "No puedes bloquear o desbloquear tu propia cuenta.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/UserService.py"
+  ]
+ },
+ {
+  "code": "INVALID_USER",
+  "status": 400,
+  "message": "No puedes modificar tu propia cuenta desde esta opción.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/UserService.py"
+  ]
+ },
+ {
+  "code": "MISSING_REQUIRED_FIELD",
+  "status": 400,
+  "message": "Debes indicar el motivo del rechazo de la devolución.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReturnService.py"
+  ]
+ },
+ {
+  "code": "MISSING_REQUIRED_FIELD",
+  "status": 400,
+  "message": "El motivo de suspensión es obligatorio.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/CompanyService.py"
+  ]
+ },
+ {
+  "code": "MISSING_REQUIRED_FIELD",
+  "status": 400,
+  "message": "El motivo es obligatorio.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/CompanyService.py"
+  ]
+ },
+ {
+  "code": "NIT_ALREADY_EXISTS",
+  "status": 409,
+  "message": "El NIT ya se encuentra registrado",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/RegisterService.py"
+  ]
+ },
+ {
+  "code": "ORDER_ALREADY_CANCELLED",
+  "status": 409,
+  "message": "Este pedido ya fue cancelado y reembolsado.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/OrderService.py"
+  ]
+ },
+ {
+  "code": "ORDER_ITEM_NOT_FOUND",
+  "status": 404,
+  "message": "Ese producto no pertenece a este pedido.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReturnService.py"
+  ]
+ },
+ {
+  "code": "ORDER_NOT_FOUND",
+  "status": 404,
+  "message": "Pedido no encontrado.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/OrderService.py",
+   "RehniMarket-backend/app/services/commerce/ReturnService.py"
+  ]
+ },
+ {
+  "code": "PAYOUT_ALREADY_EXISTS",
+  "status": 409,
+  "message": "Ya existe una liquidación generada para esta empresa en este periodo.",
+  "files": [
+   "RehniMarket-backend/app/services/PayoutService.py"
+  ]
+ },
+ {
+  "code": "PAYOUT_ALREADY_PAID",
+  "status": 409,
+  "message": "Esta liquidación ya fue pagada.",
+  "files": [
+   "RehniMarket-backend/app/services/PayoutService.py"
+  ]
+ },
+ {
+  "code": "PAYOUT_INVALID_PERIOD",
+  "status": 422,
+  "message": "El periodo seleccionado no es válido.",
+  "files": [
+   "RehniMarket-backend/app/services/PayoutService.py"
+  ]
+ },
+ {
+  "code": "PAYOUT_NOT_FOUND",
+  "status": 404,
+  "message": "Liquidación no encontrada.",
+  "files": [
+   "RehniMarket-backend/app/services/PayoutService.py"
+  ]
+ },
+ {
+  "code": "PAYOUT_NO_BANK_ACCOUNT",
+  "status": 422,
+  "message": "La empresa no tiene una cuenta bancaria predeterminada registrada.",
+  "files": [
+   "RehniMarket-backend/app/services/PayoutService.py"
+  ]
+ },
+ {
+  "code": "PAYOUT_NO_VALID_SALES",
+  "status": 422,
+  "message": "No hay ventas válidas (pedidos entregados) en el periodo solicitado.",
+  "files": [
+   "RehniMarket-backend/app/services/PayoutService.py"
+  ]
+ },
+ {
+  "code": "PRODUCT_ATTRIBUTE_INVALID",
+  "status": 409,
+  "message": "'{attribute.name}' no es un atributo de producto.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/ProductAttributes.py",
+   "RehniMarket-backend/app/services/DashboardService/company/Products.py"
+  ]
+ },
+ {
+  "code": "PRODUCT_ATTRIBUTE_INVALID",
+  "status": 409,
+  "message": "No se puede asignar dos valores al mismo atributo.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/ProductAttributes.py",
+   "RehniMarket-backend/app/services/DashboardService/company/Products.py",
+   "RehniMarket-backend/app/services/DashboardService/company/Variants.py"
+  ]
+ },
+ {
+  "code": "PRODUCT_IMAGE_NOT_FOUND",
+  "status": 404,
+  "message": "Imagen no encontrada",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Products.py"
+  ]
+ },
+ {
+  "code": "PRODUCT_NOT_FOUND",
+  "status": 404,
+  "message": "El producto seleccionado no existe.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/AdvertisementService.py"
+  ]
+ },
+ {
+  "code": "PRODUCT_NOT_FOUND",
+  "status": 404,
+  "message": "Producto no encontrado",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/ProductAttributes.py",
+   "RehniMarket-backend/app/services/DashboardService/company/ProductDiscount.py",
+   "RehniMarket-backend/app/services/DashboardService/company/Products.py",
+   "RehniMarket-backend/app/services/DashboardService/company/VariantGenerate.py",
+   "RehniMarket-backend/app/services/DashboardService/company/Variants.py",
+   "RehniMarket-backend/app/services/publicService/Products.py"
+  ]
+ },
+ {
+  "code": "PRODUCT_NOT_FOUND",
+  "status": 404,
+  "message": "Producto no encontrado.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/CartService.py",
+   "RehniMarket-backend/app/services/commerce/FavoriteService.py",
+   "RehniMarket-backend/app/services/commerce/ReportService.py",
+   "RehniMarket-backend/app/services/commerce/ReviewService.py"
+  ]
+ },
+ {
+  "code": "PRODUCT_NOT_FOUND",
+  "status": 409,
+  "message": "El producto '{product.name if product else cart_item.product_id}' ya no está disponible.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/CheckoutService.py"
+  ]
+ },
+ {
+  "code": "PRODUCT_NOT_FOUND",
+  "status": 409,
+  "message": "Una variante de '{product.name}' ya no está disponible.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/CheckoutService.py"
+  ]
+ },
+ {
+  "code": "PRODUCT_OUT_OF_STOCK",
+  "status": 409,
+  "message": "Producto sin stock disponible.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/CartService.py"
+  ]
+ },
+ {
+  "code": "PURCHASE_NOT_ALLOWED",
+  "status": 403,
+  "message": "Esta cuenta no puede escribir reseñas.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReviewService.py"
+  ]
+ },
+ {
+  "code": "PURCHASE_NOT_ALLOWED",
+  "status": 403,
+  "message": "Esta cuenta no puede solicitar devoluciones.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReturnService.py"
+  ]
+ },
+ {
+  "code": "PURCHASE_NOT_ALLOWED",
+  "status": 403,
+  "message": "Esta cuenta no tiene devoluciones.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReturnService.py"
+  ]
+ },
+ {
+  "code": "PURCHASE_NOT_ALLOWED",
+  "status": 403,
+  "message": "Esta cuenta no tiene pedidos.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/OrderService.py"
+  ]
+ },
+ {
+  "code": "PURCHASE_NOT_ALLOWED",
+  "status": 403,
+  "message": "Solo las cuentas de tipo comprador pueden gestionar direcciones.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/AddressService.py"
+  ]
+ },
+ {
+  "code": "PURCHASE_NOT_ALLOWED",
+  "status": 403,
+  "message": "Solo las cuentas de tipo comprador pueden realizar compras.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/CartService.py"
+  ]
+ },
+ {
+  "code": "PURCHASE_NOT_ALLOWED",
+  "status": 403,
+  "message": "Solo las cuentas de tipo comprador pueden usar favoritos.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/FavoriteService.py"
+  ]
+ },
+ {
+  "code": "RATE_LIMIT_EXCEEDED",
+  "status": 429,
+  "message": "Demasiadas solicitudes. Intenta nuevamente más tarde.",
+  "files": [
+   "RehniMarket-backend/app/middleware/RateLimitMiddleware.py"
+  ]
+ },
+ {
+  "code": "RECHARGE_ALREADY_CORRECTED",
+  "status": 409,
+  "message": "Esta recarga ya fue corregida y no puede corregirse de nuevo.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/WalletService.py"
+  ]
+ },
+ {
+  "code": "RECHARGE_NOT_CORRECTABLE",
+  "status": 400,
+  "message": "Solo se pueden corregir recargas realizadas por un administrador.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/WalletService.py"
+  ]
+ },
+ {
+  "code": "REFRESH_TOKEN_EXPIRED",
+  "status": 401,
+  "message": "El Refresh Token ha expirado.",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/RefreshTokenService.py"
+  ]
+ },
+ {
+  "code": "REFRESH_TOKEN_INVALID",
+  "status": 401,
+  "message": "El token proporcionado no es un Refresh Token.",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/RefreshTokenService.py"
+  ]
+ },
+ {
+  "code": "REFRESH_TOKEN_INVALID",
+  "status": 401,
+  "message": "No se proporcionó un Refresh Token.",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/RefreshTokenService.py"
+  ]
+ },
+ {
+  "code": "REPORT_ALREADY_RESOLVED",
+  "status": 409,
+  "message": "El reporte ya fue resuelto y no puede modificarse.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/ReportService.py"
+  ]
+ },
+ {
+  "code": "REPORT_NOT_FOUND",
+  "status": 404,
+  "message": "Reporte no encontrado.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/ReportService.py"
+  ]
+ },
+ {
+  "code": "RESEND_COOLDOWN_ACTIVE",
+  "status": 429,
+  "message": "Debes esperar antes de solicitar un nuevo código de verificación.",
+  "files": [
+   "RehniMarket-backend/app/services/email/CodeService.py"
+  ]
+ },
+ {
+  "code": "RETURN_ALREADY_REQUESTED",
+  "status": 409,
+  "message": "Ya existe una solicitud de devolución activa para este producto.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReturnService.py"
+  ]
+ },
+ {
+  "code": "RETURN_ALREADY_RESOLVED",
+  "status": 409,
+  "message": "Esta solicitud de devolución ya fue resuelta.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReturnService.py"
+  ]
+ },
+ {
+  "code": "RETURN_NOT_ELIGIBLE",
+  "status": 400,
+  "message": "Solo puedes solicitar la devolución de un pedido que ya fue entregado.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReturnService.py"
+  ]
+ },
+ {
+  "code": "RETURN_NOT_FOUND",
+  "status": 404,
+  "message": "Solicitud de devolución no encontrada.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReturnService.py"
+  ]
+ },
+ {
+  "code": "REVIEW_ALREADY_EXISTS",
+  "status": 409,
+  "message": "Ya reseñaste este producto. Edita tu reseña en vez de crear otra.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReviewService.py"
+  ]
+ },
+ {
+  "code": "REVIEW_NOT_ELIGIBLE",
+  "status": 403,
+  "message": "Solo puedes reseñar productos que ya te hayan entregado.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReviewService.py"
+  ]
+ },
+ {
+  "code": "REVIEW_NOT_FOUND",
+  "status": 404,
+  "message": "Reseña no encontrada.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReviewService.py"
+  ]
+ },
+ {
+  "code": "ROLE_NOT_ASSIGNED",
+  "status": 400,
+  "message": "El usuario no tiene un rol asignado",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/LoginService.py"
+  ]
+ },
+ {
+  "code": "ROLE_NOT_FOUND",
+  "status": 404,
+  "message": "No existe el rol empresa",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/RegisterService.py"
+  ]
+ },
+ {
+  "code": "ROLE_NOT_FOUND",
+  "status": 404,
+  "message": "Rol no encontrado.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/UserService.py"
+  ]
+ },
+ {
+  "code": "ROLE_NOT_FOUND",
+  "status": 409,
+  "message": "El rol no existe...",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/RegisterService.py"
+  ]
+ },
+ {
+  "code": "SHIPPING_CARRIER_ALREADY_EXISTS",
+  "status": 409,
+  "message": "Ya existe otra transportadora con ese nombre.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/ShippingCarrierService.py"
+  ]
+ },
+ {
+  "code": "SHIPPING_CARRIER_ALREADY_EXISTS",
+  "status": 409,
+  "message": "Ya existe una transportadora con ese nombre.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/ShippingCarrierService.py"
+  ]
+ },
+ {
+  "code": "SHIPPING_CARRIER_INACTIVE",
+  "status": 409,
+  "message": "La transportadora seleccionada está inactiva.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/OrderService.py"
+  ]
+ },
+ {
+  "code": "SHIPPING_CARRIER_NOT_FOUND",
+  "status": 404,
+  "message": "Transportadora no encontrada.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/ShippingCarrierService.py",
+   "RehniMarket-backend/app/services/commerce/OrderService.py"
+  ]
+ },
+ {
+  "code": "TOKEN_EXPIRED",
+  "status": 401,
+  "message": "Token expirado",
+  "files": [
+   "RehniMarket-backend/app/middleware/AuthMiddleware.py"
+  ]
+ },
+ {
+  "code": "UNAUTHORIZED",
+  "status": 401,
+  "message": "Token requerido",
+  "files": [
+   "RehniMarket-backend/app/middleware/AuthMiddleware.py"
+  ]
+ },
+ {
+  "code": "USER_BLOCKED",
+  "status": 403,
+  "message": "Tu cuenta se encuentra bloqueada.",
+  "files": [
+   "RehniMarket-backend/app/middleware/AuthMiddleware.py"
+  ]
+ },
+ {
+  "code": "USER_BLOCKED",
+  "status": 403,
+  "message": "Tu cuenta se encuentra bloqueada. Contacta con un administrador.",
+  "files": [
+   "RehniMarket-backend/app/services/authentication/CertificateUpdateService.py",
+   "RehniMarket-backend/app/services/authentication/LoginService.py",
+   "RehniMarket-backend/app/services/authentication/RefreshTokenService.py"
+  ]
+ },
+ {
+  "code": "USER_NOT_FOUND",
+  "status": 404,
+  "message": "No existe ningun usuario registrado con ese correo.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/WalletService.py"
+  ]
+ },
+ {
+  "code": "USER_NOT_FOUND",
+  "status": 404,
+  "message": "Usuario no encontrado",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Dashboard.py",
+   "RehniMarket-backend/app/services/DashboardService/company/Products.py",
+   "RehniMarket-backend/app/services/authentication/VerifyEmailService.py"
+  ]
+ },
+ {
+  "code": "USER_NOT_FOUND",
+  "status": 404,
+  "message": "Usuario no encontrado.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/UserService.py",
+   "RehniMarket-backend/app/services/authentication/MeService.py",
+   "RehniMarket-backend/app/services/authentication/RefreshTokenService.py",
+   "RehniMarket-backend/app/services/authentication/VerifyEmailService.py",
+   "RehniMarket-backend/app/services/commerce/WalletService.py"
+  ]
+ },
+ {
+  "code": "VALIDATION_ERROR",
+  "status": 400,
+  "message": "Cada atributo requiere un identificador y un valor.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Products.py"
+  ]
+ },
+ {
+  "code": "VALIDATION_ERROR",
+  "status": 400,
+  "message": "Completa la configuración requerida para este tipo de anuncio.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/AdvertisementService.py"
+  ]
+ },
+ {
+  "code": "VALIDATION_ERROR",
+  "status": 400,
+  "message": "Estado de devolución inválido.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/ReturnService.py"
+  ]
+ },
+ {
+  "code": "VALIDATION_ERROR",
+  "status": 400,
+  "message": "Estado de pedido inválido.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/OrderService.py"
+  ]
+ },
+ {
+  "code": "VALIDATION_ERROR",
+  "status": 400,
+  "message": "Estado de reporte inválido.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/ReportService.py"
+  ]
+ },
+ {
+  "code": "VALIDATION_ERROR",
+  "status": 400,
+  "message": "Este producto requiere seleccionar una variante.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/CartService.py"
+  ]
+ },
+ {
+  "code": "VALIDATION_ERROR",
+  "status": 400,
+  "message": "La fecha de fin del descuento debe ser posterior a la de inicio.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/ProductDiscount.py",
+   "RehniMarket-backend/app/services/DashboardService/company/Variants.py"
+  ]
+ },
+ {
+  "code": "VALIDATION_ERROR",
+  "status": 400,
+  "message": "Para activar el descuento, el porcentaje de descuento debe ser mayor a 0.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Products.py"
+  ]
+ },
+ {
+  "code": "VALIDATION_ERROR",
+  "status": 400,
+  "message": "Para activar el descuento, el valor debe ser mayor a 0.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/ProductDiscount.py"
+  ]
+ },
+ {
+  "code": "VALIDATION_ERROR",
+  "status": 400,
+  "message": "Selecciona un producto para este anuncio.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/AdvertisementService.py"
+  ]
+ },
+ {
+  "code": "VALIDATION_ERROR",
+  "status": 400,
+  "message": "Selecciona una categoría para este anuncio.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/AdvertisementService.py"
+  ]
+ },
+ {
+  "code": "VALIDATION_ERROR",
+  "status": 400,
+  "message": "Selecciona una empresa para este anuncio.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/AdvertisementService.py"
+  ]
+ },
+ {
+  "code": "VALIDATION_ERROR",
+  "status": 422,
+  "message": "Estado de liquidación inválido.",
+  "files": [
+   "RehniMarket-backend/app/services/PayoutService.py"
+  ]
+ },
+ {
+  "code": "VALIDATION_ERROR",
+  "status": 422,
+  "message": "Un valor de color requiere su código hexadecimal.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/admin/CatalogAttributeService.py"
+  ]
+ },
+ {
+  "code": "VARIANT_ALREADY_DELETED",
+  "status": 409,
+  "message": "La variante fue eliminada y no puede editarse.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Variants.py"
+  ]
+ },
+ {
+  "code": "VARIANT_ALREADY_DELETED",
+  "status": 409,
+  "message": "La variante ya fue eliminada.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Variants.py"
+  ]
+ },
+ {
+  "code": "VARIANT_AXIS_ROLE_INVALID",
+  "status": 409,
+  "message": "'{attribute.name}' no es un atributo de variante.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/VariantGenerate.py",
+   "RehniMarket-backend/app/services/variants/resolver.py"
+  ]
+ },
+ {
+  "code": "VARIANT_COMBINATION_DUPLICATE",
+  "status": 409,
+  "message": "Ya existe una variante con esa combinación o SKU.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Variants.py"
+  ]
+ },
+ {
+  "code": "VARIANT_COMBINATION_DUPLICATE",
+  "status": 409,
+  "message": "Ya existe una variante con esa combinación.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Variants.py"
+  ]
+ },
+ {
+  "code": "VARIANT_COMBINATION_INVALID",
+  "status": 400,
+  "message": "La categoría de este producto no define ejes de variante.",
+  "files": [
+   "RehniMarket-backend/app/services/variants/resolver.py"
+  ]
+ },
+ {
+  "code": "VARIANT_COMBINATION_INVALID",
+  "status": 400,
+  "message": "No puedes elegir dos valores para '{attribute.name}'.",
+  "files": [
+   "RehniMarket-backend/app/services/variants/resolver.py"
+  ]
+ },
+ {
+  "code": "VARIANT_COMBINATION_INVALID",
+  "status": 400,
+  "message": "No puedes repetir un eje.",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/VariantGenerate.py"
+  ]
+ },
+ {
+  "code": "VARIANT_IMAGE_NOT_FOUND",
+  "status": 404,
+  "message": "Imagen no encontrada",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Variants.py"
+  ]
+ },
+ {
+  "code": "VARIANT_NOT_FOUND",
+  "status": 404,
+  "message": "Variante no encontrada",
+  "files": [
+   "RehniMarket-backend/app/services/DashboardService/company/Variants.py"
+  ]
+ },
+ {
+  "code": "VARIANT_NOT_FOUND",
+  "status": 404,
+  "message": "Variante no encontrada.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/CartService.py"
+  ]
+ },
+ {
+  "code": "VARIANT_OPTION_MISMATCH",
+  "status": 409,
+  "message": "'{option.value}' no pertenece a un eje de variante de esta categoría.",
+  "files": [
+   "RehniMarket-backend/app/services/variants/resolver.py"
+  ]
+ },
+ {
+  "code": "WALLET_TRANSACTION_NOT_FOUND",
+  "status": 404,
+  "message": "Movimiento de RehniCoin no encontrado.",
+  "files": [
+   "RehniMarket-backend/app/services/commerce/WalletService.py"
+  ]
+ }
+]

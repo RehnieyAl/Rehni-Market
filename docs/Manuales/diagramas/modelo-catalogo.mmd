@@ -1,0 +1,43 @@
+erDiagram
+  direction TB
+  catalog {
+    uuid id PK
+    varchar_50 name UK
+    varchar_500 description
+    varchar_255 image_url
+    integer display_order
+    boolean is_active
+  }
+  catalog_attributes {
+    uuid id PK
+    uuid catalog_id FK
+    varchar_80 name
+    varchar_16 role
+    varchar_16 input_type
+    varchar_24 unit
+    boolean is_active
+    integer position
+    timestamp created_at
+  }
+  catalog_attribute_options {
+    uuid id PK
+    uuid attribute_id FK
+    varchar_80 value
+    varchar_7 hex_color
+    integer position
+  }
+  specification_templates {
+    uuid id PK
+    varchar_100 name
+    varchar_50 type
+    boolean required
+    uuid catalog_id FK
+  }
+  color_variants {
+    uuid id PK
+    varchar_50 name UK
+    varchar_7 hex_color
+  }
+  catalog ||--o{ catalog_attributes : "catalog_id"
+  catalog ||--o{ specification_templates : "catalog_id"
+  catalog_attributes ||--o{ catalog_attribute_options : "attribute_id"
