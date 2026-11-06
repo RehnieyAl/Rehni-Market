@@ -2,9 +2,9 @@
 
 Hosting, dominio y transferencia de archivos. Guía paso a paso basada en
 `bc-implantacion/bootcamp/week-03-hosting_dominio_y_transferencia/`. Los pasos 0-5 son las
-prácticas del curso; el paso 6 aplica la semana a **RehniMarket**, donde Caddy ya reemplazó a
-Nginx: frontend en `localhost` y API en `api.localhost` (en producción, `<dominio>` y
-`api.<dominio>`), con HTTPS automático.
+prácticas del curso; el paso 6 aplica la semana a **RehniMarket**, con Caddy como único reverse proxy: frontend en
+`rehnimarket` y API en `api.rehnimarket` en local (en producción, `<dominio>` y
+`api.<dominio>`), con HTTPS automático. Configuración: [`caddy-configuracion.md`](caddy-configuracion.md).
 
 > **Ojo con el puerto HTTP:** en tu copia, `compose.yaml` publica el HTTP del proxy en **8081**
 > (los documentos del curso dicen 8080). En esta guía se usa 8081. RehniMarket usa 80 y 443
@@ -179,6 +179,10 @@ Sobre **RehniMarket**, no sobre el laboratorio. Guía del curso:
 > cómo quedó, cómo volver a probarlo y qué escribir en el plan. El detalle del cambio está en
 > `RehniMarket-backend/CHANGELOG.md` → `[Unreleased]`.
 
+> **Configuración:** la puesta en marcha con `rehnimarket` / `api.rehnimarket` (`/etc/hosts`,
+> `.env`, CA local, verificación y problemas frecuentes) está en
+> [`caddy-configuracion.md`](caddy-configuracion.md).
+
 Todos los comandos de este paso, desde la raíz del proyecto:
 
 ```bash
@@ -189,13 +193,14 @@ cd ~/Escritorio/Rehni-Market
 
 | URL | Qué es |
 |---|---|
-| `https://localhost/` | **Frontend** (React) |
-| `https://api.localhost/` | **API** (FastAPI). Swagger en `/docs` y ReDoc en `/redoc`, solo con `DOCS_ENABLED=true` |
-| `http://localhost:8000/` | API directa al backend (sin Caddy; la usa la app móvil en la red local) |
+| `https://rehnimarket/` | **Frontend** (React) |
+| `https://api.rehnimarket/` | **API** (FastAPI). Swagger en `/docs` y ReDoc en `/redoc`, solo con `DOCS_ENABLED=true` |
+| `http://<IP-LAN>:8000/` | API directa al backend (sin Caddy; la usa la app móvil en la red local) |
 
 HTTP (`:80`) redirige a HTTPS (`:443`) con 308. Es la técnica de la práctica 02: **virtual
 hosts**. Las dos URL llegan al mismo puerto del mismo Caddy, y Caddy decide por el nombre
-(`Host` / SNI). `*.localhost` resuelve a `127.0.0.1` sin tocar `/etc/hosts`.
+(`Host` / SNI). Los dos nombres resuelven a `127.0.0.1` por `/etc/hosts`. Con los valores por
+defecto (`localhost` / `api.localhost`) no hace falta: `*.localhost` ya resuelve a `127.0.0.1`.
 
 ### 6.2 Servicios del proyecto
 
@@ -211,14 +216,14 @@ hosts**. Las dos URL llegan al mismo puerto del mismo Caddy, y Caddy decide por 
 ### 6.3 Camino de una petición
 
 ```
-                       ┌─ Host: localhost       → archivos del build (/srv)
+                       ┌─ Host: rehnimarket     → archivos del build (/srv)
 Navegador ──► Caddy ───┤                                     /assets/* caché 1 año · resto → index.html
-  (:80→:443)           └─ Host: api.localhost   → backend:8000 ──► pgbouncer ──► postgres
+  (:80→:443)           └─ Host: api.rehnimarket → backend:8000 ──► pgbouncer ──► postgres
                                                                         └──► minio
 ```
 
-1. El navegador abre `https://localhost/` y recibe el frontend.
-2. El JavaScript del frontend llama a `https://api.localhost/...` (`VITE_API_URL`). Es
+1. El navegador abre `https://rehnimarket/` y recibe el frontend.
+2. El JavaScript del frontend llama a `https://api.rehnimarket/...` (`VITE_API_URL`). Es
    **otro origen**, así que el navegador pregunta antes por CORS y el backend responde que
    ese origen está permitido (`CORS_EXTRA_ORIGINS`).
 3. Caddy reenvía la petición al backend **sin cambiar la ruta**: `/auth/login-user` llega
@@ -301,7 +306,7 @@ Caddy, además, descarta el `X-Forwarded-For` que mande el cliente.
 
 | Cómo entra el cliente | URL de imagen que recibe |
 |---|---|
-| `https://api.localhost` (el frontend) | `https://api.localhost/media/proxy?path=…` |
+| `https://api.rehnimarket` (el frontend) | `https://api.rehnimarket/media/proxy?path=…` |
 | App móvil directo al `:8000` | `URL_BACKEND/media/proxy?path=…` (sin cambios) |
 
 ### 6.6 Levantar
@@ -340,31 +345,30 @@ contraseña). En CachyOS / Arch:
 docker compose cp frontend:/data/caddy/pki/authorities/local/root.crt /tmp/caddy-root.crt
 sudo trust anchor --store /tmp/caddy-root.crt
 trust list | grep -i caddy          # «Caddy Local Authority - 2026 ECC Root»
-curl -I https://localhost           # sin -k: responde sin error de certificado
+curl -I https://rehnimarket          # sin -k: responde sin error de certificado
 ```
 
 En Arch, `p11-kit` hace que Firefox y Chromium lean el almacén del sistema: reinicia el
 navegador si estaba abierto. La raíz dura 10 años y vive en `caddy_data`: si borras el volumen,
 se genera otra y hay que repetirlo. Para quitarla: `sudo trust anchor --remove /tmp/caddy-root.crt`.
 
-Sin instalarla, `curl` acepta la raíz por variable: `CURL_CA_BUNDLE=/tmp/caddy-root.crt curl https://localhost`.
+Sin instalarla, `curl` acepta la raíz por variable: `CURL_CA_BUNDLE=/tmp/caddy-root.crt curl https://rehnimarket`.
 
 **Usar Swagger con endpoints protegidos** (requiere `DOCS_ENABLED=true` en `.env` y
-`docker compose up -d backend`): en `https://api.localhost/docs`, `POST /auth/login-user` →
+`docker compose up -d backend`): en `https://api.rehnimarket/docs`, `POST /auth/login-user` →
 **Try it out** → **Execute**; copia el `access_token`, pulsa **Authorize** y pégalo.
 
-Las líneas `rehnimarket` / `api.rehnimarket` de `/etc/hosts` ya no hacen falta (`curl --resolve`
-las sustituye en la prueba de 6.7). Para quitarlas: `sudo sed -i '/rehnimarket/d' /etc/hosts`.
+Las líneas `rehnimarket` / `api.rehnimarket` de `/etc/hosts` hacen falta para abrir esos nombres
+en el navegador (ver [`caddy-configuracion.md`](caddy-configuracion.md)); para la prueba con
+`curl` de 6.7 bastan `curl --resolve`.
 
 ### 6.8 Pendientes antes de producción
 
 1. **App móvil.** Sigue entrando directo al `:8000` con `URL_BACKEND`. En producción debería
    usar `https://api.<dominio>` (`EXPO_PUBLIC_API_URL` y `URL_BACKEND`).
 2. **Cerrar el `:8000`.** En producción, `BACKEND_BIND=127.0.0.1` (ya en `deploy/env.prod.example`).
-3. **`URL_FRONTEND`** (enlaces de los correos) con el dominio real: `https://<dominio>`.
-4. **Documentación:** la ficha técnica
-   (`docs/plan de implantacion - Rehnimarket/1) Ficha tecnica y requisitos minimos - Semana 1 (CE-1, CE2).md`,
-   secciones 1.4 y 1.5) aún menciona Nginx.
+3. **`URL_FRONTEND`** (enlaces de los correos) con el dominio real: `https://<dominio>`
+   (en local ya es `https://rehnimarket`).
 
 ### 6.9 Paso a producción (para la sección 4 del plan)
 

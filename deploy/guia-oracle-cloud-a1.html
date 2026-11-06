@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RehniMarket · Despliegue en Oracle Cloud (Ampere A1)</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1c2230; --muted: #5d6677; --line: #e1e5ec;
+    --accent: #c2410c; --accent-soft: #fff1e8; --code-bg: #0f1420; --code-text: #e6e9ef;
+    --ok: #15803d; --ok-soft: #e8f6ed; --warn: #a16207; --warn-soft: #fdf6e3;
+    --danger: #b91c1c; --danger-soft: #fdecec; --var: #fdba74;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117; --panel: #151b24; --text: #e6e9ef; --muted: #9aa4b5; --line: #263042;
+      --accent: #fb923c; --accent-soft: #2a1a10; --code-bg: #0a0e15; --code-text: #e6e9ef;
+      --ok: #4ade80; --ok-soft: #10251a; --warn: #facc15; --warn-soft: #262010;
+      --danger: #f87171; --danger-soft: #2a1414;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 1rem; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .layout { display: grid; grid-template-columns: 270px minmax(0, 1fr); max-width: 1240px; margin: 0 auto; }
+  nav {
+    position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 1.5rem 1rem;
+    border-right: 1px solid var(--line);
+  }
+  nav .brand { font-weight: 700; font-size: 1.05rem; margin-bottom: .2rem; }
+  nav .sub { color: var(--muted); font-size: .85rem; margin-bottom: 1rem; }
+  nav ol { list-style: none; padding: 0; margin: 0; counter-reset: s; }
+  nav li a {
+    display: flex; gap: .55rem; align-items: center; padding: .4rem .55rem; border-radius: 8px;
+    color: var(--text); text-decoration: none; font-size: .92rem;
+  }
+  nav li a:hover { background: var(--accent-soft); }
+  nav li a .dot {
+    width: 1.35rem; height: 1.35rem; flex: none; border-radius: 50%; border: 2px solid var(--line);
+    display: grid; place-items: center; font-size: .7rem; font-weight: 700; color: var(--muted);
+  }
+  nav li a.done .dot { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .progress { margin: 1rem 0 1.2rem; }
+  .progress .bar { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; }
+  .progress .fill { height: 100%; width: 0; background: var(--ok); transition: width .3s; }
+  .progress small { color: var(--muted); }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .progress .fill { transition: none; }
+  }
+  main { padding: 2rem 2.5rem 5rem; min-width: 0; }
+  header h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 .4rem; }
+  header p.lead { color: var(--muted); margin: 0 0 1.5rem; max-width: 70ch; }
+  .vars {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.2rem;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .8rem 1rem; margin-bottom: 2rem;
+  }
+  .vars .title { grid-column: 1 / -1; font-weight: 600; }
+  .vars .title span { font-weight: 400; color: var(--muted); font-size: .9rem; }
+  .vars label { display: flex; flex-direction: column; font-size: .82rem; color: var(--muted); gap: .25rem; }
+  .vars input {
+    font: inherit; font-size: .95rem; padding: .45rem .6rem; border-radius: 8px;
+    border: 1px solid var(--line); background: var(--bg); color: var(--text);
+  }
+  .vars input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  section.step {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 1.4rem 1.6rem; margin-bottom: 1.4rem;
+  }
+  section.step h2 { margin: 0 0 .8rem; font-size: 1.3rem; display: flex; align-items: center; gap: .7rem; }
+  section.step h2 .num {
+    background: var(--accent); color: #fff; width: 2rem; height: 2rem; border-radius: 50%;
+    display: grid; place-items: center; font-size: 1rem; flex: none;
+  }
+  section.step.done h2 .num { background: var(--ok); }
+  h3 { font-size: 1.02rem; margin: 1.2rem 0 .4rem; }
+  p, li { max-width: 78ch; }
+  code { font-family: ui-monospace, "JetBrains Mono", "Fira Code", monospace; font-size: .88em; }
+  :not(pre) > code { background: var(--accent-soft); padding: .1em .35em; border-radius: 5px; }
+  .code { position: relative; margin: .7rem 0 1rem; }
+  pre {
+    background: var(--code-bg); color: var(--code-text); padding: 1rem 1.1rem; border-radius: 10px;
+    overflow-x: auto; margin: 0; line-height: 1.5; font-size: .9rem;
+  }
+  pre .c { color: #7d8799; }
+  .v { color: var(--var); font-weight: 600; }
+  :not(pre) > code .v, td .v, p .v, li .v { color: var(--accent); }
+  .copy {
+    position: absolute; top: .5rem; right: .5rem; font: inherit; font-size: .75rem; cursor: pointer;
+    border: 1px solid #333c4d; background: #1b2231; color: #cfd6e2; border-radius: 6px; padding: .2rem .55rem;
+  }
+  .copy:hover { background: #263047; }
+  .copy.ok { color: #4ade80; border-color: #4ade80; }
+  table { border-collapse: collapse; width: 100%; margin: .6rem 0 1rem; font-size: .93rem; }
+  th, td { border: 1px solid var(--line); padding: .45rem .65rem; text-align: left; vertical-align: top; }
+  th { background: var(--bg); }
+  .note { border-left: 4px solid; border-radius: 8px; padding: .7rem 1rem; margin: .9rem 0; }
+  .note.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .note.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .note.danger { border-color: var(--danger); background: var(--danger-soft); }
+  .note strong:first-child { display: block; margin-bottom: .15rem; }
+  .checks { list-style: none; padding: 0; margin: 1rem 0 0; border-top: 1px dashed var(--line); padding-top: .8rem; }
+  .checks li { display: flex; gap: .55rem; align-items: flex-start; margin: .3rem 0; }
+  .checks input { margin-top: .35rem; accent-color: var(--ok); width: 1rem; height: 1rem; flex: none; }
+  .checks label { cursor: pointer; }
+  .checks input:checked + label { color: var(--muted); text-decoration: line-through; }
+  .reset { font: inherit; font-size: .8rem; background: none; border: 1px solid var(--line); color: var(--muted);
+    border-radius: 6px; padding: .25rem .6rem; cursor: pointer; }
+  footer { color: var(--muted); font-size: .85rem; margin-top: 2rem; }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    nav { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--line); }
+    main { padding: 1.4rem 1rem 4rem; }
+  }
+  @media print {
+    nav, .copy, .vars, .reset { display: none; }
+    .layout { grid-template-columns: 1fr; }
+    section.step { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav>
+    <div class="brand">RehniMarket → Oracle Cloud</div>
+    <div class="sub">Ampere A1 · ARM64 · Caddy + Let's Encrypt</div>
+    <div class="progress">
+      <div class="bar"><div class="fill" id="fill"></div></div>
+      <small id="ptext">0 de 0 tareas</small>
+    </div>
+    <ol id="toc"></ol>
+    <p style="margin-top:1rem"><button class="reset" id="reset">Reiniciar progreso</button></p>
+  </nav>
+
+  <main>
+    <header>
+      <h1>Desplegar RehniMarket en Oracle Cloud con Ampere A1</h1>
+      <p class="lead">Guía paso a paso para llevar el stack (Caddy, FastAPI, PgBouncer, PostgreSQL y MinIO)
+        a una VM ARM gratuita de Oracle Cloud, con HTTPS de Let's Encrypt en
+        <code><span class="v" data-k="dominio"></span></code> y
+        <code>api.<span class="v" data-k="dominio"></span></code>. Usa el mismo
+        <code>docker-compose.yml</code> y <code>caddy/Caddyfile</code> que en desarrollo: solo cambian los <code>.env</code>.</p>
+    </header>
+
+    <div class="vars">
+      <div class="title">Tus datos <span>— los comandos de la guía se rellenan solos (se guardan en este navegador)</span></div>
+      <label>Dominio <input id="in-dominio" data-k="dominio" placeholder="rehnimarket.com" autocomplete="off"></label>
+      <label>IP pública reservada <input id="in-ip" data-k="ip" placeholder="203.0.113.10" autocomplete="off"></label>
+      <label>Tu IP (para SSH) <input id="in-miip" data-k="miip" placeholder="198.51.100.7" autocomplete="off"></label>
+      <label>Usuario SSH <input id="in-user" data-k="user" placeholder="ubuntu" autocomplete="off"></label>
+    </div>
+
+    <!-- 0 -->
+    <section class="step" id="s0" data-title="Antes de empezar">
+      <h2><span class="num"></span>Antes de empezar</h2>
+      <p>Compatibilidad del proyecto con ARM64, comprobada el 06/11/2026:</p>
+      <table>
+        <tr><th>Pieza</th><th>Estado en ARM64</th></tr>
+        <tr><td>Imágenes: <code>caddy:2.11-alpine</code>, <code>postgres:17-alpine</code>, <code>edoburu/pgbouncer</code>, MinIO de Chainguard (digest fijado), <code>python:3.13-slim</code>, <code>node:22-alpine</code>, <code>uv</code></td><td>✅ Todas publican <code>linux/arm64</code></td></tr>
+        <tr><td>Dependencias Python (<code>uv.lock</code>)</td><td>✅ Todas con paquete <code>aarch64</code> para Python 3.13: el build no necesita compilador</td></tr>
+        <tr><td>Correo (<code>smtp.gmail.com:587</code>)</td><td>✅ Oracle bloquea el 25, no el 587. Si tu red bloquea otro puerto: <a href="#smtp">paso «Correo SMTP»</a></td></tr>
+      </table>
+      <div class="note danger"><strong>Usa 4 OCPU.</strong>
+        <code>docker-compose.yml</code> limita el backend a <code>cpus: "4"</code> (y Postgres a 3). Con menos OCPU,
+        Docker se niega a crear el contenedor. 4 OCPU / 24 GB es justo el máximo gratuito de A1.</div>
+      <p>Necesitas: una cuenta de Oracle Cloud, un dominio propio con acceso a su DNS, una clave SSH
+        (se crea en el paso siguiente) y acceso al repositorio de GitHub.</p>
+      <ul class="checks">
+        <li><input type="checkbox" id="c0a"><label for="c0a">Cuenta de Oracle Cloud activa</label></li>
+        <li><input type="checkbox" id="c0b"><label for="c0b">Dominio comprado y acceso a su panel DNS</label></li>
+      </ul>
+    </section>
+
+    <!-- Clave SSH -->
+    <section class="step" id="ssh-key" data-title="Clave SSH en tu PC">
+      <h2><span class="num"></span>Clave SSH en tu PC</h2>
+      <p>Oracle no usa contraseña para entrar al servidor: pide tu <strong>clave pública</strong> al crear la VM
+        y solo deja entrar a quien tenga la <strong>clave privada</strong> correspondiente. Por eso la clave se crea
+        <em>antes</em> de la VM. Todo esto, en <strong>tu equipo</strong> (funciona igual en fish y en bash):</p>
+      <div class="code"><pre><span class="c"># Clave dedicada al servidor (ed25519). Pide una passphrase: ponla, protege la clave si te roban el PC</span>
+ssh-keygen -t ed25519 -C "rehnimarket-oci" -f ~/.ssh/rehni_oci
+
+ls -l ~/.ssh/rehni_oci*
+<span class="c"># rehni_oci      ← PRIVADA: nunca sale de tu equipo (permisos -rw-------)</span>
+<span class="c"># rehni_oci.pub  ← PÚBLICA: la que pegas en Oracle</span>
+
+cat ~/.ssh/rehni_oci.pub    <span class="c"># copia esta línea completa (ssh-ed25519 AAAA… rehnimarket-oci)</span></pre></div>
+      <p>Para no escribir la passphrase en cada conexión, cárgala una vez por sesión en el agente:</p>
+      <div class="code"><pre>ssh-add ~/.ssh/rehni_oci</pre></div>
+      <div class="note warn"><strong>Alternativa: que Oracle genere la clave.</strong>
+        En «Add SSH keys» → <em>Generate a key pair for me</em> → <em>Save private key</em>. Luego muévela y protégela:
+        <code>mv ~/Descargas/ssh-key-*.key ~/.ssh/rehni_oci &amp;&amp; chmod 600 ~/.ssh/rehni_oci</code>.
+        Oracle no la guarda: si no la descargas en ese momento, se pierde.</div>
+      <div class="note danger"><strong>Haz copia de la clave privada</strong> (gestor de contraseñas o USB cifrado).
+        Si la pierdes no hay «recuperar contraseña»: habría que desmontar el disco de arranque de la VM, montarlo en
+        otra instancia y editar <code>authorized_keys</code> a mano.</div>
+      <ul class="checks">
+        <li><input type="checkbox" id="ck1"><label for="ck1">Clave <code>~/.ssh/rehni_oci</code> creada con passphrase</label></li>
+        <li><input type="checkbox" id="ck2"><label for="ck2">Copia de seguridad de la clave privada</label></li>
+      </ul>
+    </section>
+
+    <!-- 1 -->
+    <section class="step" id="s1" data-title="Crear la VM">
+      <h2><span class="num"></span>Crear la VM</h2>
+      <p>En la consola: <strong>Compute → Instances → Create instance</strong>.</p>
+      <table>
+        <tr><th>Campo</th><th>Valor</th></tr>
+        <tr><td>Image</td><td>Canonical Ubuntu <strong>24.04</strong> (aarch64): el SO de producción de la ficha técnica</td></tr>
+        <tr><td>Shape</td><td>Ampere → <code>VM.Standard.A1.Flex</code> · <strong>4 OCPU · 24 GB</strong></td></tr>
+        <tr><td>Networking</td><td>VCN con subred <strong>pública</strong> · «Assign a public IPv4 address»</td></tr>
+        <tr><td>Add SSH keys</td><td><em>Paste public keys</em> → pega el contenido de <code>~/.ssh/rehni_oci.pub</code> (paso anterior)</td></tr>
+        <tr><td>Boot volume</td><td>100–200 GB (hasta 200 GB en total es gratuito)</td></tr>
+      </table>
+      <div class="note warn"><strong>«Out of host capacity»</strong>
+        Es habitual en A1. Prueba otro <em>Availability Domain</em> o reintenta más tarde. Pasar la cuenta a
+        <em>Pay As You Go</em> suele resolverlo, y no se cobra mientras no superes los límites gratuitos.</div>
+      <h3>IP pública reservada</h3>
+      <p><strong>Networking → IP management → Reserved public IPs → Reserve</strong>. Luego, en la instancia:
+        <em>Attached VNICs → VNIC → IPv4 Addresses → Edit</em>: quita la IP efímera («No public IP») y asigna la reservada.
+        Así la IP no cambia si la VM se reinicia.</p>
+      <ul class="checks">
+        <li><input type="checkbox" id="c1a"><label for="c1a">VM A1 creada con 4 OCPU / 24 GB y Ubuntu 24.04</label></li>
+        <li><input type="checkbox" id="c1b"><label for="c1b">IP pública reservada asignada (anotada arriba)</label></li>
+      </ul>
+    </section>
+
+    <!-- Conectarte por SSH -->
+    <section class="step" id="ssh" data-title="Conectarte por SSH">
+      <h2><span class="num"></span>Conectarte por SSH desde tu PC</h2>
+      <h3>a) Atajo en <code>~/.ssh/config</code></h3>
+      <p>Con esto basta escribir <code>ssh rehni-oci</code>: no hay que recordar la IP, el usuario ni la clave.
+        Ábrelo con <code>nano ~/.ssh/config</code> y añade al final:</p>
+      <div class="code"><pre>Host rehni-oci <span class="v" data-k="ip"></span>
+    HostName <span class="v" data-k="ip"></span>
+    User <span class="v" data-k="user"></span>
+    IdentityFile ~/.ssh/rehni_oci
+    IdentitiesOnly yes
+    ServerAliveInterval 60</pre></div>
+      <div class="code"><pre>chmod 700 ~/.ssh
+chmod 600 ~/.ssh/config ~/.ssh/rehni_oci</pre></div>
+      <p>El usuario depende de la imagen: <code>ubuntu</code> en Ubuntu (esta guía), <code>opc</code> en Oracle Linux.
+        <code>ServerAliveInterval</code> evita que la sesión se corte si la dejas quieta.</p>
+
+      <h3>b) Primera conexión</h3>
+      <div class="code"><pre>ssh rehni-oci</pre></div>
+      <p>La primera vez pregunta <em>«Are you sure you want to continue connecting (yes/no)?»</em>: escribe
+        <code>yes</code>. SSH guarda la huella del servidor en <code>~/.ssh/known_hosts</code> y en adelante avisará
+        si cambia (posible suplantación). Dentro del servidor, comprueba:</p>
+      <div class="code"><pre>whoami     <span class="c"># ubuntu</span>
+uname -m   <span class="c"># aarch64</span>
+exit       <span class="c"># vuelve a tu PC</span></pre></div>
+
+      <h3>c) Copiar archivos entre tu PC y el servidor</h3>
+      <div class="code"><pre><span class="c"># Desde tu PC (ejemplo: subir el .env del backend, que no va por Git)</span>
+scp RehniMarket-backend/.env rehni-oci:Rehni-Market/RehniMarket-backend/.env
+
+<span class="c"># Carpetas completas (solo envía lo que cambió)</span>
+rsync -avz backups/ rehni-oci:Rehni-Market/backups/
+
+<span class="c"># Del servidor a tu PC</span>
+scp rehni-oci:Rehni-Market/backups/backup.log .</pre></div>
+
+      <h3>d) Si no conecta</h3>
+      <table>
+        <tr><th>Error</th><th>Causa y solución</th></tr>
+        <tr><td><code>Connection timed out</code></td><td>El 22 no está abierto para tu IP en la Security List
+          (<a href="#s2">paso «Abrir puertos»</a>), tu IP pública cambió (consúltala con <code>curl -s ifconfig.me</code>),
+          o la VM no tiene IP pública.</td></tr>
+        <tr><td><code>Permission denied (publickey)</code></td><td>Usuario equivocado (<code>ubuntu</code> vs <code>opc</code>),
+          clave distinta de la que pegaste en Oracle, o permisos: <code>chmod 600 ~/.ssh/rehni_oci</code>.
+          Detalle: <code>ssh -v rehni-oci</code>.</td></tr>
+        <tr><td><code>UNPROTECTED PRIVATE KEY FILE</code></td><td>La clave es legible por otros: <code>chmod 600 ~/.ssh/rehni_oci</code>.</td></tr>
+        <tr><td><code>REMOTE HOST IDENTIFICATION HAS CHANGED</code></td><td>Si recreaste la VM con la misma IP es normal:
+          <code>ssh-keygen -R <span class="v" data-k="ip"></span></code> y vuelve a conectar. Si no la recreaste, <strong>no
+          continúes</strong>: alguien podría estar suplantando el servidor.</td></tr>
+        <tr><td>Pide contraseña</td><td>No está usando la clave: revisa <code>IdentityFile</code> y que escribiste
+          <code>ssh rehni-oci</code> (no otro nombre).</td></tr>
+      </table>
+
+      <h3>e) Seguridad del acceso</h3>
+      <p>Las imágenes de Oracle ya traen desactivado el acceso con contraseña. Compruébalo en el servidor:</p>
+      <div class="code"><pre>sudo sshd -T | grep -E 'passwordauthentication|permitrootlogin'
+<span class="c"># passwordauthentication no</span>
+<span class="c"># permitrootlogin without-password (o no)</span></pre></div>
+      <p>Para dar acceso a otra persona, añade <strong>su</strong> clave pública (una línea) al final de
+        <code>~/.ssh/authorized_keys</code> en el servidor. Nunca compartas tu clave privada.</p>
+      <p><em>Opcional:</em> con la extensión <strong>Remote - SSH</strong> de VS Code, el host <code>rehni-oci</code> aparece
+        directamente para editar archivos del servidor.</p>
+
+      <ul class="checks">
+        <li><input type="checkbox" id="cs1"><label for="cs1">Entrada <code>rehni-oci</code> en <code>~/.ssh/config</code></label></li>
+        <li><input type="checkbox" id="cs2"><label for="cs2"><code>ssh rehni-oci</code> conecta y <code>uname -m</code> da <code>aarch64</code></label></li>
+        <li><input type="checkbox" id="cs3"><label for="cs3">Acceso por contraseña desactivado (comprobado)</label></li>
+      </ul>
+    </section>
+
+    <!-- 2 -->
+    <section class="step" id="s2" data-title="Abrir puertos">
+      <h2><span class="num"></span>Abrir puertos (dos capas)</h2>
+      <h3>a) Security List de la VCN</h3>
+      <p><strong>Networking → Virtual cloud networks → tu VCN → Security Lists → Default → Add Ingress Rules</strong>:</p>
+      <table>
+        <tr><th>Source CIDR</th><th>Protocolo</th><th>Puerto</th><th>Para qué</th></tr>
+        <tr><td><code>0.0.0.0/0</code></td><td>TCP</td><td>80</td><td>Validación de Let's Encrypt y redirección a HTTPS</td></tr>
+        <tr><td><code>0.0.0.0/0</code></td><td>TCP</td><td>443</td><td>HTTPS</td></tr>
+        <tr><td><code>0.0.0.0/0</code></td><td>UDP</td><td>443</td><td>HTTP/3 (opcional)</td></tr>
+        <tr><td><code><span class="v" data-k="miip"></span>/32</code></td><td>TCP</td><td>22</td><td>SSH: ya existe abierta a todos; mejor limitarla a tu IP (<code>curl -s ifconfig.me</code>). Si tu IP cambia, actualiza esta regla o no podrás entrar</td></tr>
+      </table>
+      <div class="note danger"><strong>No abras el 8000 ni el 5433.</strong>
+        La API directa y PostgreSQL solo escuchan en <code>127.0.0.1</code> del servidor.</div>
+      <h3>b) iptables dentro de la VM</h3>
+      <p>Las imágenes Ubuntu de Oracle traen reglas que rechazan todo salvo el 22. Ábrelos una vez conectado:</p>
+      <div class="code"><pre>ssh rehni-oci
+
+sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT
+sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT
+sudo iptables -I INPUT 6 -p udp --dport 443 -j ACCEPT
+sudo netfilter-persistent save</pre></div>
+      <ul class="checks">
+        <li><input type="checkbox" id="c2a"><label for="c2a">Reglas de ingreso 80/443 en la Security List</label></li>
+        <li><input type="checkbox" id="c2b"><label for="c2b">SSH limitado a mi IP</label></li>
+        <li><input type="checkbox" id="c2c"><label for="c2c">iptables abierto y guardado en la VM</label></li>
+      </ul>
+    </section>
+
+    <!-- 3 -->
+    <section class="step" id="s3" data-title="DNS del dominio">
+      <h2><span class="num"></span>DNS del dominio</h2>
+      <p>En el panel de tu proveedor de dominio, dos registros hacia la IP reservada:</p>
+      <table>
+        <tr><th>Tipo</th><th>Nombre</th><th>Valor</th><th>TTL</th></tr>
+        <tr><td><code>A</code></td><td><code><span class="v" data-k="dominio"></span></code> (o <code>@</code>)</td><td><code><span class="v" data-k="ip"></span></code></td><td>300 al principio; 3600 cuando esté estable</td></tr>
+        <tr><td><code>A</code></td><td><code>api</code></td><td><code><span class="v" data-k="ip"></span></code></td><td>igual</td></tr>
+      </table>
+      <p>Comprueba desde tu equipo que los dos responden con la IP:</p>
+      <div class="code"><pre>dig +short <span class="v" data-k="dominio"></span>
+dig +short api.<span class="v" data-k="dominio"></span></pre></div>
+      <div class="note warn"><strong>No levantes Caddy antes de que resuelvan los dos.</strong>
+        Let's Encrypt fallaría la validación y, tras varios fallos, limita temporalmente los intentos.</div>
+      <ul class="checks">
+        <li><input type="checkbox" id="c3a"><label for="c3a">Registros A creados</label></li>
+        <li><input type="checkbox" id="c3b"><label for="c3b"><code>dig</code> devuelve la IP en los dos nombres</label></li>
+      </ul>
+    </section>
+
+    <!-- 4 -->
+    <section class="step" id="s4" data-title="Preparar el servidor">
+      <h2><span class="num"></span>Preparar el servidor</h2>
+      <div class="code"><pre>ssh rehni-oci
+sudo apt update &amp;&amp; sudo apt upgrade -y
+sudo timedatectl set-timezone America/Bogota
+
+<span class="c"># Docker Engine + Compose (el script oficial soporta arm64)</span>
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
+exit   <span class="c"># vuelve a entrar para que el grupo docker tenga efecto</span></pre></div>
+      <div class="code"><pre>ssh rehni-oci
+docker version &amp;&amp; docker compose version
+uname -m          <span class="c"># aarch64</span></pre></div>
+      <ul class="checks">
+        <li><input type="checkbox" id="c4a"><label for="c4a">Sistema actualizado</label></li>
+        <li><input type="checkbox" id="c4b"><label for="c4b">Docker y Compose funcionan sin sudo</label></li>
+      </ul>
+    </section>
+
+    <!-- 5 -->
+    <section class="step" id="s5" data-title="Código y .env">
+      <h2><span class="num"></span>Código y configuración</h2>
+      <h3>Clonar el repositorio</h3>
+      <p>Con una <em>deploy key</em> (solo lectura) o un token de GitHub:</p>
+      <div class="code"><pre>git clone https://github.com/RehnieyAl/Rehni-Market.git
+cd Rehni-Market
+bash scripts/verificar-requisitos.sh</pre></div>
+
+      <div class="note danger"><strong>Los secretos nunca van por Git.</strong>
+        Créalos en el servidor desde las plantillas (o súbelos con <code>scp</code>) y genera contraseñas y
+        claves <strong>nuevas</strong>, distintas de las de desarrollo: <code>openssl rand -base64 48</code>.</div>
+
+      <h3><code>.env</code> (raíz) — desde <code>deploy/env.prod.example</code></h3>
+      <div class="code"><pre>cp deploy/env.prod.example .env &amp;&amp; nano .env</pre></div>
+      <div class="code"><pre>SITE_ADDRESS=<span class="v" data-k="dominio"></span>
+API_ADDRESS=api.<span class="v" data-k="dominio"></span>
+HTTP_PORT=80
+HTTPS_PORT=443
+CADDY_LOCAL_CERTS=                         <span class="c"># VACÍA: Caddy usa Let's Encrypt</span>
+VITE_API_URL=https://api.<span class="v" data-k="dominio"></span>
+CORS_EXTRA_ORIGINS=https://<span class="v" data-k="dominio"></span>
+DOCS_ENABLED=false
+BACKEND_BIND=127.0.0.1                     <span class="c"># el :8000 no queda expuesto</span></pre></div>
+
+      <h3><code>RehniMarket-backend/.env</code> — desde <code>.env.public.example</code></h3>
+      <div class="code"><pre>cp RehniMarket-backend/.env.public.example RehniMarket-backend/.env &amp;&amp; nano RehniMarket-backend/.env</pre></div>
+      <div class="code"><pre>URL_FRONTEND="https://<span class="v" data-k="dominio"></span>"
+URL_BACKEND="https://api.<span class="v" data-k="dominio"></span>"
+RUN_SEED=false                             <span class="c"># true solo si quieres datos de ejemplo</span>
+<span class="c"># + URL_DATABASE / URL_DATABASE_POOLED, JWT, Gmail, MinIO… con secretos nuevos</span></pre></div>
+
+      <h3><code>.env.postgres</code> y <code>.env.minio</code></h3>
+      <div class="code"><pre>cp .env.postgres.example .env.postgres &amp;&amp; nano .env.postgres
+cp .env.minio.example .env.minio &amp;&amp; nano .env.minio
+chmod 600 .env .env.postgres .env.minio RehniMarket-backend/.env</pre></div>
+      <div class="note warn"><strong>Deben coincidir.</strong>
+        Usuario, contraseña y base de <code>URL_DATABASE</code> y <code>URL_DATABASE_POOLED</code> (backend) son los de
+        <code>.env.postgres</code>. Las credenciales de MinIO del backend, las de <code>.env.minio</code>.</div>
+      <ul class="checks">
+        <li><input type="checkbox" id="c5a"><label for="c5a">Repositorio clonado y requisitos verificados</label></li>
+        <li><input type="checkbox" id="c5b"><label for="c5b"><code>.env</code> raíz con el dominio y <code>CADDY_LOCAL_CERTS</code> vacía</label></li>
+        <li><input type="checkbox" id="c5c"><label for="c5c"><code>RehniMarket-backend/.env</code> con URLs HTTPS y secretos nuevos</label></li>
+        <li><input type="checkbox" id="c5d"><label for="c5d"><code>.env.postgres</code> y <code>.env.minio</code> creados; todo con <code>chmod 600</code></label></li>
+      </ul>
+    </section>
+
+    <!-- 6 -->
+    <section class="step" id="s6" data-title="Levantar y verificar">
+      <h2><span class="num"></span>Levantar y verificar</h2>
+      <p>El build se hace en la propia VM, nativo en ARM (sin emulación). La primera vez tarda varios minutos.</p>
+      <div class="code"><pre>docker compose up -d --build --wait
+docker compose ps                                     <span class="c"># los 5 servicios en "healthy"</span>
+docker compose logs frontend | grep -i "certificate obtained"</pre></div>
+      <h3>Comprobaciones</h3>
+      <div class="code"><pre>curl -I https://<span class="v" data-k="dominio"></span>                         <span class="c"># 200, certificado válido</span>
+curl https://api.<span class="v" data-k="dominio"></span>/health/database      <span class="c"># {"Base de datos":"OK"}</span>
+curl -I http://<span class="v" data-k="dominio"></span>                          <span class="c"># 308 → https</span></pre></div>
+      <p>Prueba de humo completa (con una cuenta ya verificada):</p>
+      <div class="code"><pre>FRONTEND_URL=https://<span class="v" data-k="dominio"></span> BASE_URL=https://api.<span class="v" data-k="dominio"></span> \
+  SMOKE_EMAIL=... SMOKE_PASSWORD=... bash scripts/smoke-test.sh</pre></div>
+      <table>
+        <tr><th>Si falla…</th><th>Revisa</th></tr>
+        <tr><td>Caddy no obtiene el certificado</td><td>DNS (<a href="#s3">paso «DNS»</a>), Security List e iptables (<a href="#s2">paso «Abrir puertos»</a>), <code>CADDY_LOCAL_CERTS</code> vacía. Logs: <code>docker compose logs frontend</code></td></tr>
+        <tr><td>El backend no arranca</td><td><code>docker compose logs backend</code>: credenciales de Postgres/MinIO que no coinciden, o límite de CPU (<a href="#s0">paso 0</a>)</td></tr>
+        <tr><td>La web carga pero no llega a la API</td><td><code>VITE_API_URL</code> (exige <code>--build</code>), <code>CORS_EXTRA_ORIGINS</code> y <code>URL_FRONTEND</code></td></tr>
+      </table>
+      <ul class="checks">
+        <li><input type="checkbox" id="c6a"><label for="c6a">5 servicios <em>healthy</em></label></li>
+        <li><input type="checkbox" id="c6b"><label for="c6b">Certificados de Let's Encrypt obtenidos</label></li>
+        <li><input type="checkbox" id="c6c"><label for="c6c">Web, API y prueba de humo correctas</label></li>
+      </ul>
+    </section>
+
+    <!-- Correo SMTP -->
+    <section class="step" id="smtp" data-title="Correo SMTP">
+      <h2><span class="num"></span>Correo SMTP y puertos bloqueados</h2>
+      <p>RehniMarket envía correos (códigos de verificación, recuperar contraseña, pedidos, devoluciones…) conectándose
+        a un servidor SMTP. Muchos proveedores de nube y redes bloquean puertos de correo para frenar el spam, así que
+        conviene saber cuáles quedan abiertos y cómo cambiar si uno falla.</p>
+
+      <h3>a) Qué puertos existen y cuáles bloquea Oracle</h3>
+      <table>
+        <tr><th>Puerto</th><th>Uso</th><th>Oracle Cloud</th><th>Cifrado (<code>SMTP_SECURITY</code>)</th></tr>
+        <tr><td><strong>25</strong></td><td>Entre servidores de correo (no para enviar desde una app)</td><td>❌ <strong>Bloqueado</strong> de salida en todas las cuentas</td><td>—</td></tr>
+        <tr><td><strong>587</strong></td><td>Envío autenticado (el estándar). <strong>El que usa RehniMarket por defecto</strong></td><td>✅ Abierto</td><td><code>starttls</code></td></tr>
+        <tr><td><strong>465</strong></td><td>Envío autenticado con TLS desde el inicio</td><td>✅ Abierto</td><td><code>ssl</code></td></tr>
+        <tr><td><strong>2525</strong></td><td>Puerto alternativo de relays (Brevo, SendGrid, Mailgun…). Casi nunca está bloqueado</td><td>✅ Abierto</td><td><code>starttls</code></td></tr>
+      </table>
+      <p>En Oracle, además, la Security List trae una regla de <em>salida</em> «All protocols → 0.0.0.0/0» y la VM no filtra
+        la salida con iptables. Si borraste esa regla de egress, vuelve a crearla o el servidor no podrá conectarse a nada.</p>
+      <div class="note warn"><strong>Quien suele bloquear el 587 no es Oracle, sino la red.</strong>
+        Wi-Fi institucionales (universidad, SENA, empresa) y algunos operadores bloquean el 587 y el 465. Por eso en tu PC
+        puede fallar el correo y en el servidor funcionar, o al revés.</div>
+
+      <h3>b) Diagnóstico: ¿qué puertos deja salir esta red?</h3>
+      <p>Desde el contenedor del backend (en el servidor o en tu PC; prueba la red real por la que sale el correo):</p>
+      <div class="code"><pre>docker compose exec -T backend python3 - &lt;&lt;'EOF'
+import socket
+for host, port in [("smtp.gmail.com", 25), ("smtp.gmail.com", 587),
+                   ("smtp.gmail.com", 465), ("smtp-relay.brevo.com", 2525)]:
+    try:
+        socket.create_connection((host, port), 5).close(); r = "ABIERTO"
+    except Exception as e:
+        r = f"bloqueado ({type(e).__name__})"
+    print(f"{host}:{port} -> {r}")
+EOF</pre></div>
+      <p>Resultado esperado en Oracle Cloud: <code>25 → bloqueado</code>, <code>587</code>, <code>465</code> y <code>2525 → ABIERTO</code>.
+        Este bloque usa sintaxis de bash: en el servidor (Ubuntu) funciona tal cual.</p>
+      <p>Y en los logs, un envío fallido aparece así:</p>
+      <div class="code"><pre>docker compose logs backend | grep -iA3 "error al enviar correo"
+<span class="c"># TimeoutError / ConnectionRefusedError → puerto bloqueado (soluciones B o C)</span>
+<span class="c"># SMTPAuthenticationError               → usuario/contraseña (contraseña de aplicación de Google)</span></pre></div>
+
+      <h3>c) Soluciones (solo cambiando <code>RehniMarket-backend/.env</code>)</h3>
+      <p>El servidor, el puerto y el cifrado se configuran con variables. Sin definirlas, todo sigue como siempre
+        (Gmail por 587). Tras cambiarlas: <code>docker compose up -d backend</code>.</p>
+
+      <p><strong>A · Gmail por 587</strong> (por defecto, funciona en Oracle): no hay que añadir nada.</p>
+      <div class="code"><pre>GMAIL_USERNAME="notificaciones@<span class="v" data-k="dominio"></span>"
+GMAIL_APP_PASSWORD="contraseña de aplicación de Google"</pre></div>
+
+      <p><strong>B · Gmail por 465</strong> (si una red bloquea el 587 pero no el 465):</p>
+      <div class="code"><pre>SMTP_PORT=465            <span class="c"># SMTP_SECURITY=ssl se deduce solo con el 465</span></pre></div>
+
+      <p><strong>C · Relay por 2525</strong> (si están bloqueados el 587 y el 465, o necesitas más volumen).
+        Ejemplo con Brevo (plan gratuito): crea la cuenta, verifica el remitente o tu dominio y copia las credenciales
+        de <em>SMTP &amp; API → SMTP</em>:</p>
+      <div class="code"><pre>SMTP_HOST=smtp-relay.brevo.com
+SMTP_PORT=2525
+SMTP_SECURITY=starttls
+SMTP_USERNAME="usuario SMTP de Brevo"
+SMTP_PASSWORD="clave SMTP de Brevo"
+EMAIL_FROM="notificaciones@<span class="v" data-k="dominio"></span>"   <span class="c"># remitente verificado en Brevo</span></pre></div>
+      <p>Funciona igual con SendGrid o Mailgun (cambian host y credenciales) o con <strong>OCI Email Delivery</strong> de
+        Oracle (<code>smtp.email.&lt;región&gt;.oci.oraclecloud.com</code>, puerto 587, credenciales SMTP del usuario de OCI
+        y remitente aprobado en la consola).</p>
+
+      <table>
+        <tr><th>Variable</th><th>Por defecto</th><th>Para qué</th></tr>
+        <tr><td><code>SMTP_HOST</code></td><td><code>smtp.gmail.com</code></td><td>Servidor SMTP</td></tr>
+        <tr><td><code>SMTP_PORT</code></td><td><code>587</code></td><td>Puerto</td></tr>
+        <tr><td><code>SMTP_SECURITY</code></td><td><code>starttls</code> (<code>ssl</code> si el puerto es 465)</td><td>Cómo se cifra la conexión</td></tr>
+        <tr><td><code>SMTP_USERNAME</code> / <code>SMTP_PASSWORD</code></td><td><code>GMAIL_USERNAME</code> / <code>GMAIL_APP_PASSWORD</code></td><td>Credenciales del servidor SMTP</td></tr>
+        <tr><td><code>EMAIL_FROM</code></td><td><code>SMTP_USERNAME</code></td><td>Remitente visible; obligatorio cuando el usuario SMTP no es una dirección de correo</td></tr>
+      </table>
+
+      <div class="note warn"><strong>Que el correo no acabe en spam.</strong>
+        Si envías como <code>@<span class="v" data-k="dominio"></span></code>, añade en el DNS los registros
+        <strong>SPF</strong> y <strong>DKIM</strong> que te indique el proveedor (Google Workspace, Brevo, OCI…). Una cuenta
+        de Gmail gratuita limita el envío a unos 500 correos al día.</div>
+
+      <h3>d) Prueba real</h3>
+      <p>Registra un usuario o usa «¿Olvidaste tu contraseña?» en <code>https://<span class="v" data-k="dominio"></span></code>
+        y mira el log:</p>
+      <div class="code"><pre>docker compose logs -f backend | grep -i correo
+<span class="c"># Correo enviado a  usuario@…, exitosamente</span></pre></div>
+      <ul class="checks">
+        <li><input type="checkbox" id="cm1"><label for="cm1">Diagnóstico de puertos hecho en el servidor</label></li>
+        <li><input type="checkbox" id="cm2"><label for="cm2">Opción A, B o C configurada en <code>RehniMarket-backend/.env</code></label></li>
+        <li><input type="checkbox" id="cm3"><label for="cm3">Correo de prueba recibido (y no en spam)</label></li>
+      </ul>
+    </section>
+
+    <!-- 7 -->
+    <section class="step" id="s7" data-title="Migrar datos (opcional)">
+      <h2><span class="num"></span>Llevar los datos actuales <small style="font-weight:400;color:var(--muted)">(opcional)</small></h2>
+      <p>Si quieres los usuarios, productos e imágenes que tienes en local. En <strong>tu equipo</strong>:</p>
+      <div class="code"><pre>cd ~/Escritorio/Rehni-Market
+bash scripts/backup_rehnimarket.sh                  <span class="c"># dump de Postgres + copia de MinIO en backups/</span>
+rsync -avz backups/ rehni-oci:Rehni-Market/backups/</pre></div>
+      <p>En el <strong>servidor</strong>:</p>
+      <div class="code"><pre>cd ~/Rehni-Market
+ls backups/postgres/                                <span class="c"># rehni_market_postgres_&lt;TS&gt;.dump</span>
+
+<span class="c"># 1) Probar en contenedores desechables, sin tocar el proyecto</span>
+bash scripts/restore_rehnimarket.sh &lt;TS&gt; --verify-only
+
+<span class="c"># 2) Restaurar de verdad (TS como en el nombre, p. ej. 2026-11-06_18-30)</span>
+bash scripts/restore_rehnimarket.sh &lt;TS&gt;</pre></div>
+      <div class="note warn"><strong>URL de imágenes.</strong> Se arman en cada petición con el host por el que entra
+        el cliente, así que no hay que reescribir nada en la base de datos al cambiar de dominio.</div>
+      <ul class="checks">
+        <li><input type="checkbox" id="c7a"><label for="c7a">Respaldo hecho y subido</label></li>
+        <li><input type="checkbox" id="c7b"><label for="c7b">Restaurado y comprobado en la web</label></li>
+      </ul>
+    </section>
+
+    <!-- 8 -->
+    <section class="step" id="s8" data-title="Operación diaria">
+      <h2><span class="num"></span>Operación diaria</h2>
+      <h3>Actualizar a una nueva versión</h3>
+      <div class="code"><pre>cd ~/Rehni-Market
+git pull
+docker compose up -d --build --wait                 <span class="c"># alembic upgrade head corre al arrancar el backend</span></pre></div>
+      <h3>Base de datos (DbSchema, psql) por túnel SSH</h3>
+      <div class="code"><pre>ssh -N -L 5433:127.0.0.1:5433 rehni-oci
+<span class="c"># y conecta DbSchema a localhost:5433</span></pre></div>
+      <h3>Respaldos automáticos</h3>
+      <div class="code"><pre>crontab -e
+<span class="c"># todos los días a las 03:00</span>
+0 3 * * * cd $HOME/Rehni-Market &amp;&amp; bash scripts/backup_rehnimarket.sh</pre></div>
+      <p>Copia <code>backups/</code> fuera del servidor con regularidad (por ejemplo con <code>rsync</code> a tu equipo o a
+        Object Storage). Un respaldo que solo vive en la misma VM no protege de perderla.</p>
+      <h3>App móvil</h3>
+      <p>En <code>RehniMarket-mobile/.env</code>: <code>EXPO_PUBLIC_API_URL=https://api.<span class="v" data-k="dominio"></span></code>.
+        Ya no depende de la IP de la red local.</p>
+      <div class="note warn"><strong>Instancias inactivas.</strong> Oracle puede reclamar instancias Always Free con uso
+        de CPU muy bajo durante 7 días seguidos. Con tráfico real no suele ocurrir.</div>
+      <ul class="checks">
+        <li><input type="checkbox" id="c8a"><label for="c8a">Cron de respaldos configurado</label></li>
+        <li><input type="checkbox" id="c8b"><label for="c8b">Copia externa de los respaldos</label></li>
+        <li><input type="checkbox" id="c8c"><label for="c8c">App móvil apuntando a la API con HTTPS</label></li>
+      </ul>
+    </section>
+
+    <footer>
+      Guía generada el 06/11/2026 para RehniMarket. Referencias del repo: <code>deploy/README.md</code>,
+      <code>deploy/env.prod.example</code>, <code>caddy/caddy-configuracion.md</code>.
+      El progreso y tus datos se guardan solo en este navegador (localStorage).
+    </footer>
+  </main>
+</div>
+
+<script>
+(() => {
+  const KEY = "rehni-oci-guide";
+  const state = JSON.parse(localStorage.getItem(KEY) || '{"vars":{},"checks":{}}');
+  const save = () => localStorage.setItem(KEY, JSON.stringify(state));
+  const defaults = { dominio: "<dominio>", ip: "<IP>", miip: "<tu-IP>", user: "ubuntu" };
+
+  // Variables: inputs → todos los <span class="v" data-k="...">
+  const inputs = document.querySelectorAll(".vars input");
+  const paint = () => {
+    document.querySelectorAll("span.v").forEach(s => {
+      const k = s.dataset.k;
+      s.textContent = (state.vars[k] || "").trim() || defaults[k];
+    });
+  };
+  inputs.forEach(inp => {
+    inp.value = state.vars[inp.dataset.k] || "";
+    inp.addEventListener("input", () => { state.vars[inp.dataset.k] = inp.value; save(); paint(); });
+  });
+  paint();
+
+  // Botón copiar en cada bloque de código
+  document.querySelectorAll(".code").forEach(box => {
+    const btn = document.createElement("button");
+    btn.className = "copy"; btn.textContent = "Copiar";
+    btn.addEventListener("click", async () => {
+      const text = box.querySelector("pre").innerText;
+      try { await navigator.clipboard.writeText(text); }
+      catch {
+        const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta);
+        ta.select(); document.execCommand("copy"); ta.remove();
+      }
+      btn.textContent = "Copiado"; btn.classList.add("ok");
+      setTimeout(() => { btn.textContent = "Copiar"; btn.classList.remove("ok"); }, 1400);
+    });
+    box.appendChild(btn);
+  });
+
+  // Índice + progreso
+  const steps = [...document.querySelectorAll("section.step")];
+  const toc = document.getElementById("toc");
+  steps.forEach((s, i) => {
+    const li = document.createElement("li");
+    s.querySelector(".num").textContent = i;
+    li.innerHTML = `<a href="#${s.id}"><span class="dot">${i}</span>${s.dataset.title}</a>`;
+    toc.appendChild(li);
+  });
+  const boxes = [...document.querySelectorAll(".checks input")];
+  const refresh = () => {
+    const done = boxes.filter(b => b.checked).length;
+    document.getElementById("fill").style.width = (boxes.length ? done / boxes.length * 100 : 0) + "%";
+    document.getElementById("ptext").textContent = `${done} de ${boxes.length} tareas`;
+    steps.forEach((s, i) => {
+      const own = [...s.querySelectorAll(".checks input")];
+      const complete = own.length > 0 && own.every(b => b.checked);
+      s.classList.toggle("done", complete);
+      toc.children[i].querySelector("a").classList.toggle("done", complete);
+    });
+  };
+  boxes.forEach(b => {
+    b.checked = !!state.checks[b.id];
+    b.addEventListener("change", () => { state.checks[b.id] = b.checked; save(); refresh(); });
+  });
+  refresh();
+
+  document.getElementById("reset").addEventListener("click", () => {
+    if (!confirm("¿Borrar el progreso de las tareas? (tus datos de dominio e IP se mantienen)")) return;
+    state.checks = {}; save(); boxes.forEach(b => b.checked = false); refresh();
+  });
+})();
+</script>
+</body>
+</html>
