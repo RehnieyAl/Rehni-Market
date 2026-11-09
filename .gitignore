@@ -16,3 +16,6 @@ CLAUDE.md
 
 # Guías e informe del taller SENA (material local, no se versiona)
 docs/sena/
+
+# Repositorios git antiguos anidados (respaldo local, no se versionan)
+*.git.old/

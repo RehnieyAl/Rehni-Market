@@ -70,7 +70,11 @@ export function AuthProvider({ children }: Props) {
       setStatus("unauthenticated");
     };
 
-    resolveSession();
+    // Un fallo inesperado no debe dejar la sesión atascada en "loading".
+    resolveSession().catch((error: unknown) => {
+      console.error("Error resolviendo la sesión:", error);
+      if (session === sessionRef.current) setStatus("unauthenticated");
+    });
 
     return () => {
       sessionRef.current += 1;
