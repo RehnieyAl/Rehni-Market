@@ -13,3 +13,6 @@ CLAUDE.md
 *.csv
 .csv
 .ruff_cache/
+
+# Guías e informe del taller SENA (material local, no se versiona)
+docs/sena/
