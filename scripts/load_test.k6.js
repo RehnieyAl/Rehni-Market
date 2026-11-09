@@ -4,7 +4,7 @@ import { Rate } from 'k6/metrics';
 
 // Uso:
 //   k6 run -e BASE_URL=http://10.90.41.168:8000 -e VUS=1000 scripts/load_test.k6.js
-const BASE = __ENV.BASE_URL || 'http://10.90.41.168:8000';
+const BASE = __ENV.BASE_URL || 'https://api.rehnimarket';
 const VUS = parseInt(__ENV.VUS || '1000', 10);
 const RUN_CHECKOUT = (__ENV.CHECKOUT || '1') === '1';
 
