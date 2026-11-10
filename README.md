@@ -1,8 +1,6 @@
 <div align="center">
 
-<img src="RehniMarket-frontend/src/assets/logo.pngnono" alt="RehniMarket" width="360" />
-
-### Marketplace multiempresa con billetera digital propia
+<img src="assets/banner.png" alt="RehniMarket" width="100%" height="auto" />
 
 Conecta **empresas vendedoras** con **compradores** en una sola plataforma: catálogo con variantes, carrito, checkout con **RehniCoin**, pedidos, devoluciones, reseñas y paneles de gestión para empresas y administradores.
 
