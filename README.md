@@ -352,7 +352,7 @@ Documentos en [`docs/plan de implantacion - Rehnimarket/`](<docs/plan de implant
 | 4 | Hosting y dominio | 3 | CE-1 | [Hosting y dominio](<docs/plan de implantacion - Rehnimarket/4) Hosting y dominio — Semana 3 (CE-1).md>) |
 | 5 | Plan de instalación y despliegue | 2 y 4 | CE-1, CE-5 | [Instalación y despliegue](<docs/plan de implantacion - Rehnimarket/5) Plan de instalación y despliegue — Semanas 2 y 4 (CE-1, CE-5).md>) |
 
-Pendientes de las semanas 1 a 4 y cómo completarlos: [PENDIENTES-s1-s4.md](<docs/plan de implantacion - Rehnimarket/PENDIENTES-s1-s4.md>). Despliegue de producción: mismo `docker-compose.yml` con el `.env` de [`deploy/env.prod.example`](deploy/env.prod.example) ([`deploy/README.md`](deploy/README.md)) y [`CHANGELOG.md`](CHANGELOG.md).
+
 
 
 ---
