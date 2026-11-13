@@ -452,17 +452,20 @@ SECCIONES_PLATAFORMA = [
           "reconstruyen la imagen; un cambio en caddy/Caddyfile reinicia Caddy. Para recarga en caliente del "
           "frontend se usa `pnpm dev` en el host (http://localhost:5173)."),
         SUB("Comprobación de los servicios"),
-        P("Salida esperada de `docker compose ps` con el stack completo en ejecución (se omiten las columnas "
-          "IMAGE, COMMAND y CREATED; los tiempos cambian en cada equipo). Todos los servicios deben quedar en "
-          "«healthy»; pgbouncer y minio no publican puertos en el host. [VERIFICAR: comparar con la salida real "
-          "del servidor]"),
-        CODE("NAME             SERVICE     STATUS                    PORTS\n"
-             "pgbouncer_pool   pgbouncer   Up 2 minutes (healthy)    5432/tcp, 6432/tcp\n"
-             "rehni-backend    backend     Up 2 minutes (healthy)    127.0.0.1:8000->8000/tcp\n"
-             "rehni-frontend   frontend    Up 2 minutes (healthy)    0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp,\n"
-             "                                                       0.0.0.0:443->443/udp\n"
-             "rehni-minio      minio       Up 2 minutes (healthy)    9000/tcp\n"
-             "rehni-postgres   postgres    Up 2 minutes (healthy)    127.0.0.1:5433->5432/tcp"),
+        P("Salida de `docker compose ps --format 'table {{.Name}}\\t{{.Service}}\\t{{.Status}}\\t{{.Ports}}'` "
+          "con el stack completo en ejecución, tomada del entorno local el 13/11/2026 (se omiten las direcciones "
+          "IPv6 [::]; los tiempos cambian en cada equipo). Todos los servicios deben quedar en «healthy». "
+          "PgBouncer escucha en 6432 y MinIO en 9000 solo dentro de la red de Docker, por eso no aparecen "
+          "publicados. La columna del backend depende de BACKEND_BIND: 0.0.0.0 en la plantilla local "
+          "(.env.example) y 127.0.0.1 en producción (deploy/env.prod.example), que se muestra como "
+          "127.0.0.1:8000->8000/tcp."),
+        CODE("NAME             SERVICE     STATUS                     PORTS\n"
+             "pgbouncer_pool   pgbouncer   Up 38 minutes (healthy)    5432/tcp\n"
+             "rehni-backend    backend     Up 38 minutes (healthy)    0.0.0.0:8000->8000/tcp\n"
+             "rehni-frontend   frontend    Up 38 minutes (healthy)    0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp,\n"
+             "                                                        0.0.0.0:443->443/udp, 2019/tcp\n"
+             "rehni-minio      minio       Up 38 minutes (healthy)\n"
+             "rehni-postgres   postgres    Up 38 minutes (healthy)    127.0.0.1:5433->5432/tcp"),
     ]),
     (2, "6.5", "Correo SMTP configurable", [
         P("El backend envía los códigos de verificación y recuperación y las notificaciones de pedidos, "
