@@ -281,7 +281,16 @@ class Documento:
 # --- tabla de contenido con número de página -------------------------------------------
 
 def _palabras(pdf: Path):
-    html = subprocess.run(["pdftotext", "-bbox-layout", str(pdf), "-"], capture_output=True, text=True).stdout
+    try:
+        html = subprocess.run(["pdftotext", "-bbox-layout", str(pdf), "-"], capture_output=True, text=True,
+                              check=True).stdout
+    except FileNotFoundError as e:
+        raise RuntimeError("No se encontró pdftotext (paquete poppler): hace falta para medir las páginas de "
+                           "la tabla de contenido.") from e
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"pdftotext falló con {pdf}: {e.stderr.strip()}") from e
+    if "<page" not in html:
+        raise RuntimeError(f"pdftotext no devolvió páginas para {pdf}")
     paginas = []
     for pag in re.findall(r"<page[^>]*>(.*?)</page>", html, re.S):
         paginas.append([(float(x), float(y), unicodedata.normalize("NFC", w).replace("&amp;", "&"))
@@ -294,7 +303,9 @@ def paginas_titulos(pdf: Path, titulos, marca_inicio: str) -> dict:
     """Página de cada título: los numerados se buscan como palabra en la columna No. (x < 110 pt) y los
     libres como frase. Solo cuentan las páginas desde la que contiene `marca_inicio`."""
     paginas = _palabras(pdf)
-    inicio = next(i for i, ws in enumerate(paginas) if marca_inicio in " ".join(w for *_, w in ws))
+    inicio = next((i for i, ws in enumerate(paginas) if marca_inicio in " ".join(w for *_, w in ws)), None)
+    if inicio is None:
+        raise RuntimeError(f"No se encontró el texto «{marca_inicio}» en {pdf}: revisar la introducción.")
     out = {}
     for nivel, texto, clave in titulos:
         for i in range(inicio, len(paginas)):
@@ -561,10 +572,13 @@ def diccionario() -> Documento:
         for g in generales:
             bloques.append(("p", f"Restricción de tabla: `{g}`"))
         secciones.append((2, f"3.{i}", f"Tabla {t['name']}", bloques))
-    filas_enum = []
     for en in e["enums"]:
-        uso, vals = cdd.ENUMS[en["name"]]
-        assert set(vals) == set(en["values"]), en["name"]
+        if en["name"] not in cdd.ENUMS:
+            raise ValueError(f"El enumerado {en['name']} no está descrito en contenido_diccionario.ENUMS")
+        _, vals = cdd.ENUMS[en["name"]]
+        if set(vals) != set(en["values"]):
+            raise ValueError(f"Los valores del enumerado {en['name']} no coinciden con la base de datos: "
+                             f"base {sorted(en['values'])}, descritos {sorted(vals)}")
     secciones.append((1, "4", "Tipos enumerados", [
         ("p", f"La base de datos define {len(e['enums'])} tipos enumerados. Para cada uno se indica dónde se usa y el "
               "significado de sus valores."),
