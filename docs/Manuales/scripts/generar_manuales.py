@@ -20,7 +20,10 @@ import re
 import subprocess
 import unicodedata
 from collections import Counter
+from datetime import datetime, timezone
 from pathlib import Path
+
+from docx.oxml.ns import qn
 
 import contenido_diccionario as cdd
 import contenido_tecnico as ct
@@ -107,6 +110,7 @@ def expandir(bloques: list) -> list:
 class Documento:
     def __init__(self, archivo: str, encabezado: str, carpeta_capturas: str, perfil_defecto: str = ""):
         self.archivo = d.MANUALES / archivo
+        self.nombre = encabezado.split(" — ")[0]
         self.encabezado = encabezado
         self.carpeta = carpeta_capturas
         self.figs = Figuras()
@@ -275,6 +279,21 @@ class Documento:
                          [1.6, 2.2, 3.2, 9.5])
 
     def guardar(self):
+        # Propiedades del documento: sin esto quedan las de la plantilla de python-docx (fecha de 2013).
+        cp = self.doc.core_properties
+        ahora = datetime.now(timezone.utc).replace(microsecond=0)
+        cp.title = f"{self.nombre} — RehniMarket {VERSION}"
+        cp.subject = "RehniMarket — plataforma de comercio electrónico tipo marketplace"
+        cp.author = cp.last_modified_by = PORTADA["autor"]
+        cp.keywords = "RehniMarket; SENA; manual"
+        cp.comments = f"Versión {VERSION}. Generado con docs/Manuales/scripts/generar_manuales.py."
+        cp.language = "es-CO"
+        cp.version = VERSION
+        cp.category = "Documentación del proyecto"
+        cp.created = cp.modified = ahora
+        for el in cp._element.findall(qn("cp:lastPrinted")):   # la plantilla trae una fecha de impresión de 2013
+            cp._element.remove(el)
+        cp.revision = 1
         self.doc.save(self.archivo)
 
 
