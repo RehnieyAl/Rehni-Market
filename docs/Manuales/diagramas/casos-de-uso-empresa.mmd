@@ -1,0 +1,20 @@
+flowchart LR
+  E(["Empresa (vendedor)"]):::actor
+  A(["Administrador"]):::actor
+  subgraph S["Sistema RehniMarket: panel de empresa (solo web)"]
+    direction TB
+    U1(["Registrar la empresa con certificado PDF"])
+    U2(["Iniciar sesión (solo con el certificado aprobado) y consultar el panel Inicio"])
+    U3(["Actualizar el certificado marcado como inválido"])
+    U4(["Gestionar productos, variantes, atributos y descuentos"])
+    U5(["Gestionar pedidos, envío y estados"])
+    U6(["Resolver devoluciones por pestañas"])
+    U7(["Consultar finanzas y liquidaciones"])
+    U8(["Gestionar cuentas bancarias"])
+    U9(["Administrar Mi tienda: logo, banner y datos"])
+    U10(["Configurar la cuenta"])
+  end
+  E --> U1 & U2 & U3 & U4 & U5 & U6 & U7 & U8 & U9 & U10
+  A -. "aprueba o rechaza" .-> U1
+  U4 -. "requiere certificado aprobado" .-> U2
+  classDef actor fill:#fff,stroke:#000,stroke-width:2px;

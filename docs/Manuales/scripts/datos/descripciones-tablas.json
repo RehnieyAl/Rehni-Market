@@ -1,0 +1,478 @@
+{
+ "addresses": {
+  "descripcion": "Direcciones de envío del comprador",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "user_id": "Referencia a users",
+   "label": "Nombre de referencia de la dirección",
+   "full_name": "Nombre de quien recibe",
+   "country": "País",
+   "department": "Departamento",
+   "city": "Ciudad",
+   "address": "Dirección de entrega",
+   "postal_code": "Código postal",
+   "phone": "Teléfono de contacto",
+   "additional_instructions": "Indicaciones adicionales de entrega",
+   "is_default": "Indica si es el registro predeterminado",
+   "created_at": "Fecha y hora de creación"
+  }
+ },
+ "admin_activities": {
+  "descripcion": "Bitácora de acciones administrativas",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "admin_id": "Referencia a users",
+   "action": "Acción administrativa",
+   "target_user_id": "Referencia a users",
+   "target_company_id": "Referencia a company",
+   "reason": "Motivo registrado",
+   "created_at": "Fecha y hora de creación"
+  }
+ },
+ "advertisements": {
+  "descripcion": "Anuncios de la página de inicio",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "image_url": "Ruta de la imagen",
+   "mobile_image_url": "Imagen del anuncio para móvil",
+   "button_link": "Enlace de destino del anuncio",
+   "is_active": "Indica si el registro está activo",
+   "order": "Orden de presentación",
+   "created_at": "Fecha y hora de creación",
+   "target_type": "Tipo de destino",
+   "target_product_id": "Referencia a products",
+   "target_catalog_id": "Referencia a catalog",
+   "target_company_id": "Referencia a company",
+   "minimum_discount": "Descuento mínimo para el destino calculado",
+   "maximum_stock": "Stock máximo para el destino calculado",
+   "max_age_days": "Antigüedad máxima en días del producto"
+  }
+ },
+ "cart_items": {
+  "descripcion": "Líneas del carrito",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "cart_id": "Referencia a carts",
+   "product_id": "Referencia a products",
+   "variant_id": "Referencia a product_variants",
+   "quantity": "Cantidad de unidades",
+   "created_at": "Fecha y hora de creación"
+  }
+ },
+ "carts": {
+  "descripcion": "Carrito por usuario",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "user_id": "Referencia a users",
+   "created_at": "Fecha y hora de creación"
+  }
+ },
+ "catalog": {
+  "descripcion": "Categorías del marketplace",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "name": "Nombre",
+   "description": "Descripción",
+   "image_url": "Ruta de la imagen",
+   "display_order": "Orden visual en el catálogo",
+   "is_active": "Indica si el registro está activo"
+  }
+ },
+ "catalog_attribute_options": {
+  "descripcion": "Valores permitidos de un atributo",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "attribute_id": "Referencia a catalog_attributes",
+   "value": "Valor registrado",
+   "hex_color": "Código hexadecimal del color",
+   "position": "Orden de presentación"
+  }
+ },
+ "catalog_attributes": {
+  "descripcion": "Atributos definidos por categoría",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "catalog_id": "Referencia a catalog",
+   "name": "Nombre",
+   "role": "Rol del atributo: eje de variante o atributo de producto",
+   "input_type": "Tipo de entrada del atributo",
+   "unit": "Unidad de medida",
+   "is_active": "Indica si el registro está activo",
+   "position": "Orden de presentación",
+   "created_at": "Fecha y hora de creación"
+  }
+ },
+ "color_variants": {
+  "descripcion": "Colores disponibles",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "name": "Nombre",
+   "hex_color": "Código hexadecimal del color"
+  }
+ },
+ "company": {
+  "descripcion": "Empresas vendedoras",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "nameCompany": "Razón social",
+   "addressCompany": "Dirección de la empresa",
+   "description": "Descripción",
+   "CompanyNIT": "NIT de la empresa",
+   "CompanyNITDV": "Dígito de verificación del NIT",
+   "CompanyLogo": "Ruta del logo",
+   "CompanyBanner": "Ruta del banner",
+   "CompanyCertificate": "Ruta del certificado PDF",
+   "CompanyStatus": "Indica si la empresa está activa; falso significa suspendida",
+   "suspension_reason": "Motivo de suspensión",
+   "created_at": "Fecha y hora de creación",
+   "user_id": "Referencia a users",
+   "rejection_reason": "Motivo del rechazo del certificado",
+   "CompanyCertificateStatus": "Estado del certificado"
+  }
+ },
+ "company_bank_accounts": {
+  "descripcion": "Cuentas para recibir liquidaciones",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "company_id": "Referencia a company",
+   "account_holder": "Titular de la cuenta",
+   "document_number": "Documento del titular",
+   "bank_name": "Banco",
+   "account_type": "Tipo de cuenta",
+   "account_number": "Número de cuenta",
+   "is_default": "Indica si es el registro predeterminado",
+   "created_at": "Fecha y hora de creación",
+   "updated_at": "Fecha y hora de la última actualización"
+  }
+ },
+ "company_payouts": {
+  "descripcion": "Liquidaciones mensuales",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "company_id": "Referencia a company",
+   "period_start": "Inicio del periodo",
+   "period_end": "Fin del periodo",
+   "gross_sales": "Ventas brutas del periodo",
+   "commission_percentage": "Porcentaje de comisión aplicado",
+   "commission_amount": "Valor de la comisión",
+   "net_amount": "Valor neto a transferir",
+   "payout_status": "Estado de la liquidación",
+   "bank_account_id": "Referencia a company_bank_accounts",
+   "paid_at": "Fecha de pago",
+   "created_at": "Fecha y hora de creación"
+  }
+ },
+ "event_codes": {
+  "descripcion": "Códigos temporales de correo",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "code": "Código temporal enviado al correo",
+   "type": "Tipo de registro",
+   "created_at": "Fecha y hora de creación",
+   "expires_at": "Fecha y hora de vencimiento",
+   "user_id": "Referencia a users"
+  }
+ },
+ "favorites": {
+  "descripcion": "Productos favoritos",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "user_id": "Referencia a users",
+   "product_id": "Referencia a products",
+   "created_at": "Fecha y hora de creación"
+  }
+ },
+ "order_items": {
+  "descripcion": "Líneas del pedido con copia de datos",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "order_id": "Referencia a orders",
+   "product_id": "Referencia a products",
+   "variant_id": "Referencia a product_variants",
+   "product_name": "Nombre del producto al momento de la compra",
+   "variant_name": "Nombre de la variante al momento de la compra",
+   "unit_price": "Precio unitario pagado",
+   "original_unit_price": "Precio unitario antes del descuento",
+   "quantity": "Cantidad de unidades",
+   "subtotal": "Subtotal antes de impuestos",
+   "attributes_snapshot": "Copia de los atributos al momento de la compra"
+  }
+ },
+ "orders": {
+  "descripcion": "Pedidos por empresa",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "order_number": "Consecutivo del pedido",
+   "user_id": "Referencia a users",
+   "company_id": "Referencia a company",
+   "address_id": "Referencia a addresses",
+   "delivery_label": "Copia de la referencia de dirección",
+   "delivery_full_name": "Copia del nombre de quien recibe",
+   "delivery_phone": "Copia del teléfono",
+   "delivery_address": "Copia de la dirección de entrega",
+   "delivery_city": "Copia de la ciudad",
+   "delivery_department": "Copia del departamento",
+   "status": "Estado actual",
+   "subtotal": "Subtotal antes de impuestos",
+   "tax": "Valor del IVA",
+   "total": "Valor total pagado",
+   "created_at": "Fecha y hora de creación",
+   "updated_at": "Fecha y hora de la última actualización",
+   "shipping_carrier_id": "Referencia a shipping_carriers",
+   "tracking_number": "Número de guía"
+  }
+ },
+ "product_attribute_values": {
+  "descripcion": "Valores de atributos del producto",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "product_id": "Referencia a products",
+   "attribute_id": "Referencia a catalog_attributes",
+   "value": "Valor registrado"
+  }
+ },
+ "product_images": {
+  "descripcion": "Imágenes del producto",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "url": "Ruta del archivo en MinIO",
+   "is_main": "Indica si es la imagen principal",
+   "product_id": "Referencia a products"
+  }
+ },
+ "product_specifications": {
+  "descripcion": "Especificaciones del producto",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "value": "Valor registrado",
+   "product_id": "Referencia a products",
+   "specification_template_id": "Referencia a"
+  }
+ },
+ "product_variant_images": {
+  "descripcion": "Imágenes de la variante",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "url": "Ruta del archivo en MinIO",
+   "is_main": "Indica si es la imagen principal",
+   "variant_id": "Referencia a product_variants"
+  }
+ },
+ "product_variants": {
+  "descripcion": "Variantes comprables",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "name": "Nombre",
+   "price": "Precio base",
+   "stock": "Unidades disponibles",
+   "discount_enable": "Indica si el descuento está habilitado",
+   "discount_value": "Valor del descuento",
+   "product_id": "Referencia a products",
+   "color_id": "Referencia a color_variants",
+   "discount_type": "Tipo de descuento: porcentaje o fijo",
+   "discount_starts_at": "Inicio del descuento",
+   "discount_ends_at": "Fin del descuento",
+   "sku": "Código de la variante",
+   "combo_key": "Clave de la combinación de opciones",
+   "deleted_at": "Fecha de eliminación lógica"
+  }
+ },
+ "products": {
+  "descripcion": "Productos publicados",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "name": "Nombre",
+   "price": "Precio base",
+   "discount_enable": "Indica si el descuento está habilitado",
+   "discount_value": "Valor del descuento",
+   "stock": "Unidades disponibles",
+   "has_variants": "Indica si el producto usa variantes",
+   "descripcion": "Descripción del producto",
+   "is_active": "Indica si el registro está activo",
+   "created_at": "Fecha y hora de creación",
+   "deleted_at": "Fecha de eliminación lógica",
+   "company_id": "Referencia a company",
+   "catalog_id": "Referencia a catalog",
+   "main_color_id": "Referencia a color_variants",
+   "discount_type": "Tipo de descuento: porcentaje o fijo",
+   "discount_starts_at": "Inicio del descuento",
+   "discount_ends_at": "Fin del descuento",
+   "applies_tax": "Indica si aplica IVA"
+  }
+ },
+ "refreshToken": {
+  "descripcion": "Refresh tokens emitidos",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "token": "Valor del refresh token",
+   "revoked": "Indica si el token fue revocado",
+   "created_at": "Fecha y hora de creación",
+   "expires_at": "Fecha y hora de vencimiento",
+   "user_id": "Referencia a users"
+  }
+ },
+ "rehnicoin_movements": {
+  "descripcion": "Conversión de liquidaciones a RehniCoin",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "company_id": "Referencia a company",
+   "payout_id": "Referencia a company_payouts",
+   "amount_cop": "Valor en pesos colombianos",
+   "rehni_coins": "Valor en RehniCoin",
+   "conversion_rate": "Tasa de conversión aplicada",
+   "created_at": "Fecha y hora de creación"
+  }
+ },
+ "report_evidences": {
+  "descripcion": "Imágenes de evidencia",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "report_id": "Referencia a reports",
+   "url": "Ruta del archivo en MinIO",
+   "created_at": "Fecha y hora de creación"
+  }
+ },
+ "reports": {
+  "descripcion": "Reportes de productos y empresas",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "reporter_id": "Referencia a users",
+   "target_type": "Tipo de destino",
+   "product_id": "Referencia a products",
+   "company_id": "Referencia a company",
+   "reason": "Motivo registrado",
+   "description": "Descripción",
+   "status": "Estado actual",
+   "admin_response": "Respuesta administrativa",
+   "resolved_by": "Referencia a users",
+   "created_at": "Fecha y hora de creación",
+   "updated_at": "Fecha y hora de la última actualización",
+   "resolved_at": "Fecha de resolución"
+  }
+ },
+ "return_requests": {
+  "descripcion": "Solicitudes de devolución",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "order_id": "Referencia a orders",
+   "order_item_id": "Referencia a order_items",
+   "user_id": "Referencia a users",
+   "company_id": "Referencia a company",
+   "reason": "Motivo registrado",
+   "status": "Estado actual",
+   "company_response": "Respuesta de la empresa",
+   "reviewed_by": "Referencia a users",
+   "refund_amount": "Valor reembolsado",
+   "created_at": "Fecha y hora de creación",
+   "updated_at": "Fecha y hora de la última actualización",
+   "resolved_at": "Fecha de resolución"
+  }
+ },
+ "reviews": {
+  "descripcion": "Reseñas de productos",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "user_id": "Referencia a users",
+   "product_id": "Referencia a products",
+   "rating": "Calificación",
+   "comment": "Comentario de la reseña",
+   "is_active": "Indica si el registro está activo",
+   "created_at": "Fecha y hora de creación",
+   "updated_at": "Fecha y hora de la última actualización"
+  }
+ },
+ "roles": {
+  "descripcion": "Roles del sistema",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "name": "Nombre"
+  }
+ },
+ "shipping_carriers": {
+  "descripcion": "Transportadoras",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "name": "Nombre",
+   "tracking_url": "Plantilla de la URL de seguimiento",
+   "is_active": "Indica si el registro está activo",
+   "created_at": "Fecha y hora de creación",
+   "updated_at": "Fecha y hora de la última actualización"
+  }
+ },
+ "specification_templates": {
+  "descripcion": "Plantillas de especificaciones por categoría",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "name": "Nombre",
+   "type": "Tipo de registro",
+   "required": "Indica si la especificación es obligatoria",
+   "catalog_id": "Referencia a catalog"
+  }
+ },
+ "users": {
+  "descripcion": "Cuentas de usuario",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "fullName": "Nombre completo",
+   "email": "Correo electrónico único",
+   "hashed_password": "Contraseña cifrada con bcrypt",
+   "tell": "Teléfono de contacto",
+   "profileImagen": "Ruta de la foto de perfil",
+   "verified": "Indica si el correo fue verificado",
+   "isActive": "Indica si la cuenta está activa; falso significa bloqueada",
+   "created_at": "Fecha y hora de creación",
+   "role_id": "Referencia a roles"
+  }
+ },
+ "variant_attribute_values": {
+  "descripcion": "Valores de atributos de la variante",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "variant_id": "Referencia a product_variants",
+   "attribute_id": "Referencia a catalog_attributes",
+   "value": "Valor registrado"
+  }
+ },
+ "variant_options": {
+  "descripcion": "Opciones que forman la variante",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "variant_id": "Referencia a product_variants",
+   "attribute_id": "Referencia a catalog_attributes",
+   "option_id": "Referencia a catalog_attribute_options"
+  }
+ },
+ "variant_specifications": {
+  "descripcion": "Especificaciones de la variante",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "value": "Valor registrado",
+   "variant_id": "Referencia a product_variants",
+   "specification_template_id": "Referencia a"
+  }
+ },
+ "wallet_transactions": {
+  "descripcion": "Movimientos de la billetera",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "wallet_id": "Referencia a wallets",
+   "type": "Tipo de registro",
+   "amount": "Valor del movimiento",
+   "description": "Descripción",
+   "created_by": "Referencia a users",
+   "order_id": "Referencia a orders",
+   "created_at": "Fecha y hora de creación",
+   "corrects_transaction_id": "Referencia a wallet_transactions"
+  }
+ },
+ "wallets": {
+  "descripcion": "Billetera por usuario",
+  "columnas": {
+   "id": "Identificador único del registro",
+   "user_id": "Referencia a users",
+   "balance": "Saldo disponible en RehniCoin",
+   "created_at": "Fecha y hora de creación",
+   "updated_at": "Fecha y hora de la última actualización"
+  }
+ }
+}

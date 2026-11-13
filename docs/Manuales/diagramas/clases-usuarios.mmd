@@ -1,0 +1,67 @@
+classDiagram
+  direction TB
+  class Users {
+    +uuid id
+    +varchar fullName
+    +varchar email
+    +varchar hashed_password
+    +varchar tell
+    +varchar profileImagen
+    +boolean verified
+    +boolean isActive
+    +timestamptz created_at
+    +uuid role_id
+  }
+  class Role {
+    +uuid id
+    +varchar name
+  }
+  class RefreshToken {
+    +uuid id
+    +varchar token
+    +boolean revoked
+    +timestamp created_at
+    +timestamp expires_at
+    +uuid user_id
+  }
+  class Codes {
+    +uuid id
+    +varchar code
+    +type type
+    +timestamp created_at
+    +timestamp expires_at
+    +uuid user_id
+  }
+  class Address {
+    +uuid id
+    +uuid user_id
+    +varchar label
+    +varchar full_name
+    +varchar country
+    +varchar department
+    +varchar city
+    +varchar address
+    +varchar postal_code
+    +varchar phone
+    +varchar additional_instructions
+    +boolean is_default
+    +timestamptz created_at
+  }
+  class AdminActivity {
+    +uuid id
+    +uuid admin_id
+    +admin action
+    +uuid target_user_id
+    +uuid target_company_id
+    +text reason
+    +timestamptz created_at
+  }
+  Company "0..1" --> "0..*" AdminActivity : target_company_id
+  Role "1" --> "0..*" Users : role_id
+  Users "1" --> "0..*" Address : user_id
+  Users "1" --> "0..*" AdminActivity : admin_id
+  Users "0..1" --> "0..*" AdminActivity : target_user_id
+  Users "1" --> "0..*" Codes : user_id
+  Users "1" --> "0..*" RefreshToken : user_id
+  class Company
+  <<externa>> Company

@@ -1,0 +1,55 @@
+classDiagram
+  direction TB
+  class Report {
+    +uuid id
+    +uuid reporter_id
+    +report target_type
+    +uuid product_id
+    +uuid company_id
+    +varchar reason
+    +text description
+    +report status
+    +text admin_response
+    +uuid resolved_by
+    +timestamptz created_at
+    +timestamptz updated_at
+    +timestamptz resolved_at
+  }
+  class ReportEvidence {
+    +uuid id
+    +uuid report_id
+    +varchar url
+    +timestamptz created_at
+  }
+  class Advertisement {
+    +uuid id
+    +varchar image_url
+    +varchar mobile_image_url
+    +varchar button_link
+    +boolean is_active
+    +integer order
+    +timestamp created_at
+    +advertisementtargettype target_type
+    +uuid target_product_id
+    +uuid target_catalog_id
+    +uuid target_company_id
+    +integer minimum_discount
+    +integer maximum_stock
+    +integer max_age_days
+  }
+  Catalog "0..1" --> "0..*" Advertisement : target_catalog_id
+  Company "0..1" --> "0..*" Advertisement : target_company_id
+  Company "0..1" --> "0..*" Report : company_id
+  Product "0..1" --> "0..*" Advertisement : target_product_id
+  Product "0..1" --> "0..*" Report : product_id
+  Report "1" --> "0..*" ReportEvidence : report_id
+  Users "1" --> "0..*" Report : reporter_id
+  Users "0..1" --> "0..*" Report : resolved_by
+  class Catalog
+  <<externa>> Catalog
+  class Company
+  <<externa>> Company
+  class Product
+  <<externa>> Product
+  class Users
+  <<externa>> Users

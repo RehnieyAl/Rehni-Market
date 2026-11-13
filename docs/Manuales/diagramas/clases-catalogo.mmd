@@ -1,0 +1,43 @@
+classDiagram
+  direction TB
+  class Catalog {
+    +uuid id
+    +varchar name
+    +varchar description
+    +varchar image_url
+    +integer display_order
+    +boolean is_active
+  }
+  class CatalogAttribute {
+    +uuid id
+    +uuid catalog_id
+    +varchar name
+    +varchar role
+    +varchar input_type
+    +varchar unit
+    +boolean is_active
+    +integer position
+    +timestamp created_at
+  }
+  class CatalogAttributeOption {
+    +uuid id
+    +uuid attribute_id
+    +varchar value
+    +varchar hex_color
+    +integer position
+  }
+  class SpecificationTemplate {
+    +uuid id
+    +varchar name
+    +varchar type
+    +boolean required
+    +uuid catalog_id
+  }
+  class ColorVariant {
+    +uuid id
+    +varchar name
+    +varchar hex_color
+  }
+  Catalog "1" --> "0..*" CatalogAttribute : catalog_id
+  Catalog "1" --> "0..*" SpecificationTemplate : catalog_id
+  CatalogAttribute "1" --> "0..*" CatalogAttributeOption : attribute_id
