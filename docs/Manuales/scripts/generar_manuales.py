@@ -5,16 +5,22 @@
 - Diccionario de datos.docx
 - capturas/LISTA-CAPTURAS.md (capturas pendientes) y lista-imagenes.md (figuras y datos por verificar)
 
-Los diagramas se insertan desde docs/Manuales/diagramas/png/; las capturas de pantalla quedan como
-recuadros amarillos que se reemplazan a mano. La tabla de contenido es un campo TOC que se precarga con
-los números de página medidos en una conversión a PDF (OnlyOffice x2t) y se puede actualizar en OnlyOffice.
+Los diagramas se insertan desde docs/Manuales/diagramas/png/. Las capturas de pantalla se insertan desde
+docs/Manuales/capturas/<documento>/ cuando el archivo existe (fig-<número>-<título>.png; se busca por el
+título, así que un cambio de numeración no las pierde); si no existe, queda el recuadro amarillo con las
+instrucciones. Las capturas son la fuente de verdad: no se pegan a mano en el .docx, se guardan en esa
+carpeta y se vuelve a generar. La tabla de contenido es un campo TOC que se precarga con los números de
+página medidos en una conversión a PDF (OnlyOffice x2t) y se puede actualizar en OnlyOffice.
 
 Uso, desde la raíz del repositorio:
     uv run --project docs/Manuales/scripts python docs/Manuales/scripts/generar_manuales.py
+    uv run --project docs/Manuales/scripts python docs/Manuales/scripts/generar_manuales.py --salida /tmp/prueba
+(--salida escribe los documentos y las listas en otra carpeta, sin tocar docs/Manuales/.)
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import subprocess
@@ -31,12 +37,14 @@ import contenido_usuario as cu
 import diseno_sena as d
 import diagramas_modelo as dm
 from convertir_pdf import convertir
-from datos_comunes import CONTROL_VERSIONES, FECHA, PORTADA, VERSION
+from datos_comunes import CONTROL_VERSIONES, FECHA, PORTADA, RESPONSABLES_VERIFICAR, VERSION
 
 DATOS = d.SCRIPTS / "datos"
 PNG = d.MANUALES / "diagramas" / "png"
+CAPTURAS = d.MANUALES / "capturas"
 LEGIBLE_MM = 1.85        # alto mínimo de la letra de un diagrama en la página
 REPO = d.REPO
+SALIDA = d.MANUALES      # carpeta de los .docx y las listas; se cambia con --salida
 
 
 def _json(n):
@@ -108,8 +116,9 @@ def expandir(bloques: list) -> list:
 # --- documento ----------------------------------------------------------------------
 
 class Documento:
-    def __init__(self, archivo: str, encabezado: str, carpeta_capturas: str, perfil_defecto: str = ""):
-        self.archivo = d.MANUALES / archivo
+    def __init__(self, archivo: str, encabezado: str, carpeta_capturas: str, anchos_captura: dict | None = None):
+        self.archivo = SALIDA / archivo
+        self.anchos_captura = anchos_captura or {}
         self.nombre = encabezado.split(" — ")[0]
         self.encabezado = encabezado
         self.carpeta = carpeta_capturas
@@ -199,7 +208,9 @@ class Documento:
             self._det().codigo(b[1])
         elif k == "tabla":
             enc, filas, anchos = b[1], b[2], b[3]
-            self._det().subtabla([self.t(x) for x in enc], [[self.t(str(c)) for c in f] for f in filas],
+            # Una celda puede ser texto o ("img", ruta desde la raíz del repositorio, ancho en cm).
+            self._det().subtabla([self.t(x) for x in enc],
+                                 [[c if isinstance(c, tuple) else self.t(str(c)) for c in f] for f in filas],
                                  anchos or [1] * len(enc))
         elif k == "captura":
             self.captura(*b[1:])
@@ -208,16 +219,40 @@ class Documento:
         else:
             raise ValueError(b)
 
+    def _archivo_captura(self, num: str, titulo: str) -> tuple[str, Path | None]:
+        """Nombre esperado de la captura y, si existe, el archivo que se inserta. Se busca primero por el
+        nombre exacto y luego solo por el título (fig-*-<título>.png), para no perder una captura si cambia
+        la numeración de las figuras."""
+        nombre = f"fig-{num.replace('.', '-')}-{slug(titulo)}.png"
+        carpeta = CAPTURAS / self.carpeta
+        exacto = carpeta / nombre
+        if exacto.is_file():
+            return nombre, exacto
+        otros = sorted(carpeta.glob(f"fig-*-{slug(titulo)}.png"))
+        if len(otros) > 1:
+            raise RuntimeError(f"Hay varias capturas para «{titulo}»: {[p.name for p in otros]}")
+        if otros:
+            print(f"  aviso: la Figura {num} usa {otros[0].name}; renombrarla a {nombre}")
+            return nombre, otros[0]
+        return nombre, None
+
     def captura(self, titulo, ruta, estado, resaltar, perfil, clave):
         num = self._siguiente_figura()
-        archivo = f"docs/Manuales/capturas/{self.carpeta}/fig-{num.replace('.', '-')}-{slug(titulo)}.png"
+        nombre, existente = self._archivo_captura(num, titulo)
+        archivo = f"docs/Manuales/capturas/{self.carpeta}/{nombre}"
         perfil = perfil or "—"
-        self._det().recuadro_captura(num, self.t(titulo), archivo, self.t(perfil), self.t(ruta), self.t(estado),
-                                     self.t(resaltar))
+        if existente:
+            ancho = self.anchos_captura.get(titulo) or d.ancho_captura(existente)
+            self._det().imagen(existente, num, self.t(titulo), ancho=ancho)
+            archivo = existente.relative_to(REPO).as_posix()
+        else:
+            self._det().recuadro_captura(num, self.t(titulo), archivo, self.t(perfil), self.t(ruta),
+                                         self.t(estado), self.t(resaltar))
         self.capturas.append({"figura": num, "titulo": convertir_texto(titulo), "archivo": archivo,
                               "perfil": perfil, "ruta": convertir_texto(ruta), "estado": convertir_texto(estado),
-                              "resaltar": convertir_texto(resaltar), "seccion": self._sec})
-        self.figuras[-1] = (num, convertir_texto(titulo), archivo, "pendiente")
+                              "resaltar": convertir_texto(resaltar), "seccion": self._sec,
+                              "insertada": existente is not None})
+        self.figuras[-1] = (num, convertir_texto(titulo), archivo, "insertada" if existente else "pendiente")
 
     def imagen(self, ruta: Path, titulo: str):
         num = self._siguiente_figura()
@@ -294,6 +329,7 @@ class Documento:
         for el in cp._element.findall(qn("cp:lastPrinted")):   # la plantilla trae una fecha de impresión de 2013
             cp._element.remove(el)
         cp.revision = 1
+        self.archivo.parent.mkdir(parents=True, exist_ok=True)
         self.doc.save(self.archivo)
 
 
@@ -363,7 +399,7 @@ def construir(doc: Documento, pintar, marca_inicio: str):
 # --- manual de usuario --------------------------------------------------------------
 
 def manual_usuario() -> Documento:
-    doc = Documento("Manual de usuario.docx", "Manual de usuario — RehniMarket", "usuario")
+    doc = Documento("Manual de usuario.docx", "Manual de usuario — RehniMarket", "usuario", cu.ANCHOS_CAPTURA)
     errores = [(2, num, titulo, [("p", f"Se relacionan {len(filas)} mensajes."),
                                  ("tabla", ["Mensaje", "Dónde aparece", "Causa", "Acción a seguir"], filas,
                                   [4.4, 2.4, 2.6, 2.6])])
@@ -388,6 +424,8 @@ def arbol() -> str:
     dirs = subprocess.run(["git", "ls-tree", "-d", "-r", "--name-only", "HEAD"], cwd=REPO, capture_output=True,
                           text=True).stdout.splitlines()
     excluir = re.compile(r"(^|/)(\.|node_modules|__pycache__|dist|build|assets|public|versions|_)")
+    # Material local que no forma parte del proyecto (ignorado en .gitignore de main): docs/sena/.
+    dirs = [x for x in dirs if not (x == "docs/sena" or x.startswith("docs/sena/"))]
     expandir_en = {"RehniMarket-backend", "RehniMarket-backend/app", "RehniMarket-frontend",
                    "RehniMarket-frontend/src", "docs", "scripts", "tests", "caddy", "deploy"}
     lineas = ["Rehni-Market/"]
@@ -643,12 +681,18 @@ Todo se toma en el entorno local (https://rehnimarket) con el stack levantado y 
 
 
 def lista_capturas(docs: dict[str, Documento]):
-    lineas = ["# Capturas de pantalla pendientes", "",
-              "Generado por `docs/Manuales/scripts/generar_manuales.py`. Cada captura corresponde a un recuadro "
-              "amarillo del documento: borrar el recuadro, pegar la imagen en su lugar (en línea con el texto) y "
-              "conservar el pie de figura. Guardar el archivo con el nombre indicado.", "",
-              "Formato: PNG, ventana del navegador a 1366 × 768 o más, sin datos personales reales. Resaltar con un "
-              "recuadro o una flecha roja lo que indica la columna «Qué resaltar».", "", DATOS_PRUEBA]
+    total = sum(len(doc.capturas) for doc in docs.values())
+    hechas = sum(1 for doc in docs.values() for c in doc.capturas if c["insertada"])
+    lineas = ["# Capturas de pantalla", "",
+              "Generado por `docs/Manuales/scripts/generar_manuales.py`: no editar a mano.", "",
+              f"Estado: {hechas} de {total} capturas insertadas; {total - hechas} pendientes.", "",
+              "Cómo se agrega una captura: guardar el PNG en la carpeta indicada con el nombre de la columna "
+              "«Archivo» y volver a ejecutar el generador, que la inserta en lugar del recuadro amarillo. **No "
+              "pegar capturas directamente en el .docx**: el generador vuelve a crear los documentos y esas "
+              "imágenes se perderían.", "",
+              "Formato: PNG, ventana del navegador a 1366 × 768 o más, sin datos personales reales (ni pestañas "
+              "del navegador ni barra de tareas). Resaltar con un recuadro o una flecha roja lo que indica la "
+              "columna «Qué resaltar».", "", DATOS_PRUEBA]
     perfiles = ["Visitante", "Comprador", "Empresa", "Administrador", "Propietario"]
     for nombre, doc in docs.items():
         if not doc.capturas:
@@ -667,38 +711,54 @@ def lista_capturas(docs: dict[str, Documento]):
                        "| ✓ | Figura | Archivo | Ruta o pantalla | Estado que debe mostrar | Qué resaltar |",
                        "|---|---|---|---|---|---|"]
             for c in caps:
-                lineas.append(f"| [ ] | {c['figura']} {c['titulo']} | `{Path(c['archivo']).name}` | {c['ruta']} | "
+                marca = "[x]" if c["insertada"] else "[ ]"
+                lineas.append(f"| {marca} | {c['figura']} {c['titulo']} | `{Path(c['archivo']).name}` | {c['ruta']} | "
                               f"{c['estado']} | {c['resaltar']} |")
             lineas.append("")
         lineas.append(f"Carpeta: `docs/Manuales/capturas/{doc.carpeta}/`")
         lineas.append("")
-    destino = d.MANUALES / "capturas" / "LISTA-CAPTURAS.md"
-    destino.parent.mkdir(exist_ok=True)
+    destino = SALIDA / "capturas" / "LISTA-CAPTURAS.md"
+    destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_text("\n".join(lineas), encoding="utf-8")
+
+
+def _responsable(pendiente: str) -> str:
+    for clave, quien in RESPONSABLES_VERIFICAR.items():
+        if clave in pendiente:
+            return quien
+    return "Responsable del proyecto"
 
 
 def lista_imagenes(docs: dict[str, Documento]):
     lineas = ["# Figuras y datos por verificar de los manuales", "",
-              "Generado por `docs/Manuales/scripts/generar_manuales.py`: no editar a mano. Las capturas pendientes, "
-              "con sus instrucciones, están en `docs/Manuales/capturas/LISTA-CAPTURAS.md`.", ""]
+              "Generado por `docs/Manuales/scripts/generar_manuales.py`: no editar a mano. Las capturas, con sus "
+              "instrucciones, están en `docs/Manuales/capturas/LISTA-CAPTURAS.md`.", ""]
     for nombre, doc in docs.items():
         lineas += [f"## {nombre}", "", "| Figura | Título | Tipo | Estado | Archivo |", "|---|---|---|---|---|"]
         for num, titulo, archivo, estado in doc.figuras:
-            tipo = "captura" if estado == "pendiente" else "diagrama"
+            tipo = "captura" if "/capturas/" in archivo else "diagrama"
             lineas.append(f"| {num} | {titulo} | {tipo} | {estado} | `{archivo}` |")
         lineas.append("")
-    lineas += ["## Datos por verificar", "", "Resaltados en amarillo como `[VERIFICAR: …]`.", "",
-               "| Documento | Sección | Pendiente |", "|---|---|---|"]
+    lineas += ["## Datos por verificar", "",
+               "Resaltados en amarillo como `[VERIFICAR: …]`. No están en el repositorio: los debe suministrar "
+               "quien se indica. Se completan en `docs/Manuales/scripts/datos_comunes.py` y se vuelve a generar.",
+               "", "| Documento | Sección | Pendiente | Quién lo suministra |", "|---|---|---|---|"]
     for nombre, doc in docs.items():
         vistos = set()
         for sec, v in doc.verificar:
             if (sec, v) not in vistos:
                 vistos.add((sec, v))
-                lineas.append(f"| {nombre} | {sec} | {v} |")
-    (d.MANUALES / "lista-imagenes.md").write_text("\n".join(lineas) + "\n", encoding="utf-8")
+                lineas.append(f"| {nombre} | {sec} | {v} | {_responsable(v)} |")
+    (SALIDA / "lista-imagenes.md").write_text("\n".join(lineas) + "\n", encoding="utf-8")
 
 
 def main():
+    global SALIDA
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--salida", type=Path, help="carpeta de salida (por defecto docs/Manuales/)")
+    args = ap.parse_args()
+    if args.salida:
+        SALIDA = args.salida.resolve()
     docs = {}
     for nombre, f in (("Manual de usuario", manual_usuario), ("Manual técnico", manual_tecnico),
                       ("Diccionario de datos", diccionario)):
@@ -706,7 +766,8 @@ def main():
         doc = f()
         docs[nombre] = doc
         ins = sum(1 for f_ in doc.figuras if f_[3] == "insertada")
-        print(f"  {len(doc.figuras)} figuras ({ins} insertadas, {len(doc.capturas)} capturas pendientes), "
+        pend = sum(1 for c in doc.capturas if not c["insertada"])
+        print(f"  {len(doc.figuras)} figuras ({ins} insertadas, {pend} capturas pendientes), "
               f"{len(set(v for _, v in doc.verificar))} datos por verificar")
         print("  ", d.validar_editable(doc.archivo))
     lista_capturas(docs)

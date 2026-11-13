@@ -27,6 +27,18 @@ SOPORTE = {
     "url_api_produccion": "[VERIFICAR: URL de la API en producción, https://api.<dominio>]",
 }
 
+# Quién debe suministrar cada dato [VERIFICAR: …] (se lista en docs/Manuales/lista-imagenes.md). Ninguno
+# está en el repositorio: son datos institucionales o de la operación en producción.
+RESPONSABLES_VERIFICAR = {
+    "centro de formación": "Instructor o coordinación académica del SENA",
+    "número de ficha": "Instructor o coordinación académica del SENA",
+    "nombre de la competencia": "Instructor (guía de aprendizaje vigente)",
+    "nombre del instructor": "Instructor o coordinación académica del SENA",
+    "correo de soporte": "Responsable del proyecto (buzón de la mesa de ayuda)",
+    "URL de producción": "Responsable del despliegue (dominio público en Caddy, SITE_ADDRESS)",
+    "URL de la API en producción": "Responsable del despliegue (dominio público en Caddy, API_ADDRESS)",
+}
+
 CONTROL_VERSIONES = [
     ("1.0", "31/08/2026", "Yeinher Algarin", "Versión inicial."),
     ("2.0", "30/10/2026", "Yeinher Algarin",

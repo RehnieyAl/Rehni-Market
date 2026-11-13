@@ -411,7 +411,11 @@ class Detalle:
         for f in filas:
             cs = t.add_row().cells
             for c, v in zip(cs, f):
-                c.paragraphs[0].style = self.doc.styles[E_TEXTO_SUBTABLA]; texto(c.paragraphs[0], str(v))
+                c.paragraphs[0].style = self.doc.styles[E_TEXTO_SUBTABLA]
+                if isinstance(v, tuple) and v[0] == "img":     # ("img", ruta desde la raíz, ancho en cm)
+                    c.paragraphs[0].add_run().add_picture(png_optimizado(REPO / v[1]), width=Cm(v[2]))
+                else:
+                    texto(c.paragraphs[0], str(v))
         total = COLS[2] - 0.45
         factor = total / sum(anchos)
         _anchos(t, [a * factor for a in anchos])
@@ -500,6 +504,13 @@ def tamano_px(ruta: Path) -> tuple[int, int]:
 def ancho_ajustado(ruta: Path, ancho: float, alto: float) -> float:
     w, h = tamano_px(ruta)
     return min(ancho, alto * w / h)
+
+
+def ancho_captura(ruta: Path, dpi: float = 96) -> float:
+    """Ancho de una captura de pantalla: el de la columna Detalle, sin ampliarla por encima de su tamaño
+    natural (px a 96 ppp). Así un recorte pequeño, como un menú desplegado, no se estira."""
+    w, _ = tamano_px(ruta)
+    return min(ANCHO_IMAGEN, w / dpi * 2.54)
 
 
 _CACHE_PNG: dict[Path, bytes] = {}
