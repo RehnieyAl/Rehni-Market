@@ -1,26 +1,26 @@
 # Figuras y datos por verificar de los manuales
 
-Generado por `docs/Manuales/scripts/generar_manuales.py`: no editar a mano. Las capturas pendientes, con sus instrucciones, están en `docs/Manuales/capturas/LISTA-CAPTURAS.md`.
+Generado por `docs/Manuales/scripts/generar_manuales.py`: no editar a mano. Las capturas, con sus instrucciones, están en `docs/Manuales/capturas/LISTA-CAPTURAS.md`.
 
 ## Manual de usuario
 
 | Figura | Título | Tipo | Estado | Archivo |
 |---|---|---|---|---|
-| 5.1 | Página de inicio | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-1-pagina-de-inicio.png` |
-| 5.2 | Opción para registrarse | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-2-opcion-para-registrarse.png` |
-| 5.3 | Registro de comprador | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-3-registro-de-comprador.png` |
-| 5.4 | Verificación del correo | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-4-verificacion-del-correo.png` |
-| 5.5 | Acceso al registro de empresa | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-5-acceso-al-registro-de-empresa.png` |
-| 5.6 | Registro de empresa | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-6-registro-de-empresa.png` |
-| 5.7 | Certificado no válido | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-7-certificado-no-valido.png` |
-| 5.8 | Inicio de sesión | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-8-inicio-de-sesion.png` |
-| 5.9 | Menú de la cuenta | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-9-menu-de-la-cuenta.png` |
-| 5.10 | Solicitud de recuperación | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-10-solicitud-de-recuperacion.png` |
-| 5.11 | Nueva contraseña | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-11-nueva-contrasena.png` |
-| 5.12 | Cierre de sesión | captura | pendiente | `docs/Manuales/capturas/usuario/fig-5-12-cierre-de-sesion.png` |
+| 5.1 | Página de inicio | captura | insertada | `docs/Manuales/capturas/usuario/fig-5-1-pagina-de-inicio.png` |
+| 5.2 | Opción para registrarse | captura | insertada | `docs/Manuales/capturas/usuario/fig-5-2-opcion-para-registrarse.png` |
+| 5.3 | Registro de comprador | captura | insertada | `docs/Manuales/capturas/usuario/fig-5-3-registro-de-comprador.png` |
+| 5.4 | Verificación del correo | captura | insertada | `docs/Manuales/capturas/usuario/fig-5-4-verificacion-del-correo.png` |
+| 5.5 | Acceso al registro de empresa | captura | insertada | `docs/Manuales/capturas/usuario/fig-5-5-acceso-al-registro-de-empresa.png` |
+| 5.6 | Registro de empresa | captura | insertada | `docs/Manuales/capturas/usuario/fig-5-6-registro-de-empresa.png` |
+| 5.7 | Certificado no válido | captura | insertada | `docs/Manuales/capturas/usuario/fig-5-7-certificado-no-valido.png` |
+| 5.8 | Inicio de sesión | captura | insertada | `docs/Manuales/capturas/usuario/fig-5-8-inicio-de-sesion.png` |
+| 5.9 | Menú de la cuenta | captura | insertada | `docs/Manuales/capturas/usuario/fig-5-9-menu-de-la-cuenta.png` |
+| 5.10 | Solicitud de recuperación | captura | insertada | `docs/Manuales/capturas/usuario/fig-5-10-solicitud-de-recuperacion.png` |
+| 5.11 | Nueva contraseña | captura | insertada | `docs/Manuales/capturas/usuario/fig-5-11-nueva-contrasena.png` |
+| 5.12 | Cierre de sesión | captura | insertada | `docs/Manuales/capturas/usuario/fig-5-12-cierre-de-sesion.png` |
 | 6.1 | Mapa de navegación por perfil | diagrama | insertada | `docs/Manuales/diagramas/png/navegacion.png` |
-| 6.2 | Elementos de la interfaz | captura | pendiente | `docs/Manuales/capturas/usuario/fig-6-2-elementos-de-la-interfaz.png` |
-| 6.3 | Menú de la tienda | captura | pendiente | `docs/Manuales/capturas/usuario/fig-6-3-menu-de-la-tienda.png` |
+| 6.2 | Elementos de la interfaz | captura | insertada | `docs/Manuales/capturas/usuario/fig-6-2-elementos-de-la-interfaz.png` |
+| 6.3 | Menú de la tienda | captura | insertada | `docs/Manuales/capturas/usuario/fig-6-3-menu-de-la-tienda.png` |
 | 6.4 | Menú del panel del comprador | captura | pendiente | `docs/Manuales/capturas/usuario/fig-6-4-menu-del-panel-del-comprador.png` |
 | 6.5 | Menú del panel de empresa | captura | pendiente | `docs/Manuales/capturas/usuario/fig-6-5-menu-del-panel-de-empresa.png` |
 | 6.6 | Menú del panel administrativo | captura | pendiente | `docs/Manuales/capturas/usuario/fig-6-6-menu-del-panel-administrativo.png` |
@@ -130,26 +130,25 @@ Generado por `docs/Manuales/scripts/generar_manuales.py`: no editar a mano. Las 
 
 ## Datos por verificar
 
-Resaltados en amarillo como `[VERIFICAR: …]`.
+Resaltados en amarillo como `[VERIFICAR: …]`. No están en el repositorio: los debe suministrar quien se indica. Se completan en `docs/Manuales/scripts/datos_comunes.py` y se vuelve a generar.
 
-| Documento | Sección | Pendiente |
-|---|---|---|
-| Manual de usuario | Portada | [VERIFICAR: centro de formación] |
-| Manual de usuario | Portada | [VERIFICAR: número de ficha] |
-| Manual de usuario | Portada | [VERIFICAR: nombre de la competencia] |
-| Manual de usuario | Portada | [VERIFICAR: nombre del instructor] |
-| Manual de usuario | 1 | [VERIFICAR: correo de soporte] |
-| Manual de usuario | 5 | [VERIFICAR: URL de producción, https://<dominio>] |
-| Manual de usuario | 8 | [VERIFICAR: correo de soporte] |
-| Manual técnico | Portada | [VERIFICAR: centro de formación] |
-| Manual técnico | Portada | [VERIFICAR: número de ficha] |
-| Manual técnico | Portada | [VERIFICAR: nombre de la competencia] |
-| Manual técnico | Portada | [VERIFICAR: nombre del instructor] |
-| Manual técnico | 1 | [VERIFICAR: URL de producción, https://<dominio>] |
-| Manual técnico | 1 | [VERIFICAR: URL de la API en producción, https://api.<dominio>] |
-| Manual técnico | 6.4 | [VERIFICAR: comparar con la salida real del servidor] |
-| Manual técnico | 8 | [VERIFICAR: correo de soporte] |
-| Diccionario de datos | Portada | [VERIFICAR: centro de formación] |
-| Diccionario de datos | Portada | [VERIFICAR: número de ficha] |
-| Diccionario de datos | Portada | [VERIFICAR: nombre de la competencia] |
-| Diccionario de datos | Portada | [VERIFICAR: nombre del instructor] |
+| Documento | Sección | Pendiente | Quién lo suministra |
+|---|---|---|---|
+| Manual de usuario | Portada | [VERIFICAR: centro de formación] | Instructor o coordinación académica del SENA |
+| Manual de usuario | Portada | [VERIFICAR: número de ficha] | Instructor o coordinación académica del SENA |
+| Manual de usuario | Portada | [VERIFICAR: nombre de la competencia] | Instructor (guía de aprendizaje vigente) |
+| Manual de usuario | Portada | [VERIFICAR: nombre del instructor] | Instructor o coordinación académica del SENA |
+| Manual de usuario | 1 | [VERIFICAR: correo de soporte] | Responsable del proyecto (buzón de la mesa de ayuda) |
+| Manual de usuario | 5 | [VERIFICAR: URL de producción, https://<dominio>] | Responsable del despliegue (dominio público en Caddy, SITE_ADDRESS) |
+| Manual de usuario | 8 | [VERIFICAR: correo de soporte] | Responsable del proyecto (buzón de la mesa de ayuda) |
+| Manual técnico | Portada | [VERIFICAR: centro de formación] | Instructor o coordinación académica del SENA |
+| Manual técnico | Portada | [VERIFICAR: número de ficha] | Instructor o coordinación académica del SENA |
+| Manual técnico | Portada | [VERIFICAR: nombre de la competencia] | Instructor (guía de aprendizaje vigente) |
+| Manual técnico | Portada | [VERIFICAR: nombre del instructor] | Instructor o coordinación académica del SENA |
+| Manual técnico | 1 | [VERIFICAR: URL de producción, https://<dominio>] | Responsable del despliegue (dominio público en Caddy, SITE_ADDRESS) |
+| Manual técnico | 1 | [VERIFICAR: URL de la API en producción, https://api.<dominio>] | Responsable del despliegue (dominio público en Caddy, API_ADDRESS) |
+| Manual técnico | 8 | [VERIFICAR: correo de soporte] | Responsable del proyecto (buzón de la mesa de ayuda) |
+| Diccionario de datos | Portada | [VERIFICAR: centro de formación] | Instructor o coordinación académica del SENA |
+| Diccionario de datos | Portada | [VERIFICAR: número de ficha] | Instructor o coordinación académica del SENA |
+| Diccionario de datos | Portada | [VERIFICAR: nombre de la competencia] | Instructor (guía de aprendizaje vigente) |
+| Diccionario de datos | Portada | [VERIFICAR: nombre del instructor] | Instructor o coordinación académica del SENA |

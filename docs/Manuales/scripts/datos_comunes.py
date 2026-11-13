@@ -5,8 +5,8 @@ amarillo en el .docx y se listan en docs/Manuales/lista-imagenes.md.
 """
 
 VERSION = "3.0"
-FECHA = "6 de noviembre de 2026"
-FECHA_CORTA = "06/11/2026"
+FECHA = "13 de noviembre de 2026"
+FECHA_CORTA = "13/11/2026"
 
 PORTADA = {
     "centro": "[VERIFICAR: centro de formación]",
@@ -47,5 +47,6 @@ CONTROL_VERSIONES = [
      "Actualización contra el código de develop: paneles Inicio, Ofertas y Novedades, mapa de "
      "navegación con menús e iconos por perfil, validaciones en vivo y mensajes de la interfaz, "
      "HTTPS con Caddy en dos dominios, SMTP configurable, despliegue en Oracle Cloud, diagramas "
-     "por rol y por módulo, y Diccionario de datos aparte. Se retira la aplicación móvil del alcance."),
+     "por rol y por módulo, y Diccionario de datos aparte. Se retira la aplicación móvil del alcance. "
+     "Capturas de pantalla del ingreso al sistema y de la interfaz (capítulos 5 y 6 del Manual de usuario)."),
 ]

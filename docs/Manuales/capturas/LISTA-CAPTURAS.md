@@ -1,8 +1,12 @@
-# Capturas de pantalla pendientes
+# Capturas de pantalla
 
-Generado por `docs/Manuales/scripts/generar_manuales.py`. Cada captura corresponde a un recuadro amarillo del documento: borrar el recuadro, pegar la imagen en su lugar (en línea con el texto) y conservar el pie de figura. Guardar el archivo con el nombre indicado.
+Generado por `docs/Manuales/scripts/generar_manuales.py`: no editar a mano.
 
-Formato: PNG, ventana del navegador a 1366 × 768 o más, sin datos personales reales. Resaltar con un recuadro o una flecha roja lo que indica la columna «Qué resaltar».
+Estado: 14 de 81 capturas insertadas; 67 pendientes.
+
+Cómo se agrega una captura: guardar el PNG en la carpeta indicada con el nombre de la columna «Archivo» y volver a ejecutar el generador, que la inserta en lugar del recuadro amarillo. **No pegar capturas directamente en el .docx**: el generador vuelve a crear los documentos y esas imágenes se perderían.
+
+Formato: PNG, ventana del navegador a 1366 × 768 o más, sin datos personales reales (ni pestañas del navegador ni barra de tareas). Resaltar con un recuadro o una flecha roja lo que indica la columna «Qué resaltar».
 
 ## Datos de prueba que deben estar cargados
 
@@ -30,15 +34,15 @@ Cuenta: Visitante (sin iniciar sesión)
 
 | ✓ | Figura | Archivo | Ruta o pantalla | Estado que debe mostrar | Qué resaltar |
 |---|---|---|---|---|---|
-| [ ] | 5.1 Página de inicio | `fig-5-1-pagina-de-inicio.png` | / | Menú superior, anuncios del carrusel, categorías, “Ofertas especiales”, “Novedades” y la sección “¿Tienes una empresa?” | Menú superior (recuadro rojo) |
-| [ ] | 5.2 Opción para registrarse | `fig-5-2-opcion-para-registrarse.png` | / | Menú superior completo | Botón “Registrarse” (flecha roja) |
-| [ ] | 5.3 Registro de comprador | `fig-5-3-registro-de-comprador.png` | /register-user (formulario “Crear una cuenta”) | Campos diligenciados y un mensaje de validación en vivo visible bajo “Teléfono” | Mensaje de validación y botón “Crear cuenta” |
-| [ ] | 5.4 Verificación del correo | `fig-5-4-verificacion-del-correo.png` | /verify-email (página “Verifica tu correo”) | Código digitado y contador de reenvío | Casillas del código y botón “Verificar correo” |
-| [ ] | 5.5 Acceso al registro de empresa | `fig-5-5-acceso-al-registro-de-empresa.png` | / (sección “¿Tienes una empresa?”) | Sección visible con su botón | Botón “Registrar mi empresa” |
-| [ ] | 5.6 Registro de empresa | `fig-5-6-registro-de-empresa.png` | /register-company (formulario “Registrar empresa”) | Datos diligenciados, NIT con su DV y el PDF adjunto | Campos “NIT” y “DV”, y el certificado adjunto |
-| [ ] | 5.8 Inicio de sesión | `fig-5-8-inicio-de-sesion.png` | /login (página “Bienvenido de nuevo”) | Correo y contraseña diligenciados | Botón “Iniciar sesión” e icono del ojo |
-| [ ] | 5.10 Solicitud de recuperación | `fig-5-10-solicitud-de-recuperacion.png` | /forgot-password (página “¿Olvidaste tu contraseña?”) | Correo digitado | Botón “Enviar código” |
-| [ ] | 5.11 Nueva contraseña | `fig-5-11-nueva-contrasena.png` | /reset-password (página “Nueva contraseña”) | Código y nueva contraseña diligenciados | Botón “Guardar nueva contraseña” |
+| [x] | 5.1 Página de inicio | `fig-5-1-pagina-de-inicio.png` | / | Menú superior, anuncios del carrusel, categorías, “Ofertas especiales”, “Novedades” y la sección “¿Tienes una empresa?” | Menú superior (recuadro rojo) |
+| [x] | 5.2 Opción para registrarse | `fig-5-2-opcion-para-registrarse.png` | / | Menú superior completo | Botón “Registrarse” (flecha roja) |
+| [x] | 5.3 Registro de comprador | `fig-5-3-registro-de-comprador.png` | /register-user (formulario “Crear una cuenta”) | Campos diligenciados y un mensaje de validación en vivo visible bajo “Teléfono” | Mensaje de validación y botón “Crear cuenta” |
+| [x] | 5.4 Verificación del correo | `fig-5-4-verificacion-del-correo.png` | /verify-email (página “Verifica tu correo”) | Código digitado y contador de reenvío | Casillas del código y botón “Verificar correo” |
+| [x] | 5.5 Acceso al registro de empresa | `fig-5-5-acceso-al-registro-de-empresa.png` | / (sección “¿Tienes una empresa?”) | Sección visible con su botón | Botón “Registrar mi empresa” |
+| [x] | 5.6 Registro de empresa | `fig-5-6-registro-de-empresa.png` | /register-company (formulario “Registrar empresa”) | Datos diligenciados, NIT con su DV y el PDF adjunto | Campos “NIT” y “DV”, y el certificado adjunto |
+| [x] | 5.8 Inicio de sesión | `fig-5-8-inicio-de-sesion.png` | /login (página “Bienvenido de nuevo”) | Correo y contraseña diligenciados | Botón “Iniciar sesión” e icono del ojo |
+| [x] | 5.10 Solicitud de recuperación | `fig-5-10-solicitud-de-recuperacion.png` | /forgot-password (página “¿Olvidaste tu contraseña?”) | Correo digitado | Botón “Enviar código” |
+| [x] | 5.11 Nueva contraseña | `fig-5-11-nueva-contrasena.png` | /reset-password (página “Nueva contraseña”) | Código y nueva contraseña diligenciados | Botón “Guardar nueva contraseña” |
 | [ ] | 7.2 Búsqueda de productos | `fig-7-2-busqueda-de-productos.png` | / (barra de búsqueda) | Sugerencias desplegadas para un texto como “teclado” | Barra de búsqueda y sugerencias |
 | [ ] | 7.3 Filtros del catálogo | `fig-7-3-filtros-del-catalogo.png` | /products | Filtros aplicados y resultados | Panel de filtros |
 | [ ] | 7.4 Detalle del producto | `fig-7-4-detalle-del-producto.png` | /products/:id | Producto con variantes y stock | Selector de variantes y stock |
@@ -56,10 +60,10 @@ Cuenta: Comprador — cuenta de prueba registrada en /register-user (ej. comprad
 
 | ✓ | Figura | Archivo | Ruta o pantalla | Estado que debe mostrar | Qué resaltar |
 |---|---|---|---|---|---|
-| [ ] | 5.9 Menú de la cuenta | `fig-5-9-menu-de-la-cuenta.png` | / (sesión iniciada) | Menú de la cuenta desplegado con nombre, correo y rol | Menú desplegado (recuadro rojo) |
-| [ ] | 5.12 Cierre de sesión | `fig-5-12-cierre-de-sesion.png` | /user/dashboard (menú lateral) | Menú lateral completo del panel | Opción “Cerrar sesión” al final del menú |
-| [ ] | 6.2 Elementos de la interfaz | `fig-6-2-elementos-de-la-interfaz.png` | /user/dashboard | Panel con el menú lateral, la barra superior, el contenido y una alerta de éxito visible | Menú lateral, barra superior y alerta (recuadros rojos) |
-| [ ] | 6.3 Menú de la tienda | `fig-6-3-menu-de-la-tienda.png` | / | Menú superior con todas sus opciones visibles, incluidas “Ofertas” y “Novedades” | Opciones del menú y los iconos de búsqueda, favoritos y carrito |
+| [x] | 5.9 Menú de la cuenta | `fig-5-9-menu-de-la-cuenta.png` | / (sesión iniciada) | Menú de la cuenta desplegado con nombre, correo y rol | Menú desplegado (recuadro rojo) |
+| [x] | 5.12 Cierre de sesión | `fig-5-12-cierre-de-sesion.png` | /user/dashboard (menú lateral) | Menú lateral completo del panel | Opción “Cerrar sesión” al final del menú |
+| [x] | 6.2 Elementos de la interfaz | `fig-6-2-elementos-de-la-interfaz.png` | /user/dashboard | Panel con el menú lateral, la barra superior, el contenido y una alerta de éxito visible | Menú lateral, barra superior y alerta (recuadros rojos) |
+| [x] | 6.3 Menú de la tienda | `fig-6-3-menu-de-la-tienda.png` | / | Menú superior con todas sus opciones visibles, incluidas “Ofertas” y “Novedades” | Opciones del menú y los iconos de búsqueda, favoritos y carrito |
 | [ ] | 6.4 Menú del panel del comprador | `fig-6-4-menu-del-panel-del-comprador.png` | /user/dashboard | Menú lateral expandido con todas las opciones | Opciones del menú lateral |
 | [ ] | 7.1 Panel Inicio del comprador | `fig-7-1-panel-inicio-del-comprador.png` | /user/dashboard | Saldo, pedidos pendientes, favoritos, último pedido y recomendados con datos | Indicadores superiores |
 | [ ] | 7.8 Agregar al carrito | `fig-7-8-agregar-al-carrito.png` | /products/:id | Variante y cantidad seleccionadas | Botones “Agregar al carrito” y “Comprar ahora” |
@@ -109,7 +113,7 @@ Cuenta: Empresa con certificado marcado como inválido (ej. GameZone, gamezone@r
 
 | ✓ | Figura | Archivo | Ruta o pantalla | Estado que debe mostrar | Qué resaltar |
 |---|---|---|---|---|---|
-| [ ] | 5.7 Certificado no válido | `fig-5-7-certificado-no-valido.png` | /login (ventana “Certificado no válido”) | Ventana abierta después de intentar iniciar sesión con una empresa cuyo certificado fue marcado como inválido, con el motivo visible | Botón “Actualizar certificado” |
+| [x] | 5.7 Certificado no válido | `fig-5-7-certificado-no-valido.png` | /login (ventana “Certificado no válido”) | Ventana abierta después de intentar iniciar sesión con una empresa cuyo certificado fue marcado como inválido, con el motivo visible | Botón “Actualizar certificado” |
 | [ ] | 7.39 Actualización del certificado | `fig-7-39-actualizacion-del-certificado.png` | /actualizar-certificado | Correo, contraseña y PDF seleccionado | Campo “Nuevo certificado” |
 
 ### Administrador (plataforma web)
