@@ -77,7 +77,19 @@
 	request_body {
 		max_size 26MiB
 	}
-	reverse_proxy backend:8000
+	# Sin reintentos, cada reinicio del backend (docker compose restart/watch, redeploy)
+	# daba ~3 s de 502 "connection refused" (#48). lb_try_duration retiene la petición
+	# hasta que el backend vuelve; solo reintenta si no llegó a enviarse, así que un POST
+	# no se duplica. El health check activo saca al backend de rotación si pierde la base
+	# de datos y lo devuelve en cuanto /health/database responde 200.
+	reverse_proxy backend:8000 {
+		lb_try_duration 30s
+		lb_try_interval 250ms
+		health_uri /health/database
+		health_interval 5s
+		health_timeout 3s
+		health_status 200
+	}
 }
 
 # Healthcheck del contenedor: puerto interno, no se publica en el host.
