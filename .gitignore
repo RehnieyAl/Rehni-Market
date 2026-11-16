@@ -9,6 +9,8 @@ CLAUDE.md
 *.gpg
 .env
 .env.*
+# .env de producción preparado en el equipo antes de copiarlo al servidor por scp
+.env.produccion
 !.env*.example
 *.csv
 .csv
