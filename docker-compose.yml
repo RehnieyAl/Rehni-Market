@@ -19,8 +19,15 @@ services:
     image: cgr.dev/chainguard/minio@sha256:3c60a2a8c4d33409a9bc7a623a7fcbfb4605adc3d89422d2f53b3f673a6e5597
     container_name: rehni-minio
     restart: unless-stopped
+    # Gate de entrega (clon limpio + cp .env.example .env + docker compose up): cada
+    # servicio lee primero el .env de la raíz y después su archivo propio, que manda si
+    # existe. En producción los archivos propios existen (deploy/README.md); en un clon
+    # limpio basta el .env de desarrollo.
     env_file:
-      - ./.env.minio
+      - path: ./.env
+        required: false
+      - path: ./.env.minio
+        required: false
     volumes:
       - minio_data:/data
     command: server /data
@@ -41,7 +48,10 @@ services:
     container_name: rehni-postgres
     restart: unless-stopped
     env_file:
-      - ./.env.postgres
+      - path: ./.env
+        required: false
+      - path: ./.env.postgres
+        required: false
     volumes:
       - postgres_data:/var/lib/postgresql/data
     # Solo en el loopback del host (clientes como DbSchema; en el servidor, por túnel SSH).
@@ -85,7 +95,10 @@ services:
     container_name: pgbouncer_pool
     restart: unless-stopped
     env_file:
-      - ./.env.postgres
+      - path: ./.env
+        required: false
+      - path: ./.env.postgres
+        required: false
     environment:
       AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
@@ -143,8 +156,12 @@ services:
     # (p. ej. Wi-Fi institucional) y `uv run` no puede descargar de PyPI.
     # Tambien bloquea el servicio STMP para enviar correos, por lo que se recomienda usar un relay SMTP interno.
     env_file:
-      - ./RehniMarket-backend/.env
-      - ./.env.minio
+      - path: ./.env
+        required: false
+      - path: ./RehniMarket-backend/.env
+        required: false
+      - path: ./.env.minio
+        required: false
     volumes:
       - backend_venv:/app/.venv
     depends_on:
