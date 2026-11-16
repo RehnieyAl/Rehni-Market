@@ -262,6 +262,7 @@ Al iniciar, el backend aplica las migraciones automáticamente (`alembic upgrade
 | API (a través de Caddy) | https://api.localhost |
 | API directa, sin Caddy (app móvil en la red local) | http://localhost:8000 |
 | Documentación interactiva (Swagger, con `DOCS_ENABLED=true`) | https://api.localhost/docs |
+| Especificación OpenAPI (importable en Postman) | [`docs/api/openapi.json`](docs/api/openapi.json) ([cómo usarla](docs/api/README.md)) |
 | PostgreSQL (solo en 127.0.0.1, p. ej. DbSchema) | localhost:5433 |
 
 HTTP redirige a HTTPS. Con `localhost` Caddy firma los certificados con su CA local:
