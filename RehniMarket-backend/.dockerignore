@@ -3,7 +3,14 @@ venv
 __pycache__
 *.pyc
 .env
+.env.*
 .git
+.git.old
+.coverage
+coverage.json
+coverage.xml
+htmlcov
+.ruff_cache
 .pytest_cache
 backups
 *.dump
