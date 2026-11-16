@@ -222,23 +222,36 @@ cd Rehni-Market
 
 ### 2. Configurar variables de entorno
 
+**Desarrollo local (lo mínimo, gate de entrega):**
+
 ```bash
-cp .env.example .env                                            # Compose: dominios, puertos, VITE_*
+cp .env.example .env
+```
+
+`.env.example` trae valores de desarrollo que funcionan entre sí (BD, MinIO, JWT y una cuenta
+owner de prueba, `owner.dev@example.com`); compose los pasa a cada servicio. Son credenciales
+ficticias solo para el equipo local. Sin SMTP configurado el sistema arranca, pero no salen los
+correos de verificación.
+
+**Producción o configuración separada por servicio:** además del `.env`, cada servicio puede
+tener su archivo propio, que manda sobre el `.env` si existe:
+
+```bash
 cp .env.postgres.example .env.postgres                          # postgres y pgbouncer
 cp .env.minio.example .env.minio                                # minio y backend
 cp RehniMarket-backend/.env.example RehniMarket-backend/.env    # backend: JWT, correo, URL de la BD
 chmod 600 .env.postgres .env.minio RehniMarket-backend/.env
 ```
 
-Cada servicio recibe solo su archivo: Postgres y MinIO no ven la clave JWT ni el correo.
-La contraseña de `.env.postgres` debe coincidir con la de `URL_DATABASE` y
-`URL_DATABASE_POOLED` en `RehniMarket-backend/.env`. Lo público (`VITE_*`) va en `.env` y
-termina dentro del JavaScript del frontend: nunca pongas un secreto ahí.
+Así Postgres y MinIO no ven la clave JWT ni el correo. La contraseña de `.env.postgres` debe
+coincidir con la de `URL_DATABASE` y `URL_DATABASE_POOLED` en `RehniMarket-backend/.env`. En
+producción el `.env` sale de `deploy/env.prod.example` y no lleva secretos. Lo público
+(`VITE_*`) termina dentro del JavaScript del frontend: nunca pongas un secreto ahí.
 
 ### 3. Levantar todo con Docker
 
 ```bash
-docker compose up -d --build
+docker compose up -d --build --wait
 ```
 
 Al iniciar, el backend aplica las migraciones automáticamente (`alembic upgrade head`).

@@ -1,0 +1,45 @@
+# Gate Docker — clon limpio (bc-asesoria-proyecto S9)
+# Fecha: 2026-11-16 · Equipo de desarrollo (CachyOS, Docker Compose 5.7.0) · verificado por el responsable técnico
+# Commit: 6b054d0
+
+$ git clone <repo> gate && cd gate && cp .env.example .env
+$ time docker compose up -d --build --wait
+ Container pgbouncer_pool Healthy 
+ Container rehni-backend Healthy 
+ Container rehni-minio Healthy 
+ Container rehni-postgres Healthy 
+ Container rehni-backend Healthy 
+ Container pgbouncer_pool Healthy 
+ Container rehni-frontend Healthy 
+docker compose up -d --build --wait  0,24s user 0,10s system 0% cpu 2:04,42 total
+
+$ docker compose ps
+pgbouncer_pool  edoburu/pgbouncer:latest  Up (healthy)
+rehni-backend   rehni-market-backend      Up (healthy)
+rehni-frontend  rehni-market-frontend     Up (healthy)
+rehni-minio     cgr.dev/chainguard/minio  Up (healthy)
+rehni-postgres  postgres:17-alpine        Up (healthy)
+
+$ SMOKE_EMAIL=owner.dev@example.com SMOKE_PASSWORD=*** BASE_URL=https://api.localhost FRONTEND_URL=https://localhost bash scripts/smoke-test.sh
+# Prueba de humo — RehniMarket
+# 2026-11-16 19:08:03 UTC
+# BASE_URL=https://api.localhost   FRONTEND_URL=https://localhost   SMOKE_EMAIL=(definido)
+------------------------------------------------------------
+1. Salud de la API y de la base de datos
+  [PASA]  GET /health/database -> 200 (Base de datos: OK)
+2. Catálogo público sin sesión
+  [PASA]  GET /public/products?limit=1 -> 200 (total=787)
+3. Ruta protegida sin token
+  [PASA]  GET /cart sin token -> 401
+4. Login con credenciales incorrectas (correo inexistente @example.com)
+  [PASA]  POST /auth/login-user -> 400 INVALID_CREDENTIALS
+5. Login con la cuenta de prueba
+  [PASA]  POST /auth/login-user -> 200 con access_token (rol: owner)
+6. Perfil con el token
+  [PASA]  GET /auth/me -> 200 (correo coincide)
+7. Frontend
+  [PASA]  GET https://localhost/ -> 200
+------------------------------------------------------------
+RESULTADO: 7 pasan, 0 fallan
+
+$ docker compose down -v   # el clon se desmontó al terminar
