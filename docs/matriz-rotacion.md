@@ -35,7 +35,7 @@ Mientras tanto, esta es la evidencia por capa, con fecha y commit:
 | Línea base (2026-10-21) | 7,73 líneas | 66 (sentencias, `--cov=app`) | — |
 | Fase 0 (2026-11-03) | 7,73 líneas · 7,37 ramas | 65,91 líneas · 28,62 ramas | Front 7/7/7/4 · Back 60 combinado |
 | Fase 2 (2026-11-03, PR #3) | 10,58 líneas · 9,20 ramas | 66,39 líneas · 30,03 ramas · 60,90 combinado | Front 10/9/10/7 · Back 60 combinado |
-| S9 (2026-11-16) | 10,58 líneas · 9,2 ramas | 70,21 líneas · 34,96 ramas · 64,89 combinado | Front 10/9/10/7 · Back 60 combinado ([PENDIENTE: decidir si se sube a 64]) |
+| S9 (2026-11-16) | 10,58 líneas · 9,2 ramas | 70,21 líneas · 34,96 ramas · 64,89 combinado | Front 10/9/10/7 · Back 64 combinado (ratchet del referente) |
 
 Fuentes: `docs/pruebas/evidencias/` (archivos con la fecha en el nombre y `LEEME.md`).
 

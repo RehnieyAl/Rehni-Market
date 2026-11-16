@@ -70,7 +70,7 @@ los formularios de dinero y permisos.
 | Parte | Cobertura actual | Umbral configurado |
 |---|---|---|
 | Frontend | 10,58 % líneas · 9,2 % ramas | 10 % líneas · 9 % ramas (`vitest.config.ts`) |
-| Backend | 70,21 % líneas · 34,96 % ramas · 64,89 % combinado | 60 % combinado (`fail_under`, `pyproject.toml`) |
+| Backend | 70,21 % líneas · 34,96 % ramas · 64,89 % combinado | 64 % combinado (`fail_under`, `pyproject.toml`; antes 60) |
 
 **Brecha con el referente (≥ 80 %)**: no se cumple. El umbral se fija en el valor real (ratchet) y
 no se infla cobertura. Plan en #42: subir el backend con pruebas de ramas en liquidaciones y
