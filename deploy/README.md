@@ -22,7 +22,7 @@ en Git.
 
 | Otro archivo | Para qué |
 |---|---|
-| `guia-oracle-cloud-a1.html` | Guía anterior de despliegue en Oracle Cloud (histórica: describe la configuración en varios `.env`) |
+| `checklist-azure.md` | Lista de verificación del despliegue en la VM de Azure |
 
 Procedimiento vigente (instalación, actualización y rollback): sección 5.2 del plan de
 implantación (`docs/plan-implantacion.md`).
