@@ -216,7 +216,7 @@ docker compose exec frontend caddy reload --config /etc/caddy/Caddyfile
 | `/etc/hosts` | no hace falta | `127.0.0.1 rehnimarket api.rehnimarket` | no: registros DNS `A` |
 
 En producción, los dos registros DNS deben apuntar al servidor y los puertos 80 y 443 estar
-abiertos para que Let's Encrypt valide cada dominio. Valores: líneas `# producción: …` de `.env.example`.
+abiertos para que Let's Encrypt valide cada dominio. Plantilla: `deploy/env.prod.example`.
 
 ---
 

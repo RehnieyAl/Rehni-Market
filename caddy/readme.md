@@ -238,7 +238,7 @@ En producción es lo mismo con `<dominio>` y `api.<dominio>`.
 | `caddy/Caddyfile` | **Único** (desarrollo y producción): los dos sitios y el healthcheck. Se monta en `/etc/caddy` (por eso esta guía también aparece dentro del contenedor; no afecta) |
 | `RehniMarket-frontend/Dockerfile` | Etapa 1: `pnpm build`. Etapa 2: `caddy:2.11-alpine` con el build en `/srv` |
 | `docker-compose.yml` | **Único**: servicio `frontend` con Caddy (80/443, `caddy_data`, `caddy_config`); `backend` con `--proxy-headers`, `DOCS_ENABLED` y `CORS_EXTRA_ORIGINS` |
-| `.env` | `SITE_ADDRESS`, `API_ADDRESS`, `HTTP_PORT`, `HTTPS_PORT`, `VITE_API_URL`, `CORS_EXTRA_ORIGINS`, `DOCS_ENABLED` (`.env.example`; en producción, sus líneas «producción») |
+| `.env` | `SITE_ADDRESS`, `API_ADDRESS`, `HTTP_PORT`, `HTTPS_PORT`, `VITE_API_URL`, `CORS_EXTRA_ORIGINS`, `DOCS_ENABLED` (`.env.example` / `deploy/env.prod.example`) |
 | `RehniMarket-backend/app/middleware/PublicBaseUrlMiddleware.py` | Arma las URL de imágenes con el host por el que entró el cliente (6.5) |
 
 El `Caddyfile` en resumen (léelo completo en `caddy/Caddyfile`):
@@ -372,8 +372,8 @@ en el navegador (ver [`caddy-configuracion.md`](caddy-configuracion.md)); para l
 
 ### 6.9 Paso a producción (para la sección 4 del plan)
 
-Mismo `docker-compose.yml` y mismo `Caddyfile`; solo cambia el `.env` (plantilla única
-`.env.example`, líneas «producción»):
+Mismo `docker-compose.yml` y mismo `Caddyfile`; solo cambia el `.env` (plantilla completa en
+`deploy/env.prod.example`):
 
 ```bash
 # .env en el servidor

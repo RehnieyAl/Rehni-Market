@@ -33,7 +33,7 @@ Todo sale del plan; esta tabla solo dice qué sección usar.
 |---|---|---|
 | 1 | Comprobar servidor limpio (sin contenedores ni volúmenes del proyecto) | `registro-del-simulacro.md`, «Comprobación de servidor limpio» |
 | 2 | Instalación inicial, pasos 1 a 4 | §5.2 «Instalación inicial» |
-| 3 | Configuración en un solo paso: `cp .env.example .env && chmod 600 .env` y cambiar en el `.env` cada línea marcada `# producción: …` | §5.2 paso 5 |
+| 3 | Configuración en un solo paso: `cp deploy/env.prod.example .env && chmod 600 .env` y reemplazar cada `CAMBIAR_*` (o copiar por `scp` el `.env` de producción entregado por otro canal) | §5.2 paso 5 |
 | 4 | Instalación inicial, pasos 6 a 8 | §5.2 «Instalación inicial» |
 | 5 | Copiar los respaldos a `backups/postgres/` y `backups/minio/` | §3.4 paso 3 |
 | 6 | Restaurar: `--verify-only` y luego restauración | §3.4 pasos 5 y 6 |
