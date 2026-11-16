@@ -33,6 +33,13 @@ EMPRESA = "Empresa — TechNova, technova@rehnimarket.test (seed, certificado ap
 ADMIN = "Administrador — cuenta de prueba con rol admin (asignado por el propietario)"
 PROPIETARIO = "Propietario — cuenta owner del seed (OWNER_DEFAULT)"
 
+# Ancho en cm de las capturas que no ocupan todo el ancho de la columna Detalle (recortes pequeños). Son
+# los anchos que se les dieron al insertarlas a mano en la versión 3.0. Las demás usan el ancho de la columna.
+ANCHOS_CAPTURA = {
+    "Menú de la cuenta": 6.1,
+    "Cierre de sesión": 8.7,
+}
+
 INTRO = [
     P("Este manual sigue la estructura de la guía FAVA-SENA «Manuales técnicos de la aplicación». Cada "
       "elemento se presenta en la tabla No., Descripción y Detalle, y las funciones se explican paso a paso "
@@ -273,17 +280,21 @@ SECCIONES = [
     ]),
     (2, "6.2", "Opciones de la tienda", [
         TABLA(["Opción", "Icono", "Función", "Perfil"], [
-            ["Logo RehniMarket", "—", "Vuelve a la página de inicio", "Todos"],
-            ["Inicio", "—", "Muestra anuncios, categorías, ofertas y novedades", "Todos"],
-            ["Categorías", "—", "Explora el catálogo por categoría", "Todos"],
-            ["Productos", "—", "Lista los productos con filtros", "Todos"],
-            ["Ofertas", "—", "Productos con descuento vigente (/offers)", "Todos"],
-            ["Novedades", "—", "Productos más recientes (/new)", "Todos"],
+            # Logo y textos del menú: valores que se agregaron a mano en el .docx (versión 3.0), ahora en el
+            # generador. Las opciones del menú superior son texto, sin icono.
+            ["Logo RehniMarket", ("img", "RehniMarket-frontend/src/assets/logo.png", 2.0),
+             "Vuelve a la página de inicio", "Todos"],
+            ["Inicio", "Texto «Inicio»", "Muestra anuncios, categorías, ofertas y novedades", "Todos"],
+            ["Categorías", "Texto «Categorías»", "Explora el catálogo por categoría", "Todos"],
+            ["Productos", "Texto «Productos»", "Lista los productos con filtros", "Todos"],
+            ["Ofertas", "Texto «Ofertas»", "Productos con descuento vigente (/offers)", "Todos"],
+            ["Novedades", "Texto «Novedades»", "Productos más recientes (/new)", "Todos"],
             ["Buscar", "Lupa (Search)", "Busca productos, marcas o categorías", "Todos"],
             ["Mis favoritos", "Corazón (Heart)", "Abre los favoritos", "Comprador"],
             ["Mi carrito", "Carrito (ShoppingCart)", "Abre el carrito con la cantidad de productos", "Visitante y "
              "comprador"],
-            ["Iniciar sesión / Registrarse", "—", "Dan acceso a la cuenta", "Visitante"],
+            ["Iniciar sesión / Registrarse", "Texto «Iniciar sesión» y botón «Registrarse»", "Dan acceso a la cuenta",
+             "Visitante"],
             ["Menú de la cuenta", "Nombre y foto", "Accesos del panel, «Configuración de cuenta» y «Cerrar sesión» "
              "(LogOut)", "Con sesión"],
             ["Abrir menú / Cerrar menú", "Menú (Menu) / X", "Muestra el menú en pantallas pequeñas", "Todos"],

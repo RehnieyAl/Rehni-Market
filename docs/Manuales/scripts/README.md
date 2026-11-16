@@ -12,9 +12,15 @@ Detalle) definido como estilos reales en `diseno_sena.py`:
 Los originales `Manual de usuario -ORIGINAL.dotx` y `Manual Tecnico -original.docx` (PDF 2.0 convertidos a
 Word) son solo respaldo: el script no los lee ni los modifica.
 
-> **Importante:** el script vuelve a crear los `.docx` desde cero. No ejecutarlo después de editar los
-> documentos en OnlyOffice (se perderían esos cambios): en ese caso, editar a mano o copiar antes los cambios
-> al contenido de los scripts.
+> **Importante:** el script vuelve a crear los `.docx` desde cero. La fuente de verdad son los scripts y las
+> imágenes, no el `.docx`: un cambio hecho a mano en OnlyOffice (texto o imágenes pegadas) se pierde al
+> regenerar. Por eso:
+>
+> - **Capturas:** guardarlas como PNG en `docs/Manuales/capturas/<usuario|tecnico>/` con el nombre que indica
+>   `capturas/LISTA-CAPTURAS.md` y volver a generar; el script las inserta en lugar del recuadro amarillo. Se
+>   buscan por el título de la figura, así que sobreviven a un cambio de numeración.
+> - **Texto:** cambiarlo en `contenido_*.py` o `datos_comunes.py` (los `[VERIFICAR: …]` se completan ahí).
+> - Para revisar el resultado sin tocar `docs/Manuales/`, usar `--salida <carpeta>`.
 
 Todos los comandos, desde la raíz del repositorio. Usa su propio entorno de `uv`
 (`docs/Manuales/scripts/.venv`), sin tocar las dependencias del backend.
@@ -37,9 +43,9 @@ bash docs/Manuales/scripts/exportar_diagramas.sh arquitectura
 uv run --project docs/Manuales/scripts python docs/Manuales/scripts/generar_manuales.py
 ```
 
-Después, en OnlyOffice: reemplazar cada recuadro amarillo por su captura (en línea con el texto),
-actualizar la tabla de contenido (Referencias → Actualizar tabla) y exportar a PDF. Los PDF de
-`docs/Manuales/` son copias de revisión y no se versionan.
+La tabla de contenido sale con los números de página medidos en la conversión a PDF. Para entregar, abrir el
+`.docx` en OnlyOffice y exportar a PDF (Referencias → Actualizar tabla solo si se editó algo a mano). Los PDF
+de `docs/Manuales/` son copias de revisión y no se versionan.
 
 | Archivo | Contenido |
 |---|---|
@@ -47,7 +53,8 @@ actualizar la tabla de contenido (Referencias → Actualizar tabla) y exportar a
 | `datos_comunes.py` | Portada, contacto de soporte, versión y control de cambios |
 | `diseno_sena.py` | Estilos, encabezado, pie, tablas, recuadros de captura, figuras y páginas horizontales |
 | `generar_manuales.py` | Arma los tres documentos, la tabla de contenido y las listas |
-| `convertir_pdf.py` | Conversión a PDF con OnlyOffice (x2t), para revisar y medir páginas |
+| `convertir_pdf.py` | Conversión a PDF con OnlyOffice (x2t), para revisar y medir páginas (ruta de x2t cambiable con `ONLYOFFICE_X2T`) |
+| `../capturas/usuario/`, `../capturas/tecnico/` | Capturas de pantalla que se insertan en los documentos |
 | `diagramas_modelo.py` | Diagramas de clases y entidad-relación por módulo desde `datos/esquema.json` |
 | `extraer_datos.py` | Extrae esquema, endpoints y errores del sistema |
 | `datos/` | JSON extraídos y descripciones en español de tablas y endpoints |
