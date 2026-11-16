@@ -539,9 +539,10 @@ SECCIONES_PLATAFORMA = [
           "de Azure for Students]"),
     ]),
     (2, "6.8", "Despliegue en producción (Azure)", [
-        P("Resumen operativo del Plan de implantación (docs/plan-implantacion.md, sección 5.2, tablas "
-          "«Instalación inicial», «Actualización» y «Rollback»). Producción usa el mismo docker-compose.yml y "
-          "caddy/Caddyfile que el desarrollo: solo cambian los .env."),
+        P("La guía operativa completa está en deploy/README.md (producción: https://rehnimarket.duckdns.org y "
+          "https://apirehnimarket.duckdns.org), con su lista para marcar en deploy/checklist-azure.md. Este numeral "
+          "resume los pasos del Plan de implantación (docs/plan-implantacion.md, sección 5.2). Producción usa el "
+          "mismo docker-compose.yml y caddy/Caddyfile que el desarrollo: solo cambia el .env."),
         PASO(1, "Crear la clave SSH en el equipo del administrador.", ""),
         CODE("ssh-keygen -t ed25519 -C \"rehnimarket-azure\" -f ~/.ssh/rehni_azure\ncat ~/.ssh/rehni_azure.pub"),
         P("Guardar una copia de la clave privada: si se pierde, el acceso se recupera solo desde el portal."),

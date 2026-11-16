@@ -643,6 +643,13 @@ Enlace al `CHANGELOG.md`: [`CHANGELOG.md`](../CHANGELOG.md) (raíz). El detalle 
 
 ### 5.2 Despliegue en servidor Linux
 
+**Guía operativa: [`deploy/README.md`](../deploy/README.md)** (producción en Azure: dominios, red,
+configuración, primer despliegue, owner, verificación, actualización, rollback, respaldo y
+problemas frecuentes) y su lista para marcar, [`deploy/checklist-azure.md`](../deploy/checklist-azure.md).
+Esta sección conserva los comandos con su resultado esperado porque es el instrumento de la
+rúbrica de la semana 4 (`bc-implantacion/bootcamp/week-04-despliegue_local_y_nube/rubrica-evaluacion.md:64`).
+En la VM de Azure el clon vive en `~/Rehni-Market` del usuario de despliegue en lugar de `/opt/rehnimarket`.
+
 #### Estructura
 
 ```
@@ -650,7 +657,9 @@ Enlace al `CHANGELOG.md`: [`CHANGELOG.md`](../CHANGELOG.md) (raíz). El detalle 
 ├── docker-compose.yml            ← el mismo que en desarrollo (compose único)
 ├── caddy/Caddyfile               ← el mismo que en desarrollo; HTTPS con Let's Encrypt por el .env
 ├── deploy/
-│   └── README.md
+│   ├── README.md                 ← guía de producción
+│   ├── env.prod.example          ← plantilla del .env único para producción
+│   └── checklist-azure.md        ← lista de verificación del despliegue en Azure
 ├── .env.example                  ← plantilla del .env único para desarrollo
 ├── .env                          ← de deploy/env.prod.example (chmod 600, fuera de Git)
 ├── backups/                      ← respaldos (copia 1, sección 3.3; excluido de Git)

@@ -27,7 +27,10 @@ la sección 3.5 del plan) para compararlos al final: [PENDIENTE: huella y conteo
 
 ## Secuencia que sigue quien instala
 
-Todo sale del plan; esta tabla solo dice qué sección usar.
+Todo sale del plan; esta tabla solo dice qué sección usar. La guía de producción
+[`deploy/README.md`](../../deploy/README.md) resume los mismos pasos, pero el simulacro valida el plan
+(`bc-implantacion/bootcamp/week-09-aceptacion_y_entrega_formal/1-teoria/02-simulacro-cruzado.md`):
+quien instala sigue el plan y anota como desviación cualquier diferencia entre los dos.
 
 | # | Qué | Sección del plan |
 |---|---|---|
