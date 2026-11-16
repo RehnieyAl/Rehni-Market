@@ -25,8 +25,10 @@ docs/Manuales/_piloto/
 CLAUDE.md
 
 
-# Guías e informe del taller SENA (material local, no se versiona)
-docs/sena/
+# Guías del taller SENA (material de terceros, no se versiona); el informe .md sí,
+# porque es evidencia del plan de mejora (criterio 11 de la lista T7)
+docs/sena/*
+!docs/sena/*.md
 
 # Repositorios git antiguos anidados (respaldo local, no se versionan)
 *.git.old/
