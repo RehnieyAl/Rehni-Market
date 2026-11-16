@@ -23,6 +23,7 @@ OS_ID="${OS_ID:-ubuntu}"
 MIN_OS_VERSION="${MIN_OS_VERSION:-24.04}"     # CachyOS (rolling, sin VERSION_ID): MIN_OS_VERSION=rolling
 ARCHS="${ARCHS:-x86_64 aarch64}"
 MIN_DOCKER_VERSION="${MIN_DOCKER_VERSION:-24.0}"
+MIN_COMPOSE_VERSION="${MIN_COMPOSE_VERSION:-2.24}"   # env_file con required: false
 PORTS="${PORTS:-80 443 8000}"
 
 fallos=0
@@ -72,6 +73,14 @@ if command -v docker >/dev/null 2>&1; then
   resultado "Docker" ">= $MIN_DOCKER_VERSION" "$docker_version" $?
 else
   resultado "Docker" ">= $MIN_DOCKER_VERSION" "no instalado" 1
+fi
+
+compose_version=$(docker compose version --short 2>/dev/null | sed 's/^v//')
+if [ -n "$compose_version" ]; then
+  version_ge "$compose_version" "$MIN_COMPOSE_VERSION"
+  resultado "Docker Compose" ">= $MIN_COMPOSE_VERSION" "$compose_version" $?
+else
+  resultado "Docker Compose" ">= $MIN_COMPOSE_VERSION" "no instalado" 1
 fi
 
 # Puertos publicados por los contenedores de RehniMarket en marcha: no son un conflicto.
