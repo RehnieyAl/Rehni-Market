@@ -54,3 +54,34 @@ RUN_SEED=false TEST_DATABASE_URL=postgresql://rehni_test:rehni_test@127.0.0.1:55
 
 cd RehniMarket-frontend && pnpm exec vitest run --coverage
 ```
+
+---
+
+# Cierre bc-testing-adso S9 (2026-11-16, rama `docs/actualizar-manuales`)
+
+| Archivo | Contenido |
+|---|---|
+| `2026-11-16_backend_coverage.json` | Reporte JSON de coverage.py (backend) |
+| `2026-11-16_frontend_coverage-summary.json` | Resumen JSON de @vitest/coverage-v8 |
+
+## Resultados medidos
+
+- **Backend:** 319 passed, 6 xfailed (strict), 0 skipped, en 248 s. Cobertura: líneas **70,21 %**,
+  ramas 34,96 %, combinado **64,89 %** (`fail_under = 60`). `ruff check .`: sin errores.
+  `alembic upgrade head` en BD vacía: aplica hasta `c3e5a7f9d1b2`.
+- **Frontend:** 17 archivos, 184 passed, 1 todo. Cobertura: sentencias 10,34 %, ramas 9,2 %,
+  funciones 7,92 %, líneas **10,58 %**. `pnpm lint:ci`: 0 errores, 11 warnings (tope 11).
+  `pnpm typecheck`: sin errores.
+
+## Cómo se reprodujo
+
+```
+docker compose --profile test up -d --wait postgres-test
+cd RehniMarket-backend
+UV_PROJECT_ENVIRONMENT=<venv aislado> uv sync --group dev --python 3.13 --frozen
+TEST_DATABASE_URL=postgresql://rehni_test:rehni_test@127.0.0.1:55433/rehnimarket_test \
+  RUN_SEED=false <venv>/bin/python -m pytest --cov --cov-report=json
+cd ../RehniMarket-frontend && pnpm lint:ci && pnpm typecheck && pnpm test:coverage
+```
+
+Son los mismos pasos que los jobs `backend` y `frontend` de `.github/workflows/ci.yml`.

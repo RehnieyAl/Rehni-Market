@@ -35,7 +35,7 @@ describe("calculateNitDv", () => {
   });
 
   it.todo(
-    "H-02: un NIT de más de 15 dígitos debería rechazarse; hoy solo se ponderan los 15 primeros, igual que en el backend",
+    "H-02 (#33): un NIT de más de 15 dígitos debería rechazarse; hoy solo se ponderan los 15 primeros, igual que en el backend",
   );
 });
 
