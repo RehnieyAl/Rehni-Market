@@ -56,7 +56,8 @@ solo en Sonar (2 hallazgos): está fuera del alcance de la entrega.
   `bd94ed0` y umbral de cobertura del backend subido de 60 a 64 (`c7c34e1`).
 - Código de depuración: 4 `print()` en `app/services/email/EmailService.py` reemplazados por
   `logging` (`4652db5`). Hoy hay 0 `print(` en `app/` y 0 `console.log` en el frontend.
-- Archivos basura: 192 archivos de `RehniMarket-backend/.git.old/` versionados, sacados del
+- Archivos basura: 192 archivos de `RehniMarket-backend/.git.old/` versionados en esta rama (no en
+  `main`), sacados del
   índice (`c8a7b28`).
 - Vulnerabilidad `docker:S6470` (CRITICAL): `COPY . .` metía `RehniMarket-backend/.git.old` y los
   `.env.*` en la imagen del backend. `.dockerignore` corregido y verificado con `ls -a /app` en una

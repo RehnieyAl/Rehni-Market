@@ -47,7 +47,7 @@
 | 11 | Plan de mejora ≥3, ≥2 hechas | 55 | 90 | ↑ | `docs/plan-calidad.md` §3: 10 acciones, 6 implementadas con commit o PR | — |
 | 12 | Manual técnico | 70 | 70 | = | PDF en `main`; 3.0 en la rama | Integrar la rama de manuales |
 | 13 | Manual de usuario con capturas y FAQ | 50 | 40 | ↓ | Revisado más a fondo: `contenido_usuario.py` no tiene sección de preguntas frecuentes | FAQ ≥8 y capturas del sistema desplegado |
-| 14 | Mantenimiento y repo limpio | 10 | 70 | ↑ | Plan §9 (calendario, fin de soporte, auditoría, soporte, runbooks); `.git.old` fuera del índice (`c8a7b28`) | Integrar a `main` (allí siguen `.git.old`, `__pycache__`, `_piloto/`) |
+| 14 | Mantenimiento y repo limpio | 10 | 70 | ↑ | Plan §9 (calendario, fin de soporte, auditoría, soporte, runbooks); `.git.old` fuera del índice de la rama; la basura de `main` (17 archivos) se elimina con el merge (`c8a7b28`) | Integrar a `main` (allí siguen `__pycache__`, `_piloto/`, `_generados-descartados/`) |
 | 15 | Documentación de API | 50 | 80 | ↑ | `docs/api/openapi.json` (135 rutas) importable en Postman + Swagger | Swagger accesible en la URL desplegada |
 | 16 | Historial coherente | 70 | 75 | ↑ | Commits convencionales nuevos; 14 incidencias (#32-#45) enlazadas desde tests y documentos | Merge por PR; `a954d28 update(docs)` sin prefijo convencional |
 | 17 | Hoja de ruta y reflexión | 0 | 15 | ↑ | `docs/hoja-de-ruta-y-reflexion.md` (estructura y preguntas guía) | Escribir el texto (autor) |
@@ -60,7 +60,7 @@
 | 2 últimos runs de `main` con pruebas en verde | No cumple | No cumple (falta push y merge) |
 | URL HTTPS con `smoke-test.sh` en verde | No cumple | No cumple (humo 7/7 solo en local) |
 | Simulacro superado por un tercero | No cumple | No cumple (guion y registro listos) |
-| 0 `.git.old` en `main` y rama de manuales integrada | No cumple | No cumple hasta el merge (en la rama: 0) |
+| 0 `.git.old` en `main` y rama de manuales integrada | No cumple (en realidad `main` ya tenía 0 `.git.old`; faltaba la rama de manuales) | No cumple hasta el merge |
 
 ## 5. Próximas tareas
 
