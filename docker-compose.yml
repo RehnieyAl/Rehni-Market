@@ -1,7 +1,7 @@
 # Compose único: desarrollo, pruebas y producción. Toda la configuración está en un solo
-# .env en la raíz (cp .env.example .env; en producción se cambian las líneas marcadas
-# «producción»). minio, postgres, pgbouncer y backend lo cargan con env_file; Caddy recibe
-# solo sus variables por environment. El .env es obligatorio: sin él compose no arranca.
+# .env en la raíz (desarrollo: cp .env.example .env; producción: cp deploy/env.prod.example .env).
+# minio, postgres, pgbouncer y backend lo cargan con env_file; Caddy recibe solo sus variables
+# por environment. El .env es obligatorio: sin él compose no arranca.
 #
 #   docker compose up -d --build                                  # stack completo
 #   docker compose watch                                          # desarrollo (develop.watch)
