@@ -8,7 +8,7 @@
 #   PORTS="80 443" bash verificar-requisitos.sh       # sin comprobar la API directa
 #
 # Umbrales por defecto: matriz 1.5 de la ficha técnica de RehniMarket
-# (docs/plan de implantacion - Rehnimarket/1) Ficha tecnica ...). SO de producción:
+# (docs/plan-implantacion.md, sección 1). SO de producción:
 # Ubuntu Server 24.04 LTS. Puertos: los que publica docker-compose.yml (80, 443 de Caddy
 # y 8000 de la API; HTTP_PORT, HTTPS_PORT y BACKEND_PORT en el .env).
 # Sale con código 0 si todo cumple y 1 si algún requisito falla.

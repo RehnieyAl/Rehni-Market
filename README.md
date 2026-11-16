@@ -344,15 +344,22 @@ k6 run scripts/load_test.k6.js
 
 ## Plan de implantación
 
-Documentos en [`docs/plan de implantacion - Rehnimarket/`](<docs/plan de implantacion - Rehnimarket/>).
+Documento consolidado (versión 1.0, semana 9): [`docs/plan-implantacion.md`](docs/plan-implantacion.md).
 
-| # | Punto | Semana | Criterio | Documento |
-|---|---|---|---|---|
-| 1 | Ficha técnica y requisitos mínimos | 1 | CE-1, CE-2 | [Ficha técnica](<docs/plan de implantacion - Rehnimarket/1) Ficha tecnica y requisitos minimos - Semana 1 (CE-1, CE2).md>) |
-| 2 | Plan de migración de datos | 2 y 5 | CE-3 | [Plan de migración](<docs/plan de implantacion - Rehnimarket/2) Plan de migración de datos  Semanas 2 y 5 (CE-3).md>) |
-| 3 | Plan de respaldo | 2 y 6 | CE-4 | [Plan de respaldo](<docs/plan de implantacion - Rehnimarket/3) Plan de respaldo — Semanas 2 y 6 (CE-4).md>) |
-| 4 | Hosting y dominio | 3 | CE-1 | [Hosting y dominio](<docs/plan de implantacion - Rehnimarket/4) Hosting y dominio — Semana 3 (CE-1).md>) |
-| 5 | Plan de instalación y despliegue | 2 y 4 | CE-1, CE-5 | [Instalación y despliegue](<docs/plan de implantacion - Rehnimarket/5) Plan de instalación y despliegue — Semanas 2 y 4 (CE-1, CE-5).md>) |
+| # | Punto | Semana | Criterio |
+|---|---|---|---|
+| 1 | Ficha técnica y requisitos mínimos | 1 | CE-1, CE-2 |
+| 2 | Plan de migración de datos | 2 y 5 | CE-3 |
+| 3 | Plan de respaldo | 2 y 6 | CE-4 |
+| 4 | Hosting y dominio | 3 | CE-1 |
+| 5 | Plan de instalación y despliegue | 2 y 4 | CE-1, CE-5 |
+| 6 | Configuración y verificación | 5 | CE-1 |
+| 7 | Seguridad, usuarios y permisos | 6 | CE-1 |
+| 8 | Pipeline de despliegue y monitoreo | 7 | CE-1, CE-5 |
+| 9 | Mantenimiento, soporte y capacitación | 8 | CE-5 |
+| 10 | Aceptación y entrega ([`docs/aceptacion/`](docs/aceptacion/)) | 9 | CE-1 a CE-5 |
+
+Pruebas: [`docs/estrategia-pruebas.md`](docs/estrategia-pruebas.md) y [`docs/pruebas/REGISTRO.md`](docs/pruebas/REGISTRO.md).
 
 Pendientes de las semanas 1 a 4 y cómo completarlos: [PENDIENTES-s1-s4.md](<docs/plan de implantacion - Rehnimarket/PENDIENTES-s1-s4.md>). Despliegue de producción: mismo `docker-compose.yml` con el `.env` de [`deploy/env.prod.example`](deploy/env.prod.example) ([`deploy/README.md`](deploy/README.md)) y [`CHANGELOG.md`](CHANGELOG.md).
 
