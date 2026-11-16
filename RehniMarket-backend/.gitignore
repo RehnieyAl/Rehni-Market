@@ -28,3 +28,5 @@ coverage.xml
 __pycache__/
 soloparami.md
 .git
+# Repositorio antiguo del backend (no se versiona)
+.git.old/
