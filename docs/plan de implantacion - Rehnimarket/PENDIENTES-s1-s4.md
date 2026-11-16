@@ -154,4 +154,4 @@ Condiciones de las rúbricas:
 | Migración en producción | El ensayo fue sobre una copia en el equipo de desarrollo | Ejecutar `migrar.sh` en la ventana (orden 1 → 2 → 3 → 4 → 5 → 7) y comparar el tiempo con los 12,2 s del ensayo |
 | Despliegue en la nube | No hay cuentas en esta sesión | Ver §5.3 |
 
-scripts/datos-base.sh: probar en la VM antes de usar en producción (commiteado sin ejecutar)
+scripts/datos-base.sh: probado el 2026-11-16 en un clon limpio con `RUN_SEED=false` (roles 4, catalog 120, shipping_carriers 4; plan §5.2 paso 8.1). Falta ejecutarlo en la VM.
