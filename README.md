@@ -4,6 +4,9 @@
 
 Conecta **empresas vendedoras** con **compradores** en una sola plataforma: catálogo con variantes, carrito, checkout con **RehniCoin**, pedidos, devoluciones, reseñas y paneles de gestión para empresas y administradores.
 
+**Producción:** <https://rehnimarket.duckdns.org> · API: <https://api.rehnimarket.duckdns.org>
+<!-- PENDIENTE: el 16/11/2026 el nombre resolvía pero el sitio no respondía; confirmar tras el despliegue en Azure -->
+
 <br />
 
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=for-the-badge&logo=python&logoColor=white)
@@ -233,12 +236,13 @@ de prueba, `owner.dev@example.com`); `minio`, `postgres`, `pgbouncer` y `backend
 local. Sin SMTP configurado el sistema arranca, pero no salen los correos de verificación.
 El backend fuera de Docker (`uv run`, pytest) lee el mismo `.env` de la raíz.
 
-**Producción:** el mismo archivo. Copiar la plantilla y cambiar cada variable que tiene debajo
-una línea `# producción: …` (dominios, URL, CORS, `DOCS_ENABLED=false`, `RUN_SEED=false` y las
-contraseñas, generadas con `openssl rand -base64 24 | tr '+/' '-_'`):
+**Producción:** el mismo `.env` único, desde su plantilla de producción
+[`deploy/env.prod.example`](deploy/env.prod.example) (mismas variables, con los dominios de
+producción, `DOCS_ENABLED=false` y `RUN_SEED=false`). Solo hay que reemplazar cada `CAMBIAR_*`;
+las contraseñas se generan con `openssl rand -base64 24 | tr '+/' '-_'`:
 
 ```bash
-cp .env.example .env && chmod 600 .env
+cp deploy/env.prod.example .env && chmod 600 .env
 ```
 
 El `.env` nunca se sube a Git. Lo público (`VITE_*`) termina dentro del JavaScript del
@@ -264,7 +268,7 @@ Al iniciar, el backend aplica las migraciones automáticamente (`alembic upgrade
 HTTP redirige a HTTPS. Con `localhost` Caddy firma los certificados con su CA local:
 para que el navegador no avise, confía en esa raíz una vez
 ([`caddy/readme.md`](caddy/readme.md), «Confiar en la CA local»). En producción se usa el
-mismo `docker-compose.yml` con las líneas «producción» del `.env` aplicadas y Caddy pide los
+mismo `docker-compose.yml` con el `.env` de `deploy/env.prod.example` y Caddy pide los
 certificados a Let's Encrypt.
 
 ### Desarrollo local

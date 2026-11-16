@@ -307,46 +307,46 @@ VARIABLES = [
      "172.30.0.10"],
     ["PGBOUNCER_MAX_CLIENT_CONN", ".env (raíz)", "Clientes máximos de PgBouncer; valida el presupuesto",
      "1200"],
-    ["URL_DATABASE", "RehniMarket-backend/.env", "Conexión directa a PostgreSQL; la usa Alembic",
+    ["URL_DATABASE", ".env (raíz)", "Conexión directa a PostgreSQL; la usa Alembic",
      "postgresql://usuario:***@postgres:5432/bd"],
-    ["URL_DATABASE_POOLED", "RehniMarket-backend/.env", "Conexión por PgBouncer; la usa la aplicación",
+    ["URL_DATABASE_POOLED", ".env (raíz)", "Conexión por PgBouncer; la usa la aplicación",
      "postgresql://usuario:***@pgbouncer:6432/bd"],
-    ["SECRET_KEY / ALGORITHM", "RehniMarket-backend/.env", "Clave y algoritmo de firma JWT",
-     "openssl rand -hex 32 / HS256"],
-    ["ACCESS_TOKEN_EXPIRE_MINUTES / REFRESH_TOKEN_DAYS", "RehniMarket-backend/.env",
+    ["SECRET_KEY / ALGORITHM", ".env (raíz)", "Clave y algoritmo de firma JWT",
+     "openssl rand -base64 24 | tr '+/' '-_' / HS256"],
+    ["ACCESS_TOKEN_EXPIRE_MINUTES / REFRESH_TOKEN_DAYS", ".env (raíz)",
      "Vigencia del access token y del refresh token", "30 / 15"],
-    ["GMAIL_USERNAME / GMAIL_APP_PASSWORD", "RehniMarket-backend/.env",
+    ["GMAIL_USERNAME / GMAIL_APP_PASSWORD", ".env (raíz)",
      "Cuenta de correo y contraseña de aplicación (credenciales SMTP por defecto)", "notificaciones@… / ***"],
-    ["SMTP_HOST", "RehniMarket-backend/.env", "Servidor SMTP", "smtp.gmail.com (por defecto)"],
-    ["SMTP_PORT", "RehniMarket-backend/.env", "Puerto SMTP: 587, 465 o 2525", "587 (por defecto)"],
-    ["SMTP_SECURITY", "RehniMarket-backend/.env", "starttls o ssl; ssl se deduce con el puerto 465",
+    ["SMTP_HOST", ".env (raíz)", "Servidor SMTP", "smtp.gmail.com (por defecto)"],
+    ["SMTP_PORT", ".env (raíz)", "Puerto SMTP: 587, 465 o 2525", "587 (por defecto)"],
+    ["SMTP_SECURITY", ".env (raíz)", "starttls o ssl; ssl se deduce con el puerto 465",
      "starttls (por defecto)"],
-    ["SMTP_USERNAME / SMTP_PASSWORD", "RehniMarket-backend/.env", "Credenciales SMTP; por defecto las GMAIL_*",
+    ["SMTP_USERNAME / SMTP_PASSWORD", ".env (raíz)", "Credenciales SMTP; por defecto las GMAIL_*",
      "usuario SMTP / ***"],
-    ["EMAIL_FROM", "RehniMarket-backend/.env", "Remitente visible; por defecto SMTP_USERNAME",
+    ["EMAIL_FROM", ".env (raíz)", "Remitente visible; por defecto SMTP_USERNAME",
      "notificaciones@<dominio>"],
-    ["EMAIL_MAX_WORKERS / SMTP_TIMEOUT", "RehniMarket-backend/.env", "Hilos de envío y timeout SMTP (s)",
+    ["EMAIL_MAX_WORKERS / SMTP_TIMEOUT", ".env (raíz)", "Hilos de envío y timeout SMTP (s)",
      "4 / 10"],
-    ["URL_FRONTEND", "RehniMarket-backend/.env", "Origen web (CORS) y base de los enlaces de los correos",
+    ["URL_FRONTEND", ".env (raíz)", "Origen web (CORS) y base de los enlaces de los correos",
      "https://localhost"],
-    ["URL_BACKEND", "RehniMarket-backend/.env", "Base de las URL de imágenes cuando la petición no pasa "
+    ["URL_BACKEND", ".env (raíz)", "Base de las URL de imágenes cuando la petición no pasa "
      "por Caddy", "http://localhost:8000"],
-    ["MINIO_URL", "RehniMarket-backend/.env", "Host y puerto de MinIO, sin esquema", "minio:9000"],
-    ["RATE_LIMIT_ENABLED / REQUEST_LIMIT / TIME_WINDOW", "RehniMarket-backend/.env",
+    ["MINIO_URL", ".env (raíz)", "Host y puerto de MinIO, sin esquema", "minio:9000"],
+    ["RATE_LIMIT_ENABLED / REQUEST_LIMIT / TIME_WINDOW", ".env (raíz)",
      "Límite de peticiones por IP y ventana en segundos", "false en local, true en producción / 100 / 60"],
-    ["USER_NAME_OWNER / OWNER_DEFAULT / OWNER_PASSWORD_DEFAULT", "RehniMarket-backend/.env",
+    ["USER_NAME_OWNER / OWNER_DEFAULT / OWNER_PASSWORD_DEFAULT", ".env (raíz)",
      "Cuenta propietario que crea el seed", "Propietario / owner@… / ***"],
-    ["USER_NAME_ADMIN / ADMIN_DEFAULT / PASSWORD_DEFAULT", "RehniMarket-backend/.env",
+    ["USER_NAME_ADMIN / ADMIN_DEFAULT / PASSWORD_DEFAULT", ".env (raíz)",
      "Se leen, pero el seed no crea la cuenta admin", "vacías"],
-    ["RUN_SEED", "RehniMarket-backend/.env", "Ejecuta el seed al iniciar", "false"],
+    ["RUN_SEED", ".env (raíz)", "Ejecuta el seed al iniciar", "false"],
     ["THREADPOOL_SIZE / DB_POOL_SIZE / DB_MAX_OVERFLOW / DB_POOL_TIMEOUT / DB_POOL_RECYCLE",
-     "RehniMarket-backend/.env", "Concurrencia y pool; el backend no arranca si no cumplen el presupuesto",
+     ".env (raíz)", "Concurrencia y pool; el backend no arranca si no cumplen el presupuesto",
      "40 / 20 / 30 / 5 / 1800"],
-    ["TEST_DATABASE_URL", "RehniMarket-backend/.env (solo pytest)", "Base de pruebas que crea y borra pytest",
+    ["TEST_DATABASE_URL", ".env (raíz, solo pytest)", "Base de pruebas que crea y borra pytest",
      "postgresql://rehni_test:rehni_test@127.0.0.1:55433/rehnimarket_test"],
-    ["POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB", ".env.postgres", "Credenciales de PostgreSQL y "
+    ["POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB", ".env (raíz)", "Credenciales de PostgreSQL y "
      "PgBouncer", "usuario / *** / bd"],
-    ["MINIO_ROOT_USER / MINIO_ROOT_PASSWORD", ".env.minio", "Credenciales de MinIO (las lee también el "
+    ["MINIO_ROOT_USER / MINIO_ROOT_PASSWORD", ".env (raíz)", "Credenciales de MinIO (las lee también el "
      "backend)", "usuario / ***"],
 ]
 
@@ -365,20 +365,16 @@ SECCIONES_PLATAFORMA = [
         PASO(1, "Clonar el repositorio.", ""),
         CODE("git clone https://github.com/RehnieyAl/Rehni-Market.git\ncd Rehni-Market\n"
              "bash scripts/verificar-requisitos.sh"),
-        PASO(2, "Crear los archivos .env.", "Para desarrollo basta `cp .env.example .env`: trae valores de "
-             "desarrollo que funcionan entre sí y docker compose los pasa a cada servicio. Para separar la "
-             "configuración por servicio (como en producción), copiar además las otras plantillas; si existen, "
-             "mandan sobre el .env. Usuario, contraseña y base de URL_DATABASE y URL_DATABASE_POOLED deben "
-             "coincidir con .env.postgres."),
-        CODE("cp .env.example .env                     # suficiente para desarrollo\n"
-             "# opcional, configuración separada por servicio:\n"
-             "cp .env.postgres.example .env.postgres\ncp .env.minio.example .env.minio\n"
-             "cp RehniMarket-backend/.env.example RehniMarket-backend/.env\n"
-             "chmod 600 .env .env.postgres .env.minio RehniMarket-backend/.env"),
+        PASO(2, "Crear el .env.", "Toda la configuración está en un solo .env en la raíz. Su plantilla de "
+             "desarrollo, .env.example, trae valores que funcionan entre sí: minio, postgres, pgbouncer y backend "
+             "lo cargan completo y Caddy recibe solo sus cinco variables. El backend fuera de Docker (uv run, "
+             "pytest) lee el mismo archivo. Usuario, contraseña y base de URL_DATABASE y URL_DATABASE_POOLED "
+             "deben coincidir con POSTGRES_USER, POSTGRES_PASSWORD y POSTGRES_DB."),
+        CODE("cp .env.example .env && chmod 600 .env"),
         PASO(3, "Configurar los dominios en .env.", ""),
         CODE("SITE_ADDRESS=rehnimarket\nAPI_ADDRESS=api.rehnimarket\nCADDY_LOCAL_CERTS=local_certs\n"
              "VITE_API_URL=https://api.rehnimarket\nCORS_EXTRA_ORIGINS=https://rehnimarket"),
-        P("En RehniMarket-backend/.env: `URL_FRONTEND=\"https://rehnimarket\"` (la plantilla trae "
+        P("En el mismo .env: `URL_FRONTEND=\"https://rehnimarket\"` (la plantilla trae "
           "https://localhost, que sirve si se usan los dominios por defecto localhost y api.localhost; en ese "
           "caso no hacen falta los pasos 3, 4 ni CADDY_LOCAL_CERTS)."),
         PASO(4, "Registrar los dominios en /etc/hosts.", ""),
@@ -446,7 +442,8 @@ SECCIONES_PLATAFORMA = [
     ]),
     (2, "6.4", "Servicios de Docker Compose", [
         P("Un solo docker-compose.yml sirve para desarrollo, pruebas y producción: lo que cambia entre entornos "
-          "va en los archivos .env. Ya no existen docker-compose.dev.yml ni RehniMarket-backend/.env.dev."),
+          "va en el .env único de la raíz. Ya no existen docker-compose.dev.yml, RehniMarket-backend/.env ni "
+          ".env.postgres / .env.minio."),
         TABLA(["Servicio (contenedor)", "Función", "Publicación", "Límite"], SERVICIOS, [3.4, 4.4, 2.4, 1.6]),
         SUB("MinIO"),
         UL("La imagen minio/minio ya no se puede descargar de Docker Hub; se usa la imagen de Chainguard, "
@@ -455,7 +452,7 @@ SECCIONES_PLATAFORMA = [
            "El contenedor corre sin root, con el uid 65532 (nonroot). Un volumen minio_data creado por la imagen "
            "anterior necesita una vez `docker run --rm -v rehni-market_minio_data:/data alpine chown -R "
            "65532:65532 /data`.",
-           "La imagen no trae curl: el healthcheck usa `mc ready local` con las credenciales de .env.minio.",
+           "La imagen no trae curl: el healthcheck usa `mc ready local` con las credenciales de MinIO del .env.",
            "MinIO no se publica en el host; el backend sirve los archivos por GET /media/proxy."),
         SUB("Modos de uso"),
         CODE("docker compose up -d --build --wait                  # stack completo\n"
@@ -490,7 +487,7 @@ SECCIONES_PLATAFORMA = [
             ["2525", "starttls", "Relays como Brevo, SendGrid o Mailgun", "Abierto"],
             ["25", "—", "Entre servidores de correo; no se usa", "Bloqueado de salida"],
         ], [1.6, 3.0, 5.2, 2.0]),
-        SUB("Ejemplos (RehniMarket-backend/.env)"),
+        SUB("Ejemplos (.env de la raíz)"),
         CODE("# A · Gmail por 587 (por defecto): solo GMAIL_USERNAME y GMAIL_APP_PASSWORD\n"
              "# B · Gmail por 465\n"
              "SMTP_PORT=465\n"
@@ -582,20 +579,20 @@ SECCIONES_PLATAFORMA = [
              "git clone https://github.com/RehnieyAl/Rehni-Market.git /opt/rehnimarket && cd /opt/rehnimarket\n"
              "git checkout v1.0.0\n"
              "PORTS=\"80 443\" bash scripts/verificar-requisitos.sh   # todo en CUMPLE, código 0"),
-        PASO(8, "Crear la configuración de producción.", "Los secretos nunca van por Git: generar valores nuevos, "
-             "distintos de los de desarrollo, con `openssl rand -hex 32`. No usar .env.example (es de desarrollo)."),
-        CODE("cp deploy/env.prod.example .env\n"
-             "cp .env.postgres.example .env.postgres\ncp .env.minio.example .env.minio\n"
-             "cp RehniMarket-backend/.env.public.example RehniMarket-backend/.env\n"
-             "chmod 600 .env .env.postgres .env.minio RehniMarket-backend/.env\n"
-             "grep -nE 'CAMBIA|<dominio>|<correo|tu-dominio' .env .env.postgres .env.minio RehniMarket-backend/.env "
-             "| grep -v ':#'   # no debe mostrar nada"),
-        P("Valores clave del .env de la raíz: SITE_ADDRESS=<dominio>, API_ADDRESS=api.<dominio>, HTTP_PORT=80, "
-          "HTTPS_PORT=443, CADDY_LOCAL_CERTS vacía, VITE_API_URL=https://api.<dominio>, "
-          "CORS_EXTRA_ORIGINS=https://<dominio>, DOCS_ENABLED=false, BACKEND_BIND=127.0.0.1 y, en una VM de "
-          "2 vCPU, BACKEND_CPUS=2 y POSTGRES_CPUS=1.5. En RehniMarket-backend/.env: "
-          "URL_FRONTEND=\"https://<dominio>\", URL_BACKEND=\"https://api.<dominio>\", RATE_LIMIT_ENABLED=true, "
-          "RUN_SEED=false y las variables de owner vacías."),
+        PASO(8, "Crear la configuración de producción.", "Un solo .env, desde su plantilla de producción "
+             "deploy/env.prod.example (las mismas variables que .env.example, que es de desarrollo). Los secretos "
+             "nunca van por Git: reemplazar cada CAMBIAR_* con valores nuevos generados con "
+             "`openssl rand -base64 24 | tr '+/' '-_'` (sin + ni /, que romperían la URL de conexión). La contraseña de "
+             "PostgreSQL va igual en POSTGRES_PASSWORD, URL_DATABASE y URL_DATABASE_POOLED. También se puede "
+             "copiar por scp un .env de producción ya preparado."),
+        CODE("cp deploy/env.prod.example .env && chmod 600 .env\n"
+             "grep -n CAMBIAR .env   # no debe mostrar nada"),
+        P("La plantilla ya trae los valores de producción: SITE_ADDRESS=rehnimarket.duckdns.org, "
+          "API_ADDRESS=api.rehnimarket.duckdns.org, HTTP_PORT=80, HTTPS_PORT=443, CADDY_LOCAL_CERTS vacía, "
+          "VITE_API_URL=https://api.rehnimarket.duckdns.org, CORS_EXTRA_ORIGINS y URL_FRONTEND="
+          "https://rehnimarket.duckdns.org, URL_BACKEND=https://api.rehnimarket.duckdns.org, DOCS_ENABLED=false, "
+          "RATE_LIMIT_ENABLED=true, RUN_SEED=false, las variables de owner vacías, BACKEND_BIND=127.0.0.1 y, "
+          "para una VM de 2 vCPU, BACKEND_CPUS=2 y POSTGRES_CPUS=1.5."),
         PASO(9, "Levantar y verificar.", "El backend aplica alembic upgrade head al arrancar."),
         CODE("docker compose up -d --build --wait\ndocker compose ps                 # cinco servicios healthy\n"
              "curl -fsS https://api.<dominio>/health/database   # {\"Base de datos\":\"OK\"}\n"
@@ -619,7 +616,7 @@ SECCIONES_PLATAFORMA = [
             ["Un contenedor no se crea por la CPU", "«Range of CPUs is from 0.01 to N»: bajar BACKEND_CPUS y "
              "POSTGRES_CPUS en el .env (numeral 6.7)."],
             ["El backend no arranca", "docker compose logs backend: credenciales de PostgreSQL o MinIO que no "
-             "coinciden, o un marcador CAMBIA sin reemplazar."],
+             "coinciden, o un marcador CAMBIAR_* sin reemplazar."],
             ["El registro responde error", "Faltan los datos base: paso 10."],
             ["La web carga pero no llega a la API", "VITE_API_URL (exige --build), CORS_EXTRA_ORIGINS y "
              "URL_FRONTEND."],
@@ -716,7 +713,8 @@ ARCHIVOS_CLAVE = [
     ["RehniMarket-frontend/src/shared/validation/", "TypeScript", "Validación compartida de formularios "
      "(numeral 7.5)"],
     ["sonar-project.properties", "Properties", "Configuración de SonarCloud"],
-    ["deploy/env.prod.example", "Env", "Plantilla del .env de la raíz en producción"],
+    [".env.example", "Env", "Plantilla del .env único para desarrollo"],
+    ["deploy/env.prod.example", "Env", "Plantilla del .env único para producción"],
 ]
 
 SECCIONES_CODIGO = [

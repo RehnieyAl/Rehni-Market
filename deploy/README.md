@@ -1,12 +1,16 @@
 # deploy/
 
-Producción usa **el mismo `docker-compose.yml`, el mismo `caddy/Caddyfile` y la misma
-plantilla `.env.example`** que el desarrollo. No hay override ni plantilla de producción
-aparte: en el servidor se copia la plantilla y se cambia cada variable que tiene debajo una
-línea `# producción: …`.
+Producción usa **el mismo `docker-compose.yml` y el mismo `caddy/Caddyfile`** que el
+desarrollo, y el mismo `.env` único: solo cambian los valores. `env.prod.example` es su
+plantilla de producción (mismas variables que `.env.example`, con `rehnimarket.duckdns.org`,
+`DOCS_ENABLED=false` y `RUN_SEED=false`).
+
+| Archivo | Para qué |
+|---|---|
+| `env.prod.example` | Plantilla del `.env` único en el servidor. Reemplazar cada `CAMBIAR_*` antes de levantar |
 
 ```bash
-cp .env.example .env && chmod 600 .env   # aplicar las líneas «producción»
+cp deploy/env.prod.example .env && chmod 600 .env   # reemplazar cada CAMBIAR_*
 docker compose up -d --build --wait
 ```
 
@@ -16,7 +20,7 @@ Let's Encrypt y redirige HTTP → HTTPS. Con `localhost` (desarrollo) usa su CA 
 El `.env` es el único archivo de configuración y lleva todos los secretos: `chmod 600`, nunca
 en Git.
 
-| Archivo | Para qué |
+| Otro archivo | Para qué |
 |---|---|
 | `guia-oracle-cloud-a1.html` | Guía anterior de despliegue en Oracle Cloud (histórica: describe la configuración en varios `.env`) |
 

@@ -91,7 +91,7 @@ ejecuta este backend de forma aislada.
 > MinIO fijado por digest. Caddy es el reverse proxy con HTTPS automático
 > (`api.<dominio>` → backend, `<dominio>` → frontend; CA local con `localhost`,
 > Let's Encrypt con dominio real). Entre entornos solo cambia el `.env` de la raíz
-> (plantilla única `../.env.example`, con las líneas «producción» para el servidor).
+> (plantillas `../.env.example` para desarrollo y `../deploy/env.prod.example` para el servidor).
 > **El proyecto NO se ha desplegado en producción** (falta servidor y
 > dominio público).
 >
@@ -116,8 +116,8 @@ solo `.env` en la raíz del repo:
 cp .env.example .env && chmod 600 .env
 ```
 
-Los valores de `.env.example` sirven tal cual en desarrollo. En producción se cambia cada
-variable que tiene debajo una línea `# producción: …`. Fuera de Docker (`uv run`, pytest),
+Los valores de `.env.example` sirven tal cual en desarrollo. En producción el `.env` sale de
+`deploy/env.prod.example` (mismas variables) reemplazando cada `CAMBIAR_*`. Fuera de Docker (`uv run`, pytest),
 `app/Config.py` lee ese mismo `.env` de la raíz; ahí `URL_DATABASE` debe apuntar a
 `127.0.0.1:5433` en lugar de `postgres:5432`.
 
