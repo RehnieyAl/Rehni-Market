@@ -1,5 +1,5 @@
 from jose import jwt, JWTError, ExpiredSignatureError
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from app.Config import config
 
 SECRET_KEY = config.SECRET_KEY
@@ -7,13 +7,19 @@ ALGORITHM = config.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = config.ACCESS_TOKEN_EXPIRE_MINUTES
 REFRESH_TOKEN_DAYS = config.REFRESH_TOKEN_DAYS
 
+
+def _expires_in(lifetime: timedelta) -> datetime:
+    """Momento de expiración del token, como datetime con zona horaria UTC."""
+    return datetime.now(UTC) + lifetime
+
+
 def create_access_token(user_id: str, role: str):
 
     payload = {
         "sub": user_id,
         "role": role,
         "type": "access",
-        "exp": datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        "exp": _expires_in(timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     }
 
     return jwt.encode(
@@ -27,7 +33,7 @@ def create_refresh_token(user_id: str):
     payload = {
         "sub": user_id,
         "type": "refresh",
-        "exp": datetime.utcnow() + timedelta(days=REFRESH_TOKEN_DAYS)
+        "exp": _expires_in(timedelta(days=REFRESH_TOKEN_DAYS))
     }
 
     return jwt.encode(

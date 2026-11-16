@@ -1,8 +1,6 @@
 <div align="center">
 
-<img src="RehniMarket-frontend/src/assets/logo.pngnono" alt="RehniMarket" width="360" />
-
-### Marketplace multiempresa con billetera digital propia
+<img src="assets/banner.png" alt="RehniMarket" width="100%" height="auto" />
 
 Conecta **empresas vendedoras** con **compradores** en una sola plataforma: catálogo con variantes, carrito, checkout con **RehniCoin**, pedidos, devoluciones, reseñas y paneles de gestión para empresas y administradores.
 
@@ -375,7 +373,7 @@ Documento consolidado (versión 1.0, semana 9): [`docs/plan-implantacion.md`](do
 
 Pruebas: [`docs/estrategia-pruebas.md`](docs/estrategia-pruebas.md) y [`docs/pruebas/REGISTRO.md`](docs/pruebas/REGISTRO.md).
 
-Pendientes de las semanas 1 a 4 y cómo completarlos: [PENDIENTES-s1-s4.md](<docs/plan de implantacion - Rehnimarket/PENDIENTES-s1-s4.md>). Despliegue de producción: mismo `docker-compose.yml` con el `.env` de [`deploy/env.prod.example`](deploy/env.prod.example) ([`deploy/README.md`](deploy/README.md)) y [`CHANGELOG.md`](CHANGELOG.md).
+
 
 
 ---

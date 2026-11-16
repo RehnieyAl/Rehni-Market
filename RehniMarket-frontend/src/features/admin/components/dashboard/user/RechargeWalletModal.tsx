@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Coins, X } from "lucide-react";
 import axios from "axios";
 
@@ -31,6 +31,9 @@ export default function RechargeWalletModal({
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const amountId = useId();
+  const descriptionId = useId();
 
   if (!isOpen) return null;
 
@@ -92,11 +95,12 @@ export default function RechargeWalletModal({
           </p>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
+            <label htmlFor={amountId} className="mb-1.5 block text-sm font-medium text-gray-700">
               Monto (RC)
             </label>
 
             <input
+              id={amountId}
               type="text"
               inputMode="numeric"
               value={amount}
@@ -120,11 +124,12 @@ export default function RechargeWalletModal({
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700">
+            <label htmlFor={descriptionId} className="mb-1.5 block text-sm font-medium text-gray-700">
               Descripción (opcional)
             </label>
 
             <input
+              id={descriptionId}
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
