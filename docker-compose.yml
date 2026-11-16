@@ -85,7 +85,8 @@ services:
       resources:
         limits:
           memory: 768M
-          cpus: "3"
+          # Configurable para VM pequeñas (Docker no crea el contenedor si supera los núcleos del host).
+          cpus: "${POSTGRES_CPUS:-3}"
     depends_on:
       minio:
         condition: service_healthy
@@ -195,7 +196,8 @@ services:
       resources:
         limits:
           memory: 1G
-          cpus: "4"
+          # Configurable para VM pequeñas: en 2 vCPU usar BACKEND_CPUS=2 (y POSTGRES_CPUS=1.5).
+          cpus: "${BACKEND_CPUS:-4}"
     # docker compose watch: el código se copia al contenedor y se reinicia (vuelve a
     # pasar por alembic upgrade head). Sin uvicorn --reload: no se combina con --workers.
     develop:
