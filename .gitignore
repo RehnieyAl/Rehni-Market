@@ -21,3 +21,5 @@ docs/Manuales/**/.~lock.*
 docs/Manuales/.~lock.*
 docs/Manuales/_generados-descartados/
 docs/Manuales/_piloto/
+.claude/
+CLAUDE.md
