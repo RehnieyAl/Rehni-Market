@@ -58,16 +58,19 @@ solo en Sonar (2 hallazgos): está fuera del alcance de la entrega.
   `logging` (`4652db5`). Hoy hay 0 `print(` en `app/` y 0 `console.log` en el frontend.
 - Archivos basura: 192 archivos de `RehniMarket-backend/.git.old/` versionados, sacados del
   índice (`c8a7b28`).
+- Vulnerabilidad `docker:S6470` (CRITICAL): `COPY . .` metía `RehniMarket-backend/.git.old` y los
+  `.env.*` en la imagen del backend. `.dockerignore` corregido y verificado con `ls -a /app` en una
+  imagen reconstruida (#46).
 - Fallos esperados sin incidencia: cada `xfail`/`it.todo` cita ahora su incidencia (`31d87a9`).
 
-Revisados y descartados como falsos positivos o código intencional (Sonar):
+Revisados y descartados como falsos positivos o código intencional (Sonar). La primera revisión
+descartaba también `docker:S6470` y `python:S2068`; al revisarlos de nuevo resultaron reales y
+están abajo y en la sección 4.
 
 | Regla | Ubicación | Motivo |
 |---|---|---|
 | `plsql:DeleteOrUpdateWithoutWhereCheck` (BLOCKER) | `scripts/migracion/transformar.sql:96` | El `UPDATE` recorre a propósito toda la tabla de staging `migracion.normalizados` para marcar motivos de rechazo |
 | `pythonbugs:S2259` | `CertificateUpdateService.py:38` | `api_error` es `NoReturn` (`18b3d61`); `company` no puede ser `None` en esa línea |
-| `docker:S6470` (CRITICAL) | `RehniMarket-backend/Dockerfile` (`COPY . .`) | `.dockerignore` excluye `.env`, `backups`, `*.dump` y `.git` |
-| `python:S2068` | `app/utils/seed.py:680` | Contraseña de las empresas de ejemplo del seed de desarrollo (`RUN_SEED=false` en producción) |
 
 **Hallazgos NO bloqueantes** → ver sección 4 (Deuda Técnica).
 
@@ -83,6 +86,7 @@ Revisados y descartados como falsos positivos o código intencional (Sonar):
 | Sin pruebas E2E (#43) | No se alcanzó la fase 5 del plan de pruebas | Medio | P2 |
 | 53 promesas sin manejar (`typescript:S9383`) en web y móvil | Corrección mecánica pero en muchos archivos | Bajo-medio: errores silenciosos en la UI | P3 |
 | Contenedores como root y `uv:latest` sin fijar en `RehniMarket-backend/Dockerfile` (Sonar `S6471`, `S8544`, `S8541`) | Requiere probar permisos de volúmenes | Bajo-medio | P3 |
+| Contraseña fija de las empresas del seed (`python:S2068`, #47) | Requiere cambiar el seed y el `.env` de desarrollo | Medio si se activa `RUN_SEED` en un servidor expuesto | P2 |
 | H-01 deriva modelo ↔ migración (#32), B-01…B-04 (#38–#41) | Bajo impacto; dependen unas de otras | Bajo | P3 |
 | H-02 y H-03 validación de NIT y dígitos no ASCII (#33, #34) | Cambian reglas de validación ya publicadas | Bajo | P3 |
 | App móvil sin pruebas ni despliegue | Fuera del alcance de la entrega | — | P4 |

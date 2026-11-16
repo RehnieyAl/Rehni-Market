@@ -3,7 +3,7 @@
 > Plantilla: `bc-testing-adso/plantillas/matriz-rotacion.md`. Llenada al cierre (S9) con la
 > evidencia del historial de git; equipo de 1 persona, así que la rotación es de una sola fila.
 
-**Grupo**: RehniMarket · **Ficha**: [PENDIENTE: número de ficha] · **Stack**: React + FastAPI + PostgreSQL
+**Grupo**: RehniMarket · **Ficha**: 3171618 · **Stack**: React + FastAPI + PostgreSQL
 
 Capas: **Front** (React) · **API** (backend) · **BD** (integración) · **E2E** (Playwright)
 

@@ -13,7 +13,7 @@
 ## 1. Resumen
 
 - **Total ponderado al integrar en `main`: 61 %** (amarillo). Hoy, estricto: **45 %**. Línea base: **33 %**.
-- Días hábiles hasta la entrega: [PENDIENTE: fecha de entrega].
+- Días hábiles hasta la entrega: semana del 23 al 27 de noviembre de 2026 (día exacto por confirmar): de 5 a 9 días hábiles desde el 2026-11-16.
 - Bloqueantes que quedan (todos dependen del responsable):
   1. Push + PR a `main` y dos runs seguidos del CI en verde (T7-9, T7-1).
   2. Despliegue en la VM de Azure con HTTPS, etiqueta `v1.0.0` y prueba de humo contra la URL (T7-5).
@@ -43,7 +43,7 @@
 | 7 | Capacitación y ≥5 aceptación | 10 | 40 | ↑ | 9 casos Dado/Cuando/Entonces con criterios de salida; plan y formato de la sesión de capacitación | Ejecutar con cliente simulado, decisión y asistencia |
 | 8 | ISO 25010 y aseguramiento | 5 | 75 | ↑ | `docs/plan-calidad.md` §1: 7 características con métrica, meta, evidencia y decisión | Cifras de aceptación y simulacro |
 | 9 | CI ejecuta pruebas | 10 | 70 | ↑ | `.github/workflows/ci.yml` (`bd94ed0`): ruff, alembic, pytest (319 + 6 xfail, 64,91 %), eslint, tsc, Vitest (184), verificado en local | Push, PR y 2 runs verdes en `main`; activar el ruleset |
-| 10 | RNF medido vs. meta | 20 | 70 | ↑ | k6 base: p95 15/32/16 ms vs. 800/600/500 ms, 0 % errores (`docs/pruebas/evidencias/k6/`) | Repetir contra la URL desplegada |
+| 10 | RNF medido vs. meta | 20 | 70 | ↑ | k6 base **en local**: p95 15/32/16 ms vs. 800/600/500 ms, 0 % errores (`docs/pruebas/evidencias/k6/`) | [PENDIENTE: repetir contra la URL de producción en Azure] |
 | 11 | Plan de mejora ≥3, ≥2 hechas | 55 | 90 | ↑ | `docs/plan-calidad.md` §3: 10 acciones, 6 implementadas con commit o PR | — |
 | 12 | Manual técnico | 70 | 70 | = | PDF en `main`; 3.0 en la rama | Integrar la rama de manuales |
 | 13 | Manual de usuario con capturas y FAQ | 50 | 40 | ↓ | Revisado más a fondo: `contenido_usuario.py` no tiene sección de preguntas frecuentes | FAQ ≥8 y capturas del sistema desplegado |
