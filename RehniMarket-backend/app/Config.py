@@ -1,6 +1,12 @@
+"""Configuración del backend leída del entorno y validada al importarse."""
+from pathlib import Path
+
 from dotenv import load_dotenv
 import os
-load_dotenv()
+
+# Fuera de Docker (uv run, pytest) se lee el .env único de la raíz del repo. En el contenedor
+# esa ruta no existe y las variables llegan por env_file; load_dotenv no pisa las ya definidas.
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 
 def _int_env(name: str, default: int, minimum: int, maximum: int) -> int:

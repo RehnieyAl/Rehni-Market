@@ -1,5 +1,7 @@
-# Compose único: desarrollo, pruebas y producción. Lo que cambia entre entornos va en
-# el .env de la raíz (.env.example para local, deploy/env.prod.example para el servidor).
+# Compose único: desarrollo, pruebas y producción. Toda la configuración está en un solo
+# .env en la raíz (cp .env.example .env; en producción se cambian las líneas marcadas
+# «producción»). minio, postgres, pgbouncer y backend lo cargan con env_file; Caddy recibe
+# solo sus variables por environment. El .env es obligatorio: sin él compose no arranca.
 #
 #   docker compose up -d --build                                  # stack completo
 #   docker compose watch                                          # desarrollo (develop.watch)
@@ -22,15 +24,7 @@ services:
     image: cgr.dev/chainguard/minio@sha256:3c60a2a8c4d33409a9bc7a623a7fcbfb4605adc3d89422d2f53b3f673a6e5597
     container_name: rehni-minio
     restart: unless-stopped
-    # Gate de entrega (clon limpio + cp .env.example .env + docker compose up): cada
-    # servicio lee primero el .env de la raíz y después su archivo propio, que manda si
-    # existe. En producción los archivos propios existen (deploy/README.md); en un clon
-    # limpio basta el .env de desarrollo.
-    env_file:
-      - path: ./.env
-        required: false
-      - path: ./.env.minio
-        required: false
+    env_file: ./.env
     volumes:
       - minio_data:/data
     command: server /data
@@ -54,11 +48,7 @@ services:
     image: postgres:17-alpine
     container_name: rehni-postgres
     restart: unless-stopped
-    env_file:
-      - path: ./.env
-        required: false
-      - path: ./.env.postgres
-        required: false
+    env_file: ./.env
     volumes:
       - postgres_data:/var/lib/postgresql/data
     # Solo en el loopback del host (clientes como DbSchema; en el servidor, por túnel SSH).
@@ -104,11 +94,7 @@ services:
     image: edoburu/pgbouncer:latest
     container_name: pgbouncer_pool
     restart: unless-stopped
-    env_file:
-      - path: ./.env
-        required: false
-      - path: ./.env.postgres
-        required: false
+    env_file: ./.env
     environment:
       AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
@@ -167,13 +153,7 @@ services:
     # Recordar DevOps, Nunca fijar un dns, ya que rompe la resolución de nombres en redes que bloquean DNS saliente a resolutores públicos 
     # (p. ej. Wi-Fi institucional) y `uv run` no puede descargar de PyPI.
     # Tambien bloquea el servicio STMP para enviar correos, por lo que se recomienda usar un relay SMTP interno.
-    env_file:
-      - path: ./.env
-        required: false
-      - path: ./RehniMarket-backend/.env
-        required: false
-      - path: ./.env.minio
-        required: false
+    env_file: ./.env
     volumes:
       - backend_venv:/app/.venv
     depends_on:
