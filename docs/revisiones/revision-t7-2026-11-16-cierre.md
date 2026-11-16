@@ -10,6 +10,9 @@
 > columnas: **Hoy (estricto)**, con ese tope, y **Al integrar en `main`**, la que vale después del
 > push y el merge.
 
+> **Actualización antes del PR:** el criterio 13 sube de 40 a 55 % con las preguntas frecuentes; el
+> total al integrar pasa de 60,9 a ~61,6 %.
+
 ## 1. Resumen
 
 - **Total ponderado al integrar en `main`: 61 %** (amarillo). Hoy, estricto: **45 %**. Línea base: **33 %**.
@@ -46,7 +49,7 @@
 | 10 | RNF medido vs. meta | 20 | 70 | ↑ | k6 base **en local**: p95 15/32/16 ms vs. 800/600/500 ms, 0 % errores (`docs/pruebas/evidencias/k6/`) | [PENDIENTE: repetir contra la URL de producción en Azure] |
 | 11 | Plan de mejora ≥3, ≥2 hechas | 55 | 90 | ↑ | `docs/plan-calidad.md` §3: 10 acciones, 6 implementadas con commit o PR | — |
 | 12 | Manual técnico | 70 | 70 | = | PDF en `main`; 3.0 en la rama | Integrar la rama de manuales |
-| 13 | Manual de usuario con capturas y FAQ | 50 | 40 | ↓ | Revisado más a fondo: `contenido_usuario.py` no tiene sección de preguntas frecuentes | FAQ ≥8 y capturas del sistema desplegado |
+| 13 | Manual de usuario con capturas y FAQ | 50 | 55 | ↑ | Capítulo 10 «Preguntas frecuentes» (10 preguntas de los tres perfiles, `a067ecb`); 8 capturas sin datos personales; 69 marcadas `[PENDIENTE: captura desde la URL de producción]` | Capturas del sistema desplegado |
 | 14 | Mantenimiento y repo limpio | 10 | 70 | ↑ | Plan §9 (calendario, fin de soporte, auditoría, soporte, runbooks); `.git.old` fuera del índice de la rama; la basura de `main` (17 archivos) se elimina con el merge (`c8a7b28`) | Integrar a `main` (allí siguen `__pycache__`, `_piloto/`, `_generados-descartados/`) |
 | 15 | Documentación de API | 50 | 80 | ↑ | `docs/api/openapi.json` (135 rutas) importable en Postman + Swagger | Swagger accesible en la URL desplegada |
 | 16 | Historial coherente | 70 | 75 | ↑ | Commits convencionales nuevos; 14 incidencias (#32-#45) enlazadas desde tests y documentos | Merge por PR; `a954d28 update(docs)` sin prefijo convencional |
