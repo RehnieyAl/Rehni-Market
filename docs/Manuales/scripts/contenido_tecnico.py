@@ -118,18 +118,19 @@ SECCIONES_INICIO = [
            "Procesar compras, pedidos, envíos, cancelaciones y devoluciones.",
            "Administrar la billetera RehniCoin, las recargas y las liquidaciones.",
            "Moderar la plataforma con reportes, anuncios y catálogo.",
-           "Desplegar la plataforma con Docker Compose y Caddy en Oracle Cloud (Ampere A1) con certificados "
+           "Desplegar la plataforma con Docker Compose y Caddy en una máquina virtual Ubuntu de Azure con certificados "
            "de Let's Encrypt."),
         SUB("Hosting"),
-        P(f"La plataforma se aloja en una máquina virtual de Oracle Cloud Infrastructure, forma VM.Standard.A1.Flex "
-          f"(ARM64, Ampere A1) con Ubuntu 24.04, dentro del nivel gratuito Always Free. El frontend se publica en "
-          f"{SOPORTE['url_produccion']} y la API en {SOPORTE['url_api_produccion']}. El procedimiento completo está "
-          f"en el numeral 6.8."),
+        P(f"La plataforma se aloja en una máquina virtual de Microsoft Azure (suscripción Azure for Students) "
+          f"con Ubuntu Server 24.04 LTS (x86_64). Caddy, dentro del mismo docker-compose.yml, publica el frontend "
+          f"en {SOPORTE['url_produccion']} y la API en {SOPORTE['url_api_produccion']} con certificados de "
+          f"Let's Encrypt. El procedimiento completo está en el numeral 6.8 y en el Plan de implantación "
+          f"(docs/plan-implantacion.md, sección 5.2)."),
         SUB("Qué NO cubre este documento"),
         UL("El uso funcional de la aplicación por perfil: se describe en el Manual de usuario.",
            "El detalle de cada tabla de la base de datos: se describe en el documento «Diccionario de datos».",
            "La aplicación móvil (RehniMarket-mobile): no está cubierta por este documento.",
-           "La compra y administración del dominio, ni la configuración de la cuenta de Oracle Cloud más allá de "
+           "La compra y administración del dominio, ni la configuración de la cuenta de Azure más allá de "
            "lo necesario para el despliegue.",
            "La configuración de proveedores externos de correo (Google Workspace, Brevo u otros) más allá de las "
            "variables SMTP de RehniMarket.",
@@ -199,8 +200,9 @@ SECCIONES_INICIO = [
     (1, "4", "Administración de usuarios", [
         SUB("Creación, modificación y retiro de usuarios"),
         OL("Compradores y empresas se crean por autorregistro. El correo debe verificarse.",
-           "La cuenta propietario (owner) se crea con el seed usando USER_NAME_OWNER, OWNER_DEFAULT y "
-           "OWNER_PASSWORD_DEFAULT (RUN_SEED=true, una sola vez).",
+           "La cuenta propietario (owner): en producción, el responsable se registra, verifica el correo y "
+           "se le asigna el rol owner en la base (numeral 6.8, paso 10). En desarrollo la crea el seed con "
+           "USER_NAME_OWNER, OWNER_DEFAULT y OWNER_PASSWORD_DEFAULT (RUN_SEED=true).",
            "Un administrador se obtiene cambiando el rol de una cuenta desde «Usuarios» con una cuenta "
            "propietario.",
            "Las cuentas se modifican en el panel, opción «Usuarios», y en "
@@ -352,13 +354,18 @@ SECCIONES_PLATAFORMA = [
     (2, "6.1", "Instalación", [
         P("Instalación con los dominios locales rehnimarket (frontend) y api.rehnimarket (API), con HTTPS. "
           "Todos los comandos se ejecutan desde la raíz del repositorio. Requisitos: Git y Docker con Compose "
-          "v2.22 o superior; scripts/verificar-requisitos.sh los comprueba."),
+          "v2.24 o superior; scripts/verificar-requisitos.sh los comprueba."),
         PASO(1, "Clonar el repositorio.", ""),
         CODE("git clone https://github.com/RehnieyAl/Rehni-Market.git\ncd Rehni-Market\n"
              "bash scripts/verificar-requisitos.sh"),
-        PASO(2, "Crear los archivos .env.", "Copiar las plantillas y diligenciarlas. Usuario, contraseña y base de "
-             "URL_DATABASE y URL_DATABASE_POOLED deben coincidir con .env.postgres."),
-        CODE("cp .env.example .env\ncp .env.postgres.example .env.postgres\ncp .env.minio.example .env.minio\n"
+        PASO(2, "Crear los archivos .env.", "Para desarrollo basta `cp .env.example .env`: trae valores de "
+             "desarrollo que funcionan entre sí y docker compose los pasa a cada servicio. Para separar la "
+             "configuración por servicio (como en producción), copiar además las otras plantillas; si existen, "
+             "mandan sobre el .env. Usuario, contraseña y base de URL_DATABASE y URL_DATABASE_POOLED deben "
+             "coincidir con .env.postgres."),
+        CODE("cp .env.example .env                     # suficiente para desarrollo\n"
+             "# opcional, configuración separada por servicio:\n"
+             "cp .env.postgres.example .env.postgres\ncp .env.minio.example .env.minio\n"
              "cp RehniMarket-backend/.env.example RehniMarket-backend/.env\n"
              "chmod 600 .env .env.postgres .env.minio RehniMarket-backend/.env"),
         PASO(3, "Configurar los dominios en .env.", ""),
@@ -471,7 +478,7 @@ SECCIONES_PLATAFORMA = [
         P("El backend envía los códigos de verificación y recuperación y las notificaciones de pedidos, "
           "devoluciones y liquidaciones por SMTP, en hilos propios (RehniMarket-backend/app/services/email/"
           "EmailService.py). Sin variables SMTP_* se usa Gmail por 587 con STARTTLS y las credenciales GMAIL_*."),
-        TABLA(["Puerto", "Cifrado (SMTP_SECURITY)", "Uso", "Oracle Cloud"], [
+        TABLA(["Puerto", "Cifrado (SMTP_SECURITY)", "Uso", "Azure"], [
             ["587", "starttls", "Envío autenticado estándar; el valor por defecto", "Abierto"],
             ["465", "ssl (se deduce)", "Envío con TLS desde el inicio; para redes que bloquean el 587", "Abierto"],
             ["2525", "starttls", "Relays como Brevo, SendGrid o Mailgun", "Abierto"],
@@ -501,7 +508,7 @@ SECCIONES_PLATAFORMA = [
              "RUN_SEED=false \\\n"
              "TEST_DATABASE_URL=postgresql://rehni_test:rehni_test@127.0.0.1:55433/rehnimarket_test \\\n"
              "  uv run pytest\n"
-             "uv run pytest --cov            # con cobertura (fail_under = 60 en pyproject.toml)\n"
+             "uv run pytest --cov            # con cobertura (fail_under = 64 en pyproject.toml)\n"
              "docker compose --profile test rm -sf postgres-test"),
         SUB("Frontend"),
         UL("Web: `cd RehniMarket-frontend && pnpm test` (Vitest); `pnpm test:coverage` para cobertura."),
@@ -512,107 +519,129 @@ SECCIONES_PLATAFORMA = [
     ]),
     (2, "6.7", "Requisitos del servidor", [
         TABLA(["Elemento", "Mínimo", "Recomendado (producción)"], [
-            ["CPU", "4 vCPU (el backend tiene límite cpus: \"4\" y Docker no crea el contenedor con menos)",
-             "4 OCPU Ampere A1 (ARM64)"],
-            ["RAM", "4 GB (los límites suman unos 2,3 GB)", "24 GB (máximo gratuito de A1)"],
-            ["Disco", "40 GB", "100 a 200 GB (boot volume gratuito hasta 200 GB)"],
-            ["Sistema operativo", "Linux de 64 bits (x86_64 o aarch64)", "Ubuntu 24.04 LTS (aarch64)"],
-            ["Docker", "Docker Engine 24 y Docker Compose v2.22 (docker compose watch)",
-             "Versión estable más reciente (script oficial get.docker.com)"],
-            ["Red", "Puertos 80 y 443 abiertos; IP pública", "IP pública reservada; DNS con registros A para "
+            ["CPU", "2 vCPU, con BACKEND_CPUS=2 y POSTGRES_CPUS=1.5 en el .env (Docker no crea un contenedor "
+             "cuyo límite de CPU supere los núcleos del servidor; por defecto los límites son 4 y 3)",
+             "4 vCPU o más, sin ajustar los límites (Plan de implantación, sección 1.5)"],
+            ["RAM", "4 GB (los límites de memoria suman unos 2,3 GB)", "8 GB"],
+            ["Disco", "30 GB", "64 GB SSD"],
+            ["Sistema operativo", "Linux de 64 bits", "Ubuntu Server 24.04 LTS (x86_64)"],
+            ["Docker", "Docker Engine 24 y Docker Compose v2.24 (env_file con required: false)",
+             "Versión estable instalada desde el repositorio apt oficial de Docker"],
+            ["Red", "Puertos 80 y 443 abiertos; IP pública", "IP pública estática; DNS con registros A para "
              "<dominio> y api.<dominio>"],
             ["Correo", "Salida a un puerto SMTP (587, 465 o 2525)", "Proveedor con SPF y DKIM configurados"],
         ], [2.6, 4.6, 4.6]),
-        P("Todas las imágenes usadas publican linux/arm64 y todas las dependencias de uv.lock tienen paquete "
-          "aarch64 para Python 3.13 (comprobado el 06/11/2026)."),
+        P("Tamaño de referencia en Azure: Standard_B2s (2 vCPU, 4 GiB) con los límites de CPU ajustados, o un "
+          "tamaño de 4 vCPU sin ajustarlos. [VERIFICAR: tamaño elegido y su costo mensual frente al crédito "
+          "de Azure for Students]"),
     ]),
-    (2, "6.8", "Despliegue en producción (Oracle Cloud A1)", [
-        P("Procedimiento integrado desde deploy/guia-oracle-cloud-a1.html. Producción usa el mismo "
-          "docker-compose.yml y caddy/Caddyfile que el desarrollo: solo cambian los .env."),
+    (2, "6.8", "Despliegue en producción (Azure)", [
+        P("Resumen operativo del Plan de implantación (docs/plan-implantacion.md, sección 5.2, tablas "
+          "«Instalación inicial», «Actualización» y «Rollback»). Producción usa el mismo docker-compose.yml y "
+          "caddy/Caddyfile que el desarrollo: solo cambian los .env."),
         PASO(1, "Crear la clave SSH en el equipo del administrador.", ""),
-        CODE("ssh-keygen -t ed25519 -C \"rehnimarket-oci\" -f ~/.ssh/rehni_oci\ncat ~/.ssh/rehni_oci.pub"),
-        P("Guardar una copia de la clave privada: si se pierde no hay forma sencilla de recuperar el acceso."),
-        PASO(2, "Crear la VM.", "En la consola de Oracle: Compute → Instances → Create instance."),
+        CODE("ssh-keygen -t ed25519 -C \"rehnimarket-azure\" -f ~/.ssh/rehni_azure\ncat ~/.ssh/rehni_azure.pub"),
+        P("Guardar una copia de la clave privada: si se pierde, el acceso se recupera solo desde el portal."),
+        PASO(2, "Crear la VM.", "En portal.azure.com: Máquinas virtuales → Crear → Máquina virtual de Azure."),
         TABLA(["Campo", "Valor"], [
-            ["Image", "Canonical Ubuntu 24.04 (aarch64)"],
-            ["Shape", "Ampere → VM.Standard.A1.Flex · 4 OCPU · 24 GB"],
-            ["Networking", "VCN con subred pública · Assign a public IPv4 address"],
-            ["Add SSH keys", "Pegar el contenido de ~/.ssh/rehni_oci.pub"],
-            ["Boot volume", "100 a 200 GB"],
-        ], [3.0, 8.8]),
-        P("Si aparece «Out of host capacity», probar otro Availability Domain o reintentar más tarde."),
-        PASO(3, "Reservar la IP pública.", "Networking → IP management → Reserved public IPs → Reserve; luego, en "
-             "la VNIC de la instancia, quitar la IP efímera y asignar la reservada."),
-        PASO(4, "Configurar el acceso SSH.", "Agregar al final de ~/.ssh/config:"),
-        CODE("Host rehni-oci\n    HostName <IP pública>\n    User ubuntu\n    IdentityFile ~/.ssh/rehni_oci\n"
+            ["Suscripción", "Azure for Students"],
+            ["Imagen", "Ubuntu Server 24.04 LTS - x64 Gen2"],
+            ["Tamaño", "Standard_B2s o superior (numeral 6.7)"],
+            ["Tipo de autenticación", "Clave pública SSH; usuario azureuser; pegar ~/.ssh/rehni_azure.pub"],
+            ["Puertos de entrada públicos", "SSH (22) por ahora; HTTP y HTTPS en el paso 4"],
+            ["Disco del sistema operativo", "SSD estándar, 64 GiB"],
+            ["Red", "IP pública nueva, SKU estándar (estática)"],
+        ], [3.6, 8.2]),
+        PASO(3, "Configurar el acceso SSH.", "Agregar al final de ~/.ssh/config:"),
+        CODE("Host rehni-azure\n    HostName <IP pública>\n    User azureuser\n    IdentityFile ~/.ssh/rehni_azure\n"
              "    IdentitiesOnly yes\n    ServerAliveInterval 60"),
-        P("Probar con `ssh rehni-oci` (uname -m debe dar aarch64) y comprobar que el acceso por contraseña está "
-          "desactivado: `sudo sshd -T | grep -E 'passwordauthentication|permitrootlogin'`."),
-        PASO(5, "Abrir los puertos en dos capas.", "En la Security List de la VCN, reglas de ingreso TCP 80 y 443 "
-             "(y UDP 443 opcional) desde 0.0.0.0/0; limitar el 22 a la IP del administrador. No abrir el 8000 ni "
-             "el 5433. Dentro de la VM:"),
-        CODE("sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT\n"
-             "sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 443 -j ACCEPT\n"
-             "sudo iptables -I INPUT 6 -p udp --dport 443 -j ACCEPT\nsudo netfilter-persistent save"),
-        PASO(6, "Configurar el DNS.", "Crear dos registros A hacia la IP reservada: <dominio> (o @) y api. "
-             "Comprobar con `dig +short <dominio>` y `dig +short api.<dominio>`. No levantar Caddy antes de que "
-             "resuelvan: Let's Encrypt limita los intentos fallidos."),
-        PASO(7, "Preparar el servidor.", ""),
+        P("Probar con `ssh rehni-azure` y comprobar que el acceso por contraseña está desactivado: "
+          "`sudo sshd -T | grep -E 'passwordauthentication|permitrootlogin'`."),
+        PASO(4, "Abrir los puertos en el grupo de seguridad de red (NSG).", "En la VM: Redes → Configuración de "
+             "red → Agregar regla de puerto de entrada: TCP 80 y 443 y UDP 443 (HTTP/3) desde cualquier origen. "
+             "Limitar el 22 a la IP del administrador. No abrir el 8000 ni el 5433: PostgreSQL y la API directa "
+             "solo escuchan en 127.0.0.1."),
+        PASO(5, "Configurar el DNS.", "En el registrador del dominio, dos registros A hacia la IP pública: "
+             "<dominio> (o @) y api. Comprobar con `dig +short <dominio>` y `dig +short api.<dominio>`. No "
+             "levantar Caddy antes de que resuelvan: Let's Encrypt limita los intentos fallidos."),
+        PASO(6, "Instalar Docker.", "Repositorio apt oficial (https://docs.docker.com/engine/install/ubuntu/) y "
+             "postinstalación para usarlo sin sudo:"),
         CODE("sudo apt update && sudo apt upgrade -y\nsudo timedatectl set-timezone America/Bogota\n"
-             "curl -fsSL https://get.docker.com | sudo sh\nsudo usermod -aG docker $USER   # volver a entrar\n"
-             "docker version && docker compose version"),
-        PASO(8, "Clonar y configurar.", "Los secretos nunca van por Git: generar valores nuevos, distintos de los "
-             "de desarrollo (`openssl rand -base64 48`)."),
-        CODE("git clone https://github.com/RehnieyAl/Rehni-Market.git && cd Rehni-Market\n"
-             "bash scripts/verificar-requisitos.sh\n"
-             "cp deploy/env.prod.example .env\n"
-             "cp RehniMarket-backend/.env.public.example RehniMarket-backend/.env\n"
+             "# repositorio de Docker según la guía oficial, luego:\n"
+             "sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin\n"
+             "sudo usermod -aG docker $USER   # volver a entrar\n"
+             "docker run hello-world && docker compose version"),
+        PASO(7, "Clonar en /opt/rehnimarket y verificar requisitos.", ""),
+        CODE("sudo mkdir -p /opt/rehnimarket && sudo chown \"$USER\" /opt/rehnimarket\n"
+             "git clone https://github.com/RehnieyAl/Rehni-Market.git /opt/rehnimarket && cd /opt/rehnimarket\n"
+             "git checkout v1.0.0\n"
+             "PORTS=\"80 443\" bash scripts/verificar-requisitos.sh   # todo en CUMPLE, código 0"),
+        PASO(8, "Crear la configuración de producción.", "Los secretos nunca van por Git: generar valores nuevos, "
+             "distintos de los de desarrollo, con `openssl rand -hex 32`. No usar .env.example (es de desarrollo)."),
+        CODE("cp deploy/env.prod.example .env\n"
              "cp .env.postgres.example .env.postgres\ncp .env.minio.example .env.minio\n"
-             "chmod 600 .env .env.postgres .env.minio RehniMarket-backend/.env"),
+             "cp RehniMarket-backend/.env.public.example RehniMarket-backend/.env\n"
+             "chmod 600 .env .env.postgres .env.minio RehniMarket-backend/.env\n"
+             "grep -nE 'CAMBIA|<dominio>|<correo|tu-dominio' .env .env.postgres .env.minio RehniMarket-backend/.env "
+             "| grep -v ':#'   # no debe mostrar nada"),
         P("Valores clave del .env de la raíz: SITE_ADDRESS=<dominio>, API_ADDRESS=api.<dominio>, HTTP_PORT=80, "
           "HTTPS_PORT=443, CADDY_LOCAL_CERTS vacía, VITE_API_URL=https://api.<dominio>, "
-          "CORS_EXTRA_ORIGINS=https://<dominio>, DOCS_ENABLED=false y BACKEND_BIND=127.0.0.1. En "
-          "RehniMarket-backend/.env: URL_FRONTEND=\"https://<dominio>\", URL_BACKEND=\"https://api.<dominio>\", "
-          "RATE_LIMIT_ENABLED=true y RUN_SEED=false (true una sola vez para crear la cuenta propietario)."),
-        PASO(9, "Levantar y verificar.", "El build se hace en la VM, nativo en ARM."),
-        CODE("docker compose up -d --build --wait\ndocker compose ps\n"
-             "docker compose logs frontend | grep -i \"certificate obtained\"\n"
-             "curl -I https://<dominio>                        # 200\n"
-             "curl https://api.<dominio>/health/database       # {\"Base de datos\":\"OK\"}\n"
-             "curl -I http://<dominio>                         # 308 → https"),
+          "CORS_EXTRA_ORIGINS=https://<dominio>, DOCS_ENABLED=false, BACKEND_BIND=127.0.0.1 y, en una VM de "
+          "2 vCPU, BACKEND_CPUS=2 y POSTGRES_CPUS=1.5. En RehniMarket-backend/.env: "
+          "URL_FRONTEND=\"https://<dominio>\", URL_BACKEND=\"https://api.<dominio>\", RATE_LIMIT_ENABLED=true, "
+          "RUN_SEED=false y las variables de owner vacías."),
+        PASO(9, "Levantar y verificar.", "El backend aplica alembic upgrade head al arrancar."),
+        CODE("docker compose up -d --build --wait\ndocker compose ps                 # cinco servicios healthy\n"
+             "curl -fsS https://api.<dominio>/health/database   # {\"Base de datos\":\"OK\"}\n"
+             "curl -I http://<dominio>                          # 308 → https"),
+        PASO(10, "Cargar los datos base y crear el owner.", "Con RUN_SEED=false no existen los roles ni el catálogo, "
+             "y el registro falla. `scripts/datos-base.sh` crea roles, categorías, atributos y transportadoras, sin "
+             "datos de demostración (se puede ejecutar más de una vez). Luego el responsable se registra en la web "
+             "con su correo, verifica el código y se le asigna el rol owner en la base:"),
+        CODE("bash scripts/datos-base.sh   # roles: 4, catalog: 120, shipping_carriers: 4\n"
+             "# registro y verificación del correo en https://<dominio>, luego:\n"
+             "docker compose exec postgres sh -c 'psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\"'\n"
+             "UPDATE users SET role_id = (SELECT id FROM roles WHERE name = 'owner') WHERE email = '<correo>';"),
+        PASO(11, "Prueba de humo y primer respaldo.", "Con una cuenta de comprador de prueba ya verificada:"),
+        CODE("read -rs SMOKE_PASSWORD; export SMOKE_PASSWORD\n"
+             "SMOKE_EMAIL=<correo-de-prueba> BASE_URL=https://api.<dominio> FRONTEND_URL=https://<dominio> \\\n"
+             "  bash scripts/smoke-test.sh      # RESULTADO: 7 pasan, 0 fallan\n"
+             "bash scripts/respaldar.sh         # === FIN backup <TS> — OK ==="),
         TABLA(["Si falla…", "Revisar"], [
-            ["Caddy no obtiene el certificado", "DNS, Security List, iptables y CADDY_LOCAL_CERTS vacía "
+            ["Caddy no obtiene el certificado", "DNS, reglas del NSG para 80 y 443 y CADDY_LOCAL_CERTS vacía "
              "(docker compose logs frontend)."],
+            ["Un contenedor no se crea por la CPU", "«Range of CPUs is from 0.01 to N»: bajar BACKEND_CPUS y "
+             "POSTGRES_CPUS en el .env (numeral 6.7)."],
             ["El backend no arranca", "docker compose logs backend: credenciales de PostgreSQL o MinIO que no "
-             "coinciden, o límite de CPU."],
+             "coinciden, o un marcador CAMBIA sin reemplazar."],
+            ["El registro responde error", "Faltan los datos base: paso 10."],
             ["La web carga pero no llega a la API", "VITE_API_URL (exige --build), CORS_EXTRA_ORIGINS y "
              "URL_FRONTEND."],
-            ["No llegan los correos", "Numeral 6.5: diagnóstico de puertos y variables SMTP."],
+            ["No llegan los correos", "Numeral 6.5: Azure bloquea el puerto 25 de salida; usar 587, 465 o 2525."],
         ], [4.0, 7.8]),
-        PASO(10, "Llevar los datos (opcional).", "En el equipo local: `bash scripts/backup_rehnimarket.sh` y "
-             "`rsync -avz backups/ rehni-oci:Rehni-Market/backups/`. En el servidor: `bash "
-             "scripts/restore_rehnimarket.sh <TS> --verify-only` y luego `bash scripts/restore_rehnimarket.sh "
-             "<TS>`. Las URL de imágenes se arman en cada petición con el host del cliente: no hay que "
-             "reescribir la base de datos al cambiar de dominio."),
         SUB("Operación"),
-        UL("Actualizar: `git pull && docker compose up -d --build --wait` (alembic upgrade head corre al arrancar "
-           "el backend).",
-           "Base de datos por túnel SSH: `ssh -N -L 5433:127.0.0.1:5433 rehni-oci` y conectar el cliente a "
+        UL("Actualizar a una versión nueva: respaldo, `git fetch --tags && git checkout <versión>` y "
+           "`docker compose up -d --build --wait` (Plan de implantación, sección 5.2, «Actualización»).",
+           "Rollback: sin alembic downgrade; con una migración no compatible se restaura el respaldo previo "
+           "(sección 5.2, «Rollback», y docs/runbooks/restaurar-respaldo.md).",
+           "Base de datos por túnel SSH: `ssh -N -L 5433:127.0.0.1:5433 rehni-azure` y conectar el cliente a "
            "localhost:5433.",
-           "Respaldos diarios con cron: `0 3 * * * cd $HOME/Rehni-Market && bash scripts/backup_rehnimarket.sh`, "
-           "y copia de backups/ fuera del servidor.",
-           "Oracle puede reclamar instancias Always Free con uso de CPU muy bajo durante 7 días seguidos."),
+           "Respaldos diarios con cron: `0 2 * * * cd /opt/rehnimarket && bash scripts/respaldar.sh >> "
+           "backups/cron.log 2>&1`, y copia de backups/ fuera del servidor.",
+           "Apagar la VM desde el portal detiene el cobro de cómputo, pero el sitio queda fuera de línea."),
     ]),
-    (2, "6.9", "Integración continua (SonarCloud)", [
-        P("El repositorio tiene un único workflow, .github/workflows/sonarqube.yml, que ejecuta SonarCloud en "
-          "cada push a main y develop, en cada pull request y a mano (workflow_dispatch). SonarCloud se usa "
-          "solo para calidad de código: confiabilidad, seguridad, mantenibilidad, duplicación y security "
-          "hotspots."),
-        UL("El CI no ejecuta pruebas ni mide cobertura: las pruebas se ejecutan localmente (numeral 6.6).",
-           "sonar-project.properties excluye la cobertura de todo el código (`sonar.coverage.exclusions=**`), "
-           "por lo que el quality gate no la evalúa.",
-           "Se excluyen del análisis dependencias, builds, migraciones generadas y pruebas (sonar.exclusions).",
-           "El token se guarda en el secreto SONAR_TOKEN del repositorio."),
+    (2, "6.9", "Integración continua (pruebas y SonarCloud)", [
+        P("El repositorio tiene dos workflows que corren en cada push a main y develop, en cada pull request y "
+          "a mano (workflow_dispatch):"),
+        UL(".github/workflows/ci.yml, job backend: ruff, alembic upgrade head en una base PostgreSQL vacía y "
+           "pytest con cobertura (fail_under = 64, combinado líneas + ramas, en pyproject.toml).",
+           ".github/workflows/ci.yml, job frontend: eslint (máximo 11 avisos), tsc y Vitest con cobertura "
+           "(umbrales en vitest.config.ts).",
+           ".github/workflows/sonarqube.yml: análisis de SonarCloud (confiabilidad, seguridad, mantenibilidad, "
+           "duplicación y security hotspots). sonar-project.properties excluye la cobertura "
+           "(`sonar.coverage.exclusions=**`): la cobertura la exige ci.yml, no el quality gate.",
+           "Los jobs backend y frontend son los checks que debe exigir la regla de protección de main.",
+           "El token de Sonar se guarda en el secreto SONAR_TOKEN del repositorio."),
         CAP("Panel de SonarCloud", "https://sonarcloud.io (proyecto RehniMarket)", "Resumen del último análisis "
             "de develop con el quality gate y las métricas de confiabilidad, seguridad y mantenibilidad",
             "Estado del quality gate", "Cuenta con acceso al proyecto en SonarCloud"),
@@ -641,11 +670,11 @@ ESTRUCTURA = [
     ["RehniMarket-frontend/src/shared", "Componentes, configuración de navegación, tipos, utilidades y "
      "validación compartida"],
     ["caddy", "Caddyfile único y guía de configuración"],
-    ["deploy", "Plantilla .env de producción y guía de Oracle Cloud A1"],
+    ["deploy", "Plantilla .env de producción y guía de despliegue"],
     ["scripts", "Respaldo, restauración, verificación de requisitos, humo y rendimiento"],
     ["tests/load", "Pruebas de carga con k6"],
     ["docs", "Documentación: manuales, pruebas y plan de implantación"],
-    [".github/workflows", "Workflow de SonarCloud"],
+    [".github/workflows", "Workflows de pruebas (ci.yml) y de SonarCloud (sonarqube.yml)"],
 ]
 
 ARCHIVOS_CLAVE = [
@@ -796,7 +825,7 @@ GLOSARIO = [
     ("Let's Encrypt", "autoridad de certificación gratuita que usa Caddy en producción."),
     ("Middleware", "componente que procesa solicitudes antes del endpoint."),
     ("MinIO", "almacenamiento de objetos compatible con S3."),
-    ("OCI", "Oracle Cloud Infrastructure."),
+    ("NSG", "grupo de seguridad de red de Azure: reglas de tráfico de entrada y salida de la VM."),
     ("OpenAPI", "especificación para describir API."),
     ("PgBouncer", "administrador de conexiones de PostgreSQL."),
     ("PostgreSQL", "gestor de bases de datos relacional."),
@@ -811,6 +840,7 @@ BIBLIOGRAFIA = [
     "Servicio Nacional de Aprendizaje SENA. Manuales técnicos de la aplicación. FAVA - Formación en Ambientes "
     "Virtuales de Aprendizaje.",
     "Alred, G., Brusaw, C., Oliu, W. (2009). Handbook of technical writing. Boston: Bedford/St. Martin.",
-    "Oracle (2026). Oracle Cloud Infrastructure Documentation: Always Free Resources.",
+    "Microsoft (2026). Azure Virtual Machines documentation: Quickstart: Create a Linux virtual machine in the Azure portal.",
+    "Docker (2026). Install Docker Engine on Ubuntu.",
     "Caddy (2026). Caddy Documentation: Automatic HTTPS.",
 ]

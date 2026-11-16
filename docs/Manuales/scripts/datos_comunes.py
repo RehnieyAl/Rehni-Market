@@ -46,7 +46,7 @@ CONTROL_VERSIONES = [
     (VERSION, FECHA_CORTA, "Yeinher Algarin",
      "Actualización contra el código de develop: paneles Inicio, Ofertas y Novedades, mapa de "
      "navegación con menús e iconos por perfil, validaciones en vivo y mensajes de la interfaz, "
-     "HTTPS con Caddy en dos dominios, SMTP configurable, despliegue en Oracle Cloud, diagramas "
+     "HTTPS con Caddy en dos dominios, SMTP configurable, despliegue en Azure, diagramas "
      "por rol y por módulo, y Diccionario de datos aparte. Se retira la aplicación móvil del alcance. "
      "Capturas de pantalla del ingreso al sistema y de la interfaz (capítulos 5 y 6 del Manual de usuario)."),
 ]
