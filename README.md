@@ -4,7 +4,7 @@
 
 Conecta **empresas vendedoras** con **compradores** en una sola plataforma: catálogo con variantes, carrito, checkout con **RehniCoin**, pedidos, devoluciones, reseñas y paneles de gestión para empresas y administradores.
 
-**Producción:** <https://rehnimarket.duckdns.org> · API: <https://api.rehnimarket.duckdns.org>
+**Producción:** <https://rehnimarket.duckdns.org> · API: <https://apirehnimarket.duckdns.org>
 <!-- PENDIENTE: el 16/11/2026 el nombre resolvía pero el sitio no respondía; confirmar tras el despliegue en Azure -->
 
 <br />

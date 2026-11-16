@@ -586,11 +586,11 @@ SECCIONES_PLATAFORMA = [
              "PostgreSQL va igual en POSTGRES_PASSWORD, URL_DATABASE y URL_DATABASE_POOLED. También se puede "
              "copiar por scp un .env de producción ya preparado."),
         CODE("cp deploy/env.prod.example .env && chmod 600 .env\n"
-             "grep -n CAMBIAR .env   # no debe mostrar nada"),
+             "grep -nE '^[A-Z_]+=.*CAMBIAR' .env   # no debe mostrar nada"),
         P("La plantilla ya trae los valores de producción: SITE_ADDRESS=rehnimarket.duckdns.org, "
-          "API_ADDRESS=api.rehnimarket.duckdns.org, HTTP_PORT=80, HTTPS_PORT=443, CADDY_LOCAL_CERTS vacía, "
-          "VITE_API_URL=https://api.rehnimarket.duckdns.org, CORS_EXTRA_ORIGINS y URL_FRONTEND="
-          "https://rehnimarket.duckdns.org, URL_BACKEND=https://api.rehnimarket.duckdns.org, DOCS_ENABLED=false, "
+          "API_ADDRESS=apirehnimarket.duckdns.org, HTTP_PORT=80, HTTPS_PORT=443, CADDY_LOCAL_CERTS vacía, "
+          "VITE_API_URL=https://apirehnimarket.duckdns.org, CORS_EXTRA_ORIGINS y URL_FRONTEND="
+          "https://rehnimarket.duckdns.org, URL_BACKEND=https://apirehnimarket.duckdns.org, DOCS_ENABLED=false, "
           "RATE_LIMIT_ENABLED=true, RUN_SEED=false, las variables de owner vacías, BACKEND_BIND=127.0.0.1 y, "
           "para una VM de 2 vCPU, BACKEND_CPUS=2 y POSTGRES_CPUS=1.5."),
         PASO(9, "Levantar y verificar.", "El backend aplica alembic upgrade head al arrancar."),
