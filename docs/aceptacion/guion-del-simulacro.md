@@ -19,7 +19,7 @@
 | Plan de implantación v1.0 | `docs/plan-implantacion.md` en la etiqueta `v1.0.0` del repositorio |
 | Respaldo `rehni_market_postgres_<TS>.dump` + `.sha256` | [PENDIENTE: memoria USB o enlace temporal; cifrado con `age` cuando esté implementado (plan §3.3)] |
 | Respaldo `rehni_market_minio_<TS>.tar.gz` + `.sha256` | Igual |
-| Valores de los `.env` (contraseñas de PostgreSQL y MinIO, `SECRET_KEY`, correo) | **Otro canal** (gestor de contraseñas o en persona), nunca junto al paquete |
+| Valores del `.env` que no salen de `.env.example` (contraseñas de PostgreSQL y MinIO, `SECRET_KEY`, correo) | **Otro canal** (gestor de contraseñas o en persona), nunca junto al paquete |
 | Cuenta de comprador de prueba verificada (para `smoke-test.sh`) | Otro canal, junto con las contraseñas |
 
 Antes del simulacro, quien entrega anota la huella y los conteos del respaldo (misma consulta de
@@ -32,12 +32,14 @@ Todo sale del plan; esta tabla solo dice qué sección usar.
 | # | Qué | Sección del plan |
 |---|---|---|
 | 1 | Comprobar servidor limpio (sin contenedores ni volúmenes del proyecto) | `registro-del-simulacro.md`, «Comprobación de servidor limpio» |
-| 2 | Instalación inicial, pasos 1 a 8 | §5.2 «Instalación inicial» |
-| 3 | Copiar los respaldos a `backups/postgres/` y `backups/minio/` | §3.4 paso 3 |
-| 4 | Restaurar: `--verify-only` y luego restauración | §3.4 pasos 5 y 6 |
-| 5 | Comparar huellas y conteos con los entregados | §3.5 |
-| 6 | Prueba de humo | §5.2 paso 9 |
-| 7 | Lista posterior al despliegue | §6.5 |
+| 2 | Instalación inicial, pasos 1 a 4 | §5.2 «Instalación inicial» |
+| 3 | Configuración en un solo paso: `cp .env.example .env && chmod 600 .env` y cambiar en el `.env` cada línea marcada `# producción: …` | §5.2 paso 5 |
+| 4 | Instalación inicial, pasos 6 a 8 | §5.2 «Instalación inicial» |
+| 5 | Copiar los respaldos a `backups/postgres/` y `backups/minio/` | §3.4 paso 3 |
+| 6 | Restaurar: `--verify-only` y luego restauración | §3.4 pasos 5 y 6 |
+| 7 | Comparar huellas y conteos con los entregados | §3.5 |
+| 8 | Prueba de humo | §5.2 paso 9 |
+| 9 | Lista posterior al despliegue | §6.5 |
 
 Tiempo máximo: 90 min [PENDIENTE: confirmar con el instructor]. Desde «levantar la base» hasta
 «huellas idénticas» se cronometra aparte para compararlo con el RTO de 4 h.

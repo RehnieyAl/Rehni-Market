@@ -1,23 +1,24 @@
 # deploy/
 
-Producción usa **el mismo `docker-compose.yml` y el mismo `caddy/Caddyfile`** que el
-desarrollo. No hay override de producción: lo único que cambia entre entornos es el `.env`
-de la raíz.
-
-| Archivo | Para qué |
-|---|---|
-| `env.prod.example` | Plantilla del `.env` de la raíz en el servidor (dominios, puertos 80/443, API solo en 127.0.0.1, CORS) |
+Producción usa **el mismo `docker-compose.yml`, el mismo `caddy/Caddyfile` y la misma
+plantilla `.env.example`** que el desarrollo. No hay override ni plantilla de producción
+aparte: en el servidor se copia la plantilla y se cambia cada variable que tiene debajo una
+línea `# producción: …`.
 
 ```bash
-cp deploy/env.prod.example .env && chmod 600 .env   # reemplazar <dominio>
-docker compose up -d --build
+cp .env.example .env && chmod 600 .env   # aplicar las líneas «producción»
+docker compose up -d --build --wait
 ```
 
 Con `SITE_ADDRESS=<dominio>` y `API_ADDRESS=api.<dominio>`, Caddy pide los certificados a
 Let's Encrypt y redirige HTTP → HTTPS. Con `localhost` (desarrollo) usa su CA local.
 
-Los secretos van en `.env.postgres`, `.env.minio` y `RehniMarket-backend/.env`
-(plantilla `RehniMarket-backend/.env.public.example`), nunca en Git.
+El `.env` es el único archivo de configuración y lleva todos los secretos: `chmod 600`, nunca
+en Git.
 
-Procedimiento completo (instalación, actualización y rollback): sección 5.2 del plan de
-implantación (`docs/plan-implantacion.md`, sección 5).
+| Archivo | Para qué |
+|---|---|
+| `guia-oracle-cloud-a1.html` | Guía anterior de despliegue en Oracle Cloud (histórica: describe la configuración en varios `.env`) |
+
+Procedimiento vigente (instalación, actualización y rollback): sección 5.2 del plan de
+implantación (`docs/plan-implantacion.md`).

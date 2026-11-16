@@ -238,7 +238,7 @@ En producción es lo mismo con `<dominio>` y `api.<dominio>`.
 | `caddy/Caddyfile` | **Único** (desarrollo y producción): los dos sitios y el healthcheck. Se monta en `/etc/caddy` (por eso esta guía también aparece dentro del contenedor; no afecta) |
 | `RehniMarket-frontend/Dockerfile` | Etapa 1: `pnpm build`. Etapa 2: `caddy:2.11-alpine` con el build en `/srv` |
 | `docker-compose.yml` | **Único**: servicio `frontend` con Caddy (80/443, `caddy_data`, `caddy_config`); `backend` con `--proxy-headers`, `DOCS_ENABLED` y `CORS_EXTRA_ORIGINS` |
-| `.env` | `SITE_ADDRESS`, `API_ADDRESS`, `HTTP_PORT`, `HTTPS_PORT`, `VITE_API_URL`, `CORS_EXTRA_ORIGINS`, `DOCS_ENABLED` (`.env.example` / `deploy/env.prod.example`) |
+| `.env` | `SITE_ADDRESS`, `API_ADDRESS`, `HTTP_PORT`, `HTTPS_PORT`, `VITE_API_URL`, `CORS_EXTRA_ORIGINS`, `DOCS_ENABLED` (`.env.example`; en producción, sus líneas «producción») |
 | `RehniMarket-backend/app/middleware/PublicBaseUrlMiddleware.py` | Arma las URL de imágenes con el host por el que entró el cliente (6.5) |
 
 El `Caddyfile` en resumen (léelo completo en `caddy/Caddyfile`):
@@ -366,14 +366,14 @@ en el navegador (ver [`caddy-configuracion.md`](caddy-configuracion.md)); para l
 
 1. **App móvil.** Sigue entrando directo al `:8000` con `URL_BACKEND`. En producción debería
    usar `https://api.<dominio>` (`EXPO_PUBLIC_API_URL` y `URL_BACKEND`).
-2. **Cerrar el `:8000`.** En producción, `BACKEND_BIND=127.0.0.1` (ya en `deploy/env.prod.example`).
+2. **Cerrar el `:8000`.** En producción, `BACKEND_BIND=127.0.0.1` (ya es el valor de `.env.example`).
 3. **`URL_FRONTEND`** (enlaces de los correos) con el dominio real: `https://<dominio>`
    (en local ya es `https://rehnimarket`).
 
 ### 6.9 Paso a producción (para la sección 4 del plan)
 
-Mismo `docker-compose.yml` y mismo `Caddyfile`; solo cambia el `.env` (plantilla completa en
-`deploy/env.prod.example`):
+Mismo `docker-compose.yml` y mismo `Caddyfile`; solo cambia el `.env` (plantilla única
+`.env.example`, líneas «producción»):
 
 ```bash
 # .env en el servidor
@@ -420,7 +420,7 @@ servidor o a un PaaS, solo cambiaría el registro de `api` (a otra `A` o a un `C
 | Qué | Método | Autenticación |
 |---|---|---|
 | Código e imágenes Docker | `git pull` + `docker compose up -d --build` en el servidor (en la semana 7: imagen desde un registro) | Llave SSH / deploy key |
-| `.env` y `RehniMarket-backend/.env` | `scp` con llave y `chmod 600` en el servidor. Nunca por Git | Llave SSH |
+| `.env` | `scp` con llave y `chmod 600` en el servidor. Nunca por Git | Llave SSH |
 | Respaldos (`pg_dump`, datos de MinIO) | `rsync` o SFTP desde el servidor hacia un destino externo | Llave SSH |
 
 **Evidencia:** la tabla de 6.7 y la salida de los comandos.
@@ -461,7 +461,7 @@ imágenes las entrega el backend en `/media/proxy` (por Caddy,
   servidor**: solo en el loopback, nunca `0.0.0.0`. Desde fuera solo se llega por túnel SSH. ✅
 - Los datos viven en el volumen `postgres_data` y las imágenes en `minio_data`.
   `docker compose down -v` **los borra**: nunca lo ejecutes en el servidor.
-- Las credenciales están en `RehniMarket-backend/.env`, ignorado por Git. ✅
+- Las credenciales están en el `.env` de la raíz, ignorado por Git. ✅
 
 ### Opciones de hosting
 

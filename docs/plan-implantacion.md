@@ -337,7 +337,7 @@ Casi todo el tiempo está en `transformar.sql` (12,0 s), que calcula un hash bcr
 |---|---|---|---|
 | Base de datos PostgreSQL 17 | Contenedor `rehni-postgres`, base `rehnimarket` | `pg_dump -F c -Z 6` con `bash scripts/backup_rehnimarket.sh` | Sí |
 | Archivos de MinIO (imágenes, logos, banners, certificados PDF) | Contenedor `rehni-minio`, bucket `uploads` | `mc mirror` + `.tar.gz` con `bash scripts/backup_rehnimarket.sh` (mismo `TS` que la base) | Sí |
-| Configuración (`.env`, `.env.postgres`, `.env.minio`) | Raíz del proyecto y `RehniMarket-backend/` | Copia cifrada con `age` (decisión del 04/11/2026; implementación: semana 6) | No (contiene credenciales) |
+| Configuración (`.env` único) | Raíz del proyecto | Copia cifrada con `age` (decisión del 04/11/2026; implementación: semana 6) | No (contiene credenciales) |
 
 **Script.** El bootcamp pide `scripts/respaldar.sh`. En RehniMarket es un envoltorio de una línea que ejecuta `scripts/backup_rehnimarket.sh` con los mismos argumentos y variables (`exec bash .../backup_rehnimarket.sh "$@"`), sin lógica propia: `bash scripts/respaldar.sh` y `bash scripts/backup_rehnimarket.sh` son equivalentes. Comprobado el 04/11/2026: `bash scripts/respaldar.sh --no-stop` terminó con `=== FIN backup 2026-11-04_14-31 — OK ===` en 1 min 33 s, y el log no registra `deteniendo backend`, así que el argumento llegó al script original.
 
@@ -458,7 +458,7 @@ La evidencia anterior (respaldo `2026-08-31_16-59`, «≈ 30 segundos») se reem
 
 Alternativa en servidor propio (VM Ubuntu Server 24.04 LTS del laboratorio o del cliente):
 
-Los cinco servicios de `docker-compose.yml` (`frontend` con Caddy, `backend`, `pgbouncer`, `postgres` y `minio`) corren en el mismo servidor con Docker Compose. Caddy es el único punto de entrada: sirve el frontend en `<dominio>` y hace de reverse proxy de la API en `api.<dominio>`. PgBouncer y MinIO no tienen puertos publicados y solo son accesibles dentro de la red `data` de Docker, junto con el backend y PostgreSQL; Caddy solo está en la red `edge` (sección 7.6). PostgreSQL se publica **solo en el loopback** del servidor, `${POSTGRES_BIND:-127.0.0.1}:${POSTGRES_PORT:-5433}` (`docker-compose.yml:67`), nunca en `0.0.0.0`: desde fuera solo se llega por túnel SSH (`ssh -L 5433:127.0.0.1:5433 …`), para administrarla con DbSchema o `psql` sin abrir el puerto en el firewall. El servidor usa el **mismo `docker-compose.yml` y el mismo `caddy/Caddyfile`** que el desarrollo; solo cambia el `.env` de la raíz, que sale de `deploy/env.prod.example`: `SITE_ADDRESS=<dominio>`, `API_ADDRESS=api.<dominio>`, `HTTP_PORT=80`, `HTTPS_PORT=443`, `CADDY_LOCAL_CERTS` vacía, `VITE_API_URL=https://api.<dominio>`, `CORS_EXTRA_ORIGINS=https://<dominio>`, `DOCS_ENABLED=false` y `BACKEND_BIND=127.0.0.1`. Con un dominio público, Caddy pide los certificados a Let's Encrypt (sin correo ACME: Let's Encrypt no lo exige). El procedimiento completo está en la sección 5.
+Los cinco servicios de `docker-compose.yml` (`frontend` con Caddy, `backend`, `pgbouncer`, `postgres` y `minio`) corren en el mismo servidor con Docker Compose. Caddy es el único punto de entrada: sirve el frontend en `<dominio>` y hace de reverse proxy de la API en `api.<dominio>`. PgBouncer y MinIO no tienen puertos publicados y solo son accesibles dentro de la red `data` de Docker, junto con el backend y PostgreSQL; Caddy solo está en la red `edge` (sección 7.6). PostgreSQL se publica **solo en el loopback** del servidor, `${POSTGRES_BIND:-127.0.0.1}:${POSTGRES_PORT:-5433}` (`docker-compose.yml:67`), nunca en `0.0.0.0`: desde fuera solo se llega por túnel SSH (`ssh -L 5433:127.0.0.1:5433 …`), para administrarla con DbSchema o `psql` sin abrir el puerto en el firewall. El servidor usa el **mismo `docker-compose.yml` y el mismo `caddy/Caddyfile`** que el desarrollo; solo cambia el `.env` de la raíz, que sale de `.env.example` cambiando las líneas marcadas «producción»: `SITE_ADDRESS=<dominio>`, `API_ADDRESS=api.<dominio>`, `HTTP_PORT=80`, `HTTPS_PORT=443`, `CADDY_LOCAL_CERTS` vacía, `VITE_API_URL=https://api.<dominio>`, `CORS_EXTRA_ORIGINS=https://<dominio>`, `DOCS_ENABLED=false` y `BACKEND_BIND=127.0.0.1`. Con un dominio público, Caddy pide los certificados a Let's Encrypt (sin correo ACME: Let's Encrypt no lo exige). El procedimiento completo está en la sección 5.
 
 ### 4.2 Dominio
 
@@ -510,7 +510,7 @@ El repositorio tiene **un único `caddy/Caddyfile`** y **un único `docker-compo
 |---|---|---|
 | `SITE_ADDRESS=localhost`, `API_ADDRESS=api.localhost` (por defecto) | CA local de Caddy, automática con `localhost` y `*.localhost` | Desarrollo. Para que el navegador no avise, se confía en la raíz de Caddy una vez (`caddy/readme.md`, 6.7.1) |
 | `SITE_ADDRESS=rehnimarket`, `API_ADDRESS=api.rehnimarket`, `CADDY_LOCAL_CERTS=local_certs` | CA local de Caddy, forzada (`local_certs`, equivale a `tls internal`) | La prueba de abajo, con los nombres elegidos y `curl --resolve` (práctica 02) |
-| `SITE_ADDRESS=<dominio>`, `API_ADDRESS=api.<dominio>` (`deploy/env.prod.example`) | Let's Encrypt | Producción (sección 5.2). No se puede probar en local: necesita un dominio real que apunte al servidor |
+| `SITE_ADDRESS=<dominio>`, `API_ADDRESS=api.<dominio>` (líneas «producción» de `.env.example`) | Let's Encrypt | Producción (sección 5.2). No se puede probar en local: necesita un dominio real que apunte al servidor |
 
 En los tres casos Caddy redirige HTTP → HTTPS (308). Publica `HTTP_PORT` y `HTTPS_PORT` (80 y 443 por defecto) con el mismo número dentro y fuera del contenedor, para que la redirección apunte al puerto correcto; los certificados y la CA local viven en los volúmenes `caddy_data` y `caddy_config`. El healthcheck del contenedor usa un sitio interno, `http://:8081`, que no se publica.
 
@@ -592,7 +592,7 @@ Las peticiones por Caddy llegan con la IP del cliente que vio Caddy (la de la LA
 | Qué se transfiere | Método | Autenticación | Frecuencia |
 |---|---|---|---|
 | Código e imágenes Docker | `git pull` + `docker compose up -d --build` en el servidor (sección 5.2) | Llave SSH / deploy key | En cada liberación (sección 5.1) |
-| `.env`, `.env.postgres`, `.env.minio` y `RehniMarket-backend/.env` | `scp` con llave y `chmod 600` en el servidor; nunca por Git | Llave SSH | En la instalación inicial y al rotar un secreto |
+| `.env` | `scp` con llave y `chmod 600` en el servidor; nunca por Git | Llave SSH | En la instalación inicial y al rotar un secreto |
 | Respaldos (`pg_dump` y datos de MinIO) | `rsync` o SFTP desde el servidor hacia un destino externo | Llave SSH de un usuario restringido a SFTP <!-- PENDIENTE: crear el usuario solo SFTP en el destino externo (semana 6) --> | <!-- PENDIENTE: depende de la frecuencia del respaldo acordada (sección 3.3) --> |
 
 ---
@@ -604,7 +604,7 @@ Las peticiones por Caddy llegan con la IP del cliente que vio Caddy (la de la LA
 | # | Sección | Contenido |
 |---|---|---|
 | 1 | Alcance | Instalar los cinco servicios de `docker-compose.yml` (`frontend` con Caddy, `backend`, `pgbouncer`, `postgres`, `minio`) en un servidor Ubuntu Server 24.04 LTS con Docker Compose. La app móvil (`RehniMarket-mobile/`) no forma parte de `docker-compose.yml` y queda fuera de este plan |
-| 2 | Ambientes | Un único `docker-compose.yml` y un único `caddy/Caddyfile` en todos los ambientes; solo cambia el `.env` de la raíz. **Desarrollo:** CachyOS, `docker compose up -d` o `docker compose watch`, HTTPS en `https://localhost` y `https://api.localhost` (CA local de Caddy) y API directa en `:8000`. **Pruebas:** `docker compose --profile test up -d --wait postgres-test`. **Producción:** Ubuntu Server 24.04 LTS, `docker compose up -d` con el `.env` de `deploy/env.prod.example`, HTTPS con Let's Encrypt en `:443`. **Nube:** <!-- PENDIENTE: proveedor y plan (sección 5.3) --> |
+| 2 | Ambientes | Un único `docker-compose.yml` y un único `caddy/Caddyfile` en todos los ambientes; solo cambia el `.env` de la raíz. **Desarrollo:** CachyOS, `docker compose up -d` o `docker compose watch`, HTTPS en `https://localhost` y `https://api.localhost` (CA local de Caddy) y API directa en `:8000`. **Pruebas:** `docker compose --profile test up -d --wait postgres-test`. **Producción:** Ubuntu Server 24.04 LTS, `docker compose up -d` con el `.env` sacado de `.env.example` (líneas «producción»), HTTPS con Let's Encrypt en `:443`. **Nube:** <!-- PENDIENTE: proveedor y plan (sección 5.3) --> |
 | 3 | Roles | Responsable técnico (Yeinher Algarin): ejecuta la instalación, decide el rollback (sección 2.6). Cliente: aprueba el resultado y el reporte de rechazos de la migración (sección 2.6). <!-- PENDIENTE: otros roles (administrador del servidor, contacto del cliente) si los hay --> |
 | 4 | Prerrequisitos | Ver sección 1 (ficha técnica): matriz 1.5 y `scripts/verificar-requisitos.sh` con código de salida `0` |
 | 5 | Preparación | Ubuntu Server 24.04 LTS con Docker Engine y el plugin Compose instalados según la guía oficial (paso 2 de la instalación inicial), usuario de despliegue en el grupo `docker`, DNS apuntando al servidor (sección 4.3) y puertos 80/443/22 abiertos (sección 4.4) |
@@ -650,19 +650,16 @@ Enlace al `CHANGELOG.md`: [`CHANGELOG.md`](../CHANGELOG.md) (raíz). El detalle 
 ├── docker-compose.yml            ← el mismo que en desarrollo (compose único)
 ├── caddy/Caddyfile               ← el mismo que en desarrollo; HTTPS con Let's Encrypt por el .env
 ├── deploy/
-│   ├── env.prod.example          ← plantilla del .env de producción
 │   └── README.md
-├── .env                          ← de deploy/env.prod.example (chmod 600, fuera de Git)
-├── .env.postgres                 ← de .env.postgres.example (chmod 600)
-├── .env.minio                    ← de .env.minio.example (chmod 600)
-├── RehniMarket-backend/.env      ← de RehniMarket-backend/.env.public.example (chmod 600)
+├── .env.example                  ← única plantilla de configuración (desarrollo y producción)
+├── .env                          ← de .env.example con las líneas «producción» (chmod 600, fuera de Git)
 ├── backups/                      ← respaldos (copia 1, sección 3.3; excluido de Git)
 └── scripts/                      ← verificar-requisitos, respaldar, smoke-test, restore…
 ```
 
-Los volúmenes de datos (`postgres_data`, `minio_data`, `caddy_data`, `caddy_config`, `backend_venv`) los gestiona Docker (`docker-compose.yml:334-339`), no viven en `/opt`. Los cuatro `.env` están excluidos de Git (`.gitignore:10-11`, `RehniMarket-backend/.gitignore:5-7`).
+Los volúmenes de datos (`postgres_data`, `minio_data`, `caddy_data`, `caddy_config`, `backend_venv`) los gestiona Docker (`docker-compose.yml:334-339`), no viven en `/opt`. El `.env` está excluido de Git (`.gitignore:10-11`).
 
-**Por qué no hay `deploy/compose.prod.yaml` ni `deploy/Caddyfile`.** La rúbrica de la semana 4 nombra como instrumento del Producto la «carpeta `deploy/`» (`bc-implantacion/bootcamp/week-04-despliegue_local_y_nube/rubrica-evaluacion.md:64-65`), y el proyecto de la semana pide una «Carpeta `deploy/` con `compose.prod.yaml`, configuración del proxy, `env.prod.example`» (`3-proyecto/README.md:13-14`). RehniMarket cubre lo mismo con **un solo compose y un solo Caddyfile** para todos los ambientes: lo que cambia entre el equipo de desarrollo y el servidor (dominios, puertos, emisor de los certificados, interfaz de la API, CORS) son variables del `.env`, y su plantilla de producción es `deploy/env.prod.example`. Así no hay dos configuraciones que mantener en paralelo (antes el bloque del frontend estaba copiado en `caddy/Caddyfile` y `deploy/Caddyfile`), y lo que se prueba en local es exactamente lo que corre en el servidor. La «configuración del proxy» es `caddy/Caddyfile` y `deploy/README.md` explica el diseño. <!-- PENDIENTE: confirmar con el instructor que el compose único cumple el entregable deploy/ (PENDIENTES-s1-s4.md) -->
+**Por qué no hay `deploy/compose.prod.yaml` ni `deploy/Caddyfile`.** La rúbrica de la semana 4 nombra como instrumento del Producto la «carpeta `deploy/`» (`bc-implantacion/bootcamp/week-04-despliegue_local_y_nube/rubrica-evaluacion.md:64-65`), y el proyecto de la semana pide una «Carpeta `deploy/` con `compose.prod.yaml`, configuración del proxy, `env.prod.example`» (`3-proyecto/README.md:13-14`). RehniMarket cubre lo mismo con **un solo compose y un solo Caddyfile** para todos los ambientes: lo que cambia entre el equipo de desarrollo y el servidor (dominios, puertos, emisor de los certificados, interfaz de la API, CORS) son variables del `.env`, y su única plantilla es `.env.example`, con el valor de producción de cada variable en una línea `# producción: …` (desde el 16/11/2026 ya no hay `deploy/env.prod.example`: un solo archivo evita que las dos plantillas se desalineen). Así no hay dos configuraciones que mantener en paralelo (antes el bloque del frontend estaba copiado en `caddy/Caddyfile` y `deploy/Caddyfile`), y lo que se prueba en local es exactamente lo que corre en el servidor. La «configuración del proxy» es `caddy/Caddyfile` y `deploy/README.md` explica el diseño. <!-- PENDIENTE: confirmar con el instructor que el compose único cumple el entregable deploy/ (PENDIENTES-s1-s4.md) -->
 
 **Imagen de MinIO y permisos del volumen.** `minio/minio` ya no se puede descargar de Docker Hub; el compose usa la imagen de Chainguard fijada por digest (`docker-compose.yml:22`), que corre como el usuario `65532` (nonroot). Un volumen `minio_data` nuevo funciona sin más (la imagen crea `/data` con permisos `777`). Un volumen creado antes por `minio/minio` (archivos de `root`) falla al arrancar con `unable to rename (/data/.minio.sys/tmp -> …) file access denied` y `FATAL Unable to initialize backend: Unable to write to the backend` (comprobado el 04/11/2026 en desarrollo). Se corrige **una vez** cambiando el dueño de los datos, sin ejecutar MinIO como root:
 
@@ -676,16 +673,16 @@ En desarrollo se aplicó el 04/11/2026 a `rehni-market_minio_data` (31,7 MB, 880
 
 #### Variables de entorno
 
-Solo nombres y ejemplos ficticios; los valores reales se crean en el servidor. Plantillas: `.env.example` (`.env` de desarrollo) y, para producción, `deploy/env.prod.example` (`.env`), `.env.postgres.example`, `.env.minio.example` y `RehniMarket-backend/.env.public.example` (`RehniMarket-backend/.env`). `RehniMarket-backend/.env.example` es la plantilla de desarrollo local (`RATE_LIMIT_ENABLED=false`, URL de `localhost`).
+Solo nombres y ejemplos ficticios; los valores reales se crean en el servidor. **Un solo `.env`** en la raíz, con una sola plantilla, `.env.example`: trae valores de desarrollo listos para usar (un clon limpio arranca con `cp .env.example .env`) y, debajo de cada variable que cambia en producción, una línea `# producción: …` con el valor del servidor. `minio`, `postgres`, `pgbouncer` y `backend` cargan el `.env` completo (`env_file: ./.env` en `docker-compose.yml`); Caddy recibe solo sus variables (`SITE_ADDRESS`, `API_ADDRESS`, `HTTP_PORT`, `HTTPS_PORT`, `CADDY_LOCAL_CERTS`) para no tener las credenciales. Fuera de Docker (`uv run`, pytest), `app/Config.py` lee el mismo `.env` de la raíz.
 
-**Secretos:** en las plantillas de producción cada secreto lleva el marcador `CAMBIAR_generar_con_openssl_rand_hex_32` y se genera con `openssl rand -hex 32`, un valor distinto por secreto y por entorno (nunca los de desarrollo). La excepción es `GMAIL_APP_PASSWORD`, que la emite Google (contraseña de aplicación, marcador `CAMBIAR_contrasena_de_aplicacion_de_Google`). El backend arranca aunque quede un marcador, así que hay que revisarlos antes del paso 6: `grep -nE 'CAMBIA|<dominio>|<correo|tu-dominio' .env .env.postgres .env.minio RehniMarket-backend/.env | grep -v ':#'` no debe mostrar nada (cubre también los marcadores `CAMBIA_USUARIO`, `CAMBIA_BD` y `CAMBIA_MINIO_USER` y los dominios de ejemplo).
+**Secretos:** cada contraseña y la firma de los JWT (`POSTGRES_PASSWORD`, `MINIO_ROOT_PASSWORD`, `SECRET_KEY`) se generan en el servidor con `openssl rand -base64 24 | tr '+/' '-_'`, un valor distinto por secreto y por entorno (nunca los de desarrollo). `tr` cambia `+` y `/` por caracteres seguros en la URL de conexión: la contraseña de PostgreSQL se repite dentro de `URL_DATABASE` y `URL_DATABASE_POOLED`. La excepción es `GMAIL_APP_PASSWORD`, que la emite Google (contraseña de aplicación). El backend arranca con los valores de desarrollo, así que antes del paso 6 hay que comprobar que no quedó ninguno: `grep -nE 'dev_solo_local|OwnerDev2026|localhost' .env | grep -v ':#'` no debe mostrar nada.
 
 | Archivo | Variable | Propósito | Ejemplo (ficticio) |
 |---|---|---|---|
 | `.env` | `SITE_ADDRESS` / `API_ADDRESS` | Dominios que sirve Caddy. Obligatorios en producción: sin ellos se usan los de desarrollo, `localhost` / `api.localhost` (`docker-compose.yml:247-248`). Con un dominio público Caddy pide los certificados a Let's Encrypt (sin correo ACME) | `<dominio>` / `api.<dominio>` |
 | `.env` | `HTTP_PORT` / `HTTPS_PORT` | Puertos de Caddy en el host, iguales dentro del contenedor (`docker-compose.yml:265-267`). En producción 80 y 443: Let's Encrypt los necesita | `80` / `443` |
 | `.env` | `CADDY_LOCAL_CERTS` | `local_certs` fuerza la CA local de Caddy (solo la prueba de la sección 4.5). **En producción, vacía** | (vacía) |
-| `.env` (opcional) | `POSTGRES_BIND` / `POSTGRES_PORT` | Interfaz y puerto donde se publica PostgreSQL (`docker-compose.yml:67`; por defecto `127.0.0.1` / `5433`). **Nunca `0.0.0.0`**: en el servidor se administra con `docker compose exec postgres psql …` o por túnel SSH (`deploy/env.prod.example`) | `127.0.0.1` / `5433` |
+| `.env` (opcional) | `POSTGRES_BIND` / `POSTGRES_PORT` | Interfaz y puerto donde se publica PostgreSQL (`docker-compose.yml:67`; por defecto `127.0.0.1` / `5433`). **Nunca `0.0.0.0`**: en el servidor se administra con `docker compose exec postgres psql …` o por túnel SSH (sección PostgreSQL de `.env.example`) | `127.0.0.1` / `5433` |
 | `.env` | `BACKEND_BIND` / `BACKEND_PORT` | Interfaz y puerto del host donde se publica la API (`docker-compose.yml:199`; por defecto `127.0.0.1` / `8000`) | `127.0.0.1` / `8000` |
 | `.env` | `VITE_API_URL` | URL de la API dentro del build del frontend (pública) | `https://api.<dominio>` |
 | `.env` | `VITE_REHNIMARKET_WHATSAPP` | Número de contacto mostrado en el frontend (público) | `+57**********` |
@@ -695,18 +692,18 @@ Solo nombres y ejemplos ficticios; los valores reales se crean en el servidor. P
 | `.env` (opcional) | `UVICORN_WORKERS` | Procesos de Uvicorn del backend (`docker-compose.yml:187`, por defecto `3`; `--workers` en `:197`). `app/Config.py:65` lo valida entre 1 y 16 | `3` |
 | `.env` | `FORWARDED_ALLOW_IPS` | Proxy del que Uvicorn acepta `X-Forwarded-For` para ver la IP real del cliente, con la que cuenta el rate limit: **solo Caddy**, con IP fija `172.30.0.10` (`docker-compose.yml`, servicio `frontend` y red `edge` `172.30.0.0/24`; `--forwarded-allow-ips` en el `command` del backend). Un rango como `172.16.0.0/12` incluiría la pasarela de Docker (`172.30.0.1`), por la que entra todo lo que llega al `:8000` desde el propio servidor: cualquier proceso del servidor podría falsear su IP (comprobado el 04/11/2026, sección 4.5) | `172.30.0.10` |
 | `.env` (opcional) | `PGBOUNCER_MAX_CLIENT_CONN` | Clientes que acepta PgBouncer (`docker-compose.yml:122`) y que el backend usa para validar su presupuesto (`:196`). Por defecto `1200` en compose (`200` en `app/Config.py:73`, fuera de compose). Debe ser ≥ (`DB_POOL_SIZE` + `DB_MAX_OVERFLOW`) × `UVICORN_WORKERS` = 150 con los valores por defecto, o el backend no arranca (`app/Config.py:82`) | `1200` |
-| `.env.postgres` | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | Credenciales de PostgreSQL (también las lee PgBouncer). La contraseña se genera con `openssl rand -hex 32` | `rehni_app` / `CAMBIAR_generar_con_openssl_rand_hex_32` / `rehnimarket` |
-| `.env.minio` | `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` | Credenciales de MinIO (también las lee el backend). La contraseña se genera con `openssl rand -hex 32` | `rehni_minio` / `CAMBIAR_generar_con_openssl_rand_hex_32` |
-| `RehniMarket-backend/.env` | `URL_DATABASE` | Conexión directa a PostgreSQL (la usa Alembic); la contraseña es `POSTGRES_PASSWORD` de `.env.postgres` | `postgresql://rehni_app:CAMBIAR_generar_con_openssl_rand_hex_32@postgres:5432/rehnimarket` |
-| `RehniMarket-backend/.env` | `URL_DATABASE_POOLED` | Conexión de la app en tiempo de ejecución a través de PgBouncer (`app/database/Connection.py:16`). Si no se define, usa `URL_DATABASE` (`app/Config.py:28`) y se salta PgBouncer. Misma contraseña que `URL_DATABASE` <!-- PENDIENTE: confirmar el valor en el .env real del servidor (con PgBouncer debe apuntar a pgbouncer:6432) --> | `postgresql://rehni_app:CAMBIAR_generar_con_openssl_rand_hex_32@pgbouncer:6432/rehnimarket` |
-| `RehniMarket-backend/.env` | `SECRET_KEY` / `ALGORITHM` / `ACCESS_TOKEN_EXPIRE_MINUTES` / `REFRESH_TOKEN_DAYS` | Firma y vigencia de los JWT. `SECRET_KEY` se genera con `openssl rand -hex 32` | `CAMBIAR_generar_con_openssl_rand_hex_32` / `HS256` / `30` / `15` (`RehniMarket-backend/.env.public.example:18-21`) |
-| `RehniMarket-backend/.env` | `GMAIL_USERNAME` / `GMAIL_APP_PASSWORD` | Cuenta que envía los correos transaccionales. La contraseña de aplicación la emite Google; crear una propia para producción | `<cuenta>` / `CAMBIAR_contrasena_de_aplicacion_de_Google` |
-| `RehniMarket-backend/.env` | `URL_FRONTEND` / `URL_BACKEND` | URL públicas para enlaces de correo e imágenes | `https://<dominio>` / `https://api.<dominio>` |
-| `RehniMarket-backend/.env` | `MINIO_URL` | Dirección de MinIO dentro de la red de Docker | `minio:9000` |
-| `RehniMarket-backend/.env` | `RATE_LIMIT_ENABLED` | Activa el límite de peticiones por IP (`app/main.py:110`; por defecto `false`, `app/Config.py:47`). **En producción, `true`** (`RehniMarket-backend/.env.public.example:35`) | `true` |
-| `RehniMarket-backend/.env` (opcional) | `REQUEST_LIMIT` / `TIME_WINDOW` | Peticiones por IP permitidas dentro de una ventana de `TIME_WINDOW` segundos; al superarlas responde `429` (`app/Config.py:57-58`, por defecto `100` / `60`; `app/middleware/RateLimitMiddleware.py:32,35`). El contador es en memoria y por proceso: con `UVICORN_WORKERS=3`, una IP puede llegar a 3 × `REQUEST_LIMIT` | `100` / `60` |
-| `RehniMarket-backend/.env` | `USER_NAME_ADMIN` / `ADMIN_DEFAULT` / `PASSWORD_DEFAULT` y `USER_NAME_OWNER` / `OWNER_DEFAULT` / `OWNER_PASSWORD_DEFAULT` | Cuentas iniciales de administrador y owner. Solo se usan con `RUN_SEED=true` (`app/main.py:52`); en producción quedan vacías, sin marcador, para que el seed no cree una cuenta con una contraseña conocida (`app/utils/seed.py:1655`). Si se usan: `openssl rand -hex 32` | `""` |
-| `RehniMarket-backend/.env` | `RUN_SEED` | Carga de datos de ejemplo al arrancar | `false` |
+| `.env` | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | Credenciales de PostgreSQL (también las lee PgBouncer). La contraseña se genera en el servidor (ver «Secretos») | `rehni_app` / `<generada>` / `rehnimarket` |
+| `.env` | `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` | Credenciales de MinIO (también las lee el backend). La contraseña se genera en el servidor (ver «Secretos») | `rehni_minio` / `<generada>` |
+| `.env` | `URL_DATABASE` | Conexión directa a PostgreSQL (la usa Alembic); la contraseña es `POSTGRES_PASSWORD` | `postgresql://rehni_app:<generada>@postgres:5432/rehnimarket` |
+| `.env` | `URL_DATABASE_POOLED` | Conexión de la app en tiempo de ejecución a través de PgBouncer (`app/database/Connection.py:16`). Si no se define, usa `URL_DATABASE` (`app/Config.py:28`) y se salta PgBouncer. Misma contraseña que `URL_DATABASE` <!-- PENDIENTE: confirmar el valor en el .env real del servidor (con PgBouncer debe apuntar a pgbouncer:6432) --> | `postgresql://rehni_app:<generada>@pgbouncer:6432/rehnimarket` |
+| `.env` | `SECRET_KEY` / `ALGORITHM` / `ACCESS_TOKEN_EXPIRE_MINUTES` / `REFRESH_TOKEN_DAYS` | Firma y vigencia de los JWT. `SECRET_KEY` se genera en el servidor (ver «Secretos») | `<generada>` / `HS256` / `30` / `15` (`.env.example`) |
+| `.env` | `GMAIL_USERNAME` / `GMAIL_APP_PASSWORD` | Cuenta que envía los correos transaccionales. La contraseña de aplicación la emite Google; crear una propia para producción | `<cuenta>` / `<de Google>` |
+| `.env` | `URL_FRONTEND` / `URL_BACKEND` | URL públicas para enlaces de correo e imágenes | `https://<dominio>` / `https://api.<dominio>` |
+| `.env` | `MINIO_URL` | Dirección de MinIO dentro de la red de Docker | `minio:9000` |
+| `.env` | `RATE_LIMIT_ENABLED` | Activa el límite de peticiones por IP (`app/main.py:110`; por defecto `false`, `app/Config.py:47`). **En producción, `true`** (línea «producción» de `.env.example`) | `true` |
+| `.env` (opcional) | `REQUEST_LIMIT` / `TIME_WINDOW` | Peticiones por IP permitidas dentro de una ventana de `TIME_WINDOW` segundos; al superarlas responde `429` (`app/Config.py:57-58`, por defecto `100` / `60`; `app/middleware/RateLimitMiddleware.py:32,35`). El contador es en memoria y por proceso: con `UVICORN_WORKERS=3`, una IP puede llegar a 3 × `REQUEST_LIMIT` | `100` / `60` |
+| `.env` | `USER_NAME_ADMIN` / `ADMIN_DEFAULT` / `PASSWORD_DEFAULT` y `USER_NAME_OWNER` / `OWNER_DEFAULT` / `OWNER_PASSWORD_DEFAULT` | Cuentas iniciales de administrador y owner. Solo se usan con `RUN_SEED=true` (`app/main.py:52`); en producción quedan vacías, sin marcador, para que el seed no cree una cuenta con una contraseña conocida (`app/utils/seed.py:1655`).  | `""` |
+| `.env` | `RUN_SEED` | Carga de datos de ejemplo al arrancar | `false` |
 
 `CADDY_TLS`, `ACME_EMAIL`, `FRONTEND_PORT` y `FRONTEND_HTTPS_PORT` ya no existen: ningún Caddyfile ni compose las lee.
 
@@ -721,7 +718,7 @@ Comandos de los pasos 2 y 3: guía oficial de Docker, <https://docs.docker.com/e
 | 2 | Instalar Docker Engine y Compose | Repositorio `apt` de Docker según la guía oficial y `sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin` | `sudo docker run hello-world` muestra el mensaje de prueba |
 | 3 | Usar Docker sin `sudo` | `sudo groupadd docker` (si no existe), `sudo usermod -aG docker $USER` y volver a iniciar sesión (o `newgrp docker`) | `docker run hello-world` funciona sin `sudo`. La guía advierte que el grupo `docker` da privilegios equivalentes a root |
 | 4 | Verificar requisitos | `PORTS="80 443" bash scripts/verificar-requisitos.sh` | Tabla con todo en `CUMPLE` y código de salida `0` |
-| 5 | Crear la configuración | `cp deploy/env.prod.example .env`, `cp .env.postgres.example .env.postgres`, `cp .env.minio.example .env.minio`, `cp RehniMarket-backend/.env.public.example RehniMarket-backend/.env`, reemplazar cada `CAMBIAR_*` (secretos con `openssl rand -hex 32`, ver «Variables de entorno») y `chmod 600 .env .env.postgres .env.minio RehniMarket-backend/.env` | Cuatro archivos con permisos `-rw-------`; `git status` no los muestra |
+| 5 | Crear la configuración | `cp .env.example .env && chmod 600 .env` y, en el `.env`, aplicar cada línea `# producción: …` (secretos generados, ver «Variables de entorno») | Un solo archivo con permisos `-rw-------`; `git status` no lo muestra; el `grep` de «Secretos» no muestra nada |
 | 6 | Levantar los servicios | `docker compose up -d --build --wait` | Termina sin errores; el backend aplica `alembic upgrade head` al arrancar |
 | 7 | Comprobar la salud | `docker compose ps` | Los cinco servicios en `healthy` |
 | 8 | Comprobar HTTPS y la API | `curl -fsS https://api.<dominio>/health/database` y `curl -fsS -o /dev/null -w "%{http_code}\n" https://<dominio>/` | Respuesta de la base de datos y `200` |
@@ -879,11 +876,11 @@ sección 5.2. Inventario de los archivos `.env` reales (sin valores):
 
 | Variable | ¿Secreto? | Desarrollo | Servidor | Nube | Si falta… |
 |---|:---:|---|---|---|---|
-| `URL_DATABASE` / `URL_DATABASE_POOLED` | Sí | `RehniMarket-backend/.env` | `/opt/rehnimarket/RehniMarket-backend/.env` (600) | No aplica: el despliegue fuera de local es la VM (sección 5.2) | El backend no arranca (`app/Config.py:20-28`) |
-| `SECRET_KEY` | Sí | `RehniMarket-backend/.env` | Mismo archivo (600), generado con `openssl rand -hex 32` | — | No se pueden firmar JWT: login falla |
-| `POSTGRES_PASSWORD` | Sí | `.env.postgres` | `/opt/rehnimarket/.env.postgres` (600) | — | PostgreSQL no inicializa |
-| `MINIO_ROOT_PASSWORD` | Sí | `.env.minio` | `/opt/rehnimarket/.env.minio` (600) | — | MinIO y el backend no arrancan |
-| `GMAIL_APP_PASSWORD` / `SMTP_PASSWORD` | Sí | `RehniMarket-backend/.env` | Mismo archivo (600) | — | No salen correos de verificación: el registro queda bloqueado |
+| `URL_DATABASE` / `URL_DATABASE_POOLED` | Sí | `.env` | `/opt/rehnimarket/.env` (600) | No aplica: el despliegue fuera de local es la VM (sección 5.2) | El backend no arranca (`app/Config.py:20-28`) |
+| `SECRET_KEY` | Sí | `.env` | Mismo archivo (600), generado con `openssl rand -base64 24` | — | No se pueden firmar JWT: login falla |
+| `POSTGRES_PASSWORD` | Sí | `.env` | Mismo archivo (600) | — | PostgreSQL no inicializa |
+| `MINIO_ROOT_PASSWORD` | Sí | `.env` | Mismo archivo (600) | — | MinIO y el backend no arrancan |
+| `GMAIL_APP_PASSWORD` / `SMTP_PASSWORD` | Sí | `.env` | Mismo archivo (600) | — | No salen correos de verificación: el registro queda bloqueado |
 | `SITE_ADDRESS` / `API_ADDRESS` | No | `.env` (`localhost` / `api.localhost`) | `.env` con el dominio público | — | Caddy sirve los nombres de desarrollo |
 | `RATE_LIMIT_ENABLED` | No | `false` | `true` | — | Sin límite de peticiones por IP |
 | `DOCS_ENABLED` | No | `true` | `false` | — | Swagger oculto (por defecto) |
@@ -967,7 +964,7 @@ Archivos y carpetas sensibles:
 | Ruta | Dueño:grupo | Permisos | Por qué |
 |---|---|:---:|---|
 | `/opt/rehnimarket` | administrador | 755 | Clon del repositorio (sección 5.2) |
-| `/opt/rehnimarket/.env`, `.env.postgres`, `.env.minio`, `RehniMarket-backend/.env` | administrador | 600 | Secretos (paso 5 de la instalación) |
+| `/opt/rehnimarket/.env` | administrador | 600 | Único archivo de configuración, con todos los secretos (paso 5 de la instalación) |
 | `/opt/rehnimarket/backups/` | administrador | [PENDIENTE: 700] | Respaldos con datos personales |
 
 ### 7.2 Acceso remoto y firewall
@@ -997,7 +994,7 @@ VM, y `nc -zv <ip-publica> 5433` desde otro equipo, que debe fallar].
 
 | Rol | Privilegios | No puede | Lo usa | Dónde vive su contraseña |
 |---|---|---|---|---|
-| `POSTGRES_USER` (p. ej. `rehni_app`) | Dueño de la base y de las tablas | — | La app (vía PgBouncer) y Alembic | `.env.postgres` y `RehniMarket-backend/.env` (600) |
+| `POSTGRES_USER` (p. ej. `rehni_app`) | Dueño de la base y de las tablas | — | La app (vía PgBouncer) y Alembic | `.env` (600) |
 
 **Brecha conocida**: la app y las migraciones usan el mismo rol dueño. El referente pide separar
 un rol dueño (migraciones) de un rol de la app (solo DML). Queda en el plan de mejora
@@ -1021,12 +1018,22 @@ petición (`auth_middleware`). Evidencia automática: `RehniMarket-backend/tests
 
 | Secreto | Da acceso a | Dónde vive (cada ambiente) | Permisos | Quién lo lee | Cómo se rota |
 |---|---|---|---|---|---|
-| `SECRET_KEY` | Firma de todos los JWT | `RehniMarket-backend/.env` | 600 | Backend | Nuevo valor + reinicio (invalida las sesiones) |
-| `POSTGRES_PASSWORD` | Toda la BD | `.env.postgres`, `RehniMarket-backend/.env` | 600 | PostgreSQL, PgBouncer, backend | `ALTER ROLE ... PASSWORD` + actualizar ambos archivos |
-| `MINIO_ROOT_PASSWORD` | Imágenes y certificados | `.env.minio` | 600 | MinIO, backend | Cambiar y reiniciar ambos servicios |
-| `GMAIL_APP_PASSWORD` | Cuenta de correo transaccional | `RehniMarket-backend/.env` | 600 | Backend | Revocar en Google y emitir otra |
+| `SECRET_KEY` | Firma de todos los JWT | `.env` | 600 | Backend | Nuevo valor + reinicio (invalida las sesiones) |
+| `POSTGRES_PASSWORD` | Toda la BD | `.env` | 600 | PostgreSQL, PgBouncer, backend | `ALTER ROLE ... PASSWORD` + actualizar `POSTGRES_PASSWORD` y las dos `URL_DATABASE*` del `.env` |
+| `MINIO_ROOT_PASSWORD` | Imágenes y certificados | `.env` | 600 | MinIO, backend | Cambiar y reiniciar ambos servicios |
+| `GMAIL_APP_PASSWORD` | Cuenta de correo transaccional | `.env` | 600 | Backend | Revocar en Google y emitir otra |
 | Llave SSH de la VM | Servidor | Equipo del administrador | 600 | Administrador | Nueva llave en Azure y borrar la anterior |
 | Llave `age` del respaldo | Copias 2 y 3 | [PENDIENTE: gestor de contraseñas] | — | Administrador | [PENDIENTE] |
+
+**Un solo `.env`, por simplicidad.** Desde el 16/11/2026 toda la configuración vive en un
+único `.env` en la raíz (antes eran cuatro: `.env`, `.env.postgres`, `.env.minio` y
+`RehniMarket-backend/.env`). `minio`, `postgres`, `pgbouncer` y `backend` lo reciben completo
+(`env_file: ./.env`); Caddy recibe solo sus cinco variables por `environment`, para que el
+contenedor expuesto a Internet no tenga las credenciales. El archivo queda con `chmod 600`,
+dueño el administrador, y fuera del repositorio (`.gitignore:10`); la plantilla versionada,
+`.env.example`, solo trae valores de desarrollo. Contrapartida aceptada: MinIO, PostgreSQL y
+PgBouncer reciben también secretos que no usan (p. ej. `SECRET_KEY`); ninguno de los tres
+está en la red de Caddy (sección 7.6).
 
 Revisión del historial del repositorio (2026-11-16):
 
@@ -1070,7 +1077,7 @@ flowchart LR
 | `frontend` (Caddy) | `edge` (IP fija `172.30.0.10`) | `0.0.0.0:80`, `0.0.0.0:443` TCP y UDP | Único punto de entrada. La IP fija es la única de la que el backend acepta `X-Forwarded-For` (`FORWARDED_ALLOW_IPS=172.30.0.10`) |
 | `backend` | `edge` y `data` | `127.0.0.1:8000` (`BACKEND_BIND`) | Recibe a Caddy por `edge` y llega a PgBouncer, PostgreSQL y MinIO por `data` |
 | `pgbouncer` | `data` | Ninguno | Solo lo usa el backend (`URL_DATABASE_POOLED`) |
-| `postgres` | `data` | `127.0.0.1:5433` (`POSTGRES_BIND` / `POSTGRES_PORT`) | Lo usan PgBouncer y Alembic. En el host, solo loopback para DbSchema; en el servidor, `docker compose exec` o túnel SSH (`deploy/env.prod.example`) |
+| `postgres` | `data` | `127.0.0.1:5433` (`POSTGRES_BIND` / `POSTGRES_PORT`) | Lo usan PgBouncer y Alembic. En el host, solo loopback para DbSchema; en el servidor, `docker compose exec` o túnel SSH (`.env.example`, sección PostgreSQL) |
 | `minio` | `data` | Ninguno (ni la API `9000` ni la consola `9001`) | Caddy no hace proxy a MinIO (`caddy/Caddyfile`): las imágenes salen por el backend en `/media/proxy`, así que `frontend` ya no depende de `minio` |
 | `postgres-test` (perfil `test`) | `default`, sin otros servicios | `127.0.0.1:55433` | Base desechable de pytest, aislada del stack |
 
