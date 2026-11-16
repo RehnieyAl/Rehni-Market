@@ -42,12 +42,11 @@ y una sola IP.
 | `caddy/Caddyfile` | Los dos sitios, encabezados de seguridad, tope del cuerpo y healthcheck. **Único** para todos los entornos |
 | `docker-compose.yml` | Servicio `frontend` (Caddy): puertos, volúmenes `caddy_data`/`caddy_config`, IP fija `172.30.0.10` y variables |
 | `RehniMarket-frontend/Dockerfile` | Etapa 1 `pnpm build` (con `VITE_API_URL`); etapa 2 `caddy:2.11-alpine` con el build en `/srv` |
-| `.env` (raíz) | Dominios, puertos, CA local, URL de la API y CORS |
-| `RehniMarket-backend/.env` | `URL_FRONTEND` (correos y CORS de errores) y `URL_BACKEND` (app móvil) |
+| `.env` (raíz, único) | Dominios, puertos, CA local, URL de la API, CORS, `URL_FRONTEND` y `URL_BACKEND` |
 | `/etc/hosts` | Resuelve `rehnimarket` y `api.rehnimarket` a `127.0.0.1` |
 
 El `Caddyfile` no se toca para cambiar de entorno: lee las variables con `{$VARIABLE:defecto}`.
-**Solo cambian los `.env`.**
+**Solo cambia el `.env`.**
 
 ---
 
@@ -93,7 +92,7 @@ CORS_EXTRA_ORIGINS=https://rehnimarket
 | `CORS_EXTRA_ORIGINS` | Orígenes permitidos por CORS (separados por coma) | `docker compose up -d backend` |
 | `DOCS_ENABLED` | Swagger/ReDoc en `https://api.rehnimarket/docs` | `docker compose up -d backend` |
 
-### 3.3 `RehniMarket-backend/.env`
+### 3.3 `URL_FRONTEND` y `URL_BACKEND` (mismo `.env`)
 
 ```bash
 URL_FRONTEND="https://rehnimarket"
@@ -203,7 +202,7 @@ docker compose exec frontend caddy reload --config /etc/caddy/Caddyfile
 
 ---
 
-## 6. Otros entornos (solo cambian los `.env`)
+## 6. Otros entornos (solo cambia el `.env`)
 
 | Variable | `localhost` (por defecto) | `rehnimarket` (local) | Producción |
 |---|---|---|---|
@@ -217,7 +216,7 @@ docker compose exec frontend caddy reload --config /etc/caddy/Caddyfile
 | `/etc/hosts` | no hace falta | `127.0.0.1 rehnimarket api.rehnimarket` | no: registros DNS `A` |
 
 En producción, los dos registros DNS deben apuntar al servidor y los puertos 80 y 443 estar
-abiertos para que Let's Encrypt valide cada dominio. Plantilla: `deploy/env.prod.example`.
+abiertos para que Let's Encrypt valide cada dominio. Valores: líneas `# producción: …` de `.env.example`.
 
 ---
 

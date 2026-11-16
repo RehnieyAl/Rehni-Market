@@ -197,7 +197,7 @@ Rehni-Market/
 ├── tests/load/               # Escenarios de pruebas de carga
 ├── docs/                     # Documentación funcional y técnica
 ├── caddy/Caddyfile           # Reverse proxy y HTTPS (único: desarrollo y producción)
-├── deploy/                   # Plantilla del .env de producción
+├── deploy/                   # Guías de despliegue (diseño de compose único)
 └── docker-compose.yml        # Compose único: desarrollo (watch), pruebas y producción
 ```
 
@@ -226,25 +226,23 @@ cd Rehni-Market
 cp .env.example .env
 ```
 
-`.env.example` trae valores de desarrollo que funcionan entre sí (BD, MinIO, JWT y una cuenta
-owner de prueba, `owner.dev@example.com`); compose los pasa a cada servicio. Son credenciales
-ficticias solo para el equipo local. Sin SMTP configurado el sistema arranca, pero no salen los
-correos de verificación.
+Toda la configuración está en **un solo `.env`** en la raíz, y `.env.example` es su única
+plantilla. Trae valores de desarrollo que funcionan entre sí (BD, MinIO, JWT y una cuenta owner
+de prueba, `owner.dev@example.com`); `minio`, `postgres`, `pgbouncer` y `backend` cargan el
+`.env` completo y Caddy solo sus variables. Son credenciales ficticias solo para el equipo
+local. Sin SMTP configurado el sistema arranca, pero no salen los correos de verificación.
+El backend fuera de Docker (`uv run`, pytest) lee el mismo `.env` de la raíz.
 
-**Producción o configuración separada por servicio:** además del `.env`, cada servicio puede
-tener su archivo propio, que manda sobre el `.env` si existe:
+**Producción:** el mismo archivo. Copiar la plantilla y cambiar cada variable que tiene debajo
+una línea `# producción: …` (dominios, URL, CORS, `DOCS_ENABLED=false`, `RUN_SEED=false` y las
+contraseñas, generadas con `openssl rand -base64 24 | tr '+/' '-_'`):
 
 ```bash
-cp .env.postgres.example .env.postgres                          # postgres y pgbouncer
-cp .env.minio.example .env.minio                                # minio y backend
-cp RehniMarket-backend/.env.example RehniMarket-backend/.env    # backend: JWT, correo, URL de la BD
-chmod 600 .env.postgres .env.minio RehniMarket-backend/.env
+cp .env.example .env && chmod 600 .env
 ```
 
-Así Postgres y MinIO no ven la clave JWT ni el correo. La contraseña de `.env.postgres` debe
-coincidir con la de `URL_DATABASE` y `URL_DATABASE_POOLED` en `RehniMarket-backend/.env`. En
-producción el `.env` sale de `deploy/env.prod.example` y no lleva secretos. Lo público
-(`VITE_*`) termina dentro del JavaScript del frontend: nunca pongas un secreto ahí.
+El `.env` nunca se sube a Git. Lo público (`VITE_*`) termina dentro del JavaScript del
+frontend: nunca pongas un secreto ahí.
 
 ### 3. Levantar todo con Docker
 
@@ -266,7 +264,7 @@ Al iniciar, el backend aplica las migraciones automáticamente (`alembic upgrade
 HTTP redirige a HTTPS. Con `localhost` Caddy firma los certificados con su CA local:
 para que el navegador no avise, confía en esa raíz una vez
 ([`caddy/readme.md`](caddy/readme.md), «Confiar en la CA local»). En producción se usa el
-mismo `docker-compose.yml` con otro `.env` ([`deploy/`](deploy/)) y Caddy pide los
+mismo `docker-compose.yml` con las líneas «producción» del `.env` aplicadas y Caddy pide los
 certificados a Let's Encrypt.
 
 ### Desarrollo local
