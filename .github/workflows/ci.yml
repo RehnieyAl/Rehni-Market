@@ -70,8 +70,9 @@ jobs:
           enable-cache: true
           cache-dependency-glob: RehniMarket-backend/uv.lock
 
+      # --no-build: solo wheels, sin ejecutar scripts de instalación de paquetes (Sonar S8541).
       - name: Instalar dependencias
-        run: uv sync --group dev --frozen
+        run: uv sync --group dev --frozen --no-build
 
       - name: Lint (ruff)
         run: uv run --no-sync ruff check .
