@@ -1114,3 +1114,50 @@ BIBLIOGRAFIA = [
     "Virtuales de Aprendizaje.",
     "IEEE Computer Society (2001). IEEE 1063-2001 Standard for Software User Documentation.",
 ]
+
+
+# ------------------------------------------------------------------ 10
+# Va después del capítulo 9 (sus tablas de mensajes se agregan en generar_manuales.py).
+SECCIONES_FINALES = [
+    (1, "10", "Preguntas frecuentes", [
+        P("Preguntas de los tres perfiles sobre los flujos descritos en el capítulo 7. Si la respuesta no "
+          "resuelve el caso, acudir a la mesa de ayuda (capítulo 8)."),
+        SUB("1. Comprador · No me llegó el código de verificación del correo. ¿Qué hago?"),
+        P("Revisar la carpeta de correo no deseado. El código vence a los 5 minutos y se puede pedir otro con "
+          "«Reenviar código» cuando pasen 60 segundos; solo el último código enviado es válido (numeral 5.1)."),
+        SUB("2. Todos los perfiles · Olvidé mi contraseña."),
+        P("En el inicio de sesión oprimir «¿Olvidaste tu contraseña?», escribir el correo y usar el código que "
+          "llega para crear una contraseña nueva. El código vence a los 15 minutos (numeral 5.4)."),
+        SUB("3. Comprador · Pagué una recarga de RehniCoin y no veo el saldo."),
+        P("La recarga no es automática: «Recargar RehniCoins» abre WhatsApp con la solicitud y un administrador "
+          "acredita el saldo después de verificar el pago. Si ya se confirmó el pago y el saldo no aparece en "
+          "«Movimientos», reportarlo a la mesa de ayuda (numeral 7.1.6)."),
+        SUB("4. Comprador · Compré productos de dos empresas y aparecen dos pedidos."),
+        P("Es lo esperado: se genera un pedido por empresa, cada uno con su estado y su envío. El cobro en "
+          "RehniCoin es uno solo por el total (numeral 7.1.4)."),
+        SUB("5. Comprador · ¿Puedo cancelar un pedido?"),
+        P("Solo en estado «Pendiente» o «Pagado», con «Cancelar pedido». El valor regresa a RehniCoin y el stock "
+          "se repone. Cuando la empresa ya lo envió, no se puede cancelar; si llega con problemas, se pide una "
+          "devolución al recibirlo (numeral 7.1.5)."),
+        SUB("6. Comprador · ¿Cómo devuelvo un producto?"),
+        P("En un pedido «Entregado», oprimir «Solicitar devolución» en el producto y escribir un motivo de 5 a "
+          "500 caracteres. Si la empresa la aprueba, el valor del producto regresa a RehniCoin; si la rechaza, "
+          "se muestra su motivo (numeral 7.1.5)."),
+        SUB("7. Empresa · Al iniciar sesión aparece «Certificado no válido»."),
+        P("El administrador pidió un certificado de Cámara de Comercio nuevo. Oprimir «Actualizar certificado», "
+          "ingresar el correo y la contraseña de la empresa y subir el PDF; la empresa vuelve a revisión "
+          "(numeral 7.2.5, paso 4)."),
+        SUB("8. Empresa · ¿Por qué tengo que crear variantes si mi producto es uno solo?"),
+        P("La variante es lo que se vende: tiene su precio, su stock y sus imágenes. El producto no "
+          "aparece en la tienda mientras no tenga al menos una variante con stock. Para un producto único basta una variante con «Agregar» (numeral 7.2.2)."),
+        SUB("9. Administrador · Me equivoqué en el valor de una recarga."),
+        P("En «Últimas recargas» oprimir «Corregir recarga» e indicar la cantidad correcta y el motivo. Cada "
+          "recarga se corrige una sola vez y la corrección no puede dejar el saldo en negativo. El máximo por "
+          "recarga es de 10.000.000 RC (numeral 7.3.7)."),
+        SUB("10. Administrador y propietario · ¿Cómo convierto una cuenta en administrador?"),
+        P("En «Usuarios», «Ver usuario» → «Editar información» → «Cambio de rol». El rol de una empresa no se "
+          "puede cambiar y solo un propietario puede asignar el rol propietario o modificar una cuenta "
+          "propietario. Las liquidaciones a empresas también son exclusivas del propietario (numerales 7.3.3 "
+          "y 7.3.8)."),
+    ]),
+]

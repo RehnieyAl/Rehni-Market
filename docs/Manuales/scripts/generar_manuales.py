@@ -404,7 +404,8 @@ def manual_usuario() -> Documento:
                                  ("tabla", ["Mensaje", "Dónde aparece", "Causa", "Acción a seguir"], filas,
                                   [4.4, 2.4, 2.6, 2.6])])
                for num, titulo, filas in cu.TABLAS_ERRORES]
-    secciones = [(n, num, t, expandir(b)) for n, num, t, b in cu.SECCIONES] + errores
+    secciones = ([(n, num, t, expandir(b)) for n, num, t, b in cu.SECCIONES] + errores
+                 + [(n, num, t, expandir(b)) for n, num, t, b in cu.SECCIONES_FINALES])
     doc.prenumerar(secciones)
 
     def pintar(entradas):

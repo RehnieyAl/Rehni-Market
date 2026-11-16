@@ -430,7 +430,7 @@ class Detalle:
         t = self.c.add_table(rows=1, cols=1)
         t.style = self.doc.styles[T_RECUADRO]
         celda = t.rows[0].cells[0]
-        lineas = [f"[CAPTURA PENDIENTE] Figura {numero}. {titulo}", f"Archivo: {archivo}", "Plataforma: web",
+        lineas = [f"[PENDIENTE: captura desde la URL de producción] Figura {numero}. {titulo}", f"Archivo: {archivo}", "Plataforma: web",
                   f"Perfil y cuenta: {perfil}", f"Ruta o pantalla: {ruta}", f"Estado que debe mostrar: {estado}",
                   f"Qué resaltar: {resaltar}"]
         for k, l in enumerate(lineas):
