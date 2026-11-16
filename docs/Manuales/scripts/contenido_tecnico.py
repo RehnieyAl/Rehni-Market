@@ -195,6 +195,12 @@ SECCIONES_INICIO = [
           "en api.<dominio>, los dos con HTTPS. El backend usa PgBouncer para el tráfico normal y conexión "
           "directa a PostgreSQL para las migraciones, guarda archivos en MinIO y envía correos por un servidor "
           "SMTP configurable."),
+        P("Los contenedores se reparten en dos redes de Docker: edge (172.30.0.0/24) con Caddy y el backend, y "
+          "data (172.30.1.0/24) con el backend, PgBouncer, PostgreSQL y MinIO. Caddy no pertenece a data, así "
+          "que no puede llegar a la base de datos ni a MinIO; el backend es el único servicio en las dos. Solo "
+          "Caddy publica puertos hacia 0.0.0.0 (80 y 443). Si el backend se reinicia, Caddy retiene las "
+          "peticiones hasta 30 s (lb_try_duration) en lugar de responder 502 y comprueba /health/database cada "
+          "5 s. La prueba está en scripts/verificar-redes.sh."),
         IMG("diagramas/png/arquitectura.png", "Arquitectura del sistema", "arquitectura"),
     ]),
     (1, "4", "Administración de usuarios", [
@@ -266,15 +272,15 @@ STACK = [
 
 SERVICIOS = [
     ["frontend (rehni-frontend)", "Caddy 2.11 con el build de React en /srv; proxy de la API. IP fija "
-     "172.30.0.10", "80, 443 y 443/udp", "128 MB / 0,5 CPU"],
+     "172.30.0.10 en la red edge", "80, 443 y 443/udp", "128 MB / 0,5 CPU"],
     ["backend (rehni-backend)", "FastAPI con Uvicorn (3 workers); aplica alembic upgrade head al iniciar",
-     "127.0.0.1:8000 (BACKEND_BIND)", "1 GB / 4 CPU"],
-    ["pgbouncer (pgbouncer_pool)", "Pool de conexiones en modo transaction", "Solo red interna (6432)",
+     "127.0.0.1:8000 (BACKEND_BIND); redes edge y data", "1 GB / 4 CPU"],
+    ["pgbouncer (pgbouncer_pool)", "Pool de conexiones en modo transaction", "Solo red data (6432)",
      "128 MB / 1 CPU"],
-    ["postgres (rehni-postgres)", "PostgreSQL 17", "127.0.0.1:5433 (POSTGRES_PORT)", "768 MB / 3 CPU"],
-    ["minio (rehni-minio)", "Almacenamiento de objetos, bucket uploads", "Solo red interna (9000)",
+    ["postgres (rehni-postgres)", "PostgreSQL 17", "127.0.0.1:5433 (POSTGRES_BIND, POSTGRES_PORT); red data", "768 MB / 3 CPU"],
+    ["minio (rehni-minio)", "Almacenamiento de objetos, bucket uploads", "Solo red data (9000; consola 9001 sin publicar)",
      "256 MB / 0,5 CPU"],
-    ["postgres-test (perfil test)", "PostgreSQL desechable en tmpfs para pytest", "127.0.0.1:55433", "—"],
+    ["postgres-test (perfil test)", "PostgreSQL desechable en tmpfs para pytest", "127.0.0.1:55433; red default aislada", "—"],
 ]
 
 VARIABLES = [
@@ -293,8 +299,9 @@ VARIABLES = [
      "https://localhost (plantilla); https://rehnimarket con los dominios locales"],
     ["DOCS_ENABLED", ".env (raíz)", "Activa Swagger (/docs), ReDoc y /openapi.json", "false"],
     ["BACKEND_BIND / BACKEND_PORT", ".env (raíz)", "Interfaz y puerto de la API directa sin Caddy; "
-     "docker-compose.yml usa 127.0.0.1 si no se define", "0.0.0.0 en la plantilla local; 127.0.0.1 en producción / 8000"],
-    ["POSTGRES_PORT", ".env (raíz)", "Puerto de PostgreSQL en 127.0.0.1 del host", "5433"],
+     "docker-compose.yml usa 127.0.0.1 si no se define", "127.0.0.1 (0.0.0.0 solo mientras se prueba la app móvil en la red local) / 8000"],
+    ["POSTGRES_BIND / POSTGRES_PORT", ".env (raíz)", "Interfaz y puerto de PostgreSQL en el host; nunca 0.0.0.0. "
+     "En el servidor: docker compose exec o túnel SSH", "127.0.0.1 / 5433"],
     ["UVICORN_WORKERS", ".env (raíz)", "Procesos de Uvicorn (1 a 16)", "3"],
     ["FORWARDED_ALLOW_IPS", ".env (raíz)", "IP de la que se acepta X-Forwarded-For: solo Caddy",
      "172.30.0.10"],
@@ -460,19 +467,18 @@ SECCIONES_PLATAFORMA = [
           "frontend se usa `pnpm dev` en el host (http://localhost:5173)."),
         SUB("Comprobación de los servicios"),
         P("Salida de `docker compose ps --format 'table {{.Name}}\\t{{.Service}}\\t{{.Status}}\\t{{.Ports}}'` "
-          "con el stack completo en ejecución, tomada del entorno local el 13/11/2026 (se omiten las direcciones "
+          "con el stack completo en ejecución, tomada del entorno local el 16/11/2026 (se omiten las direcciones "
           "IPv6 [::]; los tiempos cambian en cada equipo). Todos los servicios deben quedar en «healthy». "
-          "PgBouncer escucha en 6432 y MinIO en 9000 solo dentro de la red de Docker, por eso no aparecen "
-          "publicados. La columna del backend depende de BACKEND_BIND: 0.0.0.0 en la plantilla local "
-          "(.env.example) y 127.0.0.1 en producción (deploy/env.prod.example), que se muestra como "
-          "127.0.0.1:8000->8000/tcp."),
-        CODE("NAME             SERVICE     STATUS                     PORTS\n"
-             "pgbouncer_pool   pgbouncer   Up 38 minutes (healthy)    5432/tcp\n"
-             "rehni-backend    backend     Up 38 minutes (healthy)    0.0.0.0:8000->8000/tcp\n"
-             "rehni-frontend   frontend    Up 38 minutes (healthy)    0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp,\n"
-             "                                                        0.0.0.0:443->443/udp, 2019/tcp\n"
-             "rehni-minio      minio       Up 38 minutes (healthy)\n"
-             "rehni-postgres   postgres    Up 38 minutes (healthy)    127.0.0.1:5433->5432/tcp"),
+          "PgBouncer escucha en 6432 y MinIO en 9000 solo dentro de la red data de Docker, por eso no aparecen "
+          "publicados. Solo Caddy publica en 0.0.0.0; el backend queda en 127.0.0.1 (BACKEND_BIND) y "
+          "PostgreSQL en 127.0.0.1 (POSTGRES_BIND). bash scripts/verificar-redes.sh comprueba las dos redes."),
+        CODE("NAME             SERVICE     STATUS                    PORTS\n"
+             "pgbouncer_pool   pgbouncer   Up 7 minutes (healthy)    5432/tcp\n"
+             "rehni-backend    backend     Up 6 minutes (healthy)    127.0.0.1:8000->8000/tcp\n"
+             "rehni-frontend   frontend    Up 7 minutes (healthy)    0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp,\n"
+             "                                                       0.0.0.0:443->443/udp, 2019/tcp\n"
+             "rehni-minio      minio       Up 7 minutes (healthy)\n"
+             "rehni-postgres   postgres    Up 7 minutes (healthy)    127.0.0.1:5433->5432/tcp"),
     ]),
     (2, "6.5", "Correo SMTP configurable", [
         P("El backend envía los códigos de verificación y recuperación y las notificaciones de pedidos, "

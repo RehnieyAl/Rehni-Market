@@ -28,8 +28,8 @@ Rehni-Market es una plataforma de comercio electrónico que permite a los usuari
 
 | Servicio (contenedor) | Tecnología | Función | Puerto en el servidor |
 |---|---|---|---|
-| `rehni-frontend` | Caddy 2.11 + build de React 19 (Vite) | Sirve el frontend y actúa como reverse proxy de la API | 80 (HTTP, redirige a HTTPS) y 443 (HTTPS), `docker-compose.yml:232-234` (`HTTP_PORT` / `HTTPS_PORT`; sección 4.5) |
-| `rehni-backend` | FastAPI sobre Python 3.13 y Uvicorn | API REST; al arrancar aplica las migraciones de Alembic (`docker-compose.yml:168`) | 8000 (`docker-compose.yml:170`; en producción solo en `127.0.0.1`) |
+| `rehni-frontend` | Caddy 2.11 + build de React 19 (Vite) | Sirve el frontend y actúa como reverse proxy de la API | 80 (HTTP, redirige a HTTPS) y 443 (HTTPS), `docker-compose.yml:265-267` (`HTTP_PORT` / `HTTPS_PORT`; sección 4.5) |
+| `rehni-backend` | FastAPI sobre Python 3.13 y Uvicorn | API REST; al arrancar aplica las migraciones de Alembic (`docker-compose.yml:197`) | 8000 (`docker-compose.yml:199`; en producción solo en `127.0.0.1`) |
 | `pgbouncer_pool` | PgBouncer | Pool de conexiones entre la API y PostgreSQL | No se publica |
 | `rehni-postgres` | PostgreSQL 17 | Base de datos relacional | No se publica |
 | `rehni-minio` | MinIO | Almacenamiento de imágenes y archivos (bucket `uploads`) | No se publica |
@@ -50,8 +50,8 @@ Licencias: del archivo de licencia o metadato de la imagen o paquete, o del repo
 |---|---|---|---|---|
 | Ubuntu Server | Sistema operativo del servidor de producción | 24.04 LTS | Obra agregada: cada paquete con su propia licencia; descarga y actualizaciones gratuitas (sección 1.3) | No |
 | PostgreSQL | Base de datos relacional | 17.10 (`postgres:17-alpine`) | PostgreSQL License («PostgreSQL is released under the PostgreSQL License», <https://www.postgresql.org/about/licence/>) | No |
-| PgBouncer | Pool de conexiones | 1.26.0 (`edoburu/pgbouncer:latest`, `docker-compose.yml:84`) | ISC (`COPYRIGHT` del repositorio oficial, «ISC License», <https://github.com/pgbouncer/pgbouncer/blob/master/COPYRIGHT>; también el metadato `apk` de la imagen: `license: ISC`, aunque registra el paquete 1.25.2 y el binario es 1.26.0) | No |
-| MinIO | Almacenamiento de objetos/archivos | RELEASE.2026-10-23T20-06-51Z (imagen de Chainguard `cgr.dev/chainguard/minio`, fijada por digest, `docker-compose.yml:19`; `minio/minio` ya no se puede descargar de Docker Hub) | AGPLv3 (Chainguard la construye desde el código de MinIO) | No |
+| PgBouncer | Pool de conexiones | 1.26.0 (`edoburu/pgbouncer:latest`, `docker-compose.yml:104`) | ISC (`COPYRIGHT` del repositorio oficial, «ISC License», <https://github.com/pgbouncer/pgbouncer/blob/master/COPYRIGHT>; también el metadato `apk` de la imagen: `license: ISC`, aunque registra el paquete 1.25.2 y el binario es 1.26.0) | No |
+| MinIO | Almacenamiento de objetos/archivos | RELEASE.2026-10-23T20-06-51Z (imagen de Chainguard `cgr.dev/chainguard/minio`, fijada por digest, `docker-compose.yml:22`; `minio/minio` ya no se puede descargar de Docker Hub) | AGPLv3 (Chainguard la construye desde el código de MinIO) | No |
 | Caddy | Servidor web y reverse proxy (contenedor `frontend`) | v2.11.7 (`caddy:2.11-alpine`, `RehniMarket-frontend/Dockerfile:22`) | Apache-2.0 (etiqueta `org.opencontainers.image.licenses` de la imagen) | No |
 | Python | Runtime del backend | 3.13.14 (`python:3.13-slim`, `RehniMarket-backend/Dockerfile:1`) | PSF License v2 (`/usr/local/lib/python3.13/LICENSE.txt` de la imagen `python:3.13-slim`, L73: «PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2») | No |
 | uv | Gestor de dependencias del backend | 0.11.29 (`ghcr.io/astral-sh/uv:latest`, `RehniMarket-backend/Dockerfile:5`) | MIT o Apache-2.0, a elección («uv is licensed under either of … Apache License, Version 2.0 … MIT license … at your option», <https://github.com/astral-sh/uv>) | No |
@@ -452,13 +452,13 @@ La evidencia anterior (respaldo `2026-08-31_16-59`, «≈ 30 segundos») se reem
 | Componente | Tipo de hosting | Proveedor candidato | Justificación |
 |---|---|---|---|
 | Frontend + Caddy | VPS | <!-- PENDIENTE: proveedor del VPS (decisión del responsable; con plan y precio de la sección 5.4) --> | Caddy y el build de React van en el mismo contenedor (`frontend`), que es el único punto de entrada y termina el TLS de los dos dominios en producción (sección 4.5) |
-| Backend (API) | VPS | <!-- PENDIENTE: mismo proveedor del VPS --> | Uvicorn con varios workers (`UVICORN_WORKERS`, `docker-compose.yml:158`), PgBouncer y MinIO al lado: necesita control del servidor |
-| PostgreSQL + PgBouncer | VPS (contenedor), como hoy; alternativa gestionada | Contenedor en el VPS; gestionada: Neon o Supabase (free tier) | En el VPS: control total, con PgBouncer y la memoria ya ajustados (`docker-compose.yml:39-133`). Gestionada: parches, respaldos y disponibilidad los pone el proveedor, con límites de conexiones y almacenamiento del free tier |
+| Backend (API) | VPS | <!-- PENDIENTE: mismo proveedor del VPS --> | Uvicorn con varios workers (`UVICORN_WORKERS`, `docker-compose.yml:187`), PgBouncer y MinIO al lado: necesita control del servidor |
+| PostgreSQL + PgBouncer | VPS (contenedor), como hoy; alternativa gestionada | Contenedor en el VPS; gestionada: Neon o Supabase (free tier) | En el VPS: control total, con PgBouncer y la memoria ya ajustados (`docker-compose.yml:53-159`). Gestionada: parches, respaldos y disponibilidad los pone el proveedor, con límites de conexiones y almacenamiento del free tier |
 | MinIO (imágenes) | VPS (contenedor) | <!-- PENDIENTE: mismo proveedor del VPS --> | Almacén de objetos propio. Se sirve por el backend (`/media/proxy`), no se expone |
 
 Alternativa en servidor propio (VM Ubuntu Server 24.04 LTS del laboratorio o del cliente):
 
-Los cinco servicios de `docker-compose.yml` (`frontend` con Caddy, `backend`, `pgbouncer`, `postgres` y `minio`) corren en el mismo servidor con Docker Compose. Caddy es el único punto de entrada: sirve el frontend en `<dominio>` y hace de reverse proxy de la API en `api.<dominio>`. PgBouncer y MinIO no tienen puertos publicados y solo son accesibles dentro de la red de Docker. PostgreSQL se publica **solo en el loopback** del servidor, `127.0.0.1:${POSTGRES_PORT:-5433}` (`docker-compose.yml:50`), nunca en `0.0.0.0`: desde fuera solo se llega por túnel SSH (`ssh -L 5433:127.0.0.1:5433 …`), para administrarla con DbSchema o `psql` sin abrir el puerto en el firewall. El servidor usa el **mismo `docker-compose.yml` y el mismo `caddy/Caddyfile`** que el desarrollo; solo cambia el `.env` de la raíz, que sale de `deploy/env.prod.example`: `SITE_ADDRESS=<dominio>`, `API_ADDRESS=api.<dominio>`, `HTTP_PORT=80`, `HTTPS_PORT=443`, `CADDY_LOCAL_CERTS` vacía, `VITE_API_URL=https://api.<dominio>`, `CORS_EXTRA_ORIGINS=https://<dominio>`, `DOCS_ENABLED=false` y `BACKEND_BIND=127.0.0.1`. Con un dominio público, Caddy pide los certificados a Let's Encrypt (sin correo ACME: Let's Encrypt no lo exige). El procedimiento completo está en la sección 5.
+Los cinco servicios de `docker-compose.yml` (`frontend` con Caddy, `backend`, `pgbouncer`, `postgres` y `minio`) corren en el mismo servidor con Docker Compose. Caddy es el único punto de entrada: sirve el frontend en `<dominio>` y hace de reverse proxy de la API en `api.<dominio>`. PgBouncer y MinIO no tienen puertos publicados y solo son accesibles dentro de la red `data` de Docker, junto con el backend y PostgreSQL; Caddy solo está en la red `edge` (sección 7.6). PostgreSQL se publica **solo en el loopback** del servidor, `${POSTGRES_BIND:-127.0.0.1}:${POSTGRES_PORT:-5433}` (`docker-compose.yml:67`), nunca en `0.0.0.0`: desde fuera solo se llega por túnel SSH (`ssh -L 5433:127.0.0.1:5433 …`), para administrarla con DbSchema o `psql` sin abrir el puerto en el firewall. El servidor usa el **mismo `docker-compose.yml` y el mismo `caddy/Caddyfile`** que el desarrollo; solo cambia el `.env` de la raíz, que sale de `deploy/env.prod.example`: `SITE_ADDRESS=<dominio>`, `API_ADDRESS=api.<dominio>`, `HTTP_PORT=80`, `HTTPS_PORT=443`, `CADDY_LOCAL_CERTS` vacía, `VITE_API_URL=https://api.<dominio>`, `CORS_EXTRA_ORIGINS=https://<dominio>`, `DOCS_ENABLED=false` y `BACKEND_BIND=127.0.0.1`. Con un dominio público, Caddy pide los certificados a Let's Encrypt (sin correo ACME: Let's Encrypt no lo exige). El procedimiento completo está en la sección 5.
 
 ### 4.2 Dominio
 
@@ -489,7 +489,8 @@ Navegador ──► Caddy ───┤                                    /asset
 1. El usuario abre `https://<dominio>` y recibe el frontend.
 2. El JavaScript del frontend llama a `https://api.<dominio>/...` (`VITE_API_URL`). Es otro origen, así que el navegador pregunta antes por CORS y el backend responde que ese origen está permitido (`CORS_EXTRA_ORIGINS`).
 3. **HTTPS termina en Caddy** (`caddy/Caddyfile`, el mismo en local y en producción), que redirige HTTP → HTTPS y reenvía la petición al backend (`backend:8000`) sin cambiar la ruta. En local los certificados los firma la CA de Caddy; en producción, Let's Encrypt (sección 4.5).
-4. El backend consulta PostgreSQL a través de PgBouncer (`pgbouncer:6432` → `postgres:5432`) y lee las imágenes de MinIO, que entrega al navegador por `/media/proxy`. Todo ocurre dentro de la red privada de Compose (las migraciones de Alembic, al arrancar el backend, se conectan directamente a `postgres:5432`).
+4. El backend consulta PostgreSQL a través de PgBouncer (`pgbouncer:6432` → `postgres:5432`) y lee las imágenes de MinIO, que entrega al navegador por `/media/proxy`. Caddy y el backend hablan por la red `edge`; el backend, PgBouncer, PostgreSQL y MinIO, por la red `data`, a la que Caddy no pertenece (sección 7.6). Las migraciones de Alembic, al arrancar el backend, se conectan directamente a `postgres:5432`.
+5. Si el backend se está reiniciando, Caddy retiene la petición hasta 30 s (`lb_try_duration`) en lugar de responder `502`, y un health check activo a `/health/database` cada 5 s lo saca de rotación si pierde la base de datos (`caddy/Caddyfile`, incidencia [#48](https://github.com/RehnieyAl/Rehni-Market/issues/48)).
 
 Puertos abiertos a Internet (servidor de producción):
 
@@ -499,7 +500,7 @@ Puertos abiertos a Internet (servidor de producción):
 | 443 | Caddy (HTTPS) | Acceso al frontend y a la API |
 | 22 | SSH | Administración y transferencia de archivos; limitado por firewall |
 
-El puerto 8000 del backend no se abre: en producción se publica solo en `127.0.0.1` (`BACKEND_BIND=127.0.0.1`, `docker-compose.yml:170`). PostgreSQL tampoco: se publica en `127.0.0.1:5433` (`docker-compose.yml:50`), solo en el loopback, y se administra por túnel SSH.
+El puerto 8000 del backend no se abre: en producción se publica solo en `127.0.0.1` (`BACKEND_BIND=127.0.0.1`, `docker-compose.yml:199`). PostgreSQL tampoco: se publica en `127.0.0.1:5433` (`docker-compose.yml:67`), solo en el loopback, y se administra por túnel SSH.
 
 ### 4.5 Reverse proxy
 
@@ -608,7 +609,7 @@ Las peticiones por Caddy llegan con la IP del cliente que vio Caddy (la de la LA
 | 4 | Prerrequisitos | Ver sección 1 (ficha técnica): matriz 1.5 y `scripts/verificar-requisitos.sh` con código de salida `0` |
 | 5 | Preparación | Ubuntu Server 24.04 LTS con Docker Engine y el plugin Compose instalados según la guía oficial (paso 2 de la instalación inicial), usuario de despliegue en el grupo `docker`, DNS apuntando al servidor (sección 4.3) y puertos 80/443/22 abiertos (sección 4.4) |
 | 6 | Procedimiento | Ver sección 5.2 (instalación inicial, actualización y rollback) |
-| 7 | Migración de datos | Esquema: el backend aplica `alembic upgrade head` al arrancar (`docker-compose.yml:168`). Datos del sistema anterior: sección 2 (`scripts/migracion/migrar.sh`) |
+| 7 | Migración de datos | Esquema: el backend aplica `alembic upgrade head` al arrancar (`docker-compose.yml:197`). Datos del sistema anterior: sección 2 (`scripts/migracion/migrar.sh`) |
 | 8 | Verificación | `docker compose ps` con los cinco servicios `healthy`, `curl` a `/health/database` y `scripts/smoke-test.sh` con `BASE_URL` (sección 5.2) |
 | 9 | Rollback | Ver sección 5.2 (rollback) y la clasificación de migraciones |
 | 10 | Cronograma | Ver tabla de abajo |
@@ -623,7 +624,7 @@ Las peticiones por Caddy llegan con la IP del cliente que vio Caddy (la de la LA
 | Verificación (`ps`, `/health/database`, `smoke-test.sh`) | <!-- PENDIENTE: medir en el servidor --> | |
 | Migración de datos del sistema anterior (si aplica, sección 2) | Opciones 3-5 de `migrar.sh`: 12,2 s en el ensayo del 04/11/2026 sobre una copia (sección 2.9). Sin contar la apertura y el cierre de la ventana | |
 
-**Punto de no retorno:** el arranque del backend con la nueva imagen, porque ejecuta `alembic upgrade head` (`docker-compose.yml:168`). Si la versión trae una migración **no compatible hacia atrás** (tabla de clasificación de la sección 5.2), volver a la versión anterior exige restaurar el respaldo previo (sección 3.4) y se pierde lo escrito después de él.
+**Punto de no retorno:** el arranque del backend con la nueva imagen, porque ejecuta `alembic upgrade head` (`docker-compose.yml:197`). Si la versión trae una migración **no compatible hacia atrás** (tabla de clasificación de la sección 5.2), volver a la versión anterior exige restaurar el respaldo previo (sección 3.4) y se pierde lo escrito después de él.
 
 ### 5.1 Proceso de liberación
 
@@ -632,7 +633,7 @@ Las peticiones por Caddy llegan con la IP del cliente que vio Caddy (la de la LA
 | Pruebas en verde | CI del repositorio (`.github/workflows/ci.yml`: ruff, `alembic upgrade head` en BD vacía, pytest, lint, typecheck y vitest del frontend) | Todos los checks pasan en `main` |
 | Notas de versión | Actualizar `CHANGELOG.md` de la raíz (sección `[1.0.0]`) | Entrada de la versión con fecha |
 | Etiqueta | `git tag -a v1.0.0 -m "RehniMarket 1.0.0"` + `git push origin v1.0.0` <!-- PENDIENTE: la crea el responsable --> | Etiqueta visible en GitHub |
-| Imágenes | `git checkout v1.0.0` y `docker compose build` | `docker image ls` lista `rehni-market-backend` y `rehni-market-frontend` (nombres de `docker-compose.yml:139` y `:204`) |
+| Imágenes | `git checkout v1.0.0` y `docker compose build` | `docker image ls` lista `rehni-market-backend` y `rehni-market-frontend` (nombres de `docker-compose.yml:164` y `:238`) |
 
 Esquema de versiones: SemVer `MAJOR.MINOR.PATCH`. MAJOR: cambio incompatible de la API o una migración no compatible hacia atrás; MINOR: funcionalidad nueva compatible; PATCH: corrección sin cambios de contrato.
 
@@ -659,11 +660,11 @@ Enlace al `CHANGELOG.md`: [`CHANGELOG.md`](../CHANGELOG.md) (raíz). El detalle 
 └── scripts/                      ← verificar-requisitos, respaldar, smoke-test, restore…
 ```
 
-Los volúmenes de datos (`postgres_data`, `minio_data`, `caddy_data`, `caddy_config`, `backend_venv`) los gestiona Docker (`docker-compose.yml:294-299`), no viven en `/opt`. Los cuatro `.env` están excluidos de Git (`.gitignore:10-11`, `RehniMarket-backend/.gitignore:5-7`).
+Los volúmenes de datos (`postgres_data`, `minio_data`, `caddy_data`, `caddy_config`, `backend_venv`) los gestiona Docker (`docker-compose.yml:334-339`), no viven en `/opt`. Los cuatro `.env` están excluidos de Git (`.gitignore:10-11`, `RehniMarket-backend/.gitignore:5-7`).
 
 **Por qué no hay `deploy/compose.prod.yaml` ni `deploy/Caddyfile`.** La rúbrica de la semana 4 nombra como instrumento del Producto la «carpeta `deploy/`» (`bc-implantacion/bootcamp/week-04-despliegue_local_y_nube/rubrica-evaluacion.md:64-65`), y el proyecto de la semana pide una «Carpeta `deploy/` con `compose.prod.yaml`, configuración del proxy, `env.prod.example`» (`3-proyecto/README.md:13-14`). RehniMarket cubre lo mismo con **un solo compose y un solo Caddyfile** para todos los ambientes: lo que cambia entre el equipo de desarrollo y el servidor (dominios, puertos, emisor de los certificados, interfaz de la API, CORS) son variables del `.env`, y su plantilla de producción es `deploy/env.prod.example`. Así no hay dos configuraciones que mantener en paralelo (antes el bloque del frontend estaba copiado en `caddy/Caddyfile` y `deploy/Caddyfile`), y lo que se prueba en local es exactamente lo que corre en el servidor. La «configuración del proxy» es `caddy/Caddyfile` y `deploy/README.md` explica el diseño. <!-- PENDIENTE: confirmar con el instructor que el compose único cumple el entregable deploy/ (PENDIENTES-s1-s4.md) -->
 
-**Imagen de MinIO y permisos del volumen.** `minio/minio` ya no se puede descargar de Docker Hub; el compose usa la imagen de Chainguard fijada por digest (`docker-compose.yml:19`), que corre como el usuario `65532` (nonroot). Un volumen `minio_data` nuevo funciona sin más (la imagen crea `/data` con permisos `777`). Un volumen creado antes por `minio/minio` (archivos de `root`) falla al arrancar con `unable to rename (/data/.minio.sys/tmp -> …) file access denied` y `FATAL Unable to initialize backend: Unable to write to the backend` (comprobado el 04/11/2026 en desarrollo). Se corrige **una vez** cambiando el dueño de los datos, sin ejecutar MinIO como root:
+**Imagen de MinIO y permisos del volumen.** `minio/minio` ya no se puede descargar de Docker Hub; el compose usa la imagen de Chainguard fijada por digest (`docker-compose.yml:22`), que corre como el usuario `65532` (nonroot). Un volumen `minio_data` nuevo funciona sin más (la imagen crea `/data` con permisos `777`). Un volumen creado antes por `minio/minio` (archivos de `root`) falla al arrancar con `unable to rename (/data/.minio.sys/tmp -> …) file access denied` y `FATAL Unable to initialize backend: Unable to write to the backend` (comprobado el 04/11/2026 en desarrollo). Se corrige **una vez** cambiando el dueño de los datos, sin ejecutar MinIO como root:
 
 ```bash
 docker compose stop minio
@@ -681,19 +682,19 @@ Solo nombres y ejemplos ficticios; los valores reales se crean en el servidor. P
 
 | Archivo | Variable | Propósito | Ejemplo (ficticio) |
 |---|---|---|---|
-| `.env` | `SITE_ADDRESS` / `API_ADDRESS` | Dominios que sirve Caddy. Obligatorios en producción: sin ellos se usan los de desarrollo, `localhost` / `api.localhost` (`docker-compose.yml:215-216`). Con un dominio público Caddy pide los certificados a Let's Encrypt (sin correo ACME) | `<dominio>` / `api.<dominio>` |
-| `.env` | `HTTP_PORT` / `HTTPS_PORT` | Puertos de Caddy en el host, iguales dentro del contenedor (`docker-compose.yml:232-234`). En producción 80 y 443: Let's Encrypt los necesita | `80` / `443` |
+| `.env` | `SITE_ADDRESS` / `API_ADDRESS` | Dominios que sirve Caddy. Obligatorios en producción: sin ellos se usan los de desarrollo, `localhost` / `api.localhost` (`docker-compose.yml:247-248`). Con un dominio público Caddy pide los certificados a Let's Encrypt (sin correo ACME) | `<dominio>` / `api.<dominio>` |
+| `.env` | `HTTP_PORT` / `HTTPS_PORT` | Puertos de Caddy en el host, iguales dentro del contenedor (`docker-compose.yml:265-267`). En producción 80 y 443: Let's Encrypt los necesita | `80` / `443` |
 | `.env` | `CADDY_LOCAL_CERTS` | `local_certs` fuerza la CA local de Caddy (solo la prueba de la sección 4.5). **En producción, vacía** | (vacía) |
-| `.env` (opcional) | `POSTGRES_PORT` | Puerto de PostgreSQL publicado **solo en `127.0.0.1`** (`docker-compose.yml:50`; por defecto `5433`), para administrarla por túnel SSH | `5433` |
-| `.env` | `BACKEND_BIND` / `BACKEND_PORT` | Interfaz y puerto del host donde se publica la API (`docker-compose.yml:170`; por defecto `127.0.0.1` / `8000`) | `127.0.0.1` / `8000` |
+| `.env` (opcional) | `POSTGRES_BIND` / `POSTGRES_PORT` | Interfaz y puerto donde se publica PostgreSQL (`docker-compose.yml:67`; por defecto `127.0.0.1` / `5433`). **Nunca `0.0.0.0`**: en el servidor se administra con `docker compose exec postgres psql …` o por túnel SSH (`deploy/env.prod.example`) | `127.0.0.1` / `5433` |
+| `.env` | `BACKEND_BIND` / `BACKEND_PORT` | Interfaz y puerto del host donde se publica la API (`docker-compose.yml:199`; por defecto `127.0.0.1` / `8000`) | `127.0.0.1` / `8000` |
 | `.env` | `VITE_API_URL` | URL de la API dentro del build del frontend (pública) | `https://api.<dominio>` |
 | `.env` | `VITE_REHNIMARKET_WHATSAPP` | Número de contacto mostrado en el frontend (público) | `+57**********` |
 | `.env` | `DOCS_ENABLED` | Swagger en `/docs` | `false` |
 | `.env` | `CORS_EXTRA_ORIGINS` | Orígenes permitidos por CORS, separados por comas | `https://<dominio>` |
 | `.env` (opcional) | `BACKEND_CPUS` / `POSTGRES_CPUS` | Límite de CPU de los contenedores `backend` y `postgres` (por defecto `4` y `3`). Docker no crea un contenedor cuyo límite supere los núcleos del servidor: en una VM de 2 vCPU (p. ej. Azure `Standard_B2s`) usar `2` y `1.5` | `2` / `1.5` |
-| `.env` (opcional) | `UVICORN_WORKERS` | Procesos de Uvicorn del backend (`docker-compose.yml:158`, por defecto `3`; `--workers` en `:168`). `app/Config.py:65` lo valida entre 1 y 16 | `3` |
-| `.env` | `FORWARDED_ALLOW_IPS` | Proxy del que Uvicorn acepta `X-Forwarded-For` para ver la IP real del cliente, con la que cuenta el rate limit: **solo Caddy**, con IP fija `172.30.0.10` (`docker-compose.yml`, servicio `frontend` y red `default` `172.30.0.0/24`; `--forwarded-allow-ips` en el `command` del backend). Un rango como `172.16.0.0/12` incluiría la pasarela de Docker (`172.30.0.1`), por la que entra todo lo que llega al `:8000` desde el propio servidor: cualquier proceso del servidor podría falsear su IP (comprobado el 04/11/2026, sección 4.5) | `172.30.0.10` |
-| `.env` (opcional) | `PGBOUNCER_MAX_CLIENT_CONN` | Clientes que acepta PgBouncer (`docker-compose.yml:99`) y que el backend usa para validar su presupuesto (`:167`). Por defecto `1200` en compose (`200` en `app/Config.py:73`, fuera de compose). Debe ser ≥ (`DB_POOL_SIZE` + `DB_MAX_OVERFLOW`) × `UVICORN_WORKERS` = 150 con los valores por defecto, o el backend no arranca (`app/Config.py:82`) | `1200` |
+| `.env` (opcional) | `UVICORN_WORKERS` | Procesos de Uvicorn del backend (`docker-compose.yml:187`, por defecto `3`; `--workers` en `:197`). `app/Config.py:65` lo valida entre 1 y 16 | `3` |
+| `.env` | `FORWARDED_ALLOW_IPS` | Proxy del que Uvicorn acepta `X-Forwarded-For` para ver la IP real del cliente, con la que cuenta el rate limit: **solo Caddy**, con IP fija `172.30.0.10` (`docker-compose.yml`, servicio `frontend` y red `edge` `172.30.0.0/24`; `--forwarded-allow-ips` en el `command` del backend). Un rango como `172.16.0.0/12` incluiría la pasarela de Docker (`172.30.0.1`), por la que entra todo lo que llega al `:8000` desde el propio servidor: cualquier proceso del servidor podría falsear su IP (comprobado el 04/11/2026, sección 4.5) | `172.30.0.10` |
+| `.env` (opcional) | `PGBOUNCER_MAX_CLIENT_CONN` | Clientes que acepta PgBouncer (`docker-compose.yml:122`) y que el backend usa para validar su presupuesto (`:196`). Por defecto `1200` en compose (`200` en `app/Config.py:73`, fuera de compose). Debe ser ≥ (`DB_POOL_SIZE` + `DB_MAX_OVERFLOW`) × `UVICORN_WORKERS` = 150 con los valores por defecto, o el backend no arranca (`app/Config.py:82`) | `1200` |
 | `.env.postgres` | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | Credenciales de PostgreSQL (también las lee PgBouncer). La contraseña se genera con `openssl rand -hex 32` | `rehni_app` / `CAMBIAR_generar_con_openssl_rand_hex_32` / `rehnimarket` |
 | `.env.minio` | `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` | Credenciales de MinIO (también las lee el backend). La contraseña se genera con `openssl rand -hex 32` | `rehni_minio` / `CAMBIAR_generar_con_openssl_rand_hex_32` |
 | `RehniMarket-backend/.env` | `URL_DATABASE` | Conexión directa a PostgreSQL (la usa Alembic); la contraseña es `POSTGRES_PASSWORD` de `.env.postgres` | `postgresql://rehni_app:CAMBIAR_generar_con_openssl_rand_hex_32@postgres:5432/rehnimarket` |
@@ -984,11 +985,13 @@ Archivos y carpetas sensibles:
 | 22 | Sí (solo IP del administrador en el NSG: [PENDIENTE]) | Administración con llave |
 | 80 | Sí | Let's Encrypt (HTTP-01) y redirección a HTTPS |
 | 443 (TCP y UDP) | Sí | HTTPS y HTTP/3 (Caddy) |
-| 5433 | No | PostgreSQL publicado solo en `127.0.0.1` (`docker-compose.yml`, servicio `postgres`) |
+| 5433 | No | PostgreSQL publicado solo en `127.0.0.1` (`POSTGRES_BIND`, `docker-compose.yml:67`) |
+| 6432, 9000, 9001 | No | PgBouncer y MinIO (API y consola) no se publican en el host (sección 7.6) |
 | 8000 | No | API publicada solo en `127.0.0.1` por defecto (`BACKEND_BIND`) |
 
-Evidencia de que la base de datos no está expuesta: [PENDIENTE: `docker compose ps` en la VM y
-`nc -zv <ip-publica> 5433` desde otro equipo, que debe fallar].
+Evidencia de que la base de datos no está expuesta: en desarrollo, `scripts/verificar-redes.sh`
+(sección 7.6). En la VM: [PENDIENTE: `docker compose ps` y `bash scripts/verificar-redes.sh` en la
+VM, y `nc -zv <ip-publica> 5433` desde otro equipo, que debe fallar].
 
 ### 7.3 Roles de la base de datos
 
@@ -1034,6 +1037,73 @@ RehniMarket-mobile/.env
 
 Ese archivo solo contiene `EXPO_PUBLIC_API_URL` (URL pública, no es secreto) y no está en
 `main`. Pendiente pasar un escáner (`gitleaks detect`) antes de la entrega: [PENDIENTE].
+
+### 7.6 Segmentación de redes de Docker
+
+`docker-compose.yml` separa los servicios en dos redes (`docker-compose.yml:324-333`). El único
+servicio que publica puertos hacia `0.0.0.0` es `frontend` (Caddy); los que guardan datos
+(PostgreSQL, PgBouncer y MinIO) no están en la red de Caddy, así que un fallo en el proxy no
+da acceso directo a la base de datos ni al almacenamiento.
+
+```mermaid
+flowchart LR
+  I((Internet)) -->|"80 / 443 TCP y UDP"| F
+  subgraph edge["red edge · 172.30.0.0/24"]
+    F["frontend (Caddy)<br/>172.30.0.10"]
+    B["backend :8000"]
+  end
+  subgraph data["red data · 172.30.1.0/24"]
+    B2["backend"]
+    G["pgbouncer :6432"]
+    P[("postgres :5432")]
+    M[("minio :9000")]
+  end
+  F -->|"reverse_proxy<br/>X-Forwarded-For"| B
+  B -.-|"mismo contenedor"| B2
+  B2 --> G --> P
+  B2 -->|"Alembic"| P
+  B2 -->|"/media/proxy"| M
+```
+
+| Servicio | Redes | Puertos en el host | Motivo |
+|---|---|---|---|
+| `frontend` (Caddy) | `edge` (IP fija `172.30.0.10`) | `0.0.0.0:80`, `0.0.0.0:443` TCP y UDP | Único punto de entrada. La IP fija es la única de la que el backend acepta `X-Forwarded-For` (`FORWARDED_ALLOW_IPS=172.30.0.10`) |
+| `backend` | `edge` y `data` | `127.0.0.1:8000` (`BACKEND_BIND`) | Recibe a Caddy por `edge` y llega a PgBouncer, PostgreSQL y MinIO por `data` |
+| `pgbouncer` | `data` | Ninguno | Solo lo usa el backend (`URL_DATABASE_POOLED`) |
+| `postgres` | `data` | `127.0.0.1:5433` (`POSTGRES_BIND` / `POSTGRES_PORT`) | Lo usan PgBouncer y Alembic. En el host, solo loopback para DbSchema; en el servidor, `docker compose exec` o túnel SSH (`deploy/env.prod.example`) |
+| `minio` | `data` | Ninguno (ni la API `9000` ni la consola `9001`) | Caddy no hace proxy a MinIO (`caddy/Caddyfile`): las imágenes salen por el backend en `/media/proxy`, así que `frontend` ya no depende de `minio` |
+| `postgres-test` (perfil `test`) | `default`, sin otros servicios | `127.0.0.1:55433` | Base desechable de pytest, aislada del stack |
+
+`data` no se marca `internal: true`: Docker no publicaría `127.0.0.1:5433` en el host y el
+backend perdería la salida a Internet (SMTP) si solo estuviera en esa red.
+
+**Evidencia (2026-11-16, desarrollo).** `bash scripts/verificar-redes.sh` con el stack recreado
+(`docker compose down` sin `-v` y `docker compose up -d --build`; `GET /public/products` siguió
+devolviendo `total=786`): 44 pruebas, 0 fallan. Salida completa en
+`docs/evidencias/verificacion-redes-2026-11-16.txt`. Resumen:
+
+| Tipo | Prueba | Resultado |
+|---|---|:---:|
+| Positiva | Host → Caddy: `https://rehnimarket/` y `https://api.rehnimarket/health/database` responden 200 | ✅ |
+| Positiva | Caddy → backend → MinIO: imagen de producto por `/media/proxy` (200 `image/png`) | ✅ |
+| Positiva | Backend → PgBouncer → PostgreSQL y backend → PostgreSQL: `SELECT 1` | ✅ |
+| Positiva | Backend → MinIO: TCP a `minio:9000` y listado del bucket `uploads` | ✅ |
+| Positiva | PgBouncer → PostgreSQL: `SELECT 1` | ✅ |
+| Positiva | Host → PostgreSQL en `127.0.0.1:5433` | ✅ |
+| Positiva | Resiliencia: `docker compose restart backend` sin ningún 502/503/504 por Caddy, y el sitio vuelve solo | ✅ |
+| Negativa | Caddy → `postgres:5432`, `pgbouncer:6432`, `minio:9000` y `minio:9001`, por nombre y por IP | ✅ (no conecta) |
+| Negativa | Host → consola de MinIO `127.0.0.1:9001` y API `127.0.0.1:9000` | ✅ (no responde) |
+| Negativa | Ninguna ruta de Caddy lista buckets ni abre la consola de MinIO | ✅ |
+| Negativa | PostgreSQL, PgBouncer, MinIO y backend no escuchan en `0.0.0.0` (`docker port` y `ss -tln`) | ✅ |
+
+**Caídas del frontend ↔ backend (incidencia [#48](https://github.com/RehnieyAl/Rehni-Market/issues/48)).**
+Antes del cambio, un sondeo cada 0,5 s a `/health/database` por Caddy durante
+`docker compose restart backend` dio 84 × 200 y 6 × 502 (≈ 3 s), con
+`dial tcp 172.30.0.2:8000: connect: connection refused` en el log de Caddy. Se descartaron
+memoria (`RestartCount=0`, `OOMKilled=false`, `oom_kill 0`; pico de 468 MiB de 1 GiB con 3
+workers), CORS (preflight 200) y rate limit (el backend ve la IP del cliente por
+`X-Forwarded-For` solo desde Caddy). La causa era el `reverse_proxy` sin reintentos; se corrigió
+con `lb_try_duration` y el health check activo (sección 4.4).
 
 ### 3. Plan de respaldo final (complemento de la sección 3)
 

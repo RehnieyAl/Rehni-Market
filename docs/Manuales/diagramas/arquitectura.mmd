@@ -2,11 +2,15 @@ flowchart TB
   W["Navegador del usuario<br/>Aplicación web React 19 + Vite"]
   subgraph Servidor["Servidor: Docker Compose (un solo docker-compose.yml)"]
     direction TB
-    C["Caddy 2.11 · rehni-frontend · IP 172.30.0.10<br/>HTTPS automático<br/>&lt;dominio&gt; → build de React<br/>api.&lt;dominio&gt; → reverse_proxy al backend"]
-    B["API REST FastAPI · rehni-backend<br/>Uvicorn, 3 workers"]
-    G["PgBouncer · pgbouncer_pool<br/>modo transaction"]
-    P[("PostgreSQL 17 · rehni-postgres<br/>publicado solo en 127.0.0.1")]
-    O[("MinIO (Chainguard) · rehni-minio<br/>bucket uploads")]
+    subgraph Edge["red edge · 172.30.0.0/24"]
+      C["Caddy 2.11 · rehni-frontend · IP 172.30.0.10<br/>único servicio con puertos en 0.0.0.0 (80/443)<br/>&lt;dominio&gt; → build de React<br/>api.&lt;dominio&gt; → reverse_proxy al backend (reintentos 30 s)"]
+      B["API REST FastAPI · rehni-backend<br/>Uvicorn, 3 workers · en edge y data"]
+    end
+    subgraph Data["red data · 172.30.1.0/24 (Caddy no pertenece)"]
+      G["PgBouncer · pgbouncer_pool<br/>modo transaction"]
+      P[("PostgreSQL 17 · rehni-postgres<br/>publicado solo en 127.0.0.1")]
+      O[("MinIO (Chainguard) · rehni-minio<br/>bucket uploads · sin puertos publicados")]
+    end
   end
   LE["Let's Encrypt<br/>(certificados en producción)"]
   Mail["Servidor SMTP configurable<br/>587 STARTTLS · 465 SSL · 2525"]
