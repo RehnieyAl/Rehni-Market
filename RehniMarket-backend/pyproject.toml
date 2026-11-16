@@ -95,8 +95,9 @@ skip_empty = true
 precision = 2
 # Gate de CI (ratchet: solo sube). Con branch = true este porcentaje es el
 # COMBINADO líneas+ramas de coverage.py, no el de líneas. Línea base 2026-11-03:
-# combinado 60,29 % (líneas 65,91 %, ramas 28,62 %).
-fail_under = 60
+# combinado 60,29 % (líneas 65,91 %, ramas 28,62 %). Subido a 64 el 2026-11-16
+# (combinado medido 64,89 %, docs/pruebas/evidencias/2026-11-16_backend_coverage.json).
+fail_under = 64
 
 [tool.coverage.json]
 output = "coverage.json"

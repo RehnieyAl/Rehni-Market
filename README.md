@@ -220,23 +220,36 @@ cd Rehni-Market
 
 ### 2. Configurar variables de entorno
 
+**Desarrollo local (lo mínimo, gate de entrega):**
+
 ```bash
-cp .env.example .env                                            # Compose: dominios, puertos, VITE_*
+cp .env.example .env
+```
+
+`.env.example` trae valores de desarrollo que funcionan entre sí (BD, MinIO, JWT y una cuenta
+owner de prueba, `owner.dev@example.com`); compose los pasa a cada servicio. Son credenciales
+ficticias solo para el equipo local. Sin SMTP configurado el sistema arranca, pero no salen los
+correos de verificación.
+
+**Producción o configuración separada por servicio:** además del `.env`, cada servicio puede
+tener su archivo propio, que manda sobre el `.env` si existe:
+
+```bash
 cp .env.postgres.example .env.postgres                          # postgres y pgbouncer
 cp .env.minio.example .env.minio                                # minio y backend
 cp RehniMarket-backend/.env.example RehniMarket-backend/.env    # backend: JWT, correo, URL de la BD
 chmod 600 .env.postgres .env.minio RehniMarket-backend/.env
 ```
 
-Cada servicio recibe solo su archivo: Postgres y MinIO no ven la clave JWT ni el correo.
-La contraseña de `.env.postgres` debe coincidir con la de `URL_DATABASE` y
-`URL_DATABASE_POOLED` en `RehniMarket-backend/.env`. Lo público (`VITE_*`) va en `.env` y
-termina dentro del JavaScript del frontend: nunca pongas un secreto ahí.
+Así Postgres y MinIO no ven la clave JWT ni el correo. La contraseña de `.env.postgres` debe
+coincidir con la de `URL_DATABASE` y `URL_DATABASE_POOLED` en `RehniMarket-backend/.env`. En
+producción el `.env` sale de `deploy/env.prod.example` y no lleva secretos. Lo público
+(`VITE_*`) termina dentro del JavaScript del frontend: nunca pongas un secreto ahí.
 
 ### 3. Levantar todo con Docker
 
 ```bash
-docker compose up -d --build
+docker compose up -d --build --wait
 ```
 
 Al iniciar, el backend aplica las migraciones automáticamente (`alembic upgrade head`).
@@ -247,6 +260,7 @@ Al iniciar, el backend aplica las migraciones automáticamente (`alembic upgrade
 | API (a través de Caddy) | https://api.localhost |
 | API directa, sin Caddy (app móvil en la red local) | http://localhost:8000 |
 | Documentación interactiva (Swagger, con `DOCS_ENABLED=true`) | https://api.localhost/docs |
+| Especificación OpenAPI (importable en Postman) | [`docs/api/openapi.json`](docs/api/openapi.json) ([cómo usarla](docs/api/README.md)) |
 | PostgreSQL (solo en 127.0.0.1, p. ej. DbSchema) | localhost:5433 |
 
 HTTP redirige a HTTPS. Con `localhost` Caddy firma los certificados con su CA local:
@@ -342,15 +356,22 @@ k6 run scripts/load_test.k6.js
 
 ## Plan de implantación
 
-Documentos en [`docs/plan de implantacion - Rehnimarket/`](<docs/plan de implantacion - Rehnimarket/>).
+Documento consolidado (versión 1.0, semana 9): [`docs/plan-implantacion.md`](docs/plan-implantacion.md).
 
-| # | Punto | Semana | Criterio | Documento |
-|---|---|---|---|---|
-| 1 | Ficha técnica y requisitos mínimos | 1 | CE-1, CE-2 | [Ficha técnica](<docs/plan de implantacion - Rehnimarket/1) Ficha tecnica y requisitos minimos - Semana 1 (CE-1, CE2).md>) |
-| 2 | Plan de migración de datos | 2 y 5 | CE-3 | [Plan de migración](<docs/plan de implantacion - Rehnimarket/2) Plan de migración de datos  Semanas 2 y 5 (CE-3).md>) |
-| 3 | Plan de respaldo | 2 y 6 | CE-4 | [Plan de respaldo](<docs/plan de implantacion - Rehnimarket/3) Plan de respaldo — Semanas 2 y 6 (CE-4).md>) |
-| 4 | Hosting y dominio | 3 | CE-1 | [Hosting y dominio](<docs/plan de implantacion - Rehnimarket/4) Hosting y dominio — Semana 3 (CE-1).md>) |
-| 5 | Plan de instalación y despliegue | 2 y 4 | CE-1, CE-5 | [Instalación y despliegue](<docs/plan de implantacion - Rehnimarket/5) Plan de instalación y despliegue — Semanas 2 y 4 (CE-1, CE-5).md>) |
+| # | Punto | Semana | Criterio |
+|---|---|---|---|
+| 1 | Ficha técnica y requisitos mínimos | 1 | CE-1, CE-2 |
+| 2 | Plan de migración de datos | 2 y 5 | CE-3 |
+| 3 | Plan de respaldo | 2 y 6 | CE-4 |
+| 4 | Hosting y dominio | 3 | CE-1 |
+| 5 | Plan de instalación y despliegue | 2 y 4 | CE-1, CE-5 |
+| 6 | Configuración y verificación | 5 | CE-1 |
+| 7 | Seguridad, usuarios y permisos | 6 | CE-1 |
+| 8 | Pipeline de despliegue y monitoreo | 7 | CE-1, CE-5 |
+| 9 | Mantenimiento, soporte y capacitación | 8 | CE-5 |
+| 10 | Aceptación y entrega ([`docs/aceptacion/`](docs/aceptacion/)) | 9 | CE-1 a CE-5 |
+
+Pruebas: [`docs/estrategia-pruebas.md`](docs/estrategia-pruebas.md) y [`docs/pruebas/REGISTRO.md`](docs/pruebas/REGISTRO.md).
 
 
 

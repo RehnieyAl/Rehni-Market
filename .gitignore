@@ -13,9 +13,22 @@ CLAUDE.md
 *.csv
 .csv
 .ruff_cache/
+# Manuales: el PDF se exporta desde OnlyOffice a partir del .docx (no se versiona)
+docs/Manuales/*.pdf
+docs/Manuales/scripts/.venv/
+docs/Manuales/scripts/__pycache__/
+docs/Manuales/**/.~lock.*
+docs/Manuales/.~lock.*
+docs/Manuales/_generados-descartados/
+docs/Manuales/_piloto/
+.claude/
+CLAUDE.md
 
-# Guías e informe del taller SENA (material local, no se versiona)
-docs/sena/
+
+# Guías del taller SENA (material de terceros, no se versiona); el informe .md sí,
+# porque es evidencia del plan de mejora (criterio 11 de la lista T7)
+docs/sena/*
+!docs/sena/*.md
 
 # Repositorios git antiguos anidados (respaldo local, no se versionan)
 *.git.old/

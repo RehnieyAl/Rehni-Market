@@ -172,7 +172,7 @@ Desde `2-practicas/laboratorio/`:
 
 Sobre **RehniMarket**, no sobre el laboratorio. Guía del curso:
 `3-proyecto/starter/entregable-s03-hosting-y-dominio.md`. Se completa la **sección 4** del plan:
-`docs/plan de implantacion - Rehnimarket/4) Hosting y dominio — Semana 3 (CE-1).md`.
+`docs/plan-implantacion.md` (sección 4).
 
 > **Estado:** la configuración del reverse proxy ya está hecha y probada (20/10/2026): Nginx se
 > reemplazó por Caddy, y el frontend y la API quedaron en **URL separadas**. Este paso explica
@@ -332,7 +332,7 @@ Si la nueva configuración tiene un error, Caddy lo rechaza y sigue con la anter
 
 La prueba con los nombres elegidos (`rehnimarket` / `api.rehnimarket`, CA local forzada con
 `CADDY_LOCAL_CERTS` y `curl --resolve`) y su salida están en la §4.5 del plan
-(`docs/plan de implantacion - Rehnimarket/4) Hosting y dominio — Semana 3 (CE-1).md`). La
+(`docs/plan-implantacion.md` (sección 4)). La
 prueba de humo contra `https://localhost` está en la §5.2.
 
 ### 6.7.1 Confiar en la CA local

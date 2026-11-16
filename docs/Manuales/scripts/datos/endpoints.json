@@ -1,0 +1,1274 @@
+{
+ "version": "2.6.0",
+ "operations": [
+  {
+   "method": "POST",
+   "path": "/auth/register-user",
+   "summary": "Registeruser",
+   "tags": [
+    "authentication"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/auth/register-company",
+   "summary": "Registercompany",
+   "tags": [
+    "authentication"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/auth/verify-email-user",
+   "summary": "Verify Email",
+   "tags": [
+    "authentication"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/auth/change-email",
+   "summary": "Change Email",
+   "tags": [
+    "authentication"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/auth/resend-verification-code",
+   "summary": "Resend Verification Code",
+   "tags": [
+    "authentication"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/auth/login-user",
+   "summary": "Login User",
+   "tags": [
+    "authentication"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/auth/forgot-password-user",
+   "summary": "Forgot Password",
+   "tags": [
+    "authentication"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/auth/reset-password-user",
+   "summary": "Reset Password",
+   "tags": [
+    "authentication"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/auth/refresh",
+   "summary": "Refresh Token",
+   "tags": [
+    "authentication"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/auth/me",
+   "summary": "Get Me",
+   "tags": [
+    "authentication"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/auth/me",
+   "summary": "Update Me",
+   "tags": [
+    "authentication"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/auth/me/photo",
+   "summary": "Update Me Photo",
+   "tags": [
+    "authentication"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/health/database",
+   "summary": "Healthdatabase",
+   "tags": [
+    "health"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/health/internet",
+   "summary": "Healthinternet",
+   "tags": [
+    "health"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/dashboard/me",
+   "summary": "Dashboard",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/dashboard/my-profile",
+   "summary": "Get Info Company",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/company/dashboard/upgrade-my-profile",
+   "summary": "Upgrade Info Company Profile",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/company/dashboard/patch-media-logo-banner",
+   "summary": "Patch Media",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/company/certificate",
+   "summary": "Replace Certificate",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/company/certificate/update",
+   "summary": "Update Certificate With Credentials",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/company/dashboard/create-product",
+   "summary": "Create Product",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/dashboard/get-my-products",
+   "summary": "Get My Product",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/dashboard/products-summary",
+   "summary": "Get Products Summary",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/dashboard/get-my-product/{product_id}",
+   "summary": "Get My Product Detail",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/company/dashboard/update-my-product/{idProduct}",
+   "summary": "Upgrade My Product",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/company/dashboard/change-status-my-product/{product_id}",
+   "summary": "Change Status My Product",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/company/dashboard/delete-my-product/{product_id}",
+   "summary": "Delete My Product",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/company/dashboard/products/{product_id}/variants",
+   "summary": "Create Variant",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/dashboard/products/{product_id}/variants",
+   "summary": "List Variants",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/dashboard/products/{product_id}/variants/{variant_id}",
+   "summary": "Get Variant Detail",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/company/dashboard/products/{product_id}/variants/{variant_id}",
+   "summary": "Update Variant",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/company/dashboard/products/{product_id}/variants/{variant_id}",
+   "summary": "Delete Variant",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/dashboard/products/{product_id}/variants/{variant_id}/images",
+   "summary": "List Variant Images",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/company/dashboard/products/{product_id}/variants/{variant_id}/images",
+   "summary": "Upload Variant Images",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/company/dashboard/products/{product_id}/variants/{variant_id}/images/{image_id}",
+   "summary": "Delete Variant Image",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/company/dashboard/products/{product_id}/variants/{variant_id}/images/{image_id}/main",
+   "summary": "Set Main Variant Image",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/dashboard/products/{product_id}/variants/{variant_id}/attribute-values",
+   "summary": "List Variant Attribute Values",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/company/dashboard/products/{product_id}/variants/{variant_id}/attribute-values",
+   "summary": "Set Variant Attribute Values",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/dashboard/orders",
+   "summary": "Get Company Orders",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/dashboard/orders/status-counts",
+   "summary": "Get Company Orders Status Counts",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/dashboard/orders/{order_id}",
+   "summary": "Get Company Order Detail",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/company/dashboard/orders/{order_id}/status",
+   "summary": "Update Company Order Status",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/dashboard/shipping-carriers",
+   "summary": "Get Company Shipping Carriers",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/dashboard/returns",
+   "summary": "Get Company Returns",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/dashboard/returns/{return_id}",
+   "summary": "Get Company Return Detail",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/company/dashboard/returns/{return_id}",
+   "summary": "Decide Company Return",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/company/dashboard/orders/{order_id}/shipping",
+   "summary": "Set Company Order Shipping",
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/dashboard/products/{product_id}/available-attributes",
+   "summary": "Get Available Attributes",
+   "tags": [
+    "company - product architecture"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/dashboard/products/{product_id}/product-attributes",
+   "summary": "Get Product Attributes",
+   "tags": [
+    "company - product architecture"
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/company/dashboard/products/{product_id}/product-attributes",
+   "summary": "Set Product Attributes",
+   "tags": [
+    "company - product architecture"
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/company/dashboard/products/{product_id}/discount",
+   "summary": "Set Product Discount",
+   "tags": [
+    "company - product architecture"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/company/dashboard/products/{product_id}/variants/generate",
+   "summary": "Generate Variant Combinations",
+   "tags": [
+    "company - product architecture"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/media/proxy",
+   "summary": "Proxy File",
+   "tags": []
+  },
+  {
+   "method": "GET",
+   "path": "/public/catalogs",
+   "summary": "Get Catalogs",
+   "tags": [
+    "public"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/public/catalogs/{catalog_id}/specifications",
+   "summary": "Get Catalog Specifications",
+   "tags": [
+    "public"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/public/catalogs/{catalog_id}/attributes",
+   "summary": "Get Catalog Attributes",
+   "tags": [
+    "public"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/public/colors",
+   "summary": "Get Colors",
+   "tags": [
+    "public"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/public/advertisements",
+   "summary": "Get Advertisements",
+   "tags": [
+    "public"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/public/products",
+   "summary": "Get Public Products",
+   "tags": [
+    "public"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/public/products/daily",
+   "summary": "Get Daily Products",
+   "tags": [
+    "public"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/public/products/offers",
+   "summary": "Get Public Offers",
+   "tags": [
+    "public"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/public/products/new",
+   "summary": "Get Public New Products",
+   "tags": [
+    "public"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/public/products/{product_id}",
+   "summary": "Get Public Product Detail",
+   "tags": [
+    "public"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/public/products/{product_id}/reviews",
+   "summary": "Get Public Product Reviews",
+   "tags": [
+    "public"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/public/company/{company_id}",
+   "summary": "Get Public Company",
+   "tags": [
+    "public"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/public/company/{company_id}/products",
+   "summary": "Get Public Company Products",
+   "tags": [
+    "public"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/public/company/{company_id}/rating",
+   "summary": "Get Public Company Rating",
+   "tags": [
+    "public"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/dashboard/statistics",
+   "summary": "Get Admin Dashboard Statistics",
+   "tags": [
+    "Admin"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/dashboard/recent-activities",
+   "summary": "Get Recent Activities",
+   "tags": [
+    "Admin"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/dashboard/recent-users",
+   "summary": "Get Recent Users",
+   "tags": [
+    "Admin"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/dashboard/catalogs/{catalog_id}/catalog-attributes",
+   "summary": "List Catalog Attributes",
+   "tags": [
+    "Admin - Catalog Attributes"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/admin/dashboard/catalogs/{catalog_id}/catalog-attributes",
+   "summary": "Create Catalog Attribute",
+   "tags": [
+    "Admin - Catalog Attributes"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/dashboard/catalog-attributes/{attribute_id}",
+   "summary": "Get Catalog Attribute",
+   "tags": [
+    "Admin - Catalog Attributes"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/dashboard/catalog-attributes/{attribute_id}",
+   "summary": "Update Catalog Attribute",
+   "tags": [
+    "Admin - Catalog Attributes"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/dashboard/catalog-attributes/{attribute_id}",
+   "summary": "Delete Catalog Attribute",
+   "tags": [
+    "Admin - Catalog Attributes"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/dashboard/catalog-attributes/{attribute_id}/status",
+   "summary": "Set Catalog Attribute Status",
+   "tags": [
+    "Admin - Catalog Attributes"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/admin/dashboard/catalog-attributes/{attribute_id}/options",
+   "summary": "Create Attribute Option",
+   "tags": [
+    "Admin - Catalog Attributes"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/dashboard/catalog-attribute-options/{option_id}",
+   "summary": "Update Attribute Option",
+   "tags": [
+    "Admin - Catalog Attributes"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/dashboard/catalog-attribute-options/{option_id}",
+   "summary": "Delete Attribute Option",
+   "tags": [
+    "Admin - Catalog Attributes"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/dashboard/get-companies",
+   "summary": "Get Company",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/dashboard/get-company/{company_id}",
+   "summary": "Get Admin Company",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/dashboard/companies/certificate/status/{company_id}",
+   "summary": "Update Certificate Status",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/dashboard/company/status/{company_id}",
+   "summary": "Update Company Status",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/dashboard/get-colors",
+   "summary": "Get Colors",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/admin/dashboard/create-color",
+   "summary": "Create Color",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/dashboard/update-color/{color_id}",
+   "summary": "Update Color",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/dashboard/delete-color/{color_id}",
+   "summary": "Delete Color",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/dashboard/get-catalogs",
+   "summary": "Get Catalogs",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/admin/dashboard/created-catalogs",
+   "summary": "Create Catalog",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/dashboard/update-catalogs/{catalog_id}",
+   "summary": "Update Catalog",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/dashboard/change-status-catalog/{catalog_id}",
+   "summary": "Change Catalog Status",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/dashboard/delete-catalogs/{catalog_id}",
+   "summary": "Delete Catalog",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/dashboard/get-specifications/{catalog_id}",
+   "summary": "Get Specifications",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/admin/dashboard/created-specifications/{catalog_id}",
+   "summary": "Create Specification",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/dashboard/update-specifications/{specification_id}",
+   "summary": "Update Specification",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/dashboard/delete-specifications/{specification_id}",
+   "summary": "Delete Specification",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/dashboard/get-advertisements",
+   "summary": "Get Advertisements",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/dashboard/get-advertisement/{advertisement_id}",
+   "summary": "Get Advertisement",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/admin/dashboard/create-advertisement",
+   "summary": "Create Advertisement",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/dashboard/update-advertisement/{advertisement_id}",
+   "summary": "Update Advertisement",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/dashboard/change-status-advertisement/{advertisement_id}",
+   "summary": "Change Advertisement Status",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/admin/dashboard/delete-advertisement/{advertisement_id}",
+   "summary": "Delete Advertisement",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/dashboard/get-users",
+   "summary": "Get All Users",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/dashboard/get-user/{user_id}",
+   "summary": "Get User By Id",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/dashboard/user/update-information/{user_id}",
+   "summary": "Update Admin User",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/dashboard/user/update-information/status/{user_id}",
+   "summary": "Toggle Admin User Status",
+   "tags": [
+    "admin"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/admin/wallet/recharge",
+   "summary": "Recharge Wallet By Email",
+   "tags": [
+    "admin",
+    "wallet"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/wallet/history",
+   "summary": "Get Recharge History",
+   "tags": [
+    "admin",
+    "wallet"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/admin/wallet/recharge/{transaction_id}/correction",
+   "summary": "Correct Recharge",
+   "tags": [
+    "admin",
+    "wallet"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/admin/payouts/generate",
+   "summary": "Generate Payout",
+   "tags": [
+    "admin",
+    "payouts"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/payouts",
+   "summary": "Get Payouts",
+   "tags": [
+    "admin",
+    "payouts"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/payouts/available-periods",
+   "summary": "Get Available Periods",
+   "tags": [
+    "admin",
+    "payouts"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/payouts/preview",
+   "summary": "Get Payout Preview",
+   "tags": [
+    "admin",
+    "payouts"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/payouts/{payout_id}",
+   "summary": "Get Payout Detail",
+   "tags": [
+    "admin",
+    "payouts"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/payouts/{payout_id}/pay",
+   "summary": "Pay Payout",
+   "tags": [
+    "admin",
+    "payouts"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/reports",
+   "summary": "Get Reports",
+   "tags": [
+    "admin",
+    "reports"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/reports/{report_id}",
+   "summary": "Get Report",
+   "tags": [
+    "admin",
+    "reports"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/reports/{report_id}/status",
+   "summary": "Update Report Status",
+   "tags": [
+    "admin",
+    "reports"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/admin/dashboard/shipping-carriers",
+   "summary": "Get Shipping Carriers",
+   "tags": [
+    "admin",
+    "shipping"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/admin/dashboard/shipping-carriers",
+   "summary": "Create Shipping Carrier",
+   "tags": [
+    "admin",
+    "shipping"
+   ]
+  },
+  {
+   "method": "PUT",
+   "path": "/admin/dashboard/shipping-carriers/{carrier_id}",
+   "summary": "Update Shipping Carrier",
+   "tags": [
+    "admin",
+    "shipping"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/admin/dashboard/shipping-carriers/{carrier_id}/status",
+   "summary": "Change Shipping Carrier Status",
+   "tags": [
+    "admin",
+    "shipping"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/cart",
+   "summary": "Get Cart",
+   "tags": [
+    "cart"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/cart/add",
+   "summary": "Add To Cart",
+   "tags": [
+    "cart"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/cart/item/{item_id}",
+   "summary": "Update Cart Item",
+   "tags": [
+    "cart"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/cart/item/{item_id}",
+   "summary": "Delete Cart Item",
+   "tags": [
+    "cart"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/cart/clear",
+   "summary": "Clear Cart",
+   "tags": [
+    "cart"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/checkout",
+   "summary": "Checkout",
+   "tags": [
+    "checkout"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/orders",
+   "summary": "Get My Orders",
+   "tags": [
+    "orders"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/orders/{order_id}",
+   "summary": "Get My Order Detail",
+   "tags": [
+    "orders"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/orders/{order_id}/cancel",
+   "summary": "Cancel My Order",
+   "tags": [
+    "orders"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/orders/{order_id}/returns",
+   "summary": "Get Order Returns",
+   "tags": [
+    "orders"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/orders/{order_id}/returns",
+   "summary": "Create Order Return",
+   "tags": [
+    "orders"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/favorites",
+   "summary": "Get Favorites",
+   "tags": [
+    "favorites"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/favorites",
+   "summary": "Add Favorite",
+   "tags": [
+    "favorites"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/favorites/{product_id}",
+   "summary": "Remove Favorite",
+   "tags": [
+    "favorites"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/addresses",
+   "summary": "Get Addresses",
+   "tags": [
+    "addresses"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/addresses",
+   "summary": "Create Address",
+   "tags": [
+    "addresses"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/addresses/{address_id}",
+   "summary": "Update Address",
+   "tags": [
+    "addresses"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/addresses/{address_id}",
+   "summary": "Delete Address",
+   "tags": [
+    "addresses"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/addresses/{address_id}/set-default",
+   "summary": "Set Default Address",
+   "tags": [
+    "addresses"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/wallet/me",
+   "summary": "Get My Wallet",
+   "tags": [
+    "wallet"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/wallet/transactions",
+   "summary": "Get My Transactions",
+   "tags": [
+    "wallet"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/wallet/recharge",
+   "summary": "Recharge Wallet",
+   "tags": [
+    "wallet"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/reviews/eligibility/{product_id}",
+   "summary": "Get Review Eligibility",
+   "tags": [
+    "reviews"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/reviews",
+   "summary": "Create Review",
+   "tags": [
+    "reviews"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/reviews/{review_id}",
+   "summary": "Update My Review",
+   "tags": [
+    "reviews"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/reviews/{review_id}",
+   "summary": "Delete My Review",
+   "tags": [
+    "reviews"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/reports",
+   "summary": "Create Report",
+   "tags": [
+    "reports"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/bank-accounts",
+   "summary": "Get Bank Accounts",
+   "tags": [
+    "company",
+    "bank-accounts"
+   ]
+  },
+  {
+   "method": "POST",
+   "path": "/company/bank-accounts",
+   "summary": "Create Bank Account",
+   "tags": [
+    "company",
+    "bank-accounts"
+   ]
+  },
+  {
+   "method": "PATCH",
+   "path": "/company/bank-accounts/{bank_account_id}",
+   "summary": "Update Bank Account",
+   "tags": [
+    "company",
+    "bank-accounts"
+   ]
+  },
+  {
+   "method": "DELETE",
+   "path": "/company/bank-accounts/{bank_account_id}",
+   "summary": "Delete Bank Account",
+   "tags": [
+    "company",
+    "bank-accounts"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/payouts",
+   "summary": "Get My Payouts",
+   "tags": [
+    "company",
+    "payouts"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/payouts/{payout_id}",
+   "summary": "Get My Payout Detail",
+   "tags": [
+    "company",
+    "payouts"
+   ]
+  },
+  {
+   "method": "GET",
+   "path": "/company/balance",
+   "summary": "Get My Balance",
+   "tags": [
+    "company",
+    "payouts"
+   ]
+  }
+ ]
+}

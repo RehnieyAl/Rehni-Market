@@ -1,0 +1,29 @@
+classDiagram
+  direction TB
+  class Wallet {
+    +uuid id
+    +uuid user_id
+    +numeric balance
+    +timestamptz created_at
+    +timestamptz updated_at
+  }
+  class WalletTransaction {
+    +uuid id
+    +uuid wallet_id
+    +wallettransactiontype type
+    +numeric amount
+    +varchar description
+    +uuid created_by
+    +uuid order_id
+    +timestamptz created_at
+    +uuid corrects_transaction_id
+  }
+  Order "0..1" --> "0..*" WalletTransaction : order_id
+  Users "0..1" --> "0..*" WalletTransaction : created_by
+  Users "1" --> "0..1" Wallet : user_id
+  WalletTransaction "0..1" --> "0..*" WalletTransaction : corrects_transaction_id
+  Wallet "1" --> "0..*" WalletTransaction : wallet_id
+  class Order
+  <<externa>> Order
+  class Users
+  <<externa>> Users

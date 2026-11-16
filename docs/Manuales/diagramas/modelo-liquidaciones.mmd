@@ -1,0 +1,29 @@
+erDiagram
+  direction TB
+  company_payouts {
+    uuid id PK
+    uuid company_id FK
+    date period_start
+    date period_end
+    numeric_14_2 gross_sales
+    numeric_5_4 commission_percentage
+    numeric_14_2 commission_amount
+    numeric_14_2 net_amount
+    payoutstatusenum payout_status
+    uuid bank_account_id FK
+    timestamptz paid_at
+    timestamptz created_at
+  }
+  rehnicoin_movements {
+    uuid id PK
+    uuid company_id FK
+    uuid payout_id FK,UK
+    numeric_14_2 amount_cop
+    numeric_14_2 rehni_coins
+    numeric_10_4 conversion_rate
+    timestamptz created_at
+  }
+  company ||--o{ company_payouts : "company_id"
+  company ||--o{ rehnicoin_movements : "company_id"
+  company_bank_accounts ||--o{ company_payouts : "bank_account_id"
+  company_payouts ||--o| rehnicoin_movements : "payout_id"

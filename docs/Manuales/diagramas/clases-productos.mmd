@@ -1,0 +1,58 @@
+classDiagram
+  direction TB
+  class Product {
+    +uuid id
+    +varchar name
+    +numeric price
+    +boolean discount_enable
+    +numeric discount_value
+    +integer stock
+    +boolean has_variants
+    +text descripcion
+    +boolean is_active
+    +timestamp created_at
+    +timestamp deleted_at
+    +uuid company_id
+    +uuid catalog_id
+    +uuid main_color_id
+    +varchar discount_type
+    +timestamp discount_starts_at
+    +timestamp discount_ends_at
+    +boolean applies_tax
+  }
+  class ProductImage {
+    +uuid id
+    +varchar url
+    +boolean is_main
+    +uuid product_id
+  }
+  class ProductSpecification {
+    +uuid id
+    +text value
+    +uuid product_id
+    +uuid specification_template_id
+  }
+  class ProductAttributeValue {
+    +uuid id
+    +uuid product_id
+    +uuid attribute_id
+    +text value
+  }
+  Catalog "1" --> "0..*" Product : catalog_id
+  CatalogAttribute "1" --> "0..*" ProductAttributeValue : attribute_id
+  ColorVariant "0..1" --> "0..*" Product : main_color_id
+  Company "1" --> "0..*" Product : company_id
+  Product "1" --> "0..*" ProductAttributeValue : product_id
+  Product "1" --> "0..*" ProductImage : product_id
+  Product "1" --> "0..*" ProductSpecification : product_id
+  SpecificationTemplate "1" --> "0..*" ProductSpecification : specification_template_id
+  class Catalog
+  <<externa>> Catalog
+  class CatalogAttribute
+  <<externa>> CatalogAttribute
+  class ColorVariant
+  <<externa>> ColorVariant
+  class Company
+  <<externa>> Company
+  class SpecificationTemplate
+  <<externa>> SpecificationTemplate

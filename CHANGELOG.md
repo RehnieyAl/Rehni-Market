@@ -11,7 +11,7 @@ implantación). El detalle histórico del backend sigue en
 ## [1.0.0] - <!-- PENDIENTE: fecha de la etiqueta v1.0.0 (la crea el responsable) -->
 
 Primera versión liberada del conjunto. Es la que cubre el plan de implantación
-(`docs/plan de implantacion - Rehnimarket/`).
+(`docs/plan-implantacion.md`).
 
 ### Incluye
 

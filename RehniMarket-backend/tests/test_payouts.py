@@ -154,7 +154,7 @@ class TestGenerate:
 
     @pytest.mark.xfail(
         strict=True,
-        reason="H-07: el duplicado solo se detecta con el periodo exacto; un periodo solapado vuelve a liquidar las mismas ventas",
+        reason="H-07 (#36): el duplicado solo se detecta con el periodo exacto; un periodo solapado vuelve a liquidar las mismas ventas",
     )
     def test_overlapping_period_does_not_pay_the_same_sales_twice(
         self, client, tokens, db, company, bank_account, delivered_sept
@@ -185,7 +185,7 @@ class TestGenerate:
 
     @pytest.mark.xfail(
         strict=True,
-        reason="H-08: una devolución aprobada se reembolsa al comprador pero su importe sigue en las ventas liquidadas a la empresa",
+        reason="H-08 (#37): una devolución aprobada se reembolsa al comprador pero su importe sigue en las ventas liquidadas a la empresa",
     )
     def test_approved_return_is_not_paid_out_to_the_company(
         self, client, tokens, db, company, bank_account, product, address, buyer_wallet

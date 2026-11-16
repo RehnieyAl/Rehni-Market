@@ -1,0 +1,52 @@
+erDiagram
+  direction LR
+  product_variants {
+    uuid id PK
+    varchar_100 name
+    numeric_10_2 price
+    integer stock
+    boolean discount_enable
+    numeric_10_2 discount_value
+    uuid product_id FK
+    uuid color_id FK
+    varchar_8 discount_type
+    timestamp discount_starts_at
+    timestamp discount_ends_at
+    varchar_64 sku
+    varchar_64 combo_key
+    timestamp deleted_at
+  }
+  product_variant_images {
+    uuid id PK
+    varchar_255 url
+    boolean is_main
+    uuid variant_id FK
+  }
+  variant_options {
+    uuid id PK
+    uuid variant_id FK
+    uuid attribute_id FK
+    uuid option_id FK
+  }
+  variant_attribute_values {
+    uuid id PK
+    uuid variant_id FK
+    uuid attribute_id FK
+    text value
+  }
+  variant_specifications {
+    uuid id PK
+    text value
+    uuid variant_id FK
+    uuid specification_template_id FK
+  }
+  catalog_attribute_options ||--o{ variant_options : "option_id"
+  catalog_attributes ||--o{ variant_attribute_values : "attribute_id"
+  catalog_attributes ||--o{ variant_options : "attribute_id"
+  color_variants |o--o{ product_variants : "color_id"
+  product_variants ||--o{ product_variant_images : "variant_id"
+  product_variants ||--o{ variant_attribute_values : "variant_id"
+  product_variants ||--o{ variant_options : "variant_id"
+  product_variants ||--o{ variant_specifications : "variant_id"
+  products ||--o{ product_variants : "product_id"
+  specification_templates ||--o{ variant_specifications : "specification_template_id"

@@ -1,0 +1,33 @@
+erDiagram
+  direction TB
+  company {
+    uuid id PK
+    varchar_50 nameCompany
+    varchar_100 addressCompany
+    text description
+    varchar_50 CompanyNIT
+    varchar_1 CompanyNITDV
+    varchar_255 CompanyLogo
+    varchar_255 CompanyBanner
+    varchar_255 CompanyCertificate
+    companycertificateenum CompanyCertificateStatus
+    boolean CompanyStatus
+    text suspension_reason
+    timestamptz created_at
+    uuid user_id FK,UK
+    text rejection_reason
+  }
+  company_bank_accounts {
+    uuid id PK
+    uuid company_id FK
+    varchar_150 account_holder
+    varchar_30 document_number
+    varchar_100 bank_name
+    bankaccounttypeenum account_type
+    varchar_40 account_number
+    boolean is_default
+    timestamptz created_at
+    timestamptz updated_at
+  }
+  company ||--o{ company_bank_accounts : "company_id"
+  users ||--o| company : "user_id"

@@ -20,4 +20,4 @@ Los secretos van en `.env.postgres`, `.env.minio` y `RehniMarket-backend/.env`
 (plantilla `RehniMarket-backend/.env.public.example`), nunca en Git.
 
 Procedimiento completo (instalación, actualización y rollback): sección 5.2 del plan de
-implantación (`docs/plan de implantacion - Rehnimarket/5) …`).
+implantación (`docs/plan-implantacion.md`, sección 5).
