@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Request,Depends, UploadFile, File, Form, Body, Query
+"""Rutas del panel admin para usuarios: listado, detalle, cambio de correo o rol y bloqueo."""
+from fastapi import APIRouter, Request, Depends, Query
 from sqlalchemy.orm import Session
 from app.database.Connection import get_db
 from uuid import UUID
@@ -47,14 +48,12 @@ def get_user_by_id(user_id: UUID,database: Session = Depends(get_db, scope="func
 def update_admin_user(request: Request,user_id: UUID,data: UpdateAdminUserRequest,database: Session = Depends(get_db, scope="function")):
 
     admin_id = request.state.user_id
-    acting_role = request.state.role
 
-    return update_admin_user_service(database,user_id,admin_id,data,acting_role)
+    return update_admin_user_service(database,user_id,admin_id,data)
 
 
 @router.patch("/dashboard/user/update-information/status/{user_id}")
 def toggle_admin_user_status(request: Request, user_id: UUID,database: Session = Depends(get_db, scope="function")):
 
     admin_id = request.state.user_id
-    acting_role = request.state.role
-    return toggle_admin_user_status_service(database=database,user_id=user_id,admin_id=admin_id,acting_role=acting_role)
+    return toggle_admin_user_status_service(database=database,user_id=user_id,admin_id=admin_id)

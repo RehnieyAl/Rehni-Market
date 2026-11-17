@@ -1,3 +1,4 @@
+"""Gestión de usuarios desde el panel admin: listado, detalle, cambio de correo o rol y bloqueo."""
 from sqlalchemy.orm import Session
 from uuid import UUID
 
@@ -34,6 +35,9 @@ from app.services.DashboardService.admin.DashboarService import (
 
 from app.models.ModelAdminActivity import AdminActivityAction
 from app.services.NasService import build_media_url
+
+# Un solo owner (#54): se crea y administra desde PostgreSQL (deploy/OWNER.md), nunca por la API.
+OWNER_ONLY_FROM_DATABASE = "La cuenta owner solo se administra desde la base de datos."
 
 
 def _profile_image_url(user) -> str | None:
@@ -125,7 +129,6 @@ def update_admin_user_service(
     user_id: UUID,
     admin_id: UUID,
     data: UpdateAdminUserRequest,
-    acting_role: str,
 ):
 
     if admin_id == user_id:
@@ -133,6 +136,13 @@ def update_admin_user_service(
             400,
             ErrorCodes.INVALID_USER,
             "No puedes modificar tu propia cuenta desde esta opción.",
+        )
+
+    if data.role == "owner":
+        return api_error(
+            403,
+            ErrorCodes.FORBIDDEN,
+            OWNER_ONLY_FROM_DATABASE,
         )
 
     user = get_user_by_id_repository(
@@ -147,11 +157,11 @@ def update_admin_user_service(
             "Usuario no encontrado.",
         )
 
-    if user.role and user.role.name == "owner" and acting_role != "owner":
+    if user.role and user.role.name == "owner":
         return api_error(
             403,
             ErrorCodes.FORBIDDEN,
-            "No tienes permisos para modificar una cuenta Owner.",
+            OWNER_ONLY_FROM_DATABASE,
         )
 
     updated = False
@@ -197,13 +207,6 @@ def update_admin_user_service(
                 400,
                 ErrorCodes.INVALID_ROLE,
                 "Una empresa no puede cambiar de rol.",
-            )
-
-        if new_role == "owner" and acting_role != "owner":
-            return api_error(
-                403,
-                ErrorCodes.FORBIDDEN,
-                "Solo un Owner puede asignar el rol Owner.",
             )
 
         role = (
@@ -252,7 +255,6 @@ def toggle_admin_user_status_service(
     database: Session,
     user_id: UUID,
     admin_id: UUID,
-    acting_role: str,
 ):
 
     if admin_id == user_id:
@@ -274,11 +276,11 @@ def toggle_admin_user_status_service(
             "Usuario no encontrado.",
         )
 
-    if user.role and user.role.name == "owner" and acting_role != "owner":
+    if user.role and user.role.name == "owner":
         return api_error(
             403,
             ErrorCodes.FORBIDDEN,
-            "No tienes permisos para bloquear o desbloquear una cuenta Owner.",
+            OWNER_ONLY_FROM_DATABASE,
         )
 
     user.isActive = not user.isActive
