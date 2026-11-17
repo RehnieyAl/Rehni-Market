@@ -11,7 +11,7 @@ FECHA_CORTA = "13/11/2026"
 PORTADA = {
     "centro": "[VERIFICAR: centro de formación]",
     "programa": "Tecnólogo en Análisis y Desarrollo de Software",
-    "ficha": "[VERIFICAR: número de ficha]",
+    "ficha": "3171618",
     "competencia": "[VERIFICAR: nombre de la competencia]",
     "instructor": "[VERIFICAR: nombre del instructor]",
     "autor": "Yeinher Algarin",
@@ -31,7 +31,6 @@ SOPORTE = {
 # está en el repositorio: son datos institucionales o de la operación en producción.
 RESPONSABLES_VERIFICAR = {
     "centro de formación": "Instructor o coordinación académica del SENA",
-    "número de ficha": "Instructor o coordinación académica del SENA",
     "nombre de la competencia": "Instructor (guía de aprendizaje vigente)",
     "nombre del instructor": "Instructor o coordinación académica del SENA",
     "correo de soporte": "Responsable del proyecto (buzón de la mesa de ayuda)",

@@ -135,14 +135,12 @@ Resaltados en amarillo como `[VERIFICAR: …]`. No están en el repositorio: los
 | Documento | Sección | Pendiente | Quién lo suministra |
 |---|---|---|---|
 | Manual de usuario | Portada | [VERIFICAR: centro de formación] | Instructor o coordinación académica del SENA |
-| Manual de usuario | Portada | [VERIFICAR: número de ficha] | Instructor o coordinación académica del SENA |
 | Manual de usuario | Portada | [VERIFICAR: nombre de la competencia] | Instructor (guía de aprendizaje vigente) |
 | Manual de usuario | Portada | [VERIFICAR: nombre del instructor] | Instructor o coordinación académica del SENA |
 | Manual de usuario | 1 | [VERIFICAR: correo de soporte] | Responsable del proyecto (buzón de la mesa de ayuda) |
 | Manual de usuario | 5 | [VERIFICAR: URL de producción, https://<dominio>] | Responsable del despliegue (dominio público en Caddy, SITE_ADDRESS) |
 | Manual de usuario | 8 | [VERIFICAR: correo de soporte] | Responsable del proyecto (buzón de la mesa de ayuda) |
 | Manual técnico | Portada | [VERIFICAR: centro de formación] | Instructor o coordinación académica del SENA |
-| Manual técnico | Portada | [VERIFICAR: número de ficha] | Instructor o coordinación académica del SENA |
 | Manual técnico | Portada | [VERIFICAR: nombre de la competencia] | Instructor (guía de aprendizaje vigente) |
 | Manual técnico | Portada | [VERIFICAR: nombre del instructor] | Instructor o coordinación académica del SENA |
 | Manual técnico | 1 | [VERIFICAR: URL de producción, https://<dominio>] | Responsable del despliegue (dominio público en Caddy, SITE_ADDRESS) |
@@ -150,6 +148,5 @@ Resaltados en amarillo como `[VERIFICAR: …]`. No están en el repositorio: los
 | Manual técnico | 6.7 | [VERIFICAR: tamaño elegido y su costo mensual frente al crédito de Azure for Students] | Responsable del proyecto |
 | Manual técnico | 8 | [VERIFICAR: correo de soporte] | Responsable del proyecto (buzón de la mesa de ayuda) |
 | Diccionario de datos | Portada | [VERIFICAR: centro de formación] | Instructor o coordinación académica del SENA |
-| Diccionario de datos | Portada | [VERIFICAR: número de ficha] | Instructor o coordinación académica del SENA |
 | Diccionario de datos | Portada | [VERIFICAR: nombre de la competencia] | Instructor (guía de aprendizaje vigente) |
 | Diccionario de datos | Portada | [VERIFICAR: nombre del instructor] | Instructor o coordinación académica del SENA |

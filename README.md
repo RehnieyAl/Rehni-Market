@@ -29,6 +29,7 @@ Conecta **empresas vendedoras** con **compradores** en una sola plataforma: cat�
 - [Pruebas](#pruebas)
 - [Scripts de operación](#scripts-de-operación)
 - [Plan de implantación](#plan-de-implantación)
+- [Licencia](#licencia)
 - [Autor](#autor)
 
 ---
@@ -390,6 +391,20 @@ Pruebas: [`docs/estrategia-pruebas.md`](docs/estrategia-pruebas.md) y [`docs/pru
 
 
 
+
+---
+
+## Licencia
+
+- El código de RehniMarket está bajo licencia **MIT** (ver [`LICENSE`](LICENSE)).
+- Las marcas, personajes, nombres e imágenes de **Touhou Project** pertenecen a sus dueños (ZUN / Team
+  Shanghai Alice); este es un proyecto de fans sin fines comerciales.
+- Las imágenes de productos y los logos de terceros pertenecen a sus dueños.
+- Las dependencias conservan sus propias licencias. MinIO (AGPLv3) se usa sin modificar, como un servicio
+  aparte al que el backend accede por la API S3; su licencia no se extiende a este código. Detalle por
+  componente: [`docs/plan-implantacion.md`](docs/plan-implantacion.md) §1.2.
+- Proyecto desarrollado en el programa **ADSO** (Tecnólogo en Análisis y Desarrollo de Software) del
+  **SENA**, ficha **3171618**.
 
 ---
 

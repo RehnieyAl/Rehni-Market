@@ -2,6 +2,7 @@
   "name": "RehniMarket",
   "private": true,
   "version": "0.0.0",
+  "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@11.15.0",
   "scripts": {

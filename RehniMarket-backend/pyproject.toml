@@ -1,6 +1,7 @@
 [project]
 name = "better-backend"
 version = "0.1.0"
+license = "MIT"
 description = "Este backend fue creado por yeinher Algarin"
 readme = "README.md"
 requires-python = ">=3.13"
