@@ -539,9 +539,10 @@ SECCIONES_PLATAFORMA = [
           "de Azure for Students]"),
     ]),
     (2, "6.8", "Despliegue en producción (Azure)", [
-        P("Resumen operativo del Plan de implantación (docs/plan-implantacion.md, sección 5.2, tablas "
-          "«Instalación inicial», «Actualización» y «Rollback»). Producción usa el mismo docker-compose.yml y "
-          "caddy/Caddyfile que el desarrollo: solo cambian los .env."),
+        P("La guía operativa completa está en deploy/README.md (producción: https://rehnimarket.duckdns.org y "
+          "https://apirehnimarket.duckdns.org), con su lista para marcar en deploy/checklist-azure.md. Este numeral "
+          "resume los pasos del Plan de implantación (docs/plan-implantacion.md, sección 5.2). Producción usa el "
+          "mismo docker-compose.yml y caddy/Caddyfile que el desarrollo: solo cambia el .env."),
         PASO(1, "Crear la clave SSH en el equipo del administrador.", ""),
         CODE("ssh-keygen -t ed25519 -C \"rehnimarket-azure\" -f ~/.ssh/rehni_azure\ncat ~/.ssh/rehni_azure.pub"),
         P("Guardar una copia de la clave privada: si se pierde, el acceso se recupera solo desde el portal."),
@@ -586,22 +587,23 @@ SECCIONES_PLATAFORMA = [
              "PostgreSQL va igual en POSTGRES_PASSWORD, URL_DATABASE y URL_DATABASE_POOLED. También se puede "
              "copiar por scp un .env de producción ya preparado."),
         CODE("cp deploy/env.prod.example .env && chmod 600 .env\n"
-             "grep -n CAMBIAR .env   # no debe mostrar nada"),
+             "grep -nE '^[A-Z_]+=.*CAMBIAR' .env   # no debe mostrar nada"),
         P("La plantilla ya trae los valores de producción: SITE_ADDRESS=rehnimarket.duckdns.org, "
-          "API_ADDRESS=api.rehnimarket.duckdns.org, HTTP_PORT=80, HTTPS_PORT=443, CADDY_LOCAL_CERTS vacía, "
-          "VITE_API_URL=https://api.rehnimarket.duckdns.org, CORS_EXTRA_ORIGINS y URL_FRONTEND="
-          "https://rehnimarket.duckdns.org, URL_BACKEND=https://api.rehnimarket.duckdns.org, DOCS_ENABLED=false, "
+          "API_ADDRESS=apirehnimarket.duckdns.org, HTTP_PORT=80, HTTPS_PORT=443, CADDY_LOCAL_CERTS vacía, "
+          "VITE_API_URL=https://apirehnimarket.duckdns.org, CORS_EXTRA_ORIGINS y URL_FRONTEND="
+          "https://rehnimarket.duckdns.org, URL_BACKEND=https://apirehnimarket.duckdns.org, DOCS_ENABLED=false, "
           "RATE_LIMIT_ENABLED=true, RUN_SEED=false, las variables de owner vacías, BACKEND_BIND=127.0.0.1 y, "
           "para una VM de 2 vCPU, BACKEND_CPUS=2 y POSTGRES_CPUS=1.5."),
         PASO(9, "Levantar y verificar.", "El backend aplica alembic upgrade head al arrancar."),
         CODE("docker compose up -d --build --wait\ndocker compose ps                 # cinco servicios healthy\n"
              "curl -fsS https://api.<dominio>/health/database   # {\"Base de datos\":\"OK\"}\n"
              "curl -I http://<dominio>                          # 308 → https"),
-        PASO(10, "Cargar los datos base y crear el owner.", "Con RUN_SEED=false no existen los roles ni el catálogo, "
-             "y el registro falla. `scripts/datos-base.sh` crea roles, categorías, atributos y transportadoras, sin "
-             "datos de demostración (se puede ejecutar más de una vez). Luego el responsable se registra en la web "
+        PASO(10, "Comprobar los datos base y crear el owner.", "El backend crea en cada arranque, aunque "
+             "RUN_SEED=false, los roles (si faltan), las categorías con sus atributos (solo si no hay ninguna) y las "
+             "transportadoras (solo si no hay ninguna), en app/utils/base_data.py. RUN_SEED solo controla los datos de "
+             "demostración: empresas, productos y la cuenta owner del seed. Luego el responsable se registra en la web "
              "con su correo, verifica el código y se le asigna el rol owner en la base:"),
-        CODE("bash scripts/datos-base.sh   # roles: 4, catalog: 120, shipping_carriers: 4\n"
+        CODE("docker compose exec postgres sh -c 'psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -tAc \"SELECT (SELECT count(*) FROM roles), (SELECT count(*) FROM catalog), (SELECT count(*) FROM shipping_carriers);\"'   # 4|120|4\n"
              "# registro y verificación del correo en https://<dominio>, luego:\n"
              "docker compose exec postgres sh -c 'psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\"'\n"
              "UPDATE users SET role_id = (SELECT id FROM roles WHERE name = 'owner') WHERE email = '<correo>';"),

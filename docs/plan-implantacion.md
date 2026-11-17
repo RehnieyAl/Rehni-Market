@@ -643,6 +643,13 @@ Enlace al `CHANGELOG.md`: [`CHANGELOG.md`](../CHANGELOG.md) (raíz). El detalle 
 
 ### 5.2 Despliegue en servidor Linux
 
+**Guía operativa: [`deploy/README.md`](../deploy/README.md)** (producción en Azure: dominios, red,
+configuración, primer despliegue, owner, verificación, actualización, rollback, respaldo y
+problemas frecuentes) y su lista para marcar, [`deploy/checklist-azure.md`](../deploy/checklist-azure.md).
+Esta sección conserva los comandos con su resultado esperado porque es el instrumento de la
+rúbrica de la semana 4 (`bc-implantacion/bootcamp/week-04-despliegue_local_y_nube/rubrica-evaluacion.md:64`).
+En la VM de Azure el clon vive en `~/Rehni-Market` del usuario de despliegue en lugar de `/opt/rehnimarket`.
+
 #### Estructura
 
 ```
@@ -650,7 +657,9 @@ Enlace al `CHANGELOG.md`: [`CHANGELOG.md`](../CHANGELOG.md) (raíz). El detalle 
 ├── docker-compose.yml            ← el mismo que en desarrollo (compose único)
 ├── caddy/Caddyfile               ← el mismo que en desarrollo; HTTPS con Let's Encrypt por el .env
 ├── deploy/
-│   └── README.md
+│   ├── README.md                 ← guía de producción
+│   ├── env.prod.example          ← plantilla del .env único para producción
+│   └── checklist-azure.md        ← lista de verificación del despliegue en Azure
 ├── .env.example                  ← plantilla del .env único para desarrollo
 ├── .env                          ← de deploy/env.prod.example (chmod 600, fuera de Git)
 ├── backups/                      ← respaldos (copia 1, sección 3.3; excluido de Git)
@@ -675,7 +684,7 @@ En desarrollo se aplicó el 04/11/2026 a `rehni-market_minio_data` (31,7 MB, 880
 
 Solo nombres y ejemplos ficticios; los valores reales se crean en el servidor. **Un solo `.env`** en la raíz, con dos plantillas de las mismas variables: `.env.example`, con valores de desarrollo listos para usar (un clon limpio arranca con `cp .env.example .env`), y `deploy/env.prod.example`, con los de producción (`rehnimarket.duckdns.org`, `DOCS_ENABLED=false`, `RUN_SEED=false`) y un marcador `CAMBIAR_*` en cada secreto. `minio`, `postgres`, `pgbouncer` y `backend` cargan el `.env` completo (`env_file: ./.env` en `docker-compose.yml`); Caddy recibe solo sus variables (`SITE_ADDRESS`, `API_ADDRESS`, `HTTP_PORT`, `HTTPS_PORT`, `CADDY_LOCAL_CERTS`) para no tener las credenciales. Fuera de Docker (`uv run`, pytest), `app/Config.py` lee el mismo `.env` de la raíz.
 
-**Secretos:** cada contraseña y la firma de los JWT (`POSTGRES_PASSWORD`, `MINIO_ROOT_PASSWORD`, `SECRET_KEY`) se generan en el servidor con `openssl rand -base64 24 | tr '+/' '-_'`, un valor distinto por secreto y por entorno (nunca los de desarrollo). `tr` cambia `+` y `/` por caracteres seguros en la URL de conexión: la contraseña de PostgreSQL se repite dentro de `URL_DATABASE` y `URL_DATABASE_POOLED`. La excepción es `GMAIL_APP_PASSWORD`, que la emite Google (contraseña de aplicación). El backend arranca aunque quede un marcador `CAMBIAR_*`, así que antes del paso 6 hay que comprobar que no quedó ninguno: `grep -n CAMBIAR .env` no debe mostrar nada.
+**Secretos:** cada contraseña y la firma de los JWT (`POSTGRES_PASSWORD`, `MINIO_ROOT_PASSWORD`, `SECRET_KEY`) se generan en el servidor con `openssl rand -base64 24 | tr '+/' '-_'`, un valor distinto por secreto y por entorno (nunca los de desarrollo). `tr` cambia `+` y `/` por caracteres seguros en la URL de conexión: la contraseña de PostgreSQL se repite dentro de `URL_DATABASE` y `URL_DATABASE_POOLED`. La excepción es `GMAIL_APP_PASSWORD`, que la emite Google (contraseña de aplicación). El backend arranca aunque quede un marcador `CAMBIAR_*`, así que antes del paso 6 hay que comprobar que no quedó ninguno: `grep -nE '^[A-Z_]+=.*CAMBIAR' .env` no debe mostrar nada.
 
 | Archivo | Variable | Propósito | Ejemplo (ficticio) |
 |---|---|---|---|
@@ -722,9 +731,19 @@ Comandos de los pasos 2 y 3: guía oficial de Docker, <https://docs.docker.com/e
 | 6 | Levantar los servicios | `docker compose up -d --build --wait` | Termina sin errores; el backend aplica `alembic upgrade head` al arrancar |
 | 7 | Comprobar la salud | `docker compose ps` | Los cinco servicios en `healthy` |
 | 8 | Comprobar HTTPS y la API | `curl -fsS https://api.<dominio>/health/database` y `curl -fsS -o /dev/null -w "%{http_code}\n" https://<dominio>/` | Respuesta de la base de datos y `200` |
-| 8.1 | Datos base y cuenta owner | `bash scripts/datos-base.sh`; luego registrarse en `https://<dominio>` con el correo del responsable, verificar el código y, en `docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'`: `UPDATE users SET role_id = (SELECT id FROM roles WHERE name = 'owner') WHERE email = '<correo>';` | `roles: 4`, `catalog: 120`, `shipping_carriers: 4`; `UPDATE 1`; el login responde `role: owner`. Probado el 2026-11-16 en un clon limpio con `RUN_SEED=false`. Sin este paso no hay roles y el registro falla |
+| 8.1 | Datos base y cuenta owner | Comprobar los datos base que crea el arranque: `docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT (SELECT count(*) FROM roles), (SELECT count(*) FROM catalog), (SELECT count(*) FROM shipping_carriers);"'`; luego registrarse en `https://<dominio>` con el correo del responsable, verificar el código y, en `docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'`: `UPDATE users SET role_id = (SELECT id FROM roles WHERE name = 'owner') WHERE email = '<correo>';` | `4\|120\|4`; `UPDATE 1`; el login responde `role: owner`. Probado el 2026-11-16 en un clon limpio con `RUN_SEED=false` (#53): el registro responde 200 y el usuario queda con rol `user` |
 | 9 | Prueba de humo | `read -rs SMOKE_PASSWORD; export SMOKE_PASSWORD; SMOKE_EMAIL=<correo-cuenta-de-prueba> BASE_URL=https://api.<dominio> FRONTEND_URL=https://<dominio> bash scripts/smoke-test.sh` | `RESULTADO: 7 pasan, 0 fallan` y código de salida `0` |
 | 10 | Primer respaldo | `bash scripts/respaldar.sh` | `=== FIN backup <TS> — OK ===` |
+
+**Datos que se crean al arrancar (#53).** `RUN_SEED` solo controla los datos de demostración; los datos base los crea el backend siempre (`app/utils/base_data.py`), con un advisory lock de PostgreSQL para que los workers de Uvicorn no los creen a la vez:
+
+| Datos | Cuándo se crean | Detalle |
+|---|---|---|
+| Roles `user`, `company`, `admin`, `owner` | **Siempre**, en cada arranque si faltan | Sin el rol `user` el registro falla |
+| Categorías (120), sus especificaciones, atributos de variante y opciones | **Siempre**, solo si la tabla de categorías está vacía | Después las administra el panel; volver a sembrarlas desharía sus cambios |
+| Transportadoras (4) | **Siempre**, solo si no hay ninguna | Las usan los envíos de los pedidos |
+| Cuenta owner del seed (`USER_NAME_OWNER`, `OWNER_DEFAULT`, `OWNER_PASSWORD_DEFAULT`) | Solo con `RUN_SEED=true` y las tres variables con valor | En producción quedan vacías |
+| Empresas y productos de demostración | Solo con `RUN_SEED=true` | Desarrollo |
 
 #### Actualización
 

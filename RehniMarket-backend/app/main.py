@@ -1,3 +1,4 @@
+"""Aplicación FastAPI: arranque (bucket, datos base y seed de demo), middlewares, manejo de errores y routers."""
 import anyio.to_thread
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -35,8 +36,8 @@ from app.middleware.RateLimitMiddleware import rate_limit_middleware
 from app.middleware.PublicBaseUrlMiddleware import public_base_url_middleware
 from app.middleware.CorsMiddleware import setup_cors
 from app.core.ErrorCodes import ErrorCodes
-from app.database.Connection import SessionLocal
 from app.services.NasService import ensure_bucket
+from app.utils.base_data import ensure_base_data
 from app.utils.seed import run_seed
 from app.Config import config
 
@@ -48,6 +49,7 @@ async def lifespan(app):
     anyio.to_thread.current_default_thread_limiter().total_tokens = config.THREADPOOL_SIZE
 
     ensure_bucket()
+    ensure_base_data()
 
     if config.RUN_SEED:
         db = SessionLocal()

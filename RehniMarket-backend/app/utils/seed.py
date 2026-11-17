@@ -1,3 +1,4 @@
+"""Datos de demostración y catálogo inicial: funciones de siembra idempotentes que usan run_seed y base_data."""
 import io
 import struct
 import unicodedata
@@ -1692,10 +1693,6 @@ def seed_shipping_carriers(db: Session):
 
 
 def run_seed(db: Session):
-    seed_roles(db)
-    seed_catalog(db)
-    seed_specifications(db)
-    seed_catalog_attributes(db)
+    """Datos de demostración (RUN_SEED=true); los datos base los crea app/utils/base_data.py."""
     seed_owner(db)
-    seed_shipping_carriers(db)
     seed_companies_and_products(db)

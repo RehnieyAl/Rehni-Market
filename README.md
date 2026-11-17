@@ -4,9 +4,6 @@
 
 Conecta **empresas vendedoras** con **compradores** en una sola plataforma: catálogo con variantes, carrito, checkout con **RehniCoin**, pedidos, devoluciones, reseñas y paneles de gestión para empresas y administradores.
 
-**Producción:** <https://rehnimarket.duckdns.org> · API: <https://api.rehnimarket.duckdns.org>
-<!-- PENDIENTE: el 16/11/2026 el nombre resolvía pero el sitio no respondía; confirmar tras el despliegue en Azure -->
-
 <br />
 
 ![Python](https://img.shields.io/badge/Python-3.13-3776AB?style=for-the-badge&logo=python&logoColor=white)
@@ -23,6 +20,7 @@ Conecta **empresas vendedoras** con **compradores** en una sola plataforma: cat�
 
 ## Tabla de contenido
 
+- [Producción](#producción)
 - [Sobre el proyecto](#sobre-el-proyecto)
 - [Funcionalidades](#funcionalidades)
 - [Stack tecnológico](#stack-tecnológico)
@@ -32,6 +30,17 @@ Conecta **empresas vendedoras** con **compradores** en una sola plataforma: cat�
 - [Scripts de operación](#scripts-de-operación)
 - [Plan de implantación](#plan-de-implantación)
 - [Autor](#autor)
+
+---
+
+## Producción
+
+| | |
+|---|---|
+| Web | <https://rehnimarket.duckdns.org> |
+| API | <https://apirehnimarket.duckdns.org> |
+| Estado | Desplegado en Azure (VM Ubuntu 24.04, Docker Compose) |
+| Guía de despliegue | [`deploy/README.md`](deploy/README.md) |
 
 ---
 
@@ -200,7 +209,7 @@ Rehni-Market/
 ├── tests/load/               # Escenarios de pruebas de carga
 ├── docs/                     # Documentación funcional y técnica
 ├── caddy/Caddyfile           # Reverse proxy y HTTPS (único: desarrollo y producción)
-├── deploy/                   # Guías de despliegue (diseño de compose único)
+├── deploy/                   # Guía de producción, plantilla del .env y checklist de Azure
 └── docker-compose.yml        # Compose único: desarrollo (watch), pruebas y producción
 ```
 
