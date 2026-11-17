@@ -32,15 +32,13 @@ otro marcador. Corregido en `6b054d0` (sección 3).
 
 | Métrica | Valor |
 |---|---|
-| Historias totales del backlog | 36 (catálogo RF-01…RF-36 del Manual técnico) · SRS original: [PENDIENTE] |
-| Historias en estado "Hecho" | 36 (3 con defectos abiertos) |
-| % de avance | 100 % frente al catálogo RF · [PENDIENTE: % frente al SRS original] |
+| Requisitos del SRS | 59: 31 RF (matriz del 09/10/2026) y 28 RNF (16/10/2026), en [`docs/requisitos/requisitos.md`](requisitos/requisitos.md); RNF-029 a 031 (cliente móvil) fuera de alcance |
+| En estado «Hecho» | 53 (27 RF y 26 RNF); 3 RF más «Hecho (requisito ajustado)» pendientes de validar (#72, #73, #74) |
+| % de avance frente al SRS | **89,8 %** sin ajustes · **94,9 %** con los ajustes de diseño (RF 87,1 % / 96,8 %; RNF 92,9 %) |
 
-**Meta:** ≥90%. Detalle por historia con su evidencia: [`docs/backlog-final.md`](backlog-final.md).
-El cálculo frente al catálogo RF no reemplaza al SRS: si el SRS tenía historias que no están en
-el catálogo (por ejemplo, de la app móvil), bajan el porcentaje y deben listarse en «No
-alcanzado» con su justificación. [PENDIENTE: SRS y enlace al tablero de GitHub Projects para que
-la medición sea trazable.]
+**Meta:** ≥90 %. Detalle por requisito con endpoint, pantalla, prueba y commit: [`docs/backlog-final.md`](backlog-final.md).
+Queda 1 RF parcial (RF-06, #75) y 2 RNF pendientes de medir (RNF-002 #76, RNF-025 #77); la deuda
+de pruebas de requisitos ya implementados está en #78.
 
 ## 3. Code Review Final
 
@@ -107,7 +105,7 @@ Guion por rol: [`docs/demo-e2e.md`](demo-e2e.md).
 - **Qué queda por codificar**: corregir H-07/H-08 (#36, #37) y H-06 (#35); actualizar
   dependencias (#45); separar roles de BD (#44); pruebas E2E de registro, compra y cancelación
   (#43); subir la cobertura del frontend empezando por `features/admin` y `features/company` (#42).
-- **Qué queda por documentar**: SRS original y % frente a él (`docs/backlog-final.md`); evidencia
+- **Qué queda por documentar**: validar con el instructor los tres requisitos ajustados (#72, #73, #74; `docs/backlog-final.md`, «Control de cambios»); evidencia
   del despliegue en la VM en `docs/plan-implantacion.md` (§1.7, §5.2, §6.4, §7.2);
   resultados de aceptación y del simulacro (`docs/aceptacion/`).
 - **Qué queda por implementar/desplegar**: VM Ubuntu 24.04 en Azure con dominio y HTTPS, etiqueta
