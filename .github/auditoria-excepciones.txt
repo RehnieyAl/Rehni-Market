@@ -1,0 +1,7 @@
+# Vulnerabilidades conocidas aceptadas a propósito. El job «auditoria» de .github/workflows/ci.yml
+# las ignora mientras su fecha de revisión no haya pasado; vencida, el CI falla hasta revisarlas.
+# Informe y criterio: docs/calidad/auditoria-dependencias-2026-11-16.md
+#
+# ID | ecosistema | paquete y versión | motivo | revisar antes de (AAAA-MM-DD)
+
+GHSA-g3hv-75wg-m249 | npm | minimatch 10.2.5 (frontend, solo desarrollo, moderada) | Llega por eslint y typescript-eslint y no corre en producción; el arreglo exige minimatch 11 (versión mayor) y ninguna versión de eslint lo usa todavía | 2027-02-16

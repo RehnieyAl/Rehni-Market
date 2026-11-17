@@ -146,3 +146,48 @@ jobs:
           name: coverage-frontend
           path: RehniMarket-frontend/coverage/
           if-no-files-found: warn
+
+  auditoria:
+    # Falla si una dependencia tiene una vulnerabilidad conocida: en Python, cualquiera (pip-audit
+    # no filtra por severidad); en el frontend, altas o críticas de lo que llega a producción.
+    # Excepciones con motivo y fecha de revisión en .github/auditoria-excepciones.txt.
+    name: auditoria
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.13"
+
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6
+        with:
+          version: 11.15.0
+
+      - name: Excepciones vigentes
+        id: excepciones
+        run: |
+          lista=.github/auditoria-excepciones.txt
+          hoy=$(date -u +%F)
+          vencidas=$(grep -vE '^\s*(#|$)' "$lista" | awk -F'|' -v hoy="$hoy" '{gsub(/ /, "", $1); gsub(/ /, "", $5); if ($5 < hoy) print $1}')
+          if [ -n "$vencidas" ]; then
+            echo "::error::Excepciones con la fecha de revisión vencida: $vencidas"
+            exit 1
+          fi
+          ids=$(grep -vE '^\s*(#|$)' "$lista" | cut -d'|' -f1 | tr -d ' ')
+          echo "pip=$(for id in $ids; do printf -- '--ignore-vuln %s ' "$id"; done)" >> "$GITHUB_OUTPUT"
+          echo "pnpm=$(for id in $ids; do printf -- '--ignore %s ' "$id"; done)" >> "$GITHUB_OUTPUT"
+
+      # uv.lock completo (producción y desarrollo), con hashes y sin resolver nada nuevo.
+      - name: Backend (pip-audit sobre uv.lock)
+        working-directory: RehniMarket-backend
+        run: |
+          uv export --frozen --no-emit-project --format requirements-txt -o "$RUNNER_TEMP/requirements.txt"
+          uvx pip-audit@2.10.1 -r "$RUNNER_TEMP/requirements.txt" --require-hashes --disable-pip ${{ steps.excepciones.outputs.pip }}
+
+      # Solo lee pnpm-lock.yaml: no hace falta instalar.
+      - name: Frontend (pnpm audit --prod, altas y críticas)
+        working-directory: RehniMarket-frontend
+        run: pnpm audit --prod --audit-level=high ${{ steps.excepciones.outputs.pnpm }}
