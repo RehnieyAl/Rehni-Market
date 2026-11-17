@@ -126,6 +126,17 @@ SECCIONES_INICIO = [
           f"en {SOPORTE['url_produccion']} y la API en {SOPORTE['url_api_produccion']} con certificados de "
           f"Let's Encrypt. El procedimiento completo está en el numeral 6.8 y en el Plan de implantación "
           f"(docs/plan-implantacion.md, sección 5.2)."),
+        SUB("Licencia"),
+        P("El código de RehniMarket se distribuye bajo la licencia MIT (archivo LICENSE en la raíz del "
+          "repositorio, Copyright (c) 2026 Yeinher Jose Algarin Cardozo). Proyecto desarrollado en el programa "
+          "Tecnólogo en Análisis y Desarrollo de Software (ADSO) del SENA, ficha 3171618."),
+        UL("Las marcas, personajes, nombres e imágenes de Touhou Project pertenecen a sus dueños (ZUN / Team "
+           "Shanghai Alice); RehniMarket es un proyecto de fans sin fines comerciales.",
+           "Las imágenes de productos y los logos de terceros pertenecen a sus dueños.",
+           "Las dependencias conservan sus propias licencias. MinIO (AGPLv3) se usa sin modificar como un "
+           "servicio aparte, al que el backend accede por la API S3 desde la red interna: su licencia no se "
+           "extiende al código de RehniMarket. Las licencias de cada componente están en el Plan de "
+           "implantación (docs/plan-implantacion.md, sección 1.2)."),
         SUB("Qué NO cubre este documento"),
         UL("El uso funcional de la aplicación por perfil: se describe en el Manual de usuario.",
            "El detalle de cada tabla de la base de datos: se describe en el documento «Diccionario de datos».",
