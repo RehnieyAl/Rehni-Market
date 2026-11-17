@@ -1,8 +1,8 @@
 # Checklist de despliegue en Azure con DuckDNS — RehniMarket
 
 Resumen operativo de `docs/plan-implantacion.md` §5.2 («Instalación inicial») y del manual técnico
-§6.8, con DuckDNS como DNS. Producción **sin seeds**: los datos base salen de `scripts/datos-base.sh`
-y el owner se crea con registro + `UPDATE` del rol en psql.
+§6.8, con DuckDNS como DNS. Producción **sin datos de demo** (`RUN_SEED=false`): el backend crea solo los datos base al arrancar
+(#53) y el owner se crea con registro + `UPDATE` del rol en psql.
 
 Nombres de producción: `rehnimarket.duckdns.org` (frontend) y `apirehnimarket.duckdns.org` (API).
 `<correo-owner>` es el correo del responsable. No dejar ningún `[PENDIENTE]` sin llenar en el acta.
@@ -76,10 +76,9 @@ Toda la configuración es **un solo `.env`** en la raíz. Su plantilla de produc
       `bash scripts/verificar-redes.sh | tee docs/evidencias/verificacion-redes-azure-<fecha>.txt` → `0 fallan`.
 - [ ] Desde otro equipo: `nc -zv <IP pública> 5433` y `nc -zv <IP pública> 9001` **fallan**.
 
-## 6. Datos base y owner, sin seeds (§5.2, paso 8.1)
+## 6. Datos base y owner, sin datos de demo (§5.2, paso 8.1)
 
-- [ ] `bash scripts/datos-base.sh` → `roles: 4`, `catalog: 120`, `shipping_carriers: 4`
-      (sin esto no hay roles y el registro falla).
+- [ ] Datos base creados por el arranque: `docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT (SELECT count(*) FROM roles), (SELECT count(*) FROM catalog), (SELECT count(*) FROM shipping_carriers);"'` → `4|120|4`.
 - [ ] El responsable se registra en `https://rehnimarket.duckdns.org` con `<correo-owner>` y verifica el código del correo.
 - [ ] Asignar el rol owner:
       ```bash

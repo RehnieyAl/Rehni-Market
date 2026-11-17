@@ -598,11 +598,12 @@ SECCIONES_PLATAFORMA = [
         CODE("docker compose up -d --build --wait\ndocker compose ps                 # cinco servicios healthy\n"
              "curl -fsS https://api.<dominio>/health/database   # {\"Base de datos\":\"OK\"}\n"
              "curl -I http://<dominio>                          # 308 → https"),
-        PASO(10, "Cargar los datos base y crear el owner.", "Con RUN_SEED=false no existen los roles ni el catálogo, "
-             "y el registro falla. `scripts/datos-base.sh` crea roles, categorías, atributos y transportadoras, sin "
-             "datos de demostración (se puede ejecutar más de una vez). Luego el responsable se registra en la web "
+        PASO(10, "Comprobar los datos base y crear el owner.", "El backend crea en cada arranque, aunque "
+             "RUN_SEED=false, los roles (si faltan), las categorías con sus atributos (solo si no hay ninguna) y las "
+             "transportadoras (solo si no hay ninguna), en app/utils/base_data.py. RUN_SEED solo controla los datos de "
+             "demostración: empresas, productos y la cuenta owner del seed. Luego el responsable se registra en la web "
              "con su correo, verifica el código y se le asigna el rol owner en la base:"),
-        CODE("bash scripts/datos-base.sh   # roles: 4, catalog: 120, shipping_carriers: 4\n"
+        CODE("docker compose exec postgres sh -c 'psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -tAc \"SELECT (SELECT count(*) FROM roles), (SELECT count(*) FROM catalog), (SELECT count(*) FROM shipping_carriers);\"'   # 4|120|4\n"
              "# registro y verificación del correo en https://<dominio>, luego:\n"
              "docker compose exec postgres sh -c 'psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\"'\n"
              "UPDATE users SET role_id = (SELECT id FROM roles WHERE name = 'owner') WHERE email = '<correo>';"),

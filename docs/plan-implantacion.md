@@ -731,9 +731,19 @@ Comandos de los pasos 2 y 3: guía oficial de Docker, <https://docs.docker.com/e
 | 6 | Levantar los servicios | `docker compose up -d --build --wait` | Termina sin errores; el backend aplica `alembic upgrade head` al arrancar |
 | 7 | Comprobar la salud | `docker compose ps` | Los cinco servicios en `healthy` |
 | 8 | Comprobar HTTPS y la API | `curl -fsS https://api.<dominio>/health/database` y `curl -fsS -o /dev/null -w "%{http_code}\n" https://<dominio>/` | Respuesta de la base de datos y `200` |
-| 8.1 | Datos base y cuenta owner | `bash scripts/datos-base.sh`; luego registrarse en `https://<dominio>` con el correo del responsable, verificar el código y, en `docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'`: `UPDATE users SET role_id = (SELECT id FROM roles WHERE name = 'owner') WHERE email = '<correo>';` | `roles: 4`, `catalog: 120`, `shipping_carriers: 4`; `UPDATE 1`; el login responde `role: owner`. Probado el 2026-11-16 en un clon limpio con `RUN_SEED=false`. Sin este paso no hay roles y el registro falla |
+| 8.1 | Datos base y cuenta owner | Comprobar los datos base que crea el arranque: `docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT (SELECT count(*) FROM roles), (SELECT count(*) FROM catalog), (SELECT count(*) FROM shipping_carriers);"'`; luego registrarse en `https://<dominio>` con el correo del responsable, verificar el código y, en `docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'`: `UPDATE users SET role_id = (SELECT id FROM roles WHERE name = 'owner') WHERE email = '<correo>';` | `4\|120\|4`; `UPDATE 1`; el login responde `role: owner`. Probado el 2026-11-16 en un clon limpio con `RUN_SEED=false` (#53): el registro responde 200 y el usuario queda con rol `user` |
 | 9 | Prueba de humo | `read -rs SMOKE_PASSWORD; export SMOKE_PASSWORD; SMOKE_EMAIL=<correo-cuenta-de-prueba> BASE_URL=https://api.<dominio> FRONTEND_URL=https://<dominio> bash scripts/smoke-test.sh` | `RESULTADO: 7 pasan, 0 fallan` y código de salida `0` |
 | 10 | Primer respaldo | `bash scripts/respaldar.sh` | `=== FIN backup <TS> — OK ===` |
+
+**Datos que se crean al arrancar (#53).** `RUN_SEED` solo controla los datos de demostración; los datos base los crea el backend siempre (`app/utils/base_data.py`), con un advisory lock de PostgreSQL para que los workers de Uvicorn no los creen a la vez:
+
+| Datos | Cuándo se crean | Detalle |
+|---|---|---|
+| Roles `user`, `company`, `admin`, `owner` | **Siempre**, en cada arranque si faltan | Sin el rol `user` el registro falla |
+| Categorías (120), sus especificaciones, atributos de variante y opciones | **Siempre**, solo si la tabla de categorías está vacía | Después las administra el panel; volver a sembrarlas desharía sus cambios |
+| Transportadoras (4) | **Siempre**, solo si no hay ninguna | Las usan los envíos de los pedidos |
+| Cuenta owner del seed (`USER_NAME_OWNER`, `OWNER_DEFAULT`, `OWNER_PASSWORD_DEFAULT`) | Solo con `RUN_SEED=true` y las tres variables con valor | En producción quedan vacías |
+| Empresas y productos de demostración | Solo con `RUN_SEED=true` | Desarrollo |
 
 #### Actualización
 

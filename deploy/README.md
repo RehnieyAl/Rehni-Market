@@ -136,12 +136,23 @@ docker compose ps                 # los cinco servicios en healthy
 El backend aplica `alembic upgrade head` al arrancar. Caddy pide los certificados a Let's Encrypt
 en el primer acceso a cada dominio.
 
-## 7. Cuenta owner
+## 7. Datos base y cuenta owner
 
-Con `RUN_SEED=false` no hay roles ni catálogo: primero los datos base, luego el owner.
+El backend crea los datos base en cada arranque, aunque `RUN_SEED=false` (`app/utils/base_data.py`, #53):
+
+| Datos | Cuándo se crean | Detalle |
+|---|---|---|
+| Roles `user`, `company`, `admin`, `owner` | **Siempre**, en cada arranque si faltan | Sin el rol `user` el registro falla |
+| Categorías (120), sus especificaciones, atributos de variante y opciones | **Siempre**, solo si la tabla de categorías está vacía | Después las administra el panel; volver a sembrarlas desharía sus cambios |
+| Transportadoras (4) | **Siempre**, solo si no hay ninguna | Las usan los envíos de los pedidos |
+| Cuenta owner del seed (`USER_NAME_OWNER`, `OWNER_DEFAULT`, `OWNER_PASSWORD_DEFAULT`) | Solo con `RUN_SEED=true` y las tres variables con valor | En producción quedan vacías |
+| Empresas y productos de demostración | Solo con `RUN_SEED=true` | Desarrollo |
+
+Comprobación, sin modificar nada:
 
 ```bash
-bash scripts/datos-base.sh        # roles: 4, catalog: 120, shipping_carriers: 4
+docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT (SELECT count(*) FROM roles), (SELECT count(*) FROM catalog), (SELECT count(*) FROM shipping_carriers);"'
+# 4|120|4
 ```
 
 1. Registrarse en <https://rehnimarket.duckdns.org> con el correo del responsable.
