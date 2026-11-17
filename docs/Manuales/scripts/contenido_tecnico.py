@@ -601,12 +601,16 @@ SECCIONES_PLATAFORMA = [
         PASO(10, "Comprobar los datos base y crear el owner.", "El backend crea en cada arranque, aunque "
              "RUN_SEED=false, los roles (si faltan), las categorías con sus atributos (solo si no hay ninguna) y las "
              "transportadoras (solo si no hay ninguna), en app/utils/base_data.py. RUN_SEED solo controla los datos de "
-             "demostración: empresas, productos y la cuenta owner del seed. Luego el responsable se registra en la web "
-             "con su correo, verifica el código y se le asigna el rol owner en la base:"),
+             "demostración: empresas, productos y la cuenta owner del seed. Luego se crea el único owner directamente en "
+             "PostgreSQL con deploy/sql/crear-owner.sql; el procedimiento completo (convertir una cuenta registrada, "
+             "comprobar, restablecer la clave y transferir) está en deploy/OWNER.md:"),
         CODE("docker compose exec postgres sh -c 'psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -tAc \"SELECT (SELECT count(*) FROM roles), (SELECT count(*) FROM catalog), (SELECT count(*) FROM shipping_carriers);\"'   # 4|120|4\n"
-             "# registro y verificación del correo en https://<dominio>, luego:\n"
-             "docker compose exec postgres sh -c 'psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\"'\n"
-             "UPDATE users SET role_id = (SELECT id FROM roles WHERE name = 'owner') WHERE email = '<correo>';"),
+             "read -rsp 'Clave del owner: ' OWNER_CLAVE; echo; export OWNER_CLAVE\n"
+             "export OWNER_CORREO='<correo>' OWNER_NOMBRE='<nombre>' OWNER_TELEFONO='<10 dígitos>'\n"
+             "docker compose exec -T -e OWNER_CLAVE -e OWNER_CORREO -e OWNER_NOMBRE -e OWNER_TELEFONO postgres \\\n"
+             "  sh -c 'psql -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\" -v clave=\"$OWNER_CLAVE\" -v correo=\"$OWNER_CORREO\" "
+             "-v nombre=\"$OWNER_NOMBRE\" -v telefono=\"$OWNER_TELEFONO\"' < deploy/sql/crear-owner.sql   # INSERT 0 1\n"
+             "unset OWNER_CLAVE OWNER_CORREO OWNER_NOMBRE OWNER_TELEFONO"),
         PASO(11, "Prueba de humo y primer respaldo.", "Con una cuenta de comprador de prueba ya verificada:"),
         CODE("read -rs SMOKE_PASSWORD; export SMOKE_PASSWORD\n"
              "SMOKE_EMAIL=<correo-de-prueba> BASE_URL=https://api.<dominio> FRONTEND_URL=https://<dominio> \\\n"
@@ -717,6 +721,9 @@ ARCHIVOS_CLAVE = [
     ["sonar-project.properties", "Properties", "Configuración de SonarCloud"],
     [".env.example", "Env", "Plantilla del .env único para desarrollo"],
     ["deploy/env.prod.example", "Env", "Plantilla del .env único para producción"],
+    ["deploy/OWNER.md", "Markdown", "Creación y administración del único owner desde PostgreSQL"],
+    ["deploy/sql/crear-owner.sql", "SQL", "Crea el owner con psql (valida datos y clave de 8 a 72 bytes)"],
+    ["RehniMarket-backend/app/database/single_owner.py", "Python", "Triggers e índice que garantizan un único owner"],
 ]
 
 SECCIONES_CODIGO = [

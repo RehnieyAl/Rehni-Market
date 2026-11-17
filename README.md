@@ -41,6 +41,7 @@ Conecta **empresas vendedoras** con **compradores** en una sola plataforma: cat√
 | API | <https://apirehnimarket.duckdns.org> |
 | Estado | Desplegado en Azure (VM Ubuntu 24.04, Docker Compose) |
 | Gu√≠a de despliegue | [`deploy/README.md`](deploy/README.md) |
+| Cuenta owner (una sola, desde PostgreSQL) | [`deploy/OWNER.md`](deploy/OWNER.md) |
 
 ---
 
