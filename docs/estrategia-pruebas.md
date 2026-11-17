@@ -4,6 +4,9 @@
 > del 2026-11-16, medidas en local con los mismos comandos del CI
 > (`docs/pruebas/evidencias/LEEME.md`, sección «Cierre bc-testing-adso S9»).
 
+Cómo correr cada suite (comandos, salidas esperadas y problemas frecuentes):
+[`docs/pruebas/README.md`](pruebas/README.md).
+
 **Grupo**: RehnieyAL (equipo de 1 persona) · **Ficha**: 3171618 · **Stack**: React 19 + FastAPI + PostgreSQL 17 (MinIO para imágenes) · **Fecha**: 2026-11-16
 
 ## 1. Qué hace la app y qué no puede fallar

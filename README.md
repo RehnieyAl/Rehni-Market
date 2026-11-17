@@ -330,6 +330,9 @@ Escanea el código QR con **Expo Go**.
 
 ## Pruebas
 
+Tutorial completo (todas las suites, cómo correrlas en local y contra producción, CI y problemas
+frecuentes): **[`docs/pruebas/README.md`](docs/pruebas/README.md)**.
+
 ```bash
 # Backend (pytest) contra un Postgres desechable (servicio postgres-test, perfil "test")
 docker compose --profile test up -d --wait postgres-test
@@ -341,11 +344,11 @@ cd RehniMarket-frontend
 pnpm test
 ```
 
-Pruebas de humo y de carga:
+Pruebas de aceptación y de carga (con el stack local arriba):
 
 ```bash
-./scripts/acceptance_smoke.sh
-k6 run scripts/load_test.k6.js
+API=http://127.0.0.1:8000 bash scripts/acceptance_smoke.sh
+k6 run -e K6_BASE_URL=http://127.0.0.1:8000 tests/load/01-smoke.js
 ```
 
 ---
@@ -357,11 +360,11 @@ k6 run scripts/load_test.k6.js
 | `scripts/backup_rehnimarket.sh` | Respaldo de la base de datos y del almacenamiento |
 | `scripts/respaldar.sh` | Envoltorio de `backup_rehnimarket.sh` con el nombre del plan de implantación (mismos argumentos) |
 | `scripts/restore_rehnimarket.sh` | Restauración a partir de un respaldo |
-| `scripts/acceptance_smoke.sh` | Pruebas de humo sobre los flujos principales |
+| `scripts/acceptance_smoke.sh` | Muestra técnica de aceptación (casos AC-*); escribe en la base: solo en desarrollo |
 | `scripts/smoke-test.sh` | Prueba de humo por HTTP contra `BASE_URL` (VM, servidor o nube), con una cuenta de prueba por `SMOKE_EMAIL`/`SMOKE_PASSWORD`; no registra usuarios ni envía correos |
 | `scripts/perf_test.sh` | Pruebas de rendimiento |
-| `scripts/load_test.k6.js` | Escenario de carga con k6 |
 | `scripts/verificar-requisitos.sh` | Verificación de requisitos del entorno |
+| `scripts/verificar-redes.sh` | Segmentación de redes de Docker: caminos permitidos, aislamiento y resiliencia |
 
 ---
 

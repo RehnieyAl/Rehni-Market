@@ -646,6 +646,8 @@ SECCIONES_PLATAFORMA = [
            "pytest con cobertura (fail_under = 64, combinado líneas + ramas, en pyproject.toml).",
            ".github/workflows/ci.yml, job frontend: eslint (máximo 11 avisos), tsc y Vitest con cobertura "
            "(umbrales en vitest.config.ts).",
+           ".github/workflows/ci.yml, job auditoria: pip-audit sobre uv.lock y pnpm audit --prod "
+           "--audit-level=high; las excepciones con fecha de revisión están en .github/auditoria-excepciones.txt.",
            ".github/workflows/sonarqube.yml: análisis de SonarCloud (confiabilidad, seguridad, mantenibilidad, "
            "duplicación y security hotspots). sonar-project.properties excluye la cobertura "
            "(`sonar.coverage.exclusions=**`): la cobertura la exige ci.yml, no el quality gate.",
@@ -654,6 +656,9 @@ SECCIONES_PLATAFORMA = [
         CAP("Panel de SonarCloud", "https://sonarcloud.io (proyecto RehniMarket)", "Resumen del último análisis "
             "de develop con el quality gate y las métricas de confiabilidad, seguridad y mantenibilidad",
             "Estado del quality gate", "Cuenta con acceso al proyecto en SonarCloud"),
+        P("Cómo correr cada suite en local y contra producción (pytest, Vitest, verificación de redes, prueba de "
+          "humo, aceptación, k6, auditoría de dependencias y calidad estática), con la salida esperada y los "
+          "problemas frecuentes: docs/pruebas/README.md."),
     ]),
 ]
 
