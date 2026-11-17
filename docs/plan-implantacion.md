@@ -12,6 +12,7 @@
 | Versión del plan | 1.0 |
 | Versión del software | 1.0.0 (`CHANGELOG.md`; etiqueta `v1.0.0` [PENDIENTE: la crea el responsable]) |
 | Fecha | 2026-11-16 |
+| Alcance funcional | SRS: 31 RF y 28 RNF ([`docs/requisitos/requisitos.md`](requisitos/requisitos.md)); avance y deuda: [`docs/backlog-final.md`](backlog-final.md) |
 | Servidor de producción | VM Ubuntu Server 24.04 LTS en Azure [PENDIENTE: tamaño y región; el Manual técnico en edición menciona Oracle Cloud A1, confirmar proveedor] |
 
 Pendientes abiertos de las semanas 1-4: `docs/plan de implantacion - Rehnimarket/PENDIENTES-s1-s4.md`.
