@@ -22,7 +22,7 @@ catálogo público, autenticación y autorización, carrito y checkout con pago 
 | Alembic | **1.18.4** | `pyproject.toml` |
 | psycopg2-binary | **2.9.11** | `pyproject.toml` |
 | Pydantic | **2.12.5** / pydantic-settings 2.13.1 | `pyproject.toml` |
-| python-jose | **3.5.0** (JWT HS256) | `pyproject.toml` |
+| PyJWT | **2.15.1** (JWT HS256, algoritmo fijo en el código) | `pyproject.toml` |
 | passlib | **1.7.4** (bcrypt) | `pyproject.toml` |
 | minio (SDK) | **7.2.20** | `pyproject.toml` |
 | Jinja2 | **3.1.6** (plantillas de correo) | `pyproject.toml` |

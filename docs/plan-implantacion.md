@@ -705,7 +705,7 @@ Solo nombres y ejemplos ficticios; los valores reales se crean en el servidor. *
 | `.env` | `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` | Credenciales de MinIO (también las lee el backend). La contraseña se genera en el servidor (ver «Secretos») | `rehni_minio` / `<generada>` |
 | `.env` | `URL_DATABASE` | Conexión directa a PostgreSQL (la usa Alembic); la contraseña es `POSTGRES_PASSWORD` | `postgresql://rehni_app:<generada>@postgres:5432/rehnimarket` |
 | `.env` | `URL_DATABASE_POOLED` | Conexión de la app en tiempo de ejecución a través de PgBouncer (`app/database/Connection.py:16`). Si no se define, usa `URL_DATABASE` (`app/Config.py:28`) y se salta PgBouncer. Misma contraseña que `URL_DATABASE` <!-- PENDIENTE: confirmar el valor en el .env real del servidor (con PgBouncer debe apuntar a pgbouncer:6432) --> | `postgresql://rehni_app:<generada>@pgbouncer:6432/rehnimarket` |
-| `.env` | `SECRET_KEY` / `ALGORITHM` / `ACCESS_TOKEN_EXPIRE_MINUTES` / `REFRESH_TOKEN_DAYS` | Firma y vigencia de los JWT. `SECRET_KEY` se genera en el servidor (ver «Secretos») | `<generada>` / `HS256` / `30` / `15` (`.env.example`) |
+| `.env` | `SECRET_KEY` / `ACCESS_TOKEN_EXPIRE_MINUTES` / `REFRESH_TOKEN_DAYS` | Firma (HS256, fijo en el código desde v1.0.1) y vigencia de los JWT. `SECRET_KEY` se genera en el servidor (ver «Secretos») | `<generada>` / `HS256` / `30` / `15` (`.env.example`) |
 | `.env` | `GMAIL_USERNAME` / `GMAIL_APP_PASSWORD` | Cuenta que envía los correos transaccionales. La contraseña de aplicación la emite Google; crear una propia para producción | `<cuenta>` / `<de Google>` |
 | `.env` | `URL_FRONTEND` / `URL_BACKEND` | URL públicas para enlaces de correo e imágenes | `https://<dominio>` / `https://api.<dominio>` |
 | `.env` | `MINIO_URL` | Dirección de MinIO dentro de la red de Docker | `minio:9000` |
@@ -1268,14 +1268,14 @@ Fuente: API de <https://endoflife.date>, consultada el 2026-11-16.
 | Parche de seguridad solo de build/desarrollo | 30 días | Igual, agrupado |
 | Versión menor/mayor de framework | Por trimestre | Rama propia, CI y prueba de humo |
 
-`dependabot.yml`: no existe. [PENDIENTE: decidir si se activa Dependabot] (incidencia [#45](https://github.com/RehnieyAl/Rehni-Market/issues/45)).
+`.github/dependabot.yml` (v1.0.1, #45): semanal para uv, npm (frontend y móvil) y github-actions, agrupado; el job `auditoria` del CI falla con vulnerabilidades conocidas (excepciones con fecha en `.github/auditoria-excepciones.txt`). Informe completo: [`docs/calidad/auditoria-dependencias-2026-11-16.md`](calidad/auditoria-dependencias-2026-11-16.md).
 
 Resultado de la auditoría (2026-11-16):
 
 | Herramienta | Hallazgo | Severidad | ¿En la imagen desplegada? | Decisión |
 |---|---|---|:---:|---|
-| `pnpm audit --prod` | 17 avisos: `vite`, `postcss`, `source-map-js`, `brace-expansion`, `nanoid`, `follow-redirects` | 11 altos, 5 moderados, 1 bajo | No para `vite`/`postcss`/`source-map-js` (solo build; la imagen sirve estáticos con Caddy). [PENDIENTE: confirmar `nanoid` en el bundle] | Actualizar en la incidencia #45 |
-| `pip-audit` (dependencias de producción del backend) | 11 avisos: `certifi`, `dnspython`, `ecdsa`, `pyasn1`, `python-jose` | Sin clasificar | Sí (imagen del backend) | Actualizar en la incidencia #45; `python-jose`/`ecdsa` sin versión corregida: evaluar `PyJWT` |
+| `pnpm audit --prod` | 17 avisos: `vite`, `postcss`, `source-map-js`, `brace-expansion`, `nanoid`, `follow-redirects` | 11 altos, 5 moderados, 1 bajo | No: ninguno llega al bundle (comprobado en `dist/assets`; solo compilación) | **Corregido en v1.0.1**: 0 en `--prod` |
+| `pip-audit` (dependencias de producción del backend) | 11 avisos: `certifi`, `dnspython`, `ecdsa`, `pyasn1`, `python-jose` | 2 críticas, 9 altas | Sí (imagen del backend) | **Corregido en v1.0.1**: python-jose reemplazado por PyJWT, `certifi`, `dnspython` y `pyasn1` corregidos; 0 avisos |
 
 ### 9.2 Soporte
 
