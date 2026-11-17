@@ -1,0 +1,65 @@
+erDiagram
+  direction LR
+  users {
+    uuid id PK
+    varchar_50 fullName
+    varchar_50 email UK
+    varchar_255 hashed_password
+    varchar_50 tell
+    varchar_255 profileImagen
+    boolean verified
+    boolean isActive
+    timestamptz created_at
+    uuid role_id FK
+  }
+  roles {
+    uuid id PK
+    varchar_50 name UK
+  }
+  refreshToken {
+    uuid id PK
+    varchar_255 token
+    boolean revoked
+    timestamp created_at
+    timestamp expires_at
+    uuid user_id FK
+  }
+  event_codes {
+    uuid id PK
+    varchar_10 code
+    type_code_enum type
+    timestamp created_at
+    timestamp expires_at
+    uuid user_id FK
+  }
+  addresses {
+    uuid id PK
+    uuid user_id FK
+    varchar_60 label
+    varchar_150 full_name
+    varchar_60 country
+    varchar_60 department
+    varchar_60 city
+    varchar_150 address
+    varchar_15 postal_code
+    varchar_20 phone
+    varchar_255 additional_instructions
+    boolean is_default
+    timestamptz created_at
+  }
+  admin_activities {
+    uuid id PK
+    uuid admin_id FK
+    admin_activity_action action
+    uuid target_user_id FK
+    uuid target_company_id FK
+    text reason
+    timestamptz created_at
+  }
+  company |o--o{ admin_activities : "target_company_id"
+  roles ||--o{ users : "role_id"
+  users ||--o{ addresses : "user_id"
+  users ||--o{ admin_activities : "admin_id"
+  users |o--o{ admin_activities : "target_user_id"
+  users ||--o{ event_codes : "user_id"
+  users ||--o{ refreshToken : "user_id"

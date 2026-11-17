@@ -1,3 +1,4 @@
+/** Modal de detalle de usuario del panel admin: datos, cambio de correo o rol (user/admin) y bloqueo. */
 import {
   Mail,
   Phone,
@@ -18,7 +19,6 @@ import {
 
 import type { AdminUserResponse } from "@/features/admin/types/response";
 import type { UpdateAdminUserRequest } from "@/features/admin/types/request";
-import { useRole } from "@/hooks/useRole";
 
 interface UserDetailModalProps {
   userId: string | null;
@@ -48,7 +48,6 @@ export default function UserDetailModal({
   isOpen,
   onClose,
 }: UserDetailModalProps) {
-  const { isOwner } = useRole();
 
   const [user, setUser] = useState<AdminUserResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -125,10 +124,7 @@ export default function UserDetailModal({
       data.email = email;
     }
 
-    const isAssignableRole =
-      editRole === "user" ||
-      editRole === "admin" ||
-      (editRole === "owner" && isOwner);
+    const isAssignableRole = editRole === "user" || editRole === "admin";
 
     if (
       user.role !== "company" &&
@@ -164,7 +160,8 @@ export default function UserDetailModal({
 
   const canEditRole = user?.role !== "company";
 
-  const canEdit = !(user?.role === "owner" && !isOwner);
+  // La cuenta owner solo se administra desde la base de datos (deploy/OWNER.md); la API responde 403.
+  const canEdit = user?.role !== "owner";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -273,14 +270,6 @@ export default function UserDetailModal({
                         value: "admin",
                         label: "Administrador",
                       },
-                      ...(isOwner
-                        ? [
-                            {
-                              value: "owner",
-                              label: "Propietario",
-                            },
-                          ]
-                        : []),
                     ]}
                   />
                 ) : (

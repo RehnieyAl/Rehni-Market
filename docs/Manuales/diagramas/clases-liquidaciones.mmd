@@ -1,0 +1,33 @@
+classDiagram
+  direction TB
+  class CompanyPayout {
+    +uuid id
+    +uuid company_id
+    +date period_start
+    +date period_end
+    +numeric gross_sales
+    +numeric commission_percentage
+    +numeric commission_amount
+    +numeric net_amount
+    +payoutstatusenum payout_status
+    +uuid bank_account_id
+    +timestamptz paid_at
+    +timestamptz created_at
+  }
+  class RehniCoinMovement {
+    +uuid id
+    +uuid company_id
+    +uuid payout_id
+    +numeric amount_cop
+    +numeric rehni_coins
+    +numeric conversion_rate
+    +timestamptz created_at
+  }
+  Company "1" --> "0..*" CompanyPayout : company_id
+  Company "1" --> "0..*" RehniCoinMovement : company_id
+  CompanyBankAccount "1" --> "0..*" CompanyPayout : bank_account_id
+  CompanyPayout "1" --> "0..1" RehniCoinMovement : payout_id
+  class Company
+  <<externa>> Company
+  class CompanyBankAccount
+  <<externa>> CompanyBankAccount

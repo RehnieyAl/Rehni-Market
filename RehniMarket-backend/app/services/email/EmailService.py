@@ -1,11 +1,13 @@
+import logging
 import threading
-import traceback
 from concurrent.futures import ThreadPoolExecutor
 
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from app.Config import config
+
+logger = logging.getLogger(__name__)
 
 
 # El envío SMTP corre en hilos propios y acotados, nunca en el hilo de la
@@ -41,12 +43,9 @@ def _deliver(msg: MIMEMultipart, to_email: str) -> None:
         with _open_smtp() as server:
             server.login(config.SMTP_USERNAME, config.SMTP_PASSWORD)
             server.send_message(msg)
-        exitosamente = f"Correo enviado a  {to_email}, exitosamente"
-        print(exitosamente )
+        logger.info("Correo enviado a %s", to_email)
     except Exception:
-        error = f"error al enviar correo a {to_email}, problema de bloqueo de red"
-        print(error)
-        traceback.print_exc()
+        logger.exception("Error al enviar correo a %s", to_email)
     finally:
         _pending.release()
 
@@ -60,11 +59,11 @@ def send_email(to_email: str, subject: str, body: str):
     msg.attach(MIMEText(body, 'html'))
 
     if not _pending.acquire(blocking=False):
-        print(f"error al enviar correo a {to_email}: cola de correo llena ({_EMAIL_MAX_PENDING})")
+        logger.error("Error al enviar correo a %s: cola de correo llena (%d)", to_email, _EMAIL_MAX_PENDING)
         return
 
     try:
         _executor.submit(_deliver, msg, to_email)
     except RuntimeError:  # executor cerrado (apagado del proceso)
         _pending.release()
-        print(f"error al enviar correo a {to_email}: servicio de correo detenido")
+        logger.error("Error al enviar correo a %s: servicio de correo detenido", to_email)

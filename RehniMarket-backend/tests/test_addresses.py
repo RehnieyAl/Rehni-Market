@@ -174,7 +174,7 @@ class TestDelete:
 
     @pytest.mark.xfail(
         strict=True,
-        reason="H-06: orders.address_id sin ondelete; borrar una dirección usada en un pedido da 500 (ForeignKeyViolation)",
+        reason="H-06 (#35): orders.address_id sin ondelete; borrar una dirección usada en un pedido da 500 (ForeignKeyViolation)",
     )
     def test_deleting_an_address_used_by_an_order_does_not_fail_with_500(
         self, client, tokens, db, product, address, buyer_wallet

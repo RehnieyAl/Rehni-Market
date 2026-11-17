@@ -1,5 +1,7 @@
-# Compose único: desarrollo, pruebas y producción. Lo que cambia entre entornos va en
-# el .env de la raíz (.env.example para local, deploy/env.prod.example para el servidor).
+# Compose único: desarrollo, pruebas y producción. Toda la configuración está en un solo
+# .env en la raíz (desarrollo: cp .env.example .env; producción: cp deploy/env.prod.example .env).
+# minio, postgres, pgbouncer y backend lo cargan con env_file; Caddy recibe solo sus variables
+# por environment. El .env es obligatorio: sin él compose no arranca.
 #
 #   docker compose up -d --build                                  # stack completo
 #   docker compose watch                                          # desarrollo (develop.watch)
@@ -7,6 +9,9 @@
 #
 # Caddy (servicio `frontend`) es el único punto de entrada: HTTPS en HTTP_PORT/HTTPS_PORT
 # (caddy/Caddyfile). Postgres solo se publica en 127.0.0.1 (DbSchema / túnel SSH).
+#
+# Redes (al final del archivo): `edge` = Caddy ↔ backend; `data` = backend ↔ pgbouncer,
+# postgres y minio. Caddy no ve la base de datos ni MinIO; postgres-test queda aparte.
 
 services:
   minio:
@@ -19,11 +24,14 @@ services:
     image: cgr.dev/chainguard/minio@sha256:3c60a2a8c4d33409a9bc7a623a7fcbfb4605adc3d89422d2f53b3f673a6e5597
     container_name: rehni-minio
     restart: unless-stopped
-    env_file:
-      - ./.env.minio
+    env_file: ./.env
     volumes:
       - minio_data:/data
     command: server /data
+    # Solo data: lo usa el backend (MINIO_ENDPOINT). Caddy no hace proxy a MinIO: las
+    # imágenes salen por el backend en /media/proxy.
+    networks:
+      - data
     healthcheck:
       test: ["CMD-SHELL", "MC_HOST_local=http://$$MINIO_ROOT_USER:$$MINIO_ROOT_PASSWORD@localhost:9000 mc ready local >/dev/null"]
       interval: 15s
@@ -40,15 +48,16 @@ services:
     image: postgres:17-alpine
     container_name: rehni-postgres
     restart: unless-stopped
-    env_file:
-      - ./.env.postgres
+    env_file: ./.env
     volumes:
       - postgres_data:/var/lib/postgresql/data
     # Solo en el loopback del host (clientes como DbSchema; en el servidor, por túnel SSH).
     # Nunca 0.0.0.0: la base de datos no debe quedar expuesta en la red.
     ports:
-      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+      - "${POSTGRES_BIND:-127.0.0.1}:${POSTGRES_PORT:-5433}:5432"
     shm_size: 256mb
+    networks:
+      - data
     command:
       - postgres
       - -c
@@ -75,7 +84,8 @@ services:
       resources:
         limits:
           memory: 768M
-          cpus: "3"
+          # Configurable para VM pequeñas (Docker no crea el contenedor si supera los núcleos del host).
+          cpus: "${POSTGRES_CPUS:-3}"
     depends_on:
       minio:
         condition: service_healthy
@@ -84,8 +94,7 @@ services:
     image: edoburu/pgbouncer:latest
     container_name: pgbouncer_pool
     restart: unless-stopped
-    env_file:
-      - ./.env.postgres
+    env_file: ./.env
     environment:
       AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
@@ -110,6 +119,8 @@ services:
       nofile:
         soft: 65535
         hard: 65535
+    networks:
+      - data
     entrypoint:
       - sh
       - -c
@@ -142,9 +153,7 @@ services:
     # Recordar DevOps, Nunca fijar un dns, ya que rompe la resolución de nombres en redes que bloquean DNS saliente a resolutores públicos 
     # (p. ej. Wi-Fi institucional) y `uv run` no puede descargar de PyPI.
     # Tambien bloquea el servicio STMP para enviar correos, por lo que se recomienda usar un relay SMTP interno.
-    env_file:
-      - ./RehniMarket-backend/.env
-      - ./.env.minio
+    env_file: ./.env
     volumes:
       - backend_venv:/app/.venv
     depends_on:
@@ -168,6 +177,10 @@ services:
     command: sh -c "uv run alembic upgrade head && exec uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers $$UVICORN_WORKERS --backlog 4096 --proxy-headers --forwarded-allow-ips \"$$FORWARDED_ALLOW_IPS\""
     ports:
       - "${BACKEND_BIND:-127.0.0.1}:${BACKEND_PORT:-8000}:8000"
+    # edge: recibe a Caddy. data: llega a pgbouncer y minio.
+    networks:
+      - edge
+      - data
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health/database', timeout=5).status==200 else 1)"]
       interval: 20s
@@ -178,7 +191,8 @@ services:
       resources:
         limits:
           memory: 1G
-          cpus: "4"
+          # Configurable para VM pequeñas: en 2 vCPU usar BACKEND_CPUS=2 (y POSTGRES_CPUS=1.5).
+          cpus: "${BACKEND_CPUS:-4}"
     # docker compose watch: el código se copia al contenedor y se reinicia (vuelve a
     # pasar por alembic upgrade head). Sin uvicorn --reload: no se combina con --workers.
     develop:
@@ -209,8 +223,6 @@ services:
     depends_on:
       backend:
         condition: service_healthy
-      minio:
-        condition: service_healthy
     environment:
       SITE_ADDRESS: "${SITE_ADDRESS:-localhost}"
       API_ADDRESS: "${API_ADDRESS:-api.localhost}"
@@ -223,9 +235,10 @@ services:
       - ./caddy:/etc/caddy:ro
       - caddy_data:/data
       - caddy_config:/config
-    # IP fija: el backend confía en X-Forwarded-For solo si viene de aquí (FORWARDED_ALLOW_IPS).
+    # Solo edge, con IP fija: el backend confía en X-Forwarded-For solo si viene de aquí
+    # (FORWARDED_ALLOW_IPS). Sin data: Caddy no resuelve postgres, pgbouncer ni minio.
     networks:
-      default:
+      edge:
         ipv4_address: 172.30.0.10
     # Mismo puerto dentro y fuera: la redirección HTTP → HTTPS de Caddy apunta a HTTPS_PORT.
     ports:
@@ -283,13 +296,20 @@ services:
       interval: 2s
       timeout: 3s
       retries: 15
+    # Sin networks: queda en la red default del proyecto, sin ningún otro servicio.
 
-# Subred fija para poder dar a Caddy una IP conocida (servicio frontend).
+# Subredes fijas: Caddy necesita una IP conocida en edge (FORWARDED_ALLOW_IPS).
+# data no es `internal: true`: Docker no publicaría 127.0.0.1:5433 (DbSchema / túnel
+# SSH) y el backend perdería la salida (SMTP) si solo estuviera en esa red.
 networks:
-  default:
+  edge:
     ipam:
       config:
         - subnet: 172.30.0.0/24
+  data:
+    ipam:
+      config:
+        - subnet: 172.30.1.0/24
 
 volumes:
   postgres_data:

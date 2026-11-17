@@ -1,2 +1,18 @@
 allowBuilds:
   opencode-ai: true
+
+auditConfig:
+  ignoreGhsas:
+    - GHSA-g3hv-75wg-m249
+
+# Versión mínima corregida de dependencias transitivas vulnerables (auditoría 2026-11-16, #45).
+# Cada selector solo alcanza el rango vulnerable: no impide versiones nuevas.
+overrides:
+  "postcss@<8.5.23": 8.5.23
+  "nanoid@<3.3.18": 3.3.18
+  "source-map-js@<1.2.2": 1.2.2
+  "follow-redirects@<1.16.2": 1.16.2
+  "brace-expansion@>=5.0.0 <5.0.12": 5.0.12
+  "undici@>=8.0.0 <8.12.2": 8.12.2
+  "browserslist@<4.28.7": 4.28.7
+  "zod@>=4.0.0 <4.6.6": 4.6.6

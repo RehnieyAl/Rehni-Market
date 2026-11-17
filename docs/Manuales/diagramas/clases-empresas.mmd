@@ -1,0 +1,35 @@
+classDiagram
+  direction TB
+  class Company {
+    +uuid id
+    +varchar nameCompany
+    +varchar addressCompany
+    +text description
+    +varchar CompanyNIT
+    +varchar CompanyNITDV
+    +varchar CompanyLogo
+    +varchar CompanyBanner
+    +varchar CompanyCertificate
+    +companycertificateenum CompanyCertificateStatus
+    +boolean CompanyStatus
+    +text suspension_reason
+    +timestamptz created_at
+    +uuid user_id
+    +text rejection_reason
+  }
+  class CompanyBankAccount {
+    +uuid id
+    +uuid company_id
+    +varchar account_holder
+    +varchar document_number
+    +varchar bank_name
+    +bankaccounttypeenum account_type
+    +varchar account_number
+    +boolean is_default
+    +timestamptz created_at
+    +timestamptz updated_at
+  }
+  Company "1" --> "0..*" CompanyBankAccount : company_id
+  Users "1" --> "0..1" Company : user_id
+  class Users
+  <<externa>> Users

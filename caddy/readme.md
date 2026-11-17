@@ -172,7 +172,7 @@ Desde `2-practicas/laboratorio/`:
 
 Sobre **RehniMarket**, no sobre el laboratorio. Guía del curso:
 `3-proyecto/starter/entregable-s03-hosting-y-dominio.md`. Se completa la **sección 4** del plan:
-`docs/plan de implantacion - Rehnimarket/4) Hosting y dominio — Semana 3 (CE-1).md`.
+`docs/plan-implantacion.md` (sección 4).
 
 > **Estado:** la configuración del reverse proxy ya está hecha y probada (20/10/2026): Nginx se
 > reemplazó por Caddy, y el frontend y la API quedaron en **URL separadas**. Este paso explica
@@ -332,7 +332,7 @@ Si la nueva configuración tiene un error, Caddy lo rechaza y sigue con la anter
 
 La prueba con los nombres elegidos (`rehnimarket` / `api.rehnimarket`, CA local forzada con
 `CADDY_LOCAL_CERTS` y `curl --resolve`) y su salida están en la §4.5 del plan
-(`docs/plan de implantacion - Rehnimarket/4) Hosting y dominio — Semana 3 (CE-1).md`). La
+(`docs/plan-implantacion.md` (sección 4)). La
 prueba de humo contra `https://localhost` está en la §5.2.
 
 ### 6.7.1 Confiar en la CA local
@@ -366,7 +366,7 @@ en el navegador (ver [`caddy-configuracion.md`](caddy-configuracion.md)); para l
 
 1. **App móvil.** Sigue entrando directo al `:8000` con `URL_BACKEND`. En producción debería
    usar `https://api.<dominio>` (`EXPO_PUBLIC_API_URL` y `URL_BACKEND`).
-2. **Cerrar el `:8000`.** En producción, `BACKEND_BIND=127.0.0.1` (ya en `deploy/env.prod.example`).
+2. **Cerrar el `:8000`.** En producción, `BACKEND_BIND=127.0.0.1` (ya es el valor de `.env.example`).
 3. **`URL_FRONTEND`** (enlaces de los correos) con el dominio real: `https://<dominio>`
    (en local ya es `https://rehnimarket`).
 
@@ -420,7 +420,7 @@ servidor o a un PaaS, solo cambiaría el registro de `api` (a otra `A` o a un `C
 | Qué | Método | Autenticación |
 |---|---|---|
 | Código e imágenes Docker | `git pull` + `docker compose up -d --build` en el servidor (en la semana 7: imagen desde un registro) | Llave SSH / deploy key |
-| `.env` y `RehniMarket-backend/.env` | `scp` con llave y `chmod 600` en el servidor. Nunca por Git | Llave SSH |
+| `.env` | `scp` con llave y `chmod 600` en el servidor. Nunca por Git | Llave SSH |
 | Respaldos (`pg_dump`, datos de MinIO) | `rsync` o SFTP desde el servidor hacia un destino externo | Llave SSH |
 
 **Evidencia:** la tabla de 6.7 y la salida de los comandos.
@@ -461,7 +461,7 @@ imágenes las entrega el backend en `/media/proxy` (por Caddy,
   servidor**: solo en el loopback, nunca `0.0.0.0`. Desde fuera solo se llega por túnel SSH. ✅
 - Los datos viven en el volumen `postgres_data` y las imágenes en `minio_data`.
   `docker compose down -v` **los borra**: nunca lo ejecutes en el servidor.
-- Las credenciales están en `RehniMarket-backend/.env`, ignorado por Git. ✅
+- Las credenciales están en el `.env` de la raíz, ignorado por Git. ✅
 
 ### Opciones de hosting
 

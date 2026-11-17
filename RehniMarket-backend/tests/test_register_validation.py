@@ -80,7 +80,7 @@ def test_user_fields_are_trimmed():
 
 @pytest.mark.xfail(
     strict=True,
-    reason="H-02: NIT de más de 15 dígitos aceptado; el DV solo pondera los 15 primeros",
+    reason="H-02 (#33): NIT de más de 15 dígitos aceptado; el DV solo pondera los 15 primeros",
 )
 def test_nit_longer_than_15_digits_is_rejected():
     nit_15 = "123456789012345"
@@ -92,7 +92,7 @@ def test_nit_longer_than_15_digits_is_rejected():
 
 @pytest.mark.xfail(
     strict=True,
-    reason="H-03: str.isdigit() acepta dígitos no ASCII (ancho completo) en el teléfono",
+    reason="H-03 (#34): str.isdigit() acepta dígitos no ASCII (ancho completo) en el teléfono",
 )
 def test_phone_with_non_ascii_digits_is_rejected():
     with pytest.raises(ValidationError):
@@ -101,7 +101,7 @@ def test_phone_with_non_ascii_digits_is_rejected():
 
 @pytest.mark.xfail(
     strict=True,
-    reason="H-03: str.isdigit() acepta dígitos no ASCII (ancho completo) en el NIT",
+    reason="H-03 (#34): str.isdigit() acepta dígitos no ASCII (ancho completo) en el NIT",
 )
 def test_nit_with_non_ascii_digits_is_rejected():
     with pytest.raises(ValidationError):

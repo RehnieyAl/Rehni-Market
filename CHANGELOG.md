@@ -8,10 +8,65 @@ implantación). El detalle histórico del backend sigue en
 
 ---
 
-## [1.0.0] - <!-- PENDIENTE: fecha de la etiqueta v1.0.0 (la crea el responsable) -->
+## [1.0.1] - 2026-11-16
 
-Primera versión liberada del conjunto. Es la que cubre el plan de implantación
-(`docs/plan de implantacion - Rehnimarket/`).
+Parche de seguridad: auditoría de dependencias (#45). Informe completo en
+`docs/calidad/auditoria-dependencias-2026-11-16.md`.
+
+### Seguridad
+
+- **python-jose → PyJWT 2.15.1**: python-jose tenía una vulnerabilidad crítica sin versión corregida
+  (GHSA-3qf3-8w2g-rqmx). El algoritmo queda fijo en `HS256` en el código (se elimina la variable
+  `ALGORITHM` del `.env`) y los tokens emitidos con python-jose siguen siendo válidos: desplegar no
+  cierra sesiones. Salen también `ecdsa`, `rsa`, `pyasn1` y `six`.
+- Backend: `certifi` 2026.10.18 (crítica) y `dnspython` 2.9.2; en desarrollo, `filelock` 4.2.1.
+- Frontend: `vite` 8.1.6, `vitest` 4.1.12 y `overrides` con la versión mínima corregida de `postcss`,
+  `nanoid`, `source-map-js`, `follow-redirects`, `brace-expansion`, `undici`, `browserslist` y `zod`.
+  `@tailwindcss/vite` y `tailwindcss` pasan a `devDependencies` y se quita `brace-expansion`, que no
+  se usaba. Resultado: 0 avisos en el backend y en el frontend de producción.
+- Excepción documentada: `minimatch` (desarrollo, moderada; el arreglo exige una versión mayor), con
+  fecha de revisión en `.github/auditoria-excepciones.txt`.
+
+### Corregido
+
+- `POST /auth/refresh` respondía 500 con un refresh token vencido o sin `sub`; ahora responde 401.
+- Un token sin `exp` o `sub`, o con un `sub` que no es UUID, se rechaza con 401.
+
+### Prevención
+
+- Job `auditoria` en el CI: `pip-audit` sobre `uv.lock` y `pnpm audit --prod --audit-level=high`.
+- `.github/dependabot.yml`: actualizaciones semanales agrupadas de uv, npm (frontend y móvil) y
+  github-actions.
+
+### Al actualizar
+
+- La variable `ALGORITHM` del `.env` ya no se lee; se puede borrar.
+- `docker compose up -d --build --wait`: el backend instala PyJWT al arrancar (`uv run` sincroniza
+  el entorno con `uv.lock`).
+
+## [1.0.0] - 2026-11-16
+
+Primera versión liberada del conjunto y primera en producción: Azure (VM Ubuntu 24.04 con
+Docker Compose), en <https://rehnimarket.duckdns.org> y <https://apirehnimarket.duckdns.org>.
+Es la que cubre el plan de implantación (`docs/plan-implantacion.md`).
+
+### Cierre de la versión
+
+- **CI con pruebas** en cada push y PR (`.github/workflows/ci.yml`: ruff, migraciones, pytest
+  con umbral de cobertura y pruebas del frontend), además de SonarCloud.
+- **Segmentación de redes**: `edge` (Caddy y backend) y `data` (backend, PgBouncer, PostgreSQL
+  y MinIO); solo Caddy publica puertos hacia Internet (`scripts/verificar-redes.sh`).
+- **Caddy con reintentos** hacia el backend (`lb_try_duration`) y health check a
+  `/health/database`: un reinicio del backend ya no da 502 (#48).
+- **`.env` único** con dos plantillas, `.env.example` (desarrollo) y `deploy/env.prod.example`
+  (producción); Caddy solo recibe sus 5 variables.
+- **Datos base siempre creados**: roles, catálogo y transportadoras se crean al arrancar aunque
+  `RUN_SEED=false`; `RUN_SEED` queda para los datos de demostración (#53).
+- **Un único owner** (#54): `users.is_owner` calculada por trigger, índice único parcial
+  `uq_users_single_owner` y trigger que protege el rol owner; la API responde 403 a cualquier
+  intento de asignar, quitar, editar o bloquear el rol owner, y el panel no lo ofrece. El owner
+  se crea desde PostgreSQL con `deploy/sql/crear-owner.sql` según `deploy/OWNER.md`.
+- **Despliegue en Azure** documentado en `deploy/README.md` y `deploy/checklist-azure.md`.
 
 ### Incluye
 
@@ -25,7 +80,7 @@ Primera versión liberada del conjunto. Es la que cubre el plan de implantación
 - **Seguridad**: JWT con refresh tokens, verificación de correo por código, recuperación
   de contraseña, permisos por rol validados contra la BD, rate limiting y CORS
   configurables.
-- **Esquema de base de datos**: 16 migraciones de Alembic, `head` `c3e5a7f9d1b2`
+- **Esquema de base de datos**: 17 migraciones de Alembic, `head` `d7e3f1a9c5b2`
   (clasificación en la sección 5.2 del plan).
 
 ### Componentes (versiones verificadas el 04/11/2026)

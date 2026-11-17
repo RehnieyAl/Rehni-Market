@@ -1,6 +1,12 @@
+"""Configuración del backend leída del entorno y validada al importarse."""
+from pathlib import Path
+
 from dotenv import load_dotenv
 import os
-load_dotenv()
+
+# Fuera de Docker (uv run, pytest) se lee el .env único de la raíz del repo. En el contenedor
+# esa ruta no existe y las variables llegan por env_file; load_dotenv no pisa las ya definidas.
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
 
 
 def _int_env(name: str, default: int, minimum: int, maximum: int) -> int:
@@ -27,7 +33,6 @@ class config():
     # transacción de PgBouncer.
     URL_DATABASE_POOLED = os.getenv("URL_DATABASE_POOLED") or URL_DATABASE
     SECRET_KEY = os.getenv("SECRET_KEY")
-    ALGORITHM = os.getenv("ALGORITHM")
     ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
     REFRESH_TOKEN_DAYS = int(os.getenv("REFRESH_TOKEN_DAYS"))
     GMAIL_USERNAME = os.getenv("GMAIL_USERNAME")

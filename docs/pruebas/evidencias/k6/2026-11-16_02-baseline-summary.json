@@ -1,0 +1,221 @@
+{
+    "metrics": {
+        "http_reqs": {
+            "count": 5257,
+            "rate": 42.958968753754384
+        },
+        "http_req_duration{expected_response:true}": {
+            "max": 216.422089,
+            "p(90)": 24.807470200000004,
+            "p(95)": 27.183316,
+            "avg": 10.856729157694488,
+            "min": 0.91656,
+            "med": 9.368122
+        },
+        "http_req_receiving": {
+            "avg": 0.0705500028533381,
+            "min": 0.01608,
+            "med": 0.063018,
+            "max": 5.858085,
+            "p(90)": 0.08521300000000005,
+            "p(95)": 0.100049
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "data_received": {
+            "count": 26423184,
+            "rate": 215924.050947442
+        },
+        "vus": {
+            "value": 3,
+            "min": 3,
+            "max": 10
+        },
+        "vus_max": {
+            "value": 10,
+            "min": 10,
+            "max": 10
+        },
+        "http_req_duration": {
+            "avg": 10.856729157694488,
+            "min": 0.91656,
+            "med": 9.368122,
+            "max": 216.422089,
+            "p(90)": 24.807470200000004,
+            "p(95)": 27.183316
+        },
+        "duracion_busqueda": {
+            "min": 22.149209,
+            "med": 25.728784,
+            "max": 216.422089,
+            "p(90)": 29.755715,
+            "p(95)": 31.6341935,
+            "avg": 27.758433001331547,
+            "thresholds": {
+                "p(95)<600": false
+            }
+        },
+        "http_req_sending": {
+            "min": 0.002715,
+            "med": 0.007234,
+            "max": 1.720098,
+            "p(90)": 0.013409000000000006,
+            "p(95)": 0.016344199999999996,
+            "avg": 0.008904284763172902
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 5257,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "errores_negocio": {
+            "passes": 0,
+            "fails": 3755,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_req_waiting": {
+            "min": 0.868059,
+            "med": 9.291709,
+            "max": 216.344604,
+            "p(90)": 24.7130058,
+            "p(95)": 27.0973832,
+            "avg": 10.777274870078
+        },
+        "duracion_catalogo": {
+            "min": 7.967109,
+            "med": 10.523757,
+            "max": 208.169217,
+            "p(90)": 13.24958,
+            "p(95)": 15.027967499999999,
+            "avg": 12.715167033288969,
+            "thresholds": {
+                "p(95)<800": false
+            }
+        },
+        "checks": {
+            "passes": 5257,
+            "fails": 0,
+            "value": 1
+        },
+        "duracion_detalle": {
+            "max": 67.046973,
+            "p(90)": 14.017122,
+            "p(95)": 16.2855975,
+            "avg": 10.797835488681757,
+            "min": 7.013991,
+            "med": 9.579676,
+            "thresholds": {
+                "p(95)<500": false
+            }
+        },
+        "duracion_secciones": {
+            "p(95)": 17.394735450000002,
+            "avg": 9.326581992676418,
+            "min": 2.578478,
+            "med": 11.6596105,
+            "max": 117.269929,
+            "p(90)": 15.954767900000002
+        },
+        "data_sent": {
+            "count": 515186,
+            "rate": 4209.97893786793
+        },
+        "http_req_blocked": {
+            "avg": 0.0034108959482594646,
+            "min": 0.001002,
+            "med": 0.002395,
+            "max": 0.469586,
+            "p(90)": 0.004078,
+            "p(95)": 0.0050192
+        },
+        "http_req_connecting": {
+            "avg": 0.0004986012935134107,
+            "min": 0,
+            "med": 0,
+            "max": 0.404755,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "iterations": {
+            "rate": 6.136995536250626,
+            "count": 751
+        },
+        "iteration_duration": {
+            "max": 2803.703624,
+            "p(90)": 2374.248082,
+            "p(95)": 2474.3401415,
+            "avg": 1614.5962321025286,
+            "min": 570.534772,
+            "med": 1635.158021
+        }
+    },
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "catalogo 200": {
+                    "name": "catalogo 200",
+                    "path": "::catalogo 200",
+                    "id": "9719ca227f67452b51e8ce12484e34aa",
+                    "passes": 751,
+                    "fails": 0
+                },
+                "busqueda 200": {
+                    "fails": 0,
+                    "name": "busqueda 200",
+                    "path": "::busqueda 200",
+                    "id": "9af171ab64a006988dccbd417832fdda",
+                    "passes": 751
+                },
+                "detalle 200": {
+                    "name": "detalle 200",
+                    "path": "::detalle 200",
+                    "id": "b213a430f302c6ed46dcbdeb9f053b4a",
+                    "passes": 751,
+                    "fails": 0
+                },
+                "ofertas 200": {
+                    "name": "ofertas 200",
+                    "path": "::ofertas 200",
+                    "id": "0ca6edc995cf30f3ce07beb28c49c94e",
+                    "passes": 751,
+                    "fails": 0
+                },
+                "novedades 200": {
+                    "fails": 0,
+                    "name": "novedades 200",
+                    "path": "::novedades 200",
+                    "id": "28c670904c837f31ae3ee0e2b476b2eb",
+                    "passes": 751
+                },
+                "catalogos 200": {
+                    "name": "catalogos 200",
+                    "path": "::catalogos 200",
+                    "id": "c99257ada4dd9ad96f06da180c37c341",
+                    "passes": 751,
+                    "fails": 0
+                },
+                "colores 200": {
+                    "fails": 0,
+                    "name": "colores 200",
+                    "path": "::colores 200",
+                    "id": "fb55d23b830b976c341d67f340659426",
+                    "passes": 751
+                }
+            }
+    }
+}

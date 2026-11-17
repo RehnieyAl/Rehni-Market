@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
+# Muestra técnica de las pruebas de aceptación (casos AC-*): registro, verificación, login,
+# permisos por rol, catálogo, carrito, checkout y pedidos, por HTTP contra la API.
+#
+# SOLO contra una base de DESARROLLO: crea una cuenta nueva y una dirección, fija el saldo de su
+# billetera con UPDATE (psql en el contenedor de PostgreSQL) y hace una compra real que descuenta
+# stock. Nunca contra producción.
+#
+# Uso, con el stack local arriba (docs/pruebas/README.md, §6):
+#   API=http://127.0.0.1:8000 bash scripts/acceptance_smoke.sh
+# Variables: API (por defecto http://localhost:8000), PGC (contenedor de PostgreSQL, rehni-postgres).
+# Sale con 0 si todos los casos pasan y con 1 si alguno falla.
 set -uo pipefail
 
 API="${API:-http://localhost:8000}"
@@ -196,10 +207,5 @@ echo "AC-INF-04  Swagger / OpenAPI"
 code=$(curl -s -o /dev/null -w '%{http_code}' "$API/openapi.json"); [ "$code" = "200" ] && ok "/openapi.json -> 200" || ko "/openapi.json -> $code"
 
 hr
-echo "RESUMEN:  PASA=$PASSED   FALLA=$FAILED"
-if [ "$FAILED" -eq 0 ]; then
-  echo "RESULTADO: todos los casos de la muestra técnica PASARON."
-else
-  echo "RESULTADO: $FAILED caso(s) con fallo — revisar arriba."
-fi
-exit 0
+echo "RESULTADO: $PASSED pasan, $FAILED fallan"
+[ "$FAILED" -eq 0 ]

@@ -1,0 +1,52 @@
+classDiagram
+  direction LR
+  class ReturnRequest {
+    +uuid id
+    +uuid order_id
+    +uuid order_item_id
+    +uuid user_id
+    +uuid company_id
+    +text reason
+    +return status
+    +text company_response
+    +uuid reviewed_by
+    +numeric refund_amount
+    +timestamptz created_at
+    +timestamptz updated_at
+    +timestamptz resolved_at
+  }
+  class Favorite {
+    +uuid id
+    +uuid user_id
+    +uuid product_id
+    +timestamptz created_at
+  }
+  class Review {
+    +uuid id
+    +uuid user_id
+    +uuid product_id
+    +integer rating
+    +text comment
+    +boolean is_active
+    +timestamptz created_at
+    +timestamptz updated_at
+  }
+  Company "1" --> "0..*" ReturnRequest : company_id
+  OrderItem "1" --> "0..*" ReturnRequest : order_item_id
+  Order "1" --> "0..*" ReturnRequest : order_id
+  Product "1" --> "0..*" Favorite : product_id
+  Product "1" --> "0..*" Review : product_id
+  Users "1" --> "0..*" Favorite : user_id
+  Users "0..1" --> "0..*" ReturnRequest : reviewed_by
+  Users "1" --> "0..*" ReturnRequest : user_id
+  Users "1" --> "0..*" Review : user_id
+  class Company
+  <<externa>> Company
+  class OrderItem
+  <<externa>> OrderItem
+  class Order
+  <<externa>> Order
+  class Product
+  <<externa>> Product
+  class Users
+  <<externa>> Users

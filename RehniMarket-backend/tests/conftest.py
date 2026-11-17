@@ -1,3 +1,4 @@
+"""Fixtures de pytest: base de pruebas aislada, roles, usuarios con token y cliente HTTP con el arranque simulado."""
 import os
 from collections import defaultdict
 
@@ -8,7 +9,7 @@ from sqlalchemy.orm import sessionmaker
 
 from app.Config import config
 from app.database.Connection import Base, get_db
-import app.models
+import app.models  # noqa: F401  registra todos los modelos en Base.metadata para create_all
 from app.models.ModelCatalog import Catalog
 from app.models.ModelCatalogAttribute import CatalogAttribute, CatalogAttributeOption
 from app.models.ModelCompany import Company, CompanyCertificateEnum
@@ -153,6 +154,11 @@ def client(db, engine, monkeypatch):
     # El lifespan llama a ensure_bucket() contra MinIO; sin MinIO alcanzable,
     # urllib3 reintenta ~6 s por cada TestClient. Ninguna prueba usa MinIO real.
     monkeypatch.setattr("app.main.ensure_bucket", lambda: None)
+    # El fixture db ya crea los roles; los datos base al arrancar se prueban en test_base_data.py.
+    monkeypatch.setattr("app.main.ensure_base_data", lambda: None)
+    # Las pruebas no deben depender de RUN_SEED del .env de desarrollo (true en .env.example): el
+    # seed de demostración usaría la conexión de la app (PgBouncer), que no existe fuera de Docker.
+    monkeypatch.setattr("app.main.config.RUN_SEED", False)
 
     def override_get_db():
         yield db

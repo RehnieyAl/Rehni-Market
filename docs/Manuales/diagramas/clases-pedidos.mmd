@@ -1,0 +1,78 @@
+classDiagram
+  direction TB
+  class Cart {
+    +uuid id
+    +uuid user_id
+    +timestamptz created_at
+  }
+  class CartItem {
+    +uuid id
+    +uuid cart_id
+    +uuid product_id
+    +uuid variant_id
+    +integer quantity
+    +timestamptz created_at
+  }
+  class Order {
+    +uuid id
+    +integer order_number
+    +uuid user_id
+    +uuid company_id
+    +uuid address_id
+    +varchar delivery_label
+    +varchar delivery_full_name
+    +varchar delivery_phone
+    +varchar delivery_address
+    +varchar delivery_city
+    +varchar delivery_department
+    +orderstatusenum status
+    +numeric subtotal
+    +numeric tax
+    +numeric total
+    +timestamptz created_at
+    +timestamptz updated_at
+    +uuid shipping_carrier_id
+    +varchar tracking_number
+  }
+  class OrderItem {
+    +uuid id
+    +uuid order_id
+    +uuid product_id
+    +uuid variant_id
+    +varchar product_name
+    +varchar variant_name
+    +numeric unit_price
+    +numeric original_unit_price
+    +integer quantity
+    +numeric subtotal
+    +jsonb attributes_snapshot
+  }
+  class ShippingCarrier {
+    +uuid id
+    +varchar name
+    +varchar tracking_url
+    +boolean is_active
+    +timestamptz created_at
+    +timestamptz updated_at
+  }
+  Address "0..1" --> "0..*" Order : address_id
+  Cart "1" --> "0..*" CartItem : cart_id
+  Company "1" --> "0..*" Order : company_id
+  Order "1" --> "0..*" OrderItem : order_id
+  ProductVariant "0..1" --> "0..*" CartItem : variant_id
+  ProductVariant "0..1" --> "0..*" OrderItem : variant_id
+  Product "1" --> "0..*" CartItem : product_id
+  Product "1" --> "0..*" OrderItem : product_id
+  ShippingCarrier "0..1" --> "0..*" Order : shipping_carrier_id
+  Users "1" --> "0..1" Cart : user_id
+  Users "1" --> "0..*" Order : user_id
+  class Address
+  <<externa>> Address
+  class Company
+  <<externa>> Company
+  class ProductVariant
+  <<externa>> ProductVariant
+  class Product
+  <<externa>> Product
+  class Users
+  <<externa>> Users

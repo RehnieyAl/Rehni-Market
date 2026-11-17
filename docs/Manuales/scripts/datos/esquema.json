@@ -1,0 +1,3323 @@
+{
+ "tables": [
+  {
+   "name": "addresses",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "label",
+     "type": "character varying(60)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "full_name",
+     "type": "character varying(150)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "country",
+     "type": "character varying(60)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "department",
+     "type": "character varying(60)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "city",
+     "type": "character varying(60)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "address",
+     "type": "character varying(150)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "postal_code",
+     "type": "character varying(15)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "phone",
+     "type": "character varying(20)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "additional_instructions",
+     "type": "character varying(255)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "is_default",
+     "type": "boolean",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "addresses_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "addresses_user_id_fkey",
+     "type": "f",
+     "cols": [
+      "user_id"
+     ],
+     "ref": "users",
+     "def": "FOREIGN KEY (user_id) REFERENCES users(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "admin_activities",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "admin_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "action",
+     "type": "admin_activity_action",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "target_user_id",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "target_company_id",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "reason",
+     "type": "text",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "admin_activities_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "admin_activities_admin_id_fkey",
+     "type": "f",
+     "cols": [
+      "admin_id"
+     ],
+     "ref": "users",
+     "def": "FOREIGN KEY (admin_id) REFERENCES users(id)"
+    },
+    {
+     "name": "admin_activities_target_company_id_fkey",
+     "type": "f",
+     "cols": [
+      "target_company_id"
+     ],
+     "ref": "company",
+     "def": "FOREIGN KEY (target_company_id) REFERENCES company(id) ON DELETE SET NULL"
+    },
+    {
+     "name": "admin_activities_target_user_id_fkey",
+     "type": "f",
+     "cols": [
+      "target_user_id"
+     ],
+     "ref": "users",
+     "def": "FOREIGN KEY (target_user_id) REFERENCES users(id) ON DELETE SET NULL"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "advertisements",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "image_url",
+     "type": "character varying(255)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "mobile_image_url",
+     "type": "character varying(255)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "button_link",
+     "type": "character varying(255)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "is_active",
+     "type": "boolean",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "order",
+     "type": "integer",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp without time zone",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "target_type",
+     "type": "advertisementtargettype",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "target_product_id",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "target_catalog_id",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "target_company_id",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "minimum_discount",
+     "type": "integer",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "maximum_stock",
+     "type": "integer",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "max_age_days",
+     "type": "integer",
+     "nullable": true,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "advertisements_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "advertisements_target_catalog_id_fkey",
+     "type": "f",
+     "cols": [
+      "target_catalog_id"
+     ],
+     "ref": "catalog",
+     "def": "FOREIGN KEY (target_catalog_id) REFERENCES catalog(id) ON DELETE SET NULL"
+    },
+    {
+     "name": "advertisements_target_company_id_fkey",
+     "type": "f",
+     "cols": [
+      "target_company_id"
+     ],
+     "ref": "company",
+     "def": "FOREIGN KEY (target_company_id) REFERENCES company(id) ON DELETE SET NULL"
+    },
+    {
+     "name": "advertisements_target_product_id_fkey",
+     "type": "f",
+     "cols": [
+      "target_product_id"
+     ],
+     "ref": "products",
+     "def": "FOREIGN KEY (target_product_id) REFERENCES products(id) ON DELETE SET NULL"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "cart_items",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "cart_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "product_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "variant_id",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "quantity",
+     "type": "integer",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "cart_items_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "uq_cart_item_product_variant",
+     "type": "u",
+     "cols": [
+      "cart_id",
+      "product_id",
+      "variant_id"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (cart_id, product_id, variant_id)"
+    },
+    {
+     "name": "cart_items_cart_id_fkey",
+     "type": "f",
+     "cols": [
+      "cart_id"
+     ],
+     "ref": "carts",
+     "def": "FOREIGN KEY (cart_id) REFERENCES carts(id)"
+    },
+    {
+     "name": "cart_items_product_id_fkey",
+     "type": "f",
+     "cols": [
+      "product_id"
+     ],
+     "ref": "products",
+     "def": "FOREIGN KEY (product_id) REFERENCES products(id)"
+    },
+    {
+     "name": "cart_items_variant_id_fkey",
+     "type": "f",
+     "cols": [
+      "variant_id"
+     ],
+     "ref": "product_variants",
+     "def": "FOREIGN KEY (variant_id) REFERENCES product_variants(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "carts",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "carts_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "carts_user_id_key",
+     "type": "u",
+     "cols": [
+      "user_id"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (user_id)"
+    },
+    {
+     "name": "carts_user_id_fkey",
+     "type": "f",
+     "cols": [
+      "user_id"
+     ],
+     "ref": "users",
+     "def": "FOREIGN KEY (user_id) REFERENCES users(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "catalog",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "name",
+     "type": "character varying(50)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "description",
+     "type": "character varying(500)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "image_url",
+     "type": "character varying(255)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "display_order",
+     "type": "integer",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "is_active",
+     "type": "boolean",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "catalog_name_key",
+     "type": "u",
+     "cols": [
+      "name"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (name)"
+    },
+    {
+     "name": "catalog_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "catalog_attribute_options",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "attribute_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "value",
+     "type": "character varying(80)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "hex_color",
+     "type": "character varying(7)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "position",
+     "type": "integer",
+     "nullable": false,
+     "default": "0"
+    }
+   ],
+   "constraints": [
+    {
+     "name": "catalog_attribute_options_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "uq_catalog_attribute_option_value",
+     "type": "u",
+     "cols": [
+      "attribute_id",
+      "value"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (attribute_id, value)"
+    },
+    {
+     "name": "catalog_attribute_options_attribute_id_fkey",
+     "type": "f",
+     "cols": [
+      "attribute_id"
+     ],
+     "ref": "catalog_attributes",
+     "def": "FOREIGN KEY (attribute_id) REFERENCES catalog_attributes(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "catalog_attributes",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "catalog_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "name",
+     "type": "character varying(80)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "role",
+     "type": "character varying(16)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "input_type",
+     "type": "character varying(16)",
+     "nullable": false,
+     "default": "'select'::character varying"
+    },
+    {
+     "name": "unit",
+     "type": "character varying(24)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "is_active",
+     "type": "boolean",
+     "nullable": false,
+     "default": "true"
+    },
+    {
+     "name": "position",
+     "type": "integer",
+     "nullable": false,
+     "default": "0"
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp without time zone",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "catalog_attributes_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "uq_catalog_attribute_catalog_name",
+     "type": "u",
+     "cols": [
+      "catalog_id",
+      "name"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (catalog_id, name)"
+    },
+    {
+     "name": "catalog_attributes_catalog_id_fkey",
+     "type": "f",
+     "cols": [
+      "catalog_id"
+     ],
+     "ref": "catalog",
+     "def": "FOREIGN KEY (catalog_id) REFERENCES catalog(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "color_variants",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "name",
+     "type": "character varying(50)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "hex_color",
+     "type": "character varying(7)",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "color_variants_name_key",
+     "type": "u",
+     "cols": [
+      "name"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (name)"
+    },
+    {
+     "name": "color_variants_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "company",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "nameCompany",
+     "type": "character varying(50)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "addressCompany",
+     "type": "character varying(100)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "description",
+     "type": "text",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "CompanyNIT",
+     "type": "character varying(50)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "CompanyNITDV",
+     "type": "character varying(1)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "CompanyLogo",
+     "type": "character varying(255)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "CompanyBanner",
+     "type": "character varying(255)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "CompanyCertificate",
+     "type": "character varying(255)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "CompanyCertificateStatus",
+     "type": "companycertificateenum",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "CompanyStatus",
+     "type": "boolean",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "suspension_reason",
+     "type": "text",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "rejection_reason",
+     "type": "text",
+     "nullable": true,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "company_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "company_user_id_key",
+     "type": "u",
+     "cols": [
+      "user_id"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (user_id)"
+    },
+    {
+     "name": "company_user_id_fkey",
+     "type": "f",
+     "cols": [
+      "user_id"
+     ],
+     "ref": "users",
+     "def": "FOREIGN KEY (user_id) REFERENCES users(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "company_bank_accounts",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "company_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "account_holder",
+     "type": "character varying(150)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "document_number",
+     "type": "character varying(30)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "bank_name",
+     "type": "character varying(100)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "account_type",
+     "type": "bankaccounttypeenum",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "account_number",
+     "type": "character varying(40)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "is_default",
+     "type": "boolean",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamp with time zone",
+     "nullable": true,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "company_bank_accounts_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "company_bank_accounts_company_id_fkey",
+     "type": "f",
+     "cols": [
+      "company_id"
+     ],
+     "ref": "company",
+     "def": "FOREIGN KEY (company_id) REFERENCES company(id)"
+    }
+   ],
+   "uindexes": [
+    {
+     "name": "uq_company_bank_account_default",
+     "def": "CREATE UNIQUE INDEX uq_company_bank_account_default ON public.company_bank_accounts USING btree (company_id) WHERE (is_default = true)"
+    }
+   ]
+  },
+  {
+   "name": "company_payouts",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "company_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "period_start",
+     "type": "date",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "period_end",
+     "type": "date",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "gross_sales",
+     "type": "numeric(14,2)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "commission_percentage",
+     "type": "numeric(5,4)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "commission_amount",
+     "type": "numeric(14,2)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "net_amount",
+     "type": "numeric(14,2)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "payout_status",
+     "type": "payoutstatusenum",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "bank_account_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "paid_at",
+     "type": "timestamp with time zone",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "company_payouts_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "uq_payout_company_period",
+     "type": "u",
+     "cols": [
+      "company_id",
+      "period_start",
+      "period_end"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (company_id, period_start, period_end)"
+    },
+    {
+     "name": "company_payouts_bank_account_id_fkey",
+     "type": "f",
+     "cols": [
+      "bank_account_id"
+     ],
+     "ref": "company_bank_accounts",
+     "def": "FOREIGN KEY (bank_account_id) REFERENCES company_bank_accounts(id) ON DELETE RESTRICT"
+    },
+    {
+     "name": "company_payouts_company_id_fkey",
+     "type": "f",
+     "cols": [
+      "company_id"
+     ],
+     "ref": "company",
+     "def": "FOREIGN KEY (company_id) REFERENCES company(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "event_codes",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "code",
+     "type": "character varying(10)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "type",
+     "type": "type_code_enum",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp without time zone",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "expires_at",
+     "type": "timestamp without time zone",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "event_codes_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "event_codes_user_id_fkey",
+     "type": "f",
+     "cols": [
+      "user_id"
+     ],
+     "ref": "users",
+     "def": "FOREIGN KEY (user_id) REFERENCES users(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "favorites",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "product_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "favorites_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "uq_favorite_user_product",
+     "type": "u",
+     "cols": [
+      "user_id",
+      "product_id"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (user_id, product_id)"
+    },
+    {
+     "name": "favorites_product_id_fkey",
+     "type": "f",
+     "cols": [
+      "product_id"
+     ],
+     "ref": "products",
+     "def": "FOREIGN KEY (product_id) REFERENCES products(id)"
+    },
+    {
+     "name": "favorites_user_id_fkey",
+     "type": "f",
+     "cols": [
+      "user_id"
+     ],
+     "ref": "users",
+     "def": "FOREIGN KEY (user_id) REFERENCES users(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "order_items",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "order_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "product_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "variant_id",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "product_name",
+     "type": "character varying(150)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "variant_name",
+     "type": "character varying(150)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "unit_price",
+     "type": "numeric(10,2)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "original_unit_price",
+     "type": "numeric(10,2)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "quantity",
+     "type": "integer",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "subtotal",
+     "type": "numeric(12,2)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "attributes_snapshot",
+     "type": "jsonb",
+     "nullable": true,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "order_items_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "order_items_order_id_fkey",
+     "type": "f",
+     "cols": [
+      "order_id"
+     ],
+     "ref": "orders",
+     "def": "FOREIGN KEY (order_id) REFERENCES orders(id)"
+    },
+    {
+     "name": "order_items_product_id_fkey",
+     "type": "f",
+     "cols": [
+      "product_id"
+     ],
+     "ref": "products",
+     "def": "FOREIGN KEY (product_id) REFERENCES products(id)"
+    },
+    {
+     "name": "order_items_variant_id_fkey",
+     "type": "f",
+     "cols": [
+      "variant_id"
+     ],
+     "ref": "product_variants",
+     "def": "FOREIGN KEY (variant_id) REFERENCES product_variants(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "orders",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "order_number",
+     "type": "integer",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "company_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "address_id",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "delivery_label",
+     "type": "character varying(60)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "delivery_full_name",
+     "type": "character varying(150)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "delivery_phone",
+     "type": "character varying(20)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "delivery_address",
+     "type": "character varying(150)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "delivery_city",
+     "type": "character varying(60)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "delivery_department",
+     "type": "character varying(60)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "status",
+     "type": "orderstatusenum",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "subtotal",
+     "type": "numeric(12,2)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "tax",
+     "type": "numeric(12,2)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "total",
+     "type": "numeric(12,2)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamp with time zone",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "shipping_carrier_id",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "tracking_number",
+     "type": "character varying(80)",
+     "nullable": true,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "orders_order_number_key",
+     "type": "u",
+     "cols": [
+      "order_number"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (order_number)"
+    },
+    {
+     "name": "orders_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "fk_orders_shipping_carrier_id",
+     "type": "f",
+     "cols": [
+      "shipping_carrier_id"
+     ],
+     "ref": "shipping_carriers",
+     "def": "FOREIGN KEY (shipping_carrier_id) REFERENCES shipping_carriers(id)"
+    },
+    {
+     "name": "orders_address_id_fkey",
+     "type": "f",
+     "cols": [
+      "address_id"
+     ],
+     "ref": "addresses",
+     "def": "FOREIGN KEY (address_id) REFERENCES addresses(id)"
+    },
+    {
+     "name": "orders_company_id_fkey",
+     "type": "f",
+     "cols": [
+      "company_id"
+     ],
+     "ref": "company",
+     "def": "FOREIGN KEY (company_id) REFERENCES company(id)"
+    },
+    {
+     "name": "orders_user_id_fkey",
+     "type": "f",
+     "cols": [
+      "user_id"
+     ],
+     "ref": "users",
+     "def": "FOREIGN KEY (user_id) REFERENCES users(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "product_attribute_values",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "product_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "attribute_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "value",
+     "type": "text",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "product_attribute_values_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "uq_product_attribute_value",
+     "type": "u",
+     "cols": [
+      "product_id",
+      "attribute_id"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (product_id, attribute_id)"
+    },
+    {
+     "name": "product_attribute_values_attribute_id_fkey",
+     "type": "f",
+     "cols": [
+      "attribute_id"
+     ],
+     "ref": "catalog_attributes",
+     "def": "FOREIGN KEY (attribute_id) REFERENCES catalog_attributes(id)"
+    },
+    {
+     "name": "product_attribute_values_product_id_fkey",
+     "type": "f",
+     "cols": [
+      "product_id"
+     ],
+     "ref": "products",
+     "def": "FOREIGN KEY (product_id) REFERENCES products(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "product_images",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "url",
+     "type": "character varying(255)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "is_main",
+     "type": "boolean",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "product_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "product_images_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "product_images_product_id_fkey",
+     "type": "f",
+     "cols": [
+      "product_id"
+     ],
+     "ref": "products",
+     "def": "FOREIGN KEY (product_id) REFERENCES products(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "product_specifications",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "value",
+     "type": "text",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "product_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "specification_template_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "product_specifications_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "product_specifications_product_id_fkey",
+     "type": "f",
+     "cols": [
+      "product_id"
+     ],
+     "ref": "products",
+     "def": "FOREIGN KEY (product_id) REFERENCES products(id)"
+    },
+    {
+     "name": "product_specifications_specification_template_id_fkey",
+     "type": "f",
+     "cols": [
+      "specification_template_id"
+     ],
+     "ref": "specification_templates",
+     "def": "FOREIGN KEY (specification_template_id) REFERENCES specification_templates(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "product_variant_images",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "url",
+     "type": "character varying(255)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "is_main",
+     "type": "boolean",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "variant_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "product_variant_images_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "product_variant_images_variant_id_fkey",
+     "type": "f",
+     "cols": [
+      "variant_id"
+     ],
+     "ref": "product_variants",
+     "def": "FOREIGN KEY (variant_id) REFERENCES product_variants(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "product_variants",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "name",
+     "type": "character varying(100)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "price",
+     "type": "numeric(10,2)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "stock",
+     "type": "integer",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "discount_enable",
+     "type": "boolean",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "discount_value",
+     "type": "numeric(10,2)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "product_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "color_id",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "discount_type",
+     "type": "character varying(8)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "discount_starts_at",
+     "type": "timestamp without time zone",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "discount_ends_at",
+     "type": "timestamp without time zone",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "sku",
+     "type": "character varying(64)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "combo_key",
+     "type": "character varying(64)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "deleted_at",
+     "type": "timestamp without time zone",
+     "nullable": true,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "product_variants_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "product_variants_color_id_fkey",
+     "type": "f",
+     "cols": [
+      "color_id"
+     ],
+     "ref": "color_variants",
+     "def": "FOREIGN KEY (color_id) REFERENCES color_variants(id)"
+    },
+    {
+     "name": "product_variants_product_id_fkey",
+     "type": "f",
+     "cols": [
+      "product_id"
+     ],
+     "ref": "products",
+     "def": "FOREIGN KEY (product_id) REFERENCES products(id)"
+    }
+   ],
+   "uindexes": [
+    {
+     "name": "uq_variant_product_combo_active",
+     "def": "CREATE UNIQUE INDEX uq_variant_product_combo_active ON public.product_variants USING btree (product_id, combo_key) WHERE ((deleted_at IS NULL) AND (combo_key IS NOT NULL))"
+    },
+    {
+     "name": "uq_variant_product_sku_active",
+     "def": "CREATE UNIQUE INDEX uq_variant_product_sku_active ON public.product_variants USING btree (product_id, sku) WHERE ((deleted_at IS NULL) AND (sku IS NOT NULL))"
+    }
+   ]
+  },
+  {
+   "name": "products",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "name",
+     "type": "character varying(100)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "price",
+     "type": "numeric(10,2)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "discount_enable",
+     "type": "boolean",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "discount_value",
+     "type": "numeric(10,2)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "stock",
+     "type": "integer",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "has_variants",
+     "type": "boolean",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "descripcion",
+     "type": "text",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "is_active",
+     "type": "boolean",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp without time zone",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "deleted_at",
+     "type": "timestamp without time zone",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "company_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "catalog_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "main_color_id",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "discount_type",
+     "type": "character varying(8)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "discount_starts_at",
+     "type": "timestamp without time zone",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "discount_ends_at",
+     "type": "timestamp without time zone",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "applies_tax",
+     "type": "boolean",
+     "nullable": false,
+     "default": "true"
+    }
+   ],
+   "constraints": [
+    {
+     "name": "products_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "products_catalog_id_fkey",
+     "type": "f",
+     "cols": [
+      "catalog_id"
+     ],
+     "ref": "catalog",
+     "def": "FOREIGN KEY (catalog_id) REFERENCES catalog(id)"
+    },
+    {
+     "name": "products_company_id_fkey",
+     "type": "f",
+     "cols": [
+      "company_id"
+     ],
+     "ref": "company",
+     "def": "FOREIGN KEY (company_id) REFERENCES company(id)"
+    },
+    {
+     "name": "products_main_color_id_fkey",
+     "type": "f",
+     "cols": [
+      "main_color_id"
+     ],
+     "ref": "color_variants",
+     "def": "FOREIGN KEY (main_color_id) REFERENCES color_variants(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "refreshToken",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "token",
+     "type": "character varying(255)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "revoked",
+     "type": "boolean",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp without time zone",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "expires_at",
+     "type": "timestamp without time zone",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "refreshToken_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "refreshToken_user_id_fkey",
+     "type": "f",
+     "cols": [
+      "user_id"
+     ],
+     "ref": "users",
+     "def": "FOREIGN KEY (user_id) REFERENCES users(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "rehnicoin_movements",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "company_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "payout_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "amount_cop",
+     "type": "numeric(14,2)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "rehni_coins",
+     "type": "numeric(14,2)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "conversion_rate",
+     "type": "numeric(10,4)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "rehnicoin_movements_payout_id_key",
+     "type": "u",
+     "cols": [
+      "payout_id"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (payout_id)"
+    },
+    {
+     "name": "rehnicoin_movements_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "rehnicoin_movements_company_id_fkey",
+     "type": "f",
+     "cols": [
+      "company_id"
+     ],
+     "ref": "company",
+     "def": "FOREIGN KEY (company_id) REFERENCES company(id)"
+    },
+    {
+     "name": "rehnicoin_movements_payout_id_fkey",
+     "type": "f",
+     "cols": [
+      "payout_id"
+     ],
+     "ref": "company_payouts",
+     "def": "FOREIGN KEY (payout_id) REFERENCES company_payouts(id) ON DELETE CASCADE"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "report_evidences",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "report_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "url",
+     "type": "character varying(255)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "report_evidences_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "report_evidences_report_id_fkey",
+     "type": "f",
+     "cols": [
+      "report_id"
+     ],
+     "ref": "reports",
+     "def": "FOREIGN KEY (report_id) REFERENCES reports(id) ON DELETE CASCADE"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "reports",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "reporter_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "target_type",
+     "type": "report_target_type",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "product_id",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "company_id",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "reason",
+     "type": "character varying(150)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "description",
+     "type": "text",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "status",
+     "type": "report_status",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "admin_response",
+     "type": "text",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "resolved_by",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamp with time zone",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "resolved_at",
+     "type": "timestamp with time zone",
+     "nullable": true,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "ck_report_target_exclusive",
+     "type": "c",
+     "cols": [
+      "target_type",
+      "product_id",
+      "company_id"
+     ],
+     "ref": "-",
+     "def": "CHECK ((((target_type = 'PRODUCT'::report_target_type) AND (product_id IS NOT NULL) AND (company_id IS NULL)) OR ((target_type = 'COMPANY'::report_target_type) AND (company_id IS NOT NULL) AND (product_id IS NULL))))"
+    },
+    {
+     "name": "reports_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "reports_company_id_fkey",
+     "type": "f",
+     "cols": [
+      "company_id"
+     ],
+     "ref": "company",
+     "def": "FOREIGN KEY (company_id) REFERENCES company(id)"
+    },
+    {
+     "name": "reports_product_id_fkey",
+     "type": "f",
+     "cols": [
+      "product_id"
+     ],
+     "ref": "products",
+     "def": "FOREIGN KEY (product_id) REFERENCES products(id)"
+    },
+    {
+     "name": "reports_reporter_id_fkey",
+     "type": "f",
+     "cols": [
+      "reporter_id"
+     ],
+     "ref": "users",
+     "def": "FOREIGN KEY (reporter_id) REFERENCES users(id)"
+    },
+    {
+     "name": "reports_resolved_by_fkey",
+     "type": "f",
+     "cols": [
+      "resolved_by"
+     ],
+     "ref": "users",
+     "def": "FOREIGN KEY (resolved_by) REFERENCES users(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "return_requests",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "order_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "order_item_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "company_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "reason",
+     "type": "text",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "status",
+     "type": "return_status",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "company_response",
+     "type": "text",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "reviewed_by",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "refund_amount",
+     "type": "numeric(12,2)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamp with time zone",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "resolved_at",
+     "type": "timestamp with time zone",
+     "nullable": true,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "return_requests_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "return_requests_company_id_fkey",
+     "type": "f",
+     "cols": [
+      "company_id"
+     ],
+     "ref": "company",
+     "def": "FOREIGN KEY (company_id) REFERENCES company(id)"
+    },
+    {
+     "name": "return_requests_order_id_fkey",
+     "type": "f",
+     "cols": [
+      "order_id"
+     ],
+     "ref": "orders",
+     "def": "FOREIGN KEY (order_id) REFERENCES orders(id)"
+    },
+    {
+     "name": "return_requests_order_item_id_fkey",
+     "type": "f",
+     "cols": [
+      "order_item_id"
+     ],
+     "ref": "order_items",
+     "def": "FOREIGN KEY (order_item_id) REFERENCES order_items(id)"
+    },
+    {
+     "name": "return_requests_reviewed_by_fkey",
+     "type": "f",
+     "cols": [
+      "reviewed_by"
+     ],
+     "ref": "users",
+     "def": "FOREIGN KEY (reviewed_by) REFERENCES users(id)"
+    },
+    {
+     "name": "return_requests_user_id_fkey",
+     "type": "f",
+     "cols": [
+      "user_id"
+     ],
+     "ref": "users",
+     "def": "FOREIGN KEY (user_id) REFERENCES users(id)"
+    }
+   ],
+   "uindexes": [
+    {
+     "name": "uq_return_active_per_item",
+     "def": "CREATE UNIQUE INDEX uq_return_active_per_item ON public.return_requests USING btree (order_item_id) WHERE (status <> 'REJECTED'::return_status)"
+    }
+   ]
+  },
+  {
+   "name": "reviews",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "product_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "rating",
+     "type": "integer",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "comment",
+     "type": "text",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "is_active",
+     "type": "boolean",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamp with time zone",
+     "nullable": true,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "ck_review_rating_range",
+     "type": "c",
+     "cols": [
+      "rating"
+     ],
+     "ref": "-",
+     "def": "CHECK (((rating >= 1) AND (rating <= 5)))"
+    },
+    {
+     "name": "reviews_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "uq_review_user_product",
+     "type": "u",
+     "cols": [
+      "user_id",
+      "product_id"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (user_id, product_id)"
+    },
+    {
+     "name": "reviews_product_id_fkey",
+     "type": "f",
+     "cols": [
+      "product_id"
+     ],
+     "ref": "products",
+     "def": "FOREIGN KEY (product_id) REFERENCES products(id)"
+    },
+    {
+     "name": "reviews_user_id_fkey",
+     "type": "f",
+     "cols": [
+      "user_id"
+     ],
+     "ref": "users",
+     "def": "FOREIGN KEY (user_id) REFERENCES users(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "roles",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "name",
+     "type": "character varying(50)",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "roles_name_key",
+     "type": "u",
+     "cols": [
+      "name"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (name)"
+    },
+    {
+     "name": "roles_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "shipping_carriers",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "name",
+     "type": "character varying(80)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "tracking_url",
+     "type": "character varying(255)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "is_active",
+     "type": "boolean",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamp with time zone",
+     "nullable": true,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "shipping_carriers_name_key",
+     "type": "u",
+     "cols": [
+      "name"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (name)"
+    },
+    {
+     "name": "shipping_carriers_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "specification_templates",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "name",
+     "type": "character varying(100)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "type",
+     "type": "character varying(50)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "required",
+     "type": "boolean",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "catalog_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "specification_templates_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "specification_templates_catalog_id_fkey",
+     "type": "f",
+     "cols": [
+      "catalog_id"
+     ],
+     "ref": "catalog",
+     "def": "FOREIGN KEY (catalog_id) REFERENCES catalog(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "users",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "fullName",
+     "type": "character varying(50)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "email",
+     "type": "character varying(50)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "hashed_password",
+     "type": "character varying(255)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "tell",
+     "type": "character varying(50)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "profileImagen",
+     "type": "character varying(255)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "verified",
+     "type": "boolean",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "isActive",
+     "type": "boolean",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "role_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "users_email_key",
+     "type": "u",
+     "cols": [
+      "email"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (email)"
+    },
+    {
+     "name": "users_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "users_role_id_fkey",
+     "type": "f",
+     "cols": [
+      "role_id"
+     ],
+     "ref": "roles",
+     "def": "FOREIGN KEY (role_id) REFERENCES roles(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "variant_attribute_values",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "variant_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "attribute_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "value",
+     "type": "text",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "uq_variant_attribute_value",
+     "type": "u",
+     "cols": [
+      "variant_id",
+      "attribute_id"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (variant_id, attribute_id)"
+    },
+    {
+     "name": "variant_attribute_values_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "variant_attribute_values_attribute_id_fkey",
+     "type": "f",
+     "cols": [
+      "attribute_id"
+     ],
+     "ref": "catalog_attributes",
+     "def": "FOREIGN KEY (attribute_id) REFERENCES catalog_attributes(id)"
+    },
+    {
+     "name": "variant_attribute_values_variant_id_fkey",
+     "type": "f",
+     "cols": [
+      "variant_id"
+     ],
+     "ref": "product_variants",
+     "def": "FOREIGN KEY (variant_id) REFERENCES product_variants(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "variant_options",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "variant_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "attribute_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "option_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "uq_variant_option_axis",
+     "type": "u",
+     "cols": [
+      "variant_id",
+      "attribute_id"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (variant_id, attribute_id)"
+    },
+    {
+     "name": "variant_options_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "variant_options_attribute_id_fkey",
+     "type": "f",
+     "cols": [
+      "attribute_id"
+     ],
+     "ref": "catalog_attributes",
+     "def": "FOREIGN KEY (attribute_id) REFERENCES catalog_attributes(id)"
+    },
+    {
+     "name": "variant_options_option_id_fkey",
+     "type": "f",
+     "cols": [
+      "option_id"
+     ],
+     "ref": "catalog_attribute_options",
+     "def": "FOREIGN KEY (option_id) REFERENCES catalog_attribute_options(id)"
+    },
+    {
+     "name": "variant_options_variant_id_fkey",
+     "type": "f",
+     "cols": [
+      "variant_id"
+     ],
+     "ref": "product_variants",
+     "def": "FOREIGN KEY (variant_id) REFERENCES product_variants(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "variant_specifications",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "value",
+     "type": "text",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "variant_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "specification_template_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "variant_specifications_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "variant_specifications_specification_template_id_fkey",
+     "type": "f",
+     "cols": [
+      "specification_template_id"
+     ],
+     "ref": "specification_templates",
+     "def": "FOREIGN KEY (specification_template_id) REFERENCES specification_templates(id)"
+    },
+    {
+     "name": "variant_specifications_variant_id_fkey",
+     "type": "f",
+     "cols": [
+      "variant_id"
+     ],
+     "ref": "product_variants",
+     "def": "FOREIGN KEY (variant_id) REFERENCES product_variants(id)"
+    }
+   ],
+   "uindexes": null
+  },
+  {
+   "name": "wallet_transactions",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "wallet_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "type",
+     "type": "wallettransactiontype",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "amount",
+     "type": "numeric(12,2)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "description",
+     "type": "character varying(255)",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "created_by",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "order_id",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "corrects_transaction_id",
+     "type": "uuid",
+     "nullable": true,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "wallet_transactions_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "fk_wallet_transaction_corrects_transaction",
+     "type": "f",
+     "cols": [
+      "corrects_transaction_id"
+     ],
+     "ref": "wallet_transactions",
+     "def": "FOREIGN KEY (corrects_transaction_id) REFERENCES wallet_transactions(id) ON DELETE SET NULL"
+    },
+    {
+     "name": "wallet_transactions_created_by_fkey",
+     "type": "f",
+     "cols": [
+      "created_by"
+     ],
+     "ref": "users",
+     "def": "FOREIGN KEY (created_by) REFERENCES users(id)"
+    },
+    {
+     "name": "wallet_transactions_order_id_fkey",
+     "type": "f",
+     "cols": [
+      "order_id"
+     ],
+     "ref": "orders",
+     "def": "FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL"
+    },
+    {
+     "name": "wallet_transactions_wallet_id_fkey",
+     "type": "f",
+     "cols": [
+      "wallet_id"
+     ],
+     "ref": "wallets",
+     "def": "FOREIGN KEY (wallet_id) REFERENCES wallets(id)"
+    }
+   ],
+   "uindexes": [
+    {
+     "name": "uq_wallet_transaction_refund_per_order",
+     "def": "CREATE UNIQUE INDEX uq_wallet_transaction_refund_per_order ON public.wallet_transactions USING btree (order_id) WHERE ((type = 'REFUND'::wallettransactiontype) AND (order_id IS NOT NULL))"
+    },
+    {
+     "name": "uq_wallet_transaction_correction_per_recharge",
+     "def": "CREATE UNIQUE INDEX uq_wallet_transaction_correction_per_recharge ON public.wallet_transactions USING btree (corrects_transaction_id) WHERE (corrects_transaction_id IS NOT NULL)"
+    }
+   ]
+  },
+  {
+   "name": "wallets",
+   "columns": [
+    {
+     "name": "id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "user_id",
+     "type": "uuid",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "balance",
+     "type": "numeric(12,2)",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "created_at",
+     "type": "timestamp with time zone",
+     "nullable": false,
+     "default": null
+    },
+    {
+     "name": "updated_at",
+     "type": "timestamp with time zone",
+     "nullable": true,
+     "default": null
+    }
+   ],
+   "constraints": [
+    {
+     "name": "wallets_pkey",
+     "type": "p",
+     "cols": [
+      "id"
+     ],
+     "ref": "-",
+     "def": "PRIMARY KEY (id)"
+    },
+    {
+     "name": "wallets_user_id_key",
+     "type": "u",
+     "cols": [
+      "user_id"
+     ],
+     "ref": "-",
+     "def": "UNIQUE (user_id)"
+    },
+    {
+     "name": "wallets_user_id_fkey",
+     "type": "f",
+     "cols": [
+      "user_id"
+     ],
+     "ref": "users",
+     "def": "FOREIGN KEY (user_id) REFERENCES users(id)"
+    }
+   ],
+   "uindexes": null
+  }
+ ],
+ "enums": [
+  {
+   "name": "admin_activity_action",
+   "values": [
+    "user_created",
+    "user_updated",
+    "user_upgraded",
+    "user_blocked",
+    "user_unblocked",
+    "user_deleted",
+    "company_created",
+    "company_approved",
+    "company_rejected",
+    "company_blocked",
+    "company_unblocked"
+   ]
+  },
+  {
+   "name": "advertisementtargettype",
+   "values": [
+    "PRODUCT",
+    "CATEGORY",
+    "COMPANY",
+    "PROMOTION",
+    "BLACK_FRIDAY",
+    "CYBER_DAYS",
+    "LIQUIDATION",
+    "NEW_RELEASE"
+   ]
+  },
+  {
+   "name": "bankaccounttypeenum",
+   "values": [
+    "SAVINGS",
+    "CHECKING",
+    "NEQUI",
+    "DAVIPLATA"
+   ]
+  },
+  {
+   "name": "companycertificateenum",
+   "values": [
+    "PENDING",
+    "APPROVED",
+    "REJECTED",
+    "NEEDS_UPDATE"
+   ]
+  },
+  {
+   "name": "orderstatusenum",
+   "values": [
+    "PENDING",
+    "PAID",
+    "PROCESSING",
+    "SHIPPED",
+    "DELIVERED",
+    "CANCELLED"
+   ]
+  },
+  {
+   "name": "payoutstatusenum",
+   "values": [
+    "PENDING",
+    "PROCESSING",
+    "PAID",
+    "FAILED"
+   ]
+  },
+  {
+   "name": "report_status",
+   "values": [
+    "PENDING",
+    "REVIEWING",
+    "RESOLVED",
+    "REJECTED"
+   ]
+  },
+  {
+   "name": "report_target_type",
+   "values": [
+    "PRODUCT",
+    "COMPANY"
+   ]
+  },
+  {
+   "name": "return_status",
+   "values": [
+    "PENDING",
+    "APPROVED",
+    "REJECTED"
+   ]
+  },
+  {
+   "name": "type_code_enum",
+   "values": [
+    "RESET_PASSWORD",
+    "VERIFY_EMAIL",
+    "CHANGE_EMAIL"
+   ]
+  },
+  {
+   "name": "wallettransactiontype",
+   "values": [
+    "RECHARGE",
+    "PURCHASE",
+    "REFUND",
+    "ADJUSTMENT"
+   ]
+  }
+ ],
+ "alembic": "c3e5a7f9d1b2"
+}

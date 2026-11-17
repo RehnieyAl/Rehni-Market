@@ -22,7 +22,7 @@ catálogo público, autenticación y autorización, carrito y checkout con pago 
 | Alembic | **1.18.4** | `pyproject.toml` |
 | psycopg2-binary | **2.9.11** | `pyproject.toml` |
 | Pydantic | **2.12.5** / pydantic-settings 2.13.1 | `pyproject.toml` |
-| python-jose | **3.5.0** (JWT HS256) | `pyproject.toml` |
+| PyJWT | **2.15.1** (JWT HS256, algoritmo fijo en el código) | `pyproject.toml` |
 | passlib | **1.7.4** (bcrypt) | `pyproject.toml` |
 | minio (SDK) | **7.2.20** | `pyproject.toml` |
 | Jinja2 | **3.1.6** (plantillas de correo) | `pyproject.toml` |
@@ -91,7 +91,7 @@ ejecuta este backend de forma aislada.
 > MinIO fijado por digest. Caddy es el reverse proxy con HTTPS automático
 > (`api.<dominio>` → backend, `<dominio>` → frontend; CA local con `localhost`,
 > Let's Encrypt con dominio real). Entre entornos solo cambia el `.env` de la raíz
-> (`../.env.example` / `../deploy/env.prod.example`).
+> (plantillas `../.env.example` para desarrollo y `../deploy/env.prod.example` para el servidor).
 > **El proyecto NO se ha desplegado en producción** (falta servidor y
 > dominio público).
 >
@@ -107,34 +107,26 @@ git clone https://github.com/RehnieyAl/Rehni-Market.git
 cd Rehni-Market
 ```
 
-### 2. Variables de entorno del backend
+### 2. Variables de entorno
+
+Toda la configuración (backend, PostgreSQL, PgBouncer, MinIO, Caddy y frontend) está en un
+solo `.env` en la raíz del repo:
 
 ```bash
-cp RehniMarket-backend/.env.example RehniMarket-backend/.env
-cp .env.postgres.example .env.postgres   # desde la raíz del repo
-cp .env.minio.example .env.minio
+cp .env.example .env && chmod 600 .env
 ```
 
-Cada archivo lo recibe solo quien lo necesita:
+Los valores de `.env.example` sirven tal cual en desarrollo. En producción el `.env` sale de
+`deploy/env.prod.example` (mismas variables) reemplazando cada `CAMBIAR_*`. Fuera de Docker (`uv run`, pytest),
+`app/Config.py` lee ese mismo `.env` de la raíz; ahí `URL_DATABASE` debe apuntar a
+`127.0.0.1:5433` en lugar de `postgres:5432`.
 
-| Archivo | Lo reciben | Contenido |
-|---|---|---|
-| `.env.postgres` | `postgres`, `pgbouncer` | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` |
-| `.env.minio` | `minio`, `backend` | `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD` |
-| `RehniMarket-backend/.env` | `backend` | Todo lo demás |
+Reglas que hay que respetar al editarlo:
 
-En `RehniMarket-backend/.env`, como mínimo:
-
-- `URL_DATABASE=postgresql://<POSTGRES_USER>:<POSTGRES_PASSWORD>@postgres:5432/<POSTGRES_DB>`
-  (mismos valores que `.env.postgres`) y `URL_DATABASE_POOLED` igual pero con
-  `@pgbouncer:6432`
-- `MINIO_URL=minio:9000`
-- `SECRET_KEY` (valor propio, largo y aleatorio — **no** el de ejemplo), `ALGORITHM=HS256`,
-  `ACCESS_TOKEN_EXPIRE_MINUTES=30`, `REFRESH_TOKEN_DAYS=15`
-- `URL_FRONTEND`, `URL_BACKEND` (URL del backend **visible desde el navegador**;
-  debe coincidir con `VITE_API_URL` del frontend)
-- `GMAIL_USERNAME`, `GMAIL_APP_PASSWORD` (si se usará el correo)
-- `RUN_SEED=false`
+- `URL_DATABASE` y `URL_DATABASE_POOLED` llevan el mismo usuario, contraseña y base que
+  `POSTGRES_USER`, `POSTGRES_PASSWORD` y `POSTGRES_DB` (`@postgres:5432` y `@pgbouncer:6432`).
+- `SECRET_KEY`: valor propio, largo y aleatorio en producción, **no** el de desarrollo.
+- `URL_BACKEND` es la URL de la API **visible desde el navegador**; coincide con `VITE_API_URL`.
 
 ### 3. Construir y levantar
 
@@ -173,7 +165,7 @@ curl https://api.localhost/health/database
 las cuentas `admin` / `owner` por defecto. La carga de empresas y productos de
 ejemplo (`seed_companies_and_products`) está **comentada** en el código.
 
-1. En `RehniMarket-backend/.env`: definir `ADMIN_DEFAULT` / `USER_NAME_ADMIN` /
+1. En el `.env` de la raíz: definir `ADMIN_DEFAULT` / `USER_NAME_ADMIN` /
    `PASSWORD_DEFAULT` (y, opcionalmente, `OWNER_DEFAULT` / `USER_NAME_OWNER` /
    `OWNER_PASSWORD_DEFAULT`) y poner `RUN_SEED=true`.
 2. `docker compose restart backend` (el seed corre en el arranque).

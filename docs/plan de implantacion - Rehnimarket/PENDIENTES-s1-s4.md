@@ -125,7 +125,7 @@ Condiciones de las rúbricas:
 
 | # | Decisión | Dónde | Por qué la tomé | Qué la confirmaría o la cambiaría |
 |---|---|---|---|---|
-| D-1 | **50 usuarios concurrentes** en la prueba de carga (**supuesto, no es la carga esperada**) | §1.4 y §1.5 | La propuse como carga moderada porque el equipo de desarrollo tiene 7 GB y ya usaba swap; tú la elegiste entre las opciones. En el repo no hay ninguna cifra de concurrencia esperada (RNF-011 y RNF-012 no fijan usuarios), y el 1000 por defecto de `load_test.k6.js:8` tampoco está justificado | La concurrencia acordada con el cliente: repetir k6 con ese valor |
+| D-1 | **50 usuarios concurrentes** en la prueba de carga (**supuesto, no es la carga esperada**) | §1.4 y §1.5 | La propuse como carga moderada porque el equipo de desarrollo tiene 7 GB y ya usaba swap; tú la elegiste entre las opciones. En el repo no hay ninguna cifra de concurrencia esperada (RNF-011 y RNF-012 no fijan usuarios), y el 1000 por defecto del script anterior `load_test.k6.js` (eliminado; ahora `tests/load/`) tampoco está justificado | La concurrencia acordada con el cliente: repetir k6 con ese valor |
 | D-2 | **CPU recomendada de 6 vCPU** y RAM recomendada de 8 GB | §1.5 | Cálculo del bootcamp (medido × 1,5) aplicado a lo medido con D-1: 3,45 × 1,5 = 5,2 → 6 | Cambia si cambia D-1 |
 | D-3 | Mínimo de 2 vCPU sin medir | §1.5 | Se mantuvo el valor que ya tenía el plan | k6 en una VM de 2 vCPU |
 | D-4 | Frecuencias de la §4.6: «en cada liberación» y «en la instalación inicial y al rotar un secreto» | §4.6 | Se deducen del procedimiento de la §5, no de un acuerdo | Tu política de despliegue y de rotación de secretos |
@@ -150,8 +150,8 @@ Condiciones de las rúbricas:
 | `smoke-test.sh` en el servidor y en la nube | Solo se ejecutó contra el stack local | `BASE_URL=https://api.<dominio> FRONTEND_URL=https://<dominio> SMOKE_EMAIL=... SMOKE_PASSWORD=... bash scripts/smoke-test.sh`: debe dar `7 pasan, 0 fallan` y código `0` |
 | Actualización y rollback «probados» (exigidos por la rúbrica de la semana 4) | Hacen falta dos versiones etiquetadas y el servidor | Tras crear `v1.0.0`, desplegar una versión posterior y volver con las tablas de la §5.2 |
 | Mínimo de 2 vCPU | El equipo de desarrollo tiene 12 procesadores | k6 en una VM de 2 vCPU: comparar el p95 y los fallos con la §1.4 |
-| Medición con el SO de producción | Se midió en CachyOS con swap en `zram` | Repetir la §1.4 en el servidor: `docker stats` durante `k6 run -e BASE_URL=http://localhost:8000 -e VUS=<concurrencia acordada> scripts/load_test.k6.js` |
+| Medición con el SO de producción | Se midió en CachyOS con swap en `zram` | Repetir la §1.4 en el servidor: `docker stats` durante `k6 run -e K6_BASE_URL=http://localhost:8000 -e SUSTAINED_VUS=<concurrencia acordada> tests/load/04-sustained.js` |
 | Migración en producción | El ensayo fue sobre una copia en el equipo de desarrollo | Ejecutar `migrar.sh` en la ventana (orden 1 → 2 → 3 → 4 → 5 → 7) y comparar el tiempo con los 12,2 s del ensayo |
 | Despliegue en la nube | No hay cuentas en esta sesión | Ver §5.3 |
 
-scripts/datos-base.sh: probar en la VM antes de usar en producción (commiteado sin ejecutar)
+scripts/datos-base.sh: probado el 2026-11-16 en un clon limpio con `RUN_SEED=false` (roles 4, catalog 120, shipping_carriers 4; plan §5.2 paso 8.1). Falta ejecutarlo en la VM.

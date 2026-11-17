@@ -1,0 +1,626 @@
+{
+ "GET /addresses": {
+  "rol": "Comprador",
+  "descripcion": "Consulta direcciones"
+ },
+ "POST /addresses": {
+  "rol": "Comprador",
+  "descripcion": "Crea direcciones"
+ },
+ "PATCH /addresses/{address_id}": {
+  "rol": "Comprador",
+  "descripcion": "Actualiza direcciones"
+ },
+ "DELETE /addresses/{address_id}": {
+  "rol": "Comprador",
+  "descripcion": "Elimina direcciones"
+ },
+ "PATCH /addresses/{address_id}/set-default": {
+  "rol": "Comprador",
+  "descripcion": "Marca la dirección como predeterminada"
+ },
+ "PATCH /admin/dashboard/catalog-attribute-options/{option_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Actualiza el valor de un atributo"
+ },
+ "DELETE /admin/dashboard/catalog-attribute-options/{option_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Elimina el valor de un atributo"
+ },
+ "GET /admin/dashboard/catalog-attributes/{attribute_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta atributos del catálogo"
+ },
+ "PATCH /admin/dashboard/catalog-attributes/{attribute_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Actualiza atributos del catálogo"
+ },
+ "DELETE /admin/dashboard/catalog-attributes/{attribute_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Elimina atributos del catálogo"
+ },
+ "POST /admin/dashboard/catalog-attributes/{attribute_id}/options": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Crea atributos del catálogo"
+ },
+ "PATCH /admin/dashboard/catalog-attributes/{attribute_id}/status": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Actualiza atributos del catálogo"
+ },
+ "GET /admin/dashboard/catalogs/{catalog_id}/catalog-attributes": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta atributos del catálogo"
+ },
+ "POST /admin/dashboard/catalogs/{catalog_id}/catalog-attributes": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Crea atributos del catálogo"
+ },
+ "PATCH /admin/dashboard/change-status-advertisement/{advertisement_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Actualiza anuncios"
+ },
+ "PATCH /admin/dashboard/change-status-catalog/{catalog_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Actualiza el estado de la categoría"
+ },
+ "PATCH /admin/dashboard/companies/certificate/status/{company_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Actualiza el estado del certificado"
+ },
+ "PATCH /admin/dashboard/company/status/{company_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Actualiza el estado de la empresa"
+ },
+ "POST /admin/dashboard/create-advertisement": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Crea anuncios"
+ },
+ "POST /admin/dashboard/create-color": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Crea un color"
+ },
+ "POST /admin/dashboard/created-catalogs": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Crea categorías"
+ },
+ "POST /admin/dashboard/created-specifications/{catalog_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Crea especificaciones"
+ },
+ "DELETE /admin/dashboard/delete-advertisement/{advertisement_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Elimina anuncios"
+ },
+ "DELETE /admin/dashboard/delete-catalogs/{catalog_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Elimina categorías"
+ },
+ "DELETE /admin/dashboard/delete-color/{color_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Elimina un color"
+ },
+ "DELETE /admin/dashboard/delete-specifications/{specification_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Elimina especificaciones"
+ },
+ "GET /admin/dashboard/get-advertisement/{advertisement_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta anuncios"
+ },
+ "GET /admin/dashboard/get-advertisements": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta anuncios"
+ },
+ "GET /admin/dashboard/get-catalogs": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta categorías"
+ },
+ "GET /admin/dashboard/get-colors": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta colores"
+ },
+ "GET /admin/dashboard/get-companies": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta empresas"
+ },
+ "GET /admin/dashboard/get-company/{company_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta una empresa"
+ },
+ "GET /admin/dashboard/get-specifications/{catalog_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta especificaciones"
+ },
+ "GET /admin/dashboard/get-user/{user_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta un usuario"
+ },
+ "GET /admin/dashboard/get-users": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta usuarios"
+ },
+ "GET /admin/dashboard/recent-activities": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta la actividad reciente"
+ },
+ "GET /admin/dashboard/recent-users": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta los usuarios recientes"
+ },
+ "GET /admin/dashboard/shipping-carriers": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta transportadoras"
+ },
+ "POST /admin/dashboard/shipping-carriers": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Crea transportadoras"
+ },
+ "PUT /admin/dashboard/shipping-carriers/{carrier_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Reemplaza transportadoras"
+ },
+ "PATCH /admin/dashboard/shipping-carriers/{carrier_id}/status": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Actualiza transportadoras"
+ },
+ "GET /admin/dashboard/statistics": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta estadísticas"
+ },
+ "PATCH /admin/dashboard/update-advertisement/{advertisement_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Actualiza anuncios"
+ },
+ "PUT /admin/dashboard/update-catalogs/{catalog_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Reemplaza categorías"
+ },
+ "PUT /admin/dashboard/update-color/{color_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Reemplaza un color"
+ },
+ "PUT /admin/dashboard/update-specifications/{specification_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Reemplaza especificaciones"
+ },
+ "PATCH /admin/dashboard/user/update-information/status/{user_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Actualiza el estado de la cuenta"
+ },
+ "PATCH /admin/dashboard/user/update-information/{user_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Actualiza los datos de un usuario"
+ },
+ "GET /admin/payouts": {
+  "rol": "Propietario",
+  "descripcion": "Consulta liquidaciones"
+ },
+ "GET /admin/payouts/available-periods": {
+  "rol": "Propietario",
+  "descripcion": "Consulta los periodos disponibles"
+ },
+ "POST /admin/payouts/generate": {
+  "rol": "Propietario",
+  "descripcion": "Genera una liquidación"
+ },
+ "GET /admin/payouts/preview": {
+  "rol": "Propietario",
+  "descripcion": "Calcula la vista previa de una liquidación"
+ },
+ "GET /admin/payouts/{payout_id}": {
+  "rol": "Propietario",
+  "descripcion": "Consulta liquidaciones"
+ },
+ "PATCH /admin/payouts/{payout_id}/pay": {
+  "rol": "Propietario",
+  "descripcion": "Marca la liquidación como pagada"
+ },
+ "GET /admin/reports": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta reportes"
+ },
+ "GET /admin/reports/{report_id}": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta reportes"
+ },
+ "PATCH /admin/reports/{report_id}/status": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Actualiza reportes"
+ },
+ "GET /admin/wallet/history": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Consulta el historial de recargas"
+ },
+ "POST /admin/wallet/recharge": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Recarga saldo a un usuario"
+ },
+ "POST /admin/wallet/recharge/{transaction_id}/correction": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Corrige una recarga"
+ },
+ "POST /auth/change-email": {
+  "rol": "Público",
+  "descripcion": "Cambia el correo de una cuenta sin verificar"
+ },
+ "POST /auth/forgot-password-user": {
+  "rol": "Público",
+  "descripcion": "Envía el código de recuperación"
+ },
+ "POST /auth/login-user": {
+  "rol": "Público",
+  "descripcion": "Inicia sesión y emite tokens"
+ },
+ "GET /auth/me": {
+  "rol": "Autenticado",
+  "descripcion": "Consulta el perfil propio"
+ },
+ "PATCH /auth/me": {
+  "rol": "Autenticado",
+  "descripcion": "Actualiza el perfil propio"
+ },
+ "PATCH /auth/me/photo": {
+  "rol": "Autenticado",
+  "descripcion": "Actualiza la foto de perfil"
+ },
+ "POST /auth/refresh": {
+  "rol": "Público",
+  "descripcion": "Renueva el token de acceso"
+ },
+ "POST /auth/register-company": {
+  "rol": "Público",
+  "descripcion": "Registra una empresa con su certificado"
+ },
+ "POST /auth/register-user": {
+  "rol": "Público",
+  "descripcion": "Registra un comprador"
+ },
+ "POST /auth/resend-verification-code": {
+  "rol": "Público",
+  "descripcion": "Reenvía el código de verificación"
+ },
+ "POST /auth/reset-password-user": {
+  "rol": "Público",
+  "descripcion": "Restablece la contraseña"
+ },
+ "POST /auth/verify-email-user": {
+  "rol": "Público",
+  "descripcion": "Verifica el correo con un código"
+ },
+ "GET /cart": {
+  "rol": "Comprador",
+  "descripcion": "Consulta el carrito"
+ },
+ "POST /cart/add": {
+  "rol": "Comprador",
+  "descripcion": "Agrega un producto al carrito"
+ },
+ "DELETE /cart/clear": {
+  "rol": "Comprador",
+  "descripcion": "Vacía el carrito"
+ },
+ "PATCH /cart/item/{item_id}": {
+  "rol": "Comprador",
+  "descripcion": "Actualiza una línea del carrito"
+ },
+ "DELETE /cart/item/{item_id}": {
+  "rol": "Comprador",
+  "descripcion": "Elimina una línea del carrito"
+ },
+ "POST /checkout": {
+  "rol": "Comprador",
+  "descripcion": "Confirma la compra y crea los pedidos"
+ },
+ "GET /company/balance": {
+  "rol": "Empresa",
+  "descripcion": "Consulta el balance"
+ },
+ "GET /company/bank-accounts": {
+  "rol": "Empresa",
+  "descripcion": "Consulta cuentas bancarias"
+ },
+ "POST /company/bank-accounts": {
+  "rol": "Empresa",
+  "descripcion": "Crea cuentas bancarias"
+ },
+ "PATCH /company/bank-accounts/{bank_account_id}": {
+  "rol": "Empresa",
+  "descripcion": "Actualiza cuentas bancarias"
+ },
+ "DELETE /company/bank-accounts/{bank_account_id}": {
+  "rol": "Empresa",
+  "descripcion": "Elimina cuentas bancarias"
+ },
+ "PUT /company/certificate": {
+  "rol": "Empresa",
+  "descripcion": "Reemplaza el certificado con sesión"
+ },
+ "POST /company/certificate/update": {
+  "rol": "Público",
+  "descripcion": "Reemplaza el certificado sin sesión"
+ },
+ "PATCH /company/dashboard/change-status-my-product/{product_id}": {
+  "rol": "Empresa",
+  "descripcion": "Actualiza el estado del producto"
+ },
+ "POST /company/dashboard/create-product": {
+  "rol": "Empresa",
+  "descripcion": "Crea un producto"
+ },
+ "DELETE /company/dashboard/delete-my-product/{product_id}": {
+  "rol": "Empresa",
+  "descripcion": "Elimina productos propios"
+ },
+ "GET /company/dashboard/get-my-product/{product_id}": {
+  "rol": "Empresa",
+  "descripcion": "Consulta productos propios"
+ },
+ "GET /company/dashboard/get-my-products": {
+  "rol": "Empresa",
+  "descripcion": "Consulta productos propios"
+ },
+ "GET /company/dashboard/me": {
+  "rol": "Empresa",
+  "descripcion": "Consulta los datos de la empresa"
+ },
+ "GET /company/dashboard/my-profile": {
+  "rol": "Empresa",
+  "descripcion": "Consulta el perfil de la empresa"
+ },
+ "GET /company/dashboard/orders": {
+  "rol": "Empresa",
+  "descripcion": "Consulta pedidos"
+ },
+ "GET /company/dashboard/orders/status-counts": {
+  "rol": "Empresa",
+  "descripcion": "Consulta el conteo de pedidos por estado"
+ },
+ "GET /company/dashboard/orders/{order_id}": {
+  "rol": "Empresa",
+  "descripcion": "Consulta pedidos"
+ },
+ "PATCH /company/dashboard/orders/{order_id}/shipping": {
+  "rol": "Empresa",
+  "descripcion": "Actualiza los datos de envío"
+ },
+ "PATCH /company/dashboard/orders/{order_id}/status": {
+  "rol": "Empresa",
+  "descripcion": "Actualiza el estado del pedido"
+ },
+ "PATCH /company/dashboard/patch-media-logo-banner": {
+  "rol": "Empresa",
+  "descripcion": "Actualiza logo y banner"
+ },
+ "GET /company/dashboard/products-summary": {
+  "rol": "Empresa",
+  "descripcion": "Consulta el resumen de productos"
+ },
+ "GET /company/dashboard/products/{product_id}/available-attributes": {
+  "rol": "Empresa",
+  "descripcion": "Consulta atributos disponibles"
+ },
+ "PUT /company/dashboard/products/{product_id}/discount": {
+  "rol": "Empresa",
+  "descripcion": "Reemplaza el descuento del producto"
+ },
+ "GET /company/dashboard/products/{product_id}/product-attributes": {
+  "rol": "Empresa",
+  "descripcion": "Consulta atributos del producto"
+ },
+ "PUT /company/dashboard/products/{product_id}/product-attributes": {
+  "rol": "Empresa",
+  "descripcion": "Reemplaza atributos del producto"
+ },
+ "POST /company/dashboard/products/{product_id}/variants": {
+  "rol": "Empresa",
+  "descripcion": "Crea variantes del producto"
+ },
+ "GET /company/dashboard/products/{product_id}/variants": {
+  "rol": "Empresa",
+  "descripcion": "Consulta variantes del producto"
+ },
+ "POST /company/dashboard/products/{product_id}/variants/generate": {
+  "rol": "Empresa",
+  "descripcion": "Genera variantes por combinaciones"
+ },
+ "GET /company/dashboard/products/{product_id}/variants/{variant_id}": {
+  "rol": "Empresa",
+  "descripcion": "Consulta variantes del producto"
+ },
+ "PATCH /company/dashboard/products/{product_id}/variants/{variant_id}": {
+  "rol": "Empresa",
+  "descripcion": "Actualiza variantes del producto"
+ },
+ "DELETE /company/dashboard/products/{product_id}/variants/{variant_id}": {
+  "rol": "Empresa",
+  "descripcion": "Elimina variantes del producto"
+ },
+ "GET /company/dashboard/products/{product_id}/variants/{variant_id}/attribute-values": {
+  "rol": "Empresa",
+  "descripcion": "Consulta valores de atributos de la variante"
+ },
+ "PUT /company/dashboard/products/{product_id}/variants/{variant_id}/attribute-values": {
+  "rol": "Empresa",
+  "descripcion": "Reemplaza valores de atributos de la variante"
+ },
+ "GET /company/dashboard/products/{product_id}/variants/{variant_id}/images": {
+  "rol": "Empresa",
+  "descripcion": "Consulta imágenes de la variante"
+ },
+ "POST /company/dashboard/products/{product_id}/variants/{variant_id}/images": {
+  "rol": "Empresa",
+  "descripcion": "Crea imágenes de la variante"
+ },
+ "DELETE /company/dashboard/products/{product_id}/variants/{variant_id}/images/{image_id}": {
+  "rol": "Empresa",
+  "descripcion": "Elimina imágenes de la variante"
+ },
+ "PATCH /company/dashboard/products/{product_id}/variants/{variant_id}/images/{image_id}/main": {
+  "rol": "Empresa",
+  "descripcion": "Actualiza la imagen principal de la variante"
+ },
+ "GET /company/dashboard/returns": {
+  "rol": "Empresa",
+  "descripcion": "Consulta devoluciones"
+ },
+ "GET /company/dashboard/returns/{return_id}": {
+  "rol": "Empresa",
+  "descripcion": "Consulta devoluciones"
+ },
+ "PATCH /company/dashboard/returns/{return_id}": {
+  "rol": "Empresa",
+  "descripcion": "Actualiza devoluciones"
+ },
+ "GET /company/dashboard/shipping-carriers": {
+  "rol": "Empresa",
+  "descripcion": "Consulta transportadoras"
+ },
+ "PATCH /company/dashboard/update-my-product/{idProduct}": {
+  "rol": "Empresa",
+  "descripcion": "Actualiza productos propios"
+ },
+ "PATCH /company/dashboard/upgrade-my-profile": {
+  "rol": "Empresa",
+  "descripcion": "Actualiza el perfil de la empresa"
+ },
+ "GET /company/payouts": {
+  "rol": "Empresa",
+  "descripcion": "Consulta liquidaciones"
+ },
+ "GET /company/payouts/{payout_id}": {
+  "rol": "Empresa",
+  "descripcion": "Consulta liquidaciones"
+ },
+ "GET /favorites": {
+  "rol": "Comprador",
+  "descripcion": "Consulta favoritos"
+ },
+ "POST /favorites": {
+  "rol": "Comprador",
+  "descripcion": "Crea favoritos"
+ },
+ "DELETE /favorites/{product_id}": {
+  "rol": "Comprador",
+  "descripcion": "Elimina favoritos"
+ },
+ "GET /health/database": {
+  "rol": "Público",
+  "descripcion": "Comprueba la base de datos"
+ },
+ "GET /health/internet": {
+  "rol": "Público",
+  "descripcion": "Comprueba la salida a internet"
+ },
+ "GET /media/proxy": {
+  "rol": "Público",
+  "descripcion": "Entrega un archivo de MinIO"
+ },
+ "GET /orders": {
+  "rol": "Comprador",
+  "descripcion": "Consulta pedidos"
+ },
+ "GET /orders/{order_id}": {
+  "rol": "Comprador",
+  "descripcion": "Consulta pedidos"
+ },
+ "PATCH /orders/{order_id}/cancel": {
+  "rol": "Comprador",
+  "descripcion": "Cancela el pedido, reembolsa y repone stock"
+ },
+ "GET /orders/{order_id}/returns": {
+  "rol": "Comprador",
+  "descripcion": "Consulta devoluciones"
+ },
+ "POST /orders/{order_id}/returns": {
+  "rol": "Comprador",
+  "descripcion": "Crea devoluciones"
+ },
+ "GET /public/advertisements": {
+  "rol": "Público",
+  "descripcion": "Consulta anuncios"
+ },
+ "GET /public/catalogs": {
+  "rol": "Público",
+  "descripcion": "Consulta categorías"
+ },
+ "GET /public/catalogs/{catalog_id}/attributes": {
+  "rol": "Público",
+  "descripcion": "Consulta categorías"
+ },
+ "GET /public/catalogs/{catalog_id}/specifications": {
+  "rol": "Público",
+  "descripcion": "Consulta categorías"
+ },
+ "GET /public/colors": {
+  "rol": "Público",
+  "descripcion": "Consulta colores"
+ },
+ "GET /public/company/{company_id}": {
+  "rol": "Público",
+  "descripcion": "Consulta el perfil público"
+ },
+ "GET /public/company/{company_id}/products": {
+  "rol": "Público",
+  "descripcion": "Consulta el perfil público"
+ },
+ "GET /public/company/{company_id}/rating": {
+  "rol": "Público",
+  "descripcion": "Consulta la calificación"
+ },
+ "GET /public/products": {
+  "rol": "Público",
+  "descripcion": "Consulta productos"
+ },
+ "GET /public/products/daily": {
+  "rol": "Público",
+  "descripcion": "Consulta los productos"
+ },
+ "GET /public/products/new": {
+  "rol": "Público",
+  "descripcion": "Consulta las novedades"
+ },
+ "GET /public/products/offers": {
+  "rol": "Público",
+  "descripcion": "Consulta las ofertas"
+ },
+ "GET /public/products/{product_id}": {
+  "rol": "Público",
+  "descripcion": "Consulta productos"
+ },
+ "GET /public/products/{product_id}/reviews": {
+  "rol": "Público",
+  "descripcion": "Consulta reseñas"
+ },
+ "POST /reports": {
+  "rol": "Comprador",
+  "descripcion": "Crea reportes"
+ },
+ "POST /reviews": {
+  "rol": "Comprador",
+  "descripcion": "Crea reseñas"
+ },
+ "GET /reviews/eligibility/{product_id}": {
+  "rol": "Comprador",
+  "descripcion": "Consulta si el comprador puede reseñar"
+ },
+ "PATCH /reviews/{review_id}": {
+  "rol": "Comprador",
+  "descripcion": "Actualiza reseñas"
+ },
+ "DELETE /reviews/{review_id}": {
+  "rol": "Comprador",
+  "descripcion": "Elimina reseñas"
+ },
+ "GET /wallet/me": {
+  "rol": "Comprador",
+  "descripcion": "Consulta la billetera propia"
+ },
+ "POST /wallet/recharge": {
+  "rol": "Administrador, propietario",
+  "descripcion": "Recarga saldo a un usuario"
+ },
+ "GET /wallet/transactions": {
+  "rol": "Comprador",
+  "descripcion": "Consulta movimientos de la billetera"
+ }
+}

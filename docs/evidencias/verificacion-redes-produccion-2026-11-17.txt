@@ -1,0 +1,60 @@
+Verificación de redes · 2026-11-17 01:06:02 UTC · RehniMarket
+Sitio: https://rehnimarket.duckdns.org   API: https://apirehnimarket.duckdns.org   Postgres en el host: 127.0.0.1:5433
+
+Redes por servicio:
+  rehni-frontend   edge
+  rehni-backend    data edge
+  pgbouncer_pool   data
+  rehni-postgres   data
+  rehni-minio      data
+
+Topología esperada
+  ✅ frontend (Caddy) solo en edge
+  ✅ backend en edge y data
+  ✅ pgbouncer solo en data
+  ✅ postgres solo en data
+  ✅ minio solo en data
+  ✅ Caddy conserva la IP fija 172.30.0.10 en edge
+  ✅ backend confía solo en Caddy (FORWARDED_ALLOW_IPS=172.30.0.10)
+
+POSITIVAS (deben pasar)
+  ✅ Host → Caddy: https://rehnimarket.duckdns.org/ responde 200
+  ✅ Caddy → backend: https://apirehnimarket.duckdns.org/health/database responde 200
+  ⏭  Caddy → backend → MinIO: omitida, aún no hay imágenes de producto en la base de datos
+  ✅ Backend → PgBouncer → Postgres: SELECT 1 por URL_DATABASE_POOLED (pgbouncer:6432)
+  ✅ Backend → Postgres: SELECT 1 por URL_DATABASE (postgres:5432, la que usa Alembic)
+  ✅ Backend → MinIO: conexión TCP a minio:9000
+  ✅ Backend → MinIO: listado del bucket uploads
+  ✅ MinIO: el bucket uploads existe (mc ls desde el contenedor minio)
+  ✅ PgBouncer → Postgres: healthcheck del contenedor pgbouncer = healthy
+  ✅ PgBouncer → Postgres: SELECT 1 a través del pool (psql -h 127.0.0.1 -p 6432)
+  ✅ PgBouncer → Postgres: SELECT 1 directo a postgres:5432 por la red data
+  ✅ Host → Postgres: 127.0.0.1:5433 acepta conexión (DbSchema / túnel SSH)
+  ✅ Resiliencia: tras docker compose restart backend, la API vuelve sola (healthy + 200)
+  ✅ Resiliencia: el sitio https://rehnimarket.duckdns.org/ sigue en 200 después del reinicio
+  ✅ Resiliencia: ningún 502/503/504 por Caddy durante el reinicio (sondeo cada 0,5 s: 4×200)
+
+NEGATIVAS (deben fallar: eso prueba el aislamiento)
+  ✅ Caddy → postgres: el nombre no resuelve
+  ✅ Caddy → pgbouncer: el nombre no resuelve
+  ✅ Caddy → minio: el nombre no resuelve
+  ✅ Caddy → postgres:5432 no conecta
+  ✅ Caddy → pgbouncer:6432 no conecta
+  ✅ Caddy → postgres por IP (172.30.1.3:5432) no conecta
+  ✅ Caddy → pgbouncer por IP (172.30.1.4:6432) no conecta
+  ✅ Caddy → minio por IP (172.30.1.2:9000) no conecta
+  ✅ Caddy → minio:9001 (consola) no conecta
+  ✅ Caddy → minio por IP (172.30.1.2:9001, consola) no conecta
+  ✅ Caddy → pasarela de edge (172.30.0.1:5433) no llega al Postgres publicado
+  ✅ Host → consola de MinIO: 127.0.0.1:9001 no responde
+  ✅ Host → API S3 de MinIO: 127.0.0.1:9000 no responde
+  ✅ Desde afuera: ninguna ruta de Caddy lista buckets ni abre la consola de MinIO
+  ✅ Postgres solo publicado en 127.0.0.1 (docker port: 127.0.0.1:5433 )
+  ✅ Postgres no escucha en 0.0.0.0/[::]:5433 (ss -tln)
+  ✅ pgbouncer y minio sin puertos publicados en el host
+  ✅ backend sin publicar en 0.0.0.0/[::] (docker port: 127.0.0.1:8000 )
+  ✅ Nada escucha en 0.0.0.0/[::] en 8000, 6432, 9000 ni 9001 del host (ss -tln)
+  ✅ Solo frontend (Caddy) publica puertos fuera de 127.0.0.1
+  (postgres-test no está corriendo: se omiten sus pruebas)
+
+Resultado: 41 pasan, 0 fallan

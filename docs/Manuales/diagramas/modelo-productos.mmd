@@ -1,0 +1,48 @@
+erDiagram
+  direction TB
+  products {
+    uuid id PK
+    varchar_100 name
+    numeric_10_2 price
+    boolean discount_enable
+    numeric_10_2 discount_value
+    integer stock
+    boolean has_variants
+    text descripcion
+    boolean is_active
+    timestamp created_at
+    timestamp deleted_at
+    uuid company_id FK
+    uuid catalog_id FK
+    uuid main_color_id FK
+    varchar_8 discount_type
+    timestamp discount_starts_at
+    timestamp discount_ends_at
+    boolean applies_tax
+  }
+  product_images {
+    uuid id PK
+    varchar_255 url
+    boolean is_main
+    uuid product_id FK
+  }
+  product_specifications {
+    uuid id PK
+    text value
+    uuid product_id FK
+    uuid specification_template_id FK
+  }
+  product_attribute_values {
+    uuid id PK
+    uuid product_id FK
+    uuid attribute_id FK
+    text value
+  }
+  catalog ||--o{ products : "catalog_id"
+  catalog_attributes ||--o{ product_attribute_values : "attribute_id"
+  color_variants |o--o{ products : "main_color_id"
+  company ||--o{ products : "company_id"
+  products ||--o{ product_attribute_values : "product_id"
+  products ||--o{ product_images : "product_id"
+  products ||--o{ product_specifications : "product_id"
+  specification_templates ||--o{ product_specifications : "specification_template_id"

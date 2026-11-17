@@ -1,0 +1,41 @@
+Prueba del único owner en producción · 2026-11-17 01:02:08 UTC · commit 4cd918e
+
+== docker compose ps
+pgbouncer_pool  Up About a minute (healthy)
+rehni-backend  Up 56 seconds (healthy)
+rehni-frontend  Up 39 seconds (healthy)
+rehni-minio  Up About a minute (healthy)
+rehni-postgres  Up About a minute (healthy)
+
+== alembic current
+d7e3f1a9c5b2 (head)
+
+== datos base, índice y triggers
+ roles | catalogo | transportadoras 
+-------+----------+-----------------
+     4 |      120 |               4
+
+       indexname       |                                            indexdef                                             
+-----------------------+-------------------------------------------------------------------------------------------------
+ uq_users_single_owner | CREATE UNIQUE INDEX uq_users_single_owner ON public.users USING btree (is_owner) WHERE is_owner
+
+       trigger       | tabla 
+---------------------+-------
+ roles_protect_owner | roles
+ users_set_is_owner  | users
+
+ owners_antes 
+--------------
+            0
+
+
+== segundo owner dentro de BEGIN … ROLLBACK (no deja cambios)
+BEGIN
+INSERT 0 1
+ERROR:  duplicate key value violates unique constraint "uq_users_single_owner"
+DETAIL:  Key (is_owner)=(t) already exists.
+ROLLBACK
+
+== después del ROLLBACK
+owners: 0
+usuarios de prueba que quedaron: 0

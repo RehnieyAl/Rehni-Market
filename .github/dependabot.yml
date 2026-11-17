@@ -1,0 +1,76 @@
+# Actualizaciones semanales de dependencias (#45). Las versiones menores y los parches de cada
+# ecosistema llegan en un solo PR, y los arreglos de seguridad en otro, para no llenar la cola;
+# las versiones mayores quedan en PRs aparte porque pueden romper (se revisan a mano).
+version: 2
+
+updates:
+  - package-ecosystem: uv
+    directory: /RehniMarket-backend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/Bogota
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(backend)"
+    groups:
+      backend-seguridad:
+        applies-to: security-updates
+        patterns: ["*"]
+      backend-menores:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /RehniMarket-frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/Bogota
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(web)"
+    groups:
+      frontend-seguridad:
+        applies-to: security-updates
+        patterns: ["*"]
+      frontend-menores:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /RehniMarket-mobile
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/Bogota
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(mobile)"
+    groups:
+      mobile-seguridad:
+        applies-to: security-updates
+        patterns: ["*"]
+      mobile-menores:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/Bogota
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+    groups:
+      acciones:
+        patterns: ["*"]

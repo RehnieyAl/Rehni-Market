@@ -1,3 +1,4 @@
+"""Renovación de sesión: valida el refresh token y emite un par nuevo de tokens."""
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 import traceback
@@ -23,9 +24,13 @@ def refresh_token_service(data: RefreshRequest,database: Session):
 
         payload = verify_token(data.refresh_token)
 
-
-        if payload is None:
+        # verify_token devuelve "expired" (texto) para un token vencido: antes llegaba a
+        # payload.get() y terminaba en 500 en vez de 401.
+        if payload == "expired":
             api_error(401,ErrorCodes.REFRESH_TOKEN_EXPIRED,"El Refresh Token ha expirado.")
+
+        if not isinstance(payload, dict):
+            api_error(401,ErrorCodes.REFRESH_TOKEN_INVALID,"El Refresh Token no es válido.")
 
         if payload.get("type") != "refresh":
             api_error(401,ErrorCodes.REFRESH_TOKEN_INVALID,"El token proporcionado no es un Refresh Token.")

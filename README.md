@@ -1,8 +1,6 @@
 <div align="center">
 
-<img src="RehniMarket-frontend/src/assets/logo.pngnono" alt="RehniMarket" width="360" />
-
-### Marketplace multiempresa con billetera digital propia
+<img src="assets/banner.png" alt="RehniMarket" width="100%" height="auto" />
 
 Conecta **empresas vendedoras** con **compradores** en una sola plataforma: catálogo con variantes, carrito, checkout con **RehniCoin**, pedidos, devoluciones, reseñas y paneles de gestión para empresas y administradores.
 
@@ -22,6 +20,7 @@ Conecta **empresas vendedoras** con **compradores** en una sola plataforma: cat�
 
 ## Tabla de contenido
 
+- [Producción](#producción)
 - [Sobre el proyecto](#sobre-el-proyecto)
 - [Funcionalidades](#funcionalidades)
 - [Stack tecnológico](#stack-tecnológico)
@@ -31,6 +30,18 @@ Conecta **empresas vendedoras** con **compradores** en una sola plataforma: cat�
 - [Scripts de operación](#scripts-de-operación)
 - [Plan de implantación](#plan-de-implantación)
 - [Autor](#autor)
+
+---
+
+## Producción
+
+| | |
+|---|---|
+| Web | <https://rehnimarket.duckdns.org> |
+| API | <https://apirehnimarket.duckdns.org> |
+| Estado | Desplegado en Azure (VM Ubuntu 24.04, Docker Compose) |
+| Guía de despliegue | [`deploy/README.md`](deploy/README.md) |
+| Cuenta owner (una sola, desde PostgreSQL) | [`deploy/OWNER.md`](deploy/OWNER.md) |
 
 ---
 
@@ -199,7 +210,7 @@ Rehni-Market/
 ├── tests/load/               # Escenarios de pruebas de carga
 ├── docs/                     # Documentación funcional y técnica
 ├── caddy/Caddyfile           # Reverse proxy y HTTPS (único: desarrollo y producción)
-├── deploy/                   # Plantilla del .env de producción
+├── deploy/                   # Guía de producción, plantilla del .env y checklist de Azure
 └── docker-compose.yml        # Compose único: desarrollo (watch), pruebas y producción
 ```
 
@@ -222,23 +233,35 @@ cd Rehni-Market
 
 ### 2. Configurar variables de entorno
 
+**Desarrollo local (lo mínimo, gate de entrega):**
+
 ```bash
-cp .env.example .env                                            # Compose: dominios, puertos, VITE_*
-cp .env.postgres.example .env.postgres                          # postgres y pgbouncer
-cp .env.minio.example .env.minio                                # minio y backend
-cp RehniMarket-backend/.env.example RehniMarket-backend/.env    # backend: JWT, correo, URL de la BD
-chmod 600 .env.postgres .env.minio RehniMarket-backend/.env
+cp .env.example .env
 ```
 
-Cada servicio recibe solo su archivo: Postgres y MinIO no ven la clave JWT ni el correo.
-La contraseña de `.env.postgres` debe coincidir con la de `URL_DATABASE` y
-`URL_DATABASE_POOLED` en `RehniMarket-backend/.env`. Lo público (`VITE_*`) va en `.env` y
-termina dentro del JavaScript del frontend: nunca pongas un secreto ahí.
+Toda la configuración está en **un solo `.env`** en la raíz, y `.env.example` es su única
+plantilla. Trae valores de desarrollo que funcionan entre sí (BD, MinIO, JWT y una cuenta owner
+de prueba, `owner.dev@example.com`); `minio`, `postgres`, `pgbouncer` y `backend` cargan el
+`.env` completo y Caddy solo sus variables. Son credenciales ficticias solo para el equipo
+local. Sin SMTP configurado el sistema arranca, pero no salen los correos de verificación.
+El backend fuera de Docker (`uv run`, pytest) lee el mismo `.env` de la raíz.
+
+**Producción:** el mismo `.env` único, desde su plantilla de producción
+[`deploy/env.prod.example`](deploy/env.prod.example) (mismas variables, con los dominios de
+producción, `DOCS_ENABLED=false` y `RUN_SEED=false`). Solo hay que reemplazar cada `CAMBIAR_*`;
+las contraseñas se generan con `openssl rand -base64 24 | tr '+/' '-_'`:
+
+```bash
+cp deploy/env.prod.example .env && chmod 600 .env
+```
+
+El `.env` nunca se sube a Git. Lo público (`VITE_*`) termina dentro del JavaScript del
+frontend: nunca pongas un secreto ahí.
 
 ### 3. Levantar todo con Docker
 
 ```bash
-docker compose up -d --build
+docker compose up -d --build --wait
 ```
 
 Al iniciar, el backend aplica las migraciones automáticamente (`alembic upgrade head`).
@@ -249,12 +272,13 @@ Al iniciar, el backend aplica las migraciones automáticamente (`alembic upgrade
 | API (a través de Caddy) | https://api.localhost |
 | API directa, sin Caddy (app móvil en la red local) | http://localhost:8000 |
 | Documentación interactiva (Swagger, con `DOCS_ENABLED=true`) | https://api.localhost/docs |
+| Especificación OpenAPI (importable en Postman) | [`docs/api/openapi.json`](docs/api/openapi.json) ([cómo usarla](docs/api/README.md)) |
 | PostgreSQL (solo en 127.0.0.1, p. ej. DbSchema) | localhost:5433 |
 
 HTTP redirige a HTTPS. Con `localhost` Caddy firma los certificados con su CA local:
 para que el navegador no avise, confía en esa raíz una vez
 ([`caddy/readme.md`](caddy/readme.md), «Confiar en la CA local»). En producción se usa el
-mismo `docker-compose.yml` con otro `.env` ([`deploy/`](deploy/)) y Caddy pide los
+mismo `docker-compose.yml` con el `.env` de `deploy/env.prod.example` y Caddy pide los
 certificados a Let's Encrypt.
 
 ### Desarrollo local
@@ -306,6 +330,9 @@ Escanea el código QR con **Expo Go**.
 
 ## Pruebas
 
+Tutorial completo (todas las suites, cómo correrlas en local y contra producción, CI y problemas
+frecuentes): **[`docs/pruebas/README.md`](docs/pruebas/README.md)**.
+
 ```bash
 # Backend (pytest) contra un Postgres desechable (servicio postgres-test, perfil "test")
 docker compose --profile test up -d --wait postgres-test
@@ -317,11 +344,11 @@ cd RehniMarket-frontend
 pnpm test
 ```
 
-Pruebas de humo y de carga:
+Pruebas de aceptación y de carga (con el stack local arriba):
 
 ```bash
-./scripts/acceptance_smoke.sh
-k6 run scripts/load_test.k6.js
+API=http://127.0.0.1:8000 bash scripts/acceptance_smoke.sh
+k6 run -e K6_BASE_URL=http://127.0.0.1:8000 tests/load/01-smoke.js
 ```
 
 ---
@@ -333,28 +360,35 @@ k6 run scripts/load_test.k6.js
 | `scripts/backup_rehnimarket.sh` | Respaldo de la base de datos y del almacenamiento |
 | `scripts/respaldar.sh` | Envoltorio de `backup_rehnimarket.sh` con el nombre del plan de implantación (mismos argumentos) |
 | `scripts/restore_rehnimarket.sh` | Restauración a partir de un respaldo |
-| `scripts/acceptance_smoke.sh` | Pruebas de humo sobre los flujos principales |
+| `scripts/acceptance_smoke.sh` | Muestra técnica de aceptación (casos AC-*); escribe en la base: solo en desarrollo |
 | `scripts/smoke-test.sh` | Prueba de humo por HTTP contra `BASE_URL` (VM, servidor o nube), con una cuenta de prueba por `SMOKE_EMAIL`/`SMOKE_PASSWORD`; no registra usuarios ni envía correos |
 | `scripts/perf_test.sh` | Pruebas de rendimiento |
-| `scripts/load_test.k6.js` | Escenario de carga con k6 |
 | `scripts/verificar-requisitos.sh` | Verificación de requisitos del entorno |
+| `scripts/verificar-redes.sh` | Segmentación de redes de Docker: caminos permitidos, aislamiento y resiliencia |
 
 ---
 
 
 ## Plan de implantación
 
-Documentos en [`docs/plan de implantacion - Rehnimarket/`](<docs/plan de implantacion - Rehnimarket/>).
+Documento consolidado (versión 1.0, semana 9): [`docs/plan-implantacion.md`](docs/plan-implantacion.md).
 
-| # | Punto | Semana | Criterio | Documento |
-|---|---|---|---|---|
-| 1 | Ficha técnica y requisitos mínimos | 1 | CE-1, CE-2 | [Ficha técnica](<docs/plan de implantacion - Rehnimarket/1) Ficha tecnica y requisitos minimos - Semana 1 (CE-1, CE2).md>) |
-| 2 | Plan de migración de datos | 2 y 5 | CE-3 | [Plan de migración](<docs/plan de implantacion - Rehnimarket/2) Plan de migración de datos  Semanas 2 y 5 (CE-3).md>) |
-| 3 | Plan de respaldo | 2 y 6 | CE-4 | [Plan de respaldo](<docs/plan de implantacion - Rehnimarket/3) Plan de respaldo — Semanas 2 y 6 (CE-4).md>) |
-| 4 | Hosting y dominio | 3 | CE-1 | [Hosting y dominio](<docs/plan de implantacion - Rehnimarket/4) Hosting y dominio — Semana 3 (CE-1).md>) |
-| 5 | Plan de instalación y despliegue | 2 y 4 | CE-1, CE-5 | [Instalación y despliegue](<docs/plan de implantacion - Rehnimarket/5) Plan de instalación y despliegue — Semanas 2 y 4 (CE-1, CE-5).md>) |
+| # | Punto | Semana | Criterio |
+|---|---|---|---|
+| 1 | Ficha técnica y requisitos mínimos | 1 | CE-1, CE-2 |
+| 2 | Plan de migración de datos | 2 y 5 | CE-3 |
+| 3 | Plan de respaldo | 2 y 6 | CE-4 |
+| 4 | Hosting y dominio | 3 | CE-1 |
+| 5 | Plan de instalación y despliegue | 2 y 4 | CE-1, CE-5 |
+| 6 | Configuración y verificación | 5 | CE-1 |
+| 7 | Seguridad, usuarios y permisos | 6 | CE-1 |
+| 8 | Pipeline de despliegue y monitoreo | 7 | CE-1, CE-5 |
+| 9 | Mantenimiento, soporte y capacitación | 8 | CE-5 |
+| 10 | Aceptación y entrega ([`docs/aceptacion/`](docs/aceptacion/)) | 9 | CE-1 a CE-5 |
 
-Pendientes de las semanas 1 a 4 y cómo completarlos: [PENDIENTES-s1-s4.md](<docs/plan de implantacion - Rehnimarket/PENDIENTES-s1-s4.md>). Despliegue de producción: mismo `docker-compose.yml` con el `.env` de [`deploy/env.prod.example`](deploy/env.prod.example) ([`deploy/README.md`](deploy/README.md)) y [`CHANGELOG.md`](CHANGELOG.md).
+Pruebas: [`docs/estrategia-pruebas.md`](docs/estrategia-pruebas.md) y [`docs/pruebas/REGISTRO.md`](docs/pruebas/REGISTRO.md).
+
+
 
 
 ---
