@@ -156,6 +156,9 @@ def client(db, engine, monkeypatch):
     monkeypatch.setattr("app.main.ensure_bucket", lambda: None)
     # El fixture db ya crea los roles; los datos base al arrancar se prueban en test_base_data.py.
     monkeypatch.setattr("app.main.ensure_base_data", lambda: None)
+    # Las pruebas no deben depender de RUN_SEED del .env de desarrollo (true en .env.example): el
+    # seed de demostración usaría la conexión de la app (PgBouncer), que no existe fuera de Docker.
+    monkeypatch.setattr("app.main.config.RUN_SEED", False)
 
     def override_get_db():
         yield db
