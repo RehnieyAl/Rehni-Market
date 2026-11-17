@@ -112,7 +112,8 @@ if [ -n "$IMG_PATH" ]; then
   check "Caddy → backend → MinIO: imagen de producto por /media/proxy (${IMG_PATH}) → ${IMG_RES}" \
     sh -c "case '$IMG_RES' in '200 image/'*) exit 0;; *) exit 1;; esac"
 else
-  ko "Caddy → backend → MinIO: no hay imágenes de producto en la base de datos"
+  # Una instalación nueva todavía no tiene productos: no es una falla de red.
+  printf '  ⏭  Caddy → backend → MinIO: omitida, aún no hay imágenes de producto en la base de datos\n'
 fi
 
 check "Backend → PgBouncer → Postgres: SELECT 1 por URL_DATABASE_POOLED (pgbouncer:6432)" \
@@ -136,6 +137,7 @@ PY
 check "Backend → MinIO: conexión TCP a minio:9000" \
   docker exec "$BACKEND" python3 -c "import socket; socket.create_connection(('minio', 9000), timeout=$TIMEOUT).close()"
 
+# Prueba credenciales y permisos de lectura; el bucket puede estar vacío en una instalación nueva.
 check "Backend → MinIO: listado del bucket uploads" \
   docker exec -i "$BACKEND" /app/.venv/bin/python - <<'PY'
 import os
@@ -143,7 +145,7 @@ from minio import Minio
 c = Minio(os.environ.get("MINIO_URL") or "minio:9000",
           access_key=os.environ["MINIO_ROOT_USER"], secret_key=os.environ["MINIO_ROOT_PASSWORD"], secure=False)
 assert c.bucket_exists("uploads")
-assert next(iter(c.list_objects("uploads", recursive=True)), None) is not None, "bucket vacío"
+next(iter(c.list_objects("uploads", recursive=True)), None)
 PY
 
 check "MinIO: el bucket uploads existe (mc ls desde el contenedor minio)" \
