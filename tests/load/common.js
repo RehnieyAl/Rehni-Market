@@ -1,8 +1,8 @@
 // Utilidades compartidas por los escenarios de tests/load/.
 //
 // BASE_URL se toma de la variable de entorno K6_BASE_URL (o BASE_URL como
-// alias), nunca hardcodeada: el script anterior (scripts/load_test.k6.js)
-// tenía una IP privada fija, lo que lo hacía no portable entre entornos.
+// alias), nunca hardcodeada: el script anterior, ya eliminado, tenía una IP
+// privada fija y no era portable entre entornos.
 //
 // Todos los escenarios de esta carpeta son de SOLO LECTURA contra endpoints
 // públicos del catálogo (/public/...). No ejecutan checkout, registro ni

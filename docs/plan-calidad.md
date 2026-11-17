@@ -52,7 +52,7 @@ panel quedan en `admin_activities`).
 
 | Campo | Valor |
 |---|---|
-| RNF | Las consultas públicas del catálogo responden rápido bajo concurrencia (metas de `tests/load/02-baseline.js` y `scripts/load_test.k6.js`) |
+| RNF | Las consultas públicas del catálogo responden rápido bajo concurrencia (metas de `tests/load/02-baseline.js`) |
 | Meta | p95 catálogo < 800 ms, búsqueda < 600 ms, detalle < 500 ms; `http_req_failed` < 1 % |
 | Herramienta y escenario | k6, `tests/load/02-baseline.js`: 10 usuarios virtuales constantes durante 2 min, solo `GET` a `/public/*` |
 | Ambiente | **Local**: equipo de desarrollo, stack completo de `docker-compose.yml`, API directa `http://127.0.0.1:8000` (sin Caddy). No es el servidor de producción |

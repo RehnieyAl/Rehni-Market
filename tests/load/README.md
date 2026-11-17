@@ -1,9 +1,11 @@
 # Pruebas de carga — RehniMarket (k6)
 
 Scripts de k6 para auditar la estabilidad del backend bajo concurrencia.
-Sustituyen a `scripts/load_test.k6.js` (se deja sin borrar, pero ya no se
-recomienda usarlo: saltaba directo a 1000 VUs sin humo/base previos, usaba
-una IP privada hardcodeada y su función `compra()` estaba vacía).
+Sustituyen a `scripts/load_test.k6.js`, eliminado en noviembre de 2026: saltaba
+directo a 1000 VUs sin humo ni carga base previos, usaba una IP privada fija y su
+función `compra()` estaba vacía. Sigue en el historial de git
+(`git show 45ea99d:scripts/load_test.k6.js`). Tutorial general de pruebas:
+[`docs/pruebas/README.md`](../../docs/pruebas/README.md).
 
 ## Alcance
 
