@@ -1,8 +1,10 @@
-from sqlalchemy import String, Boolean, ForeignKey, DateTime
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+"""Modelo de usuario: credenciales, rol, verificación y la marca is_owner que mantiene la base (#54)."""
+from sqlalchemy import DDL, String, Boolean, FetchedValue, ForeignKey, DateTime, Index, event, text
+from sqlalchemy.orm import relationship, Mapped, mapped_column, validates
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.database.Connection import Base
+from app.database.single_owner import OWNER_INDEX_NAME, TRIGGER_STATEMENTS
 
 import uuid
 
@@ -12,6 +14,10 @@ from datetime import datetime, timezone
 class Users(Base):
 
     __tablename__ = "users"
+    # Índice único parcial: a lo sumo una fila con is_owner = true (app/database/single_owner.py).
+    __table_args__ = (
+        Index(OWNER_INDEX_NAME, "is_owner", unique=True, postgresql_where=text("is_owner")),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -66,6 +72,15 @@ class Users(Base):
         UUID(as_uuid=True),
         ForeignKey("roles.id"),
         nullable=False,
+    )
+
+    # Solo lectura: la calcula el trigger users_set_is_owner (app/database/single_owner.py) a partir
+    # del rol. El ORM nunca la envía (default y actualización en el servidor) y asignarla falla.
+    is_owner: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default=text("false"),
+        server_onupdate=FetchedValue(),
     )
 
     role: Mapped["Role"] = relationship(
@@ -138,3 +153,12 @@ class Users(Base):
         cascade="all, delete-orphan",
     )
 
+    @validates("is_owner")
+    def _reject_is_owner_write(self, key, value):
+        raise AttributeError("is_owner la calcula la base de datos a partir del rol; asigna role_id.")
+
+
+# create_all (pruebas) crea los mismos triggers que la migración d7e3f1a9c5b2; roles ya existe
+# cuando se crea users por la clave foránea.
+for _statement in TRIGGER_STATEMENTS:
+    event.listen(Users.__table__, "after_create", DDL(_statement))

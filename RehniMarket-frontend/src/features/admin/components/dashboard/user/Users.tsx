@@ -1,3 +1,4 @@
+/** Listado de usuarios del panel admin: filtros, detalle y bloqueo (la cuenta owner no se bloquea). */
 import {
   Search,
   Eye,
@@ -18,10 +19,8 @@ import {
 } from "@/features/admin/api/userService";
 
 import type { AdminUserResponse } from "@/features/admin/types/response";
-import { useRole } from "@/hooks/useRole";
 
 export default function Users() {
-  const { isOwner } = useRole();
 
   const [users, setUsers] = useState<AdminUserResponse[]>([]);
   const [search, setSearch] = useState("");
@@ -362,7 +361,7 @@ export default function Users() {
                           <Eye size={18} />
                         </button>
 
-                        {(user.role !== "owner" || isOwner) && (
+                        {user.role !== "owner" && (
                           <button
                             type="button"
                             onClick={() =>

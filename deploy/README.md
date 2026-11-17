@@ -8,6 +8,8 @@ Solo cambia el `.env`, que sale de la plantilla [`env.prod.example`](env.prod.ex
 | `README.md` | Esta guía |
 | [`env.prod.example`](env.prod.example) | Plantilla del `.env` único de producción |
 | [`checklist-azure.md`](checklist-azure.md) | Lista de verificación para marcar durante el despliegue en Azure |
+| [`OWNER.md`](OWNER.md) | Crear y administrar el único owner desde PostgreSQL |
+| [`sql/crear-owner.sql`](sql/crear-owner.sql) | SQL que crea el owner con `psql` |
 
 ## 1. Producción
 
@@ -155,22 +157,11 @@ docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -
 # 4|120|4
 ```
 
-1. Registrarse en <https://rehnimarket.duckdns.org> con el correo del responsable.
-2. Asignar el rol owner y, si el código de verificación no llegó por correo, marcar el correo como verificado:
-
-```bash
-docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
-```
-
-```sql
-UPDATE users
-   SET role_id = (SELECT id FROM roles WHERE name = 'owner'),
-       verified = true
- WHERE email = '<correo-del-owner>';
--- debe responder UPDATE 1
-```
-
-3. Cerrar sesión y volver a entrar: el rol se lee de la base en cada petición.
+**Cuenta owner:** hay una sola y se crea directamente en PostgreSQL con
+[`deploy/sql/crear-owner.sql`](sql/crear-owner.sql), nunca por la web. Procedimiento completo
+(crear, convertir una cuenta registrada, comprobar, restablecer la clave, transferir y errores
+frecuentes) en **[`deploy/OWNER.md`](OWNER.md)**. La base de datos, el backend y el frontend impiden
+un segundo owner (§13).
 
 ## 8. Verificación
 
@@ -249,5 +240,8 @@ docker compose ps
 - **CORS restringido** a `https://rehnimarket.duckdns.org` (`CORS_EXTRA_ORIGINS`).
 - **Rate limit** activo (`RATE_LIMIT_ENABLED=true`), con la IP real del cliente: el backend solo
   acepta `X-Forwarded-For` de Caddy (`FORWARDED_ALLOW_IPS=172.30.0.10`).
+- **Un solo owner**, creado desde PostgreSQL ([`OWNER.md`](OWNER.md)): la base lo garantiza con un
+  índice único y triggers, el backend responde 403 a cualquier intento de asignar, quitar, editar o
+  bloquear el rol owner, y el panel no lo ofrece.
 - **PostgreSQL, PgBouncer y MinIO ocultos**: en la red `data`, a la que Caddy no pertenece, y sin
   puertos hacia Internet. PostgreSQL solo en `127.0.0.1:5433`.

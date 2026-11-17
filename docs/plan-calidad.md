@@ -14,7 +14,7 @@ una: la métrica, la meta, la evidencia actual y **la decisión del proyecto que
 | Adecuación funcional | % de historias RF «Hecho»; casos de aceptación que pasan | ≥ 90 %; 9/9 | 36/36 RF (`docs/backlog-final.md`); aceptación [PENDIENTE] | Backlog medido contra el catálogo RF; los defectos de dinero (H-07, H-08) quedan como incidencias P1 |
 | Fiabilidad (tolerancia a fallos, recuperabilidad) | Reembolsos duplicados; RPO/RTO | 0; 24 h / 4 h | Reembolso idempotente con índice único parcial (migración `c3d5e7f9a1b2`) y pruebas de `test_order_cancel_refund.py`; restauración medida 12,8 s (plan §3.5) | Índice único en la BD en vez de solo una comprobación en código; respaldo con huella y `--verify-only` |
 | Eficiencia de desempeño | p95 de las rutas públicas y tasa de error bajo carga | p95 catálogo < 800 ms, búsqueda < 600 ms, detalle < 500 ms; errores < 1 % | Ver §2: **medición en local** (p95 15–32 ms, 0 % de errores). [PENDIENTE: repetir contra la URL de producción en Azure] | PgBouncer en modo transacción y sesión de solo lectura para `/public` tras el bloqueo del pool bajo k6 |
-| Seguridad | Vulnerabilidades de Sonar; pruebas de autorización; avisos de dependencias | 0 vulnerabilidades sin revisar; 100 % de rutas por rol probadas | 8 vulnerabilidades en Sonar: `S6470` corregida (#46), `S2068` registrada (#47) y 6 de configuración de Docker y HTTP interno como deuda (`docs/cierre-trimestre.md` §4); 12 pruebas de autorización; 28 avisos de dependencias (#45) | El rol se lee de la BD en cada petición (no del JWT); rate limit por IP real solo desde Caddy; secretos fuera de Git |
+| Seguridad | Vulnerabilidades de Sonar; pruebas de autorización; avisos de dependencias | 0 vulnerabilidades sin revisar; 100 % de rutas por rol probadas | 8 vulnerabilidades en Sonar: `S6470` corregida (#46), `S2068` registrada (#47) y 6 de configuración de Docker y HTTP interno como deuda (`docs/cierre-trimestre.md` §4); 12 pruebas de autorización; 28 avisos de dependencias (#45) | El rol se lee de la BD en cada petición (no del JWT); rate limit por IP real solo desde Caddy; secretos fuera de Git; un único owner garantizado en tres capas (§1.2, #54) |
 | Mantenibilidad (capacidad de prueba, modificabilidad) | Cobertura; code smells; deuda | Cobertura ≥ 80 % (referente); sin smells nuevos en el Quality Gate | Backend 70,21 % líneas / 64,89 % combinado; frontend 10,58 %; Quality Gate `OK` | Umbral por ratchet (solo sube: 60 → 64); CI con pruebas en cada push y PR; Sonar en cada PR |
 | Capacidad de interacción (usabilidad) | Errores con mensaje legible; tareas de capacitación sin ayuda | 100 % de errores con `{code, message}`; tarea < 5 min | H-04 y H-05 corregidos (`6bc1c81`); sesión de capacitación [PENDIENTE] | Contrato único de errores y validación en vivo espejo del backend (zod) |
 | Flexibilidad (portabilidad, instalabilidad) | Instalación desde cero solo con el manual | Gate Docker y simulacro superados | Gate en clon limpio superado (`docs/pruebas/evidencias/2026-11-16_gate-docker.txt`); simulacro [PENDIENTE] | Un solo `docker-compose.yml` y un solo `Caddyfile` para todos los ambientes; solo cambia el `.env` |
@@ -30,6 +30,21 @@ una: la métrica, la meta, la evidencia actual y **la decisión del proyecto que
 | Prueba de carga | Cada versión mayor y antes de la entrega | k6 (`tests/load/`) | Responsable técnico | `docs/pruebas/evidencias/k6/` |
 | Auditoría de dependencias | Mensual | `pnpm audit`, `pip-audit` | Responsable técnico | Plan §9.1 |
 | Pruebas de aceptación | Cada entrega | `docs/aceptacion/pruebas-de-aceptacion.md` | Cliente simulado | Decisión firmada |
+
+### 1.2 Seguridad: defensa en profundidad para el único owner
+
+El owner es el rol de mayor privilegio y RehniMarket admite **uno solo**, creado desde PostgreSQL
+([`deploy/OWNER.md`](../deploy/OWNER.md)). Una sola barrera no basta: si el control del backend
+falla o alguien entra por `psql`, otra capa debe seguir impidiendo un segundo owner (ISO/IEC 25010,
+seguridad: confidencialidad e integridad; la responsabilidad se conserva porque las acciones del
+panel quedan en `admin_activities`).
+
+| Capa | Control | Qué cubre | Prueba |
+|---|---|---|---|
+| Base de datos | `users.is_owner` calculada por trigger a partir de `roles.name`; índice único parcial `uq_users_single_owner`; trigger `roles_protect_owner` (no borrar ni renombrar el rol) | Cualquier camino, incluidos `psql`, scripts y dos transacciones simultáneas; no depende del id del rol | `tests/test_single_owner.py::TestDatabaseGuarantee` (incluye la prueba concurrente) |
+| Backend | `PATCH /admin/dashboard/user/update-information/{id}` y `…/status/{id}` responden 403 si piden el rol owner o si la cuenta destino es owner, sin importar quién actúe | La API, aunque el frontend se salte | `tests/test_single_owner.py::TestApiNeverAssignsOwner` |
+| Frontend | El panel no ofrece «Propietario» ni deja editar o bloquear la cuenta owner | Errores del usuario en el panel | Revisión de `UserDetailModal.tsx` y `Users.tsx` |
+| Procedimiento | `deploy/sql/crear-owner.sql`: transacción, rechaza un segundo owner, valida datos y clave de 8 a 72 bytes; la clave llega por variable de entorno | La creación inicial y los errores de operación | `tests/test_crear_owner_sql.py` |
 
 ## 2. Informe de evaluación: RNF de rendimiento medido contra su meta
 
@@ -63,8 +78,8 @@ checkout no están en los escenarios (`tests/load/README.md`).
 
 ## 3. Plan de mejora
 
-Acciones que salen de la verificación de calidad (Sonar, pruebas, gate, auditoría). M-01 a M-06
-y M-11 ya están implementadas.
+Acciones que salen de la verificación de calidad (Sonar, pruebas, gate, auditoría). M-01 a M-06,
+M-11 y M-12 ya están implementadas.
 
 | # | Acción | Origen (verificación) | Característica ISO 25010 | Estado | Evidencia |
 |---|---|---|---|---|---|
@@ -79,3 +94,4 @@ y M-11 ya están implementadas.
 | M-08 | Actualizar dependencias vulnerables y activar Dependabot | Auditoría de dependencias | Seguridad | Pendiente (P1) | #45 |
 | M-09 | Separar el rol de BD de la app del rol dueño | Revisión de seguridad (plan §7.3) | Seguridad | Pendiente (P2) | #44 |
 | M-10 | Subir la cobertura del frontend y agregar E2E | Estrategia de pruebas | Mantenibilidad | Pendiente (P2) | #42, #43 |
+| M-12 | Garantizar un único owner en base de datos, API y panel (defensa en profundidad, §1.2) | Revisión de código (B-06) | Seguridad | Implementada | #54 |

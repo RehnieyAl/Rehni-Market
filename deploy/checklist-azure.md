@@ -79,16 +79,8 @@ Toda la configuración es **un solo `.env`** en la raíz. Su plantilla de produc
 ## 6. Datos base y owner, sin datos de demo (§5.2, paso 8.1)
 
 - [ ] Datos base creados por el arranque: `docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT (SELECT count(*) FROM roles), (SELECT count(*) FROM catalog), (SELECT count(*) FROM shipping_carriers);"'` → `4|120|4`.
-- [ ] El responsable se registra en `https://rehnimarket.duckdns.org` con `<correo-owner>` y verifica el código del correo.
-- [ ] Asignar el rol owner:
-      ```bash
-      docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
-      ```
-      ```sql
-      UPDATE users SET role_id = (SELECT id FROM roles WHERE name = 'owner') WHERE email = '<correo-owner>';
-      -- debe responder: UPDATE 1
-      ```
-- [ ] Cerrar sesión, volver a entrar: el panel de owner aparece (el rol se lee de la base en cada petición).
+- [ ] Crear el owner con `deploy/sql/crear-owner.sql` según [`OWNER.md`](OWNER.md) §3 (clave con `read -rsp`) → `INSERT 0 1`.
+- [ ] Comprobar con la consulta de `OWNER.md` §4 (una fila, `is_owner = t`) e iniciar sesión en la web: **Panel Propietario**.
 
 ## 7. Prueba de humo y respaldo (§5.2, pasos 9-10)
 
