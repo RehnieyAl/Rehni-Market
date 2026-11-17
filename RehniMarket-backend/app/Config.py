@@ -33,7 +33,6 @@ class config():
     # transacción de PgBouncer.
     URL_DATABASE_POOLED = os.getenv("URL_DATABASE_POOLED") or URL_DATABASE
     SECRET_KEY = os.getenv("SECRET_KEY")
-    ALGORITHM = os.getenv("ALGORITHM")
     ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
     REFRESH_TOKEN_DAYS = int(os.getenv("REFRESH_TOKEN_DAYS"))
     GMAIL_USERNAME = os.getenv("GMAIL_USERNAME")
