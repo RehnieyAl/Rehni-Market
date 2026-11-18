@@ -2,7 +2,7 @@
 
 Fecha: 04/11/2026. Rama `docs/implantacion-s1-s4`.
 
-Fuentes de los requisitos: repositorio del bootcamp (`bc-implantacion`): `docs/plan-curricular.md`, `docs/plan-implantacion-template.md` y, por semana, `rubrica-evaluacion.md`, `3-proyecto/README.md` y `3-proyecto/starter/`. Los PDF de `actividad  a realizar/` tratan las actividades 2 a 4 y el informe de diseño, no la implantación.
+Fuentes de los requisitos: Bootcamp de Implantación del SENA, semanas 1 a 4 (plan curricular, plantilla del plan de implantación y, por semana, la rúbrica, la guía del proyecto y su plantilla).
 
 Regla aplicada: todo dato sale del repositorio (archivo:línea), de la salida de un comando ejecutado el 04/11/2026 o de una página oficial citada. Lo demás queda marcado con `<!-- PENDIENTE: ... -->` en el archivo correspondiente.
 
@@ -55,7 +55,7 @@ Condiciones de las rúbricas:
 |---|---|
 | Ensayo completo (carga, transformación, validación y rollback): 12,2 s para las opciones 3-5, `OK=10 FALLA=0`, 73 migrados y 27 rechazados, rollback en 0,1 s | Ensayo del 04/11/2026 14:41 UTC sobre `rehnimarket_ensayo`, restaurada del respaldo `2026-11-04_14-31` y eliminada al terminar (§2.9) |
 | Duración del respaldo previo: 1 min 58 s (antes: «menos de 1 minuto») | `backups/backup.log`, 04/11/2026 |
-| Encabezado y comentarios de la plantilla, eliminados | Formato de `plan-implantacion-template.md` |
+| Encabezado y comentarios de la plantilla, eliminados | Formato de la plantilla del plan del Bootcamp de Implantación del SENA |
 
 ### §3 Respaldo
 | Dato | Fuente |

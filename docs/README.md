@@ -17,7 +17,7 @@
 | Documento | Para qué |
 |---|---|
 | [`plan-implantacion.md`](plan-implantacion.md) | Plan de implantación consolidado (secciones 1 a 10) |
-| [`implantacion/`](implantacion/README.md) | Evidencia de cada semana del bootcamp de implantación (1 a 7), con su estado |
+| [`implantacion/`](implantacion/README.md) | Evidencia de cada semana del Bootcamp de Implantación del SENA (1 a 7), con su estado |
 | [`aceptacion/`](aceptacion/) | Pruebas de aceptación, guion y registro del simulacro |
 | [`runbooks/`](runbooks/) | Procedimientos de operación |
 | [`evidencias/`](evidencias/) | Evidencias de producción (redes, único owner, hosting y HTTPS) |

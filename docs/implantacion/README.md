@@ -1,7 +1,9 @@
 # Implantación — evidencias por semana
 
-Un archivo por semana del bootcamp `bc-implantacion` (semanas 1 a 7), cada uno con la plantilla
-`3-proyecto/starter/entregable-s0N-*.md` de su semana, en el mismo orden y con los mismos títulos.
+Autor: Yeinher Jose Algarin Cardozo, aprendiz ADSO, ficha 3171618.
+
+Un archivo por semana del Bootcamp de Implantación del SENA (semanas 1 a 7), cada uno con la
+plantilla «Entregable S0N» de su semana, en el mismo orden y con los mismos títulos.
 El documento consolidado es [`docs/plan-implantacion.md`](../plan-implantacion.md): resume cada
 sección y enlaza aquí. Las semanas 8 y 9 están en el plan (§9 y §10) y en
 [`docs/aceptacion/`](../aceptacion/).
@@ -28,8 +30,8 @@ Azure (Azure for Students) con el clon en `~/Rehni-Market`; `rehnimarket.duckdns
 ## Cumplimiento de la rúbrica de Producto
 
 La rúbrica de cada semana pesa Conocimiento 30 %, Desempeño 40 % y Producto 30 %. Solo el Producto
-se evalúa con el repositorio. Estimación del 18/11/2026, ítem por ítem, contra
-`bootcamp/week-0N-*/rubrica-evaluacion.md` («Evidencia de Producto»):
+se evalúa con el repositorio. Estimación del 18/11/2026, ítem por ítem, contra la
+rúbrica de evaluación de cada semana del Bootcamp de Implantación del SENA («Evidencia de Producto»):
 
 | Sem | Ítem de la rúbrica (puntos) | ¿Cumple? | Puntos | Qué falta |
 |---|---|:---:|---:|---|

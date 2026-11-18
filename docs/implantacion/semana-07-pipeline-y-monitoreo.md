@@ -4,10 +4,11 @@
 |---|---|
 | Proyecto | RehniMarket |
 | Equipo | 1 persona (responsable técnico) |
+| Autor | Yeinher Jose Algarin Cardozo, aprendiz ADSO, ficha 3171618 |
 | Versión del software | 1.0.1 |
 | Fecha | 2026-11-18 |
 | Semana | 7 de 9 — CI/CD de despliegue y monitoreo (CE-1, CE-5) |
-| Guía del bootcamp | `bc-implantacion/bootcamp/week-07-cicd_de_despliegue_y_monitoreo/3-proyecto/README.md`, plantilla `3-proyecto/starter/entregable-s07-pipeline-y-monitoreo.md`, rúbrica `rubrica-evaluacion.md` |
+| Guía | Bootcamp de Implantación del SENA, semana 7: guía del proyecto de la semana, plantilla «Entregable S07» y rúbrica de evaluación (evidencia de Producto) |
 | Sección del plan consolidado | §8 de [`docs/plan-implantacion.md`](../plan-implantacion.md) |
 | Estado | Parcial: 19 `[PENDIENTE]` (CI completo; faltan `release.yml`, `desplegar.sh`, ambiente `produccion` y monitoreo externo) |
 
@@ -103,7 +104,7 @@ curl -fsS https://apirehnimarket.duckdns.org/health/database && bash scripts/smo
 ```
 
 ```
-[PENDIENTE: scripts/desplegar.sh (adaptado de bc-implantacion/referencia/deploy/desplegar.sh) que haga respaldo, cambio de versión, espera de salud, prueba de humo y rollback automático a la versión anterior si algo falla, y que escriba ~/Rehni-Market/despliegues.log. Pegar aquí el log de un despliegue exitoso y de uno detenido a propósito (p. ej. con una etiqueta inexistente o un .env con un CAMBIAR_*)]
+[PENDIENTE: scripts/desplegar.sh (adaptado del `desplegar.sh` de la app de referencia del Bootcamp de Implantación del SENA, semana 7) que haga respaldo, cambio de versión, espera de salud, prueba de humo y rollback automático a la versión anterior si algo falla, y que escriba ~/Rehni-Market/despliegues.log. Pegar aquí el log de un despliegue exitoso y de uno detenido a propósito (p. ej. con una etiqueta inexistente o un .env con un CAMBIAR_*)]
 ```
 
 ### Migraciones compatibles hacia atrás

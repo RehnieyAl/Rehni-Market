@@ -4,17 +4,17 @@
 |---|---|
 | Proyecto | RehniMarket |
 | Equipo | 1 persona (responsable técnico) |
+| Autor | Yeinher Jose Algarin Cardozo, aprendiz ADSO, ficha 3171618 |
 | Versión del software | 1.0.1 |
 | Fecha | 2026-11-18 |
 | Semana | 6 de 9 — Seguridad, usuarios y permisos (CE-1, CE-4) |
-| Guía del bootcamp | `bc-implantacion/bootcamp/week-06-seguridad_usuarios_y_permisos/3-proyecto/README.md`, plantilla `3-proyecto/starter/entregable-s06-seguridad-y-respaldo.md`, rúbrica `rubrica-evaluacion.md` |
+| Guía | Bootcamp de Implantación del SENA, semana 6: guía del proyecto de la semana, plantilla «Entregable S06» y rúbrica de evaluación (evidencia de Producto) |
 | Sección del plan consolidado | §7 y §3 (versión final) de [`docs/plan-implantacion.md`](../plan-implantacion.md); reemplaza el respaldo v0 de la [semana 2](semana-02-migracion-respaldo-instalacion.md) |
 | Estado | Parcial: 23 `[PENDIENTE]` (dependen de comandos en la VM, del cambio de roles #44 y de la restauración por un tercero) |
 
 Servidor: VM Ubuntu 24.04 de Azure, clon en `~/Rehni-Market`. Marcadores: `<usuario-admin>`,
 `<ip-de-la-vm>`, `<ip-del-administrador>`. Equipo de una persona: lo que la guía pide hacer «con
-otra persona del equipo» lo hace un tercero (compañero o instructor), según
-`.claude/referentes-sena.md`.
+otra persona del equipo» lo hace un tercero (compañero o instructor).
 
 ---
 
@@ -211,7 +211,7 @@ Ese archivo solo contiene `EXPO_PUBLIC_API_URL` (URL pública, no es secreto). R
 |---|---|
 | Qué se respalda | Base PostgreSQL (`pg_dump -F c -Z 6`) y bucket `uploads` de MinIO (`mc mirror` + `.tar.gz`), con el mismo `TS` y un `.sha256` cada uno ([`scripts/backup_rehnimarket.sh`](../../scripts/backup_rehnimarket.sh), envoltorio [`scripts/respaldar.sh`](../../scripts/respaldar.sh)). El `.env` no entra en el respaldo: se guarda cifrado fuera del servidor |
 | RPO / RTO acordados | 24 h / 4 h ([semana 2](semana-02-migracion-respaldo-instalacion.md), §3.2) [PENDIENTE: aceptación del cliente en el acta] |
-| Herramienta | `pg_dump` + `mc mirror` con `sha256sum`; cifrado con `age` para las copias que salen del servidor (decisión del 04/11/2026; el bootcamp propone restic, que también cifra y deduplica) |
+| Herramienta | `pg_dump` + `mc mirror` con `sha256sum`; cifrado con `age` para las copias que salen del servidor (decisión del 04/11/2026; el Bootcamp de Implantación del SENA, semana 6, propone restic, que también cifra y deduplica) |
 | Usuario del sistema y rol de base que lo ejecutan | `<usuario-admin>` (grupo `docker`) y rol `POSTGRES_USER`. [PENDIENTE: rol de solo lectura para `pg_dump` tras cerrar #44] |
 | Cifrado y dónde vive la contraseña | [PENDIENTE: implementar `age -r <llave-publica>` sobre el `.dump` y el `.tar.gz` antes de copiarlos fuera; llave privada solo en el gestor de contraseñas del responsable] |
 | Horario (línea de cron) | Propuesta: `0 2 * * * cd /home/rehnimarket/Rehni-Market && bash scripts/respaldar.sh >> backups/cron.log 2>&1` [PENDIENTE: instalar con `crontab -e` en la VM y pegar `crontab -l`] |

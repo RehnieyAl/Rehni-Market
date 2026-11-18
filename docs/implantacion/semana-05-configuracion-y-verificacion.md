@@ -4,10 +4,11 @@
 |---|---|
 | Proyecto | RehniMarket |
 | Equipo | 1 persona (responsable técnico) |
+| Autor | Yeinher Jose Algarin Cardozo, aprendiz ADSO, ficha 3171618 |
 | Versión del software | 1.0.1 |
 | Fecha | 2026-11-18 |
 | Semana | 5 de 9 — Configuración y pruebas en servidor (CE-1, CE-3) |
-| Guía del bootcamp | `bc-implantacion/bootcamp/week-05-configuracion_y_pruebas_en_servidor/3-proyecto/README.md`, plantilla `3-proyecto/starter/entregable-s05-configuracion-y-verificacion.md`, rúbrica `rubrica-evaluacion.md` |
+| Guía | Bootcamp de Implantación del SENA, semana 5: guía del proyecto de la semana, plantilla «Entregable S05» y rúbrica de evaluación (evidencia de Producto) |
 | Sección del plan consolidado | §6 y evidencia de §2 (2.8) de [`docs/plan-implantacion.md`](../plan-implantacion.md) |
 | Estado | Parcial: 9 `[PENDIENTE]` (1 se cierra con el comando «b»; 5 dependen de ejecutar la migración en la VM) |
 

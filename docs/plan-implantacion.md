@@ -1,15 +1,16 @@
 # Plan de Implantación — RehniMarket
 
-> Plantilla: `bc-implantacion/docs/plan-implantacion-template.md`. Documento consolidado para la
+> Plantilla: plan de implantación del Bootcamp de Implantación del SENA. Documento consolidado para la
 > semana 9 (gate): resume las secciones 1 a 8 y enlaza la evidencia completa de cada semana en
 > [`docs/implantacion/`](implantacion/README.md) (un archivo por semana, con la plantilla del
-> bootcamp); las secciones 9 y 10 están completas aquí. Si este resumen y un archivo de semana no
+> Bootcamp); las secciones 9 y 10 están completas aquí. Si este resumen y un archivo de semana no
 > coinciden, manda el archivo de semana. Solo datos sintéticos: ninguna IP, contraseña ni token real.
 
 | Campo | Valor |
 |---|---|
 | Proyecto | RehniMarket |
 | Equipo | 1 persona (responsable técnico) |
+| Autor | Yeinher Jose Algarin Cardozo, aprendiz ADSO, ficha 3171618 |
 | Versión del plan | 1.1 |
 | Versión del software | 1.0.1 ([`CHANGELOG.md`](../CHANGELOG.md); releases [v1.0.0](https://github.com/RehnieyAl/Rehni-Market/releases/tag/v1.0.0) y [v1.0.1](https://github.com/RehnieyAl/Rehni-Market/releases/tag/v1.0.1)) |
 | Fecha | 2026-11-18 |
@@ -100,7 +101,7 @@ CI (`ci.yml`: `backend`, `frontend`, `auditoria`) en cada push y PR, ruleset act
 
 ## 9. Mantenimiento, soporte y capacitación — Semana 8 (CE-5)
 
-Plantilla: `bc-implantacion/bootcamp/week-08-mantenimiento_soporte_y_capacitacion/3-proyecto/starter/entregable-s08-mantenimiento-soporte-y-capacitacion.md`.
+Plantilla: Bootcamp de Implantación del SENA, semana 8 («Entregable S08»).
 
 ### 9.1 Plan de mantenimiento
 
@@ -205,7 +206,7 @@ Dónde se enlazan: `README.md` (sección de documentación). [PENDIENTE: enlace 
 
 ## 10. Aceptación y entrega — Semana 9 (CE-1 a CE-5)
 
-Plantilla: `bc-implantacion/bootcamp/week-09-aceptacion_y_entrega_formal/3-proyecto/starter/entregable-s09-aceptacion-y-entrega.md`.
+Plantilla: Bootcamp de Implantación del SENA, semana 9 («Entregable S09»).
 
 | Campo | Valor |
 |---|---|

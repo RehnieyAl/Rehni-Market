@@ -4,9 +4,10 @@
 |---|---|
 | Proyecto | RehniMarket |
 | Equipo | 1 persona (responsable técnico) |
+| Autor | Yeinher Jose Algarin Cardozo, aprendiz ADSO, ficha 3171618 |
 | Fecha | 2026-11-18 (planes y evidencias del 04/11/2026) |
 | Semana | 2 de 9 — Plan de instalación, migración y respaldo (CE-3, CE-4, CE-5) |
-| Guía del bootcamp | `bc-implantacion/bootcamp/week-02-plan_de_instalacion_migracion_y_respaldo/3-proyecto/README.md`, plantilla `3-proyecto/starter/entregable-s02-planes.md`, rúbrica `rubrica-evaluacion.md` |
+| Guía | Bootcamp de Implantación del SENA, semana 2: guía del proyecto de la semana, plantilla «Entregable S02» y rúbrica de evaluación (evidencia de Producto) |
 | Sección del plan consolidado | §2, §3 (v0) y §5 (v0) de [`docs/plan-implantacion.md`](../plan-implantacion.md) |
 | Estado | Parcial: 5 `[PENDIENTE]` (3 se cierran con los comandos «a» y «c» en la VM) |
 
@@ -60,7 +61,7 @@ Migrar a la tabla `users` (rol `user`) el 100 % de los clientes válidos del sis
 
 - Criterio para ejecutar rollback: cualquier control de `validar.sql` en `FALLA`, que el SHA-256 del CSV cambie o que el cliente rechace el reporte de rechazos.
 - Método principal: `scripts/migracion/rollback.sql` con el `id_ejecucion`; borra solo los usuarios de esa ejecución. Si aborta (usuario migrado modificado o referenciado por otra tabla), se restaura el respaldo previo con `bash scripts/restore_rehnimarket.sh <TS>`.
-- Rol que decide: responsable técnico del proyecto (Yeinher Algarin), con aprobación del cliente.
+- Rol que decide: responsable técnico del proyecto (Yeinher Jose Algarin Cardozo), con aprobación del cliente.
 
 ### 2.7 Matriz de riesgos
 
@@ -158,7 +159,7 @@ Casi todo el tiempo está en `transformar.sql` (12,0 s), que calcula un hash bcr
 | Archivos de MinIO (imágenes, logos, banners, certificados PDF) | Contenedor `rehni-minio`, bucket `uploads` | `mc mirror` + `.tar.gz` con `bash scripts/backup_rehnimarket.sh` (mismo `TS` que la base) | Sí |
 | Configuración (`.env` único) | Raíz del proyecto | Copia cifrada con `age` (decisión del 04/11/2026; implementación: semana 6) | No (contiene credenciales) |
 
-**Script ([`scripts/respaldar.sh`](../../scripts/respaldar.sh)).** El bootcamp pide `scripts/respaldar.sh`. En RehniMarket es un envoltorio de una línea que ejecuta `scripts/backup_rehnimarket.sh` con los mismos argumentos y variables (`exec bash .../backup_rehnimarket.sh "$@"`), sin lógica propia: `bash scripts/respaldar.sh` y `bash scripts/backup_rehnimarket.sh` son equivalentes. Comprobado el 04/11/2026: `bash scripts/respaldar.sh --no-stop` terminó con `=== FIN backup 2026-11-04_14-31 — OK ===` en 1 min 33 s, y el log no registra `deteniendo backend`, así que el argumento llegó al script original.
+**Script ([`scripts/respaldar.sh`](../../scripts/respaldar.sh)).** El Bootcamp de Implantación del SENA, semana 2, pide `scripts/respaldar.sh`. En RehniMarket es un envoltorio de una línea que ejecuta `scripts/backup_rehnimarket.sh` con los mismos argumentos y variables (`exec bash .../backup_rehnimarket.sh "$@"`), sin lógica propia: `bash scripts/respaldar.sh` y `bash scripts/backup_rehnimarket.sh` son equivalentes. Comprobado el 04/11/2026: `bash scripts/respaldar.sh --no-stop` terminó con `=== FIN backup 2026-11-04_14-31 — OK ===` en 1 min 33 s, y el log no registra `deteniendo backend`, así que el argumento llegó al script original.
 
 ### 3.2 Objetivos
 
@@ -177,7 +178,7 @@ Casi todo el tiempo está en `transformar.sql` (12,0 s), que calcula un hash bcr
 | Copia 2 — ubicación y medio | Disco externo (decisión del responsable, 04/11/2026). Implementación y procedimiento de copia: semana 6 |
 | Copia 3 (fuera del sitio) | Almacenamiento en la nube: Backblaze B2 (decisión del responsable, 04/11/2026). Implementación (subida del archivo cifrado): semana 6 |
 | Cifrado | `age` (decisión del responsable, 04/11/2026): las copias 2 y 3 salen del servidor cifradas. Implementación y custodia de la llave privada: semana 6 |
-| Responsable (rol) | Responsable técnico del proyecto (Yeinher Algarin) |
+| Responsable (rol) | Responsable técnico del proyecto (Yeinher Jose Algarin Cardozo) |
 
 ### 3.4 Procedimiento de restauración
 
@@ -270,7 +271,7 @@ La evidencia anterior (respaldo `2026-08-31_16-59`, «≈ 30 segundos») se reem
 |---|---|---|
 | 1 | Alcance | Instalar los cinco servicios de `docker-compose.yml` (`frontend` con Caddy, `backend`, `pgbouncer`, `postgres`, `minio`) en un servidor Ubuntu Server 24.04 LTS con Docker Compose. La app móvil (`RehniMarket-mobile/`) no forma parte de `docker-compose.yml` y queda fuera de este plan |
 | 2 | Ambientes | Un único `docker-compose.yml` y un único `caddy/Caddyfile` en todos los ambientes; solo cambia el `.env` de la raíz. **Desarrollo:** CachyOS, `docker compose up -d` o `docker compose watch`, HTTPS en `https://localhost` y `https://api.localhost` (CA local de Caddy) y API directa en `:8000`. **Pruebas:** `docker compose --profile test up -d --wait postgres-test`. **Producción:** Ubuntu Server 24.04 LTS, `docker compose up -d` con el `.env` de `deploy/env.prod.example`, HTTPS con Let's Encrypt en `:443`. **Producción en la nube:** VM Ubuntu 24.04 en Azure (IaaS), clon en `~/Rehni-Market`; detalle en la semana 4 ([§5.2 y §5.3](semana-04-procedimiento-despliegue.md)) |
-| 3 | Roles | Responsable técnico (Yeinher Algarin): ejecuta la instalación, decide el rollback (sección 2.6). Cliente: aprueba el resultado y el reporte de rechazos de la migración (sección 2.6). Equipo de una persona: el responsable técnico es también el administrador de la VM. [PENDIENTE: nombre y rol del contacto del cliente que aprueba] |
+| 3 | Roles | Responsable técnico (Yeinher Jose Algarin Cardozo): ejecuta la instalación, decide el rollback (sección 2.6). Cliente: aprueba el resultado y el reporte de rechazos de la migración (sección 2.6). Equipo de una persona: el responsable técnico es también el administrador de la VM. [PENDIENTE: nombre y rol del contacto del cliente que aprueba] |
 | 4 | Prerrequisitos | Ver [semana 1](semana-01-ficha-tecnica.md) (ficha técnica): matriz 1.5 y `scripts/verificar-requisitos.sh` con código de salida `0` |
 | 5 | Preparación | Ubuntu Server 24.04 LTS con Docker Engine y el plugin Compose instalados según la guía oficial (paso 2 de la instalación inicial), usuario de despliegue en el grupo `docker`, DNS apuntando al servidor y puertos 80/443/22 abiertos ([semana 3](semana-03-hosting-y-dominio.md), §4.3 y §4.4) |
 | 6 | Procedimiento | v0: clonar, crear el `.env` desde `deploy/env.prod.example`, `docker compose up -d --build --wait`. Comandos exactos en la [semana 4](semana-04-procedimiento-despliegue.md) (§5.2: instalación, actualización y rollback) |

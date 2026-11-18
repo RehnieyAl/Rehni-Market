@@ -4,9 +4,10 @@
 |---|---|
 | Proyecto | RehniMarket |
 | Equipo | 1 persona (responsable técnico) |
+| Autor | Yeinher Jose Algarin Cardozo, aprendiz ADSO, ficha 3171618 |
 | Fecha | 2026-11-18 |
 | Semana | 1 de 9 — Plataforma tecnológica y hardware (CE-1, CE-2) |
-| Guía del bootcamp | `bc-implantacion/bootcamp/week-01-plataforma_tecnologica_y_hardware/3-proyecto/README.md`, plantilla `3-proyecto/starter/entregable-s01-ficha-tecnica.md`, rúbrica `rubrica-evaluacion.md` |
+| Guía | Bootcamp de Implantación del SENA, semana 1: guía del proyecto de la semana, plantilla «Entregable S01» y rúbrica de evaluación (evidencia de Producto) |
 | Sección del plan consolidado | [§1 de `docs/plan-implantacion.md`](../plan-implantacion.md#1-ficha-técnica-y-requisitos-mínimos--semana-1-ce-1-ce-2) |
 | Estado | Parcial: 4 `[PENDIENTE]` (2 se cierran con la salida del comando «a» en la VM) |
 
@@ -73,7 +74,7 @@ Ningún componente genera costo de licencia. El único costo es la VM de Azure (
 | Requisitos mínimos oficiales (enlace) | <https://ubuntu.com/server/docs/reference/installation/system-requirements/>: RAM mínima 1,5 GB (ISO) / 1 GB (imagen cloud), sugerida «3 GB or more»; disco mínimo 5 GB / 4 GB, sugerido «25 GB or more». La página no fija un mínimo de CPU |
 
 **Por qué Ubuntu Server 24.04 LTS:** LTS con soporte hasta 2029, imagen oficial en Azure, Docker
-Engine la admite (<https://docs.docker.com/engine/install/ubuntu/>) y es el SO que pide el bootcamp.
+Engine la admite (<https://docs.docker.com/engine/install/ubuntu/>) y es el SO que pide el Bootcamp de Implantación del SENA, semana 1.
 
 ## 1.4 Medición de consumo
 

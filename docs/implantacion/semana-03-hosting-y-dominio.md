@@ -4,9 +4,10 @@
 |---|---|
 | Proyecto | RehniMarket |
 | Equipo | 1 persona (responsable técnico) |
+| Autor | Yeinher Jose Algarin Cardozo, aprendiz ADSO, ficha 3171618 |
 | Fecha | 2026-11-18 |
 | Semana | 3 de 9 — Hosting, dominio y transferencia de archivos (CE-1) |
-| Guía del bootcamp | `bc-implantacion/bootcamp/week-03-hosting_dominio_y_transferencia/3-proyecto/README.md`, plantilla `3-proyecto/starter/entregable-s03-hosting-y-dominio.md`, rúbrica `rubrica-evaluacion.md` |
+| Guía | Bootcamp de Implantación del SENA, semana 3: guía del proyecto de la semana, plantilla «Entregable S03» y rúbrica de evaluación (evidencia de Producto) |
 | Sección del plan consolidado | §4 de [`docs/plan-implantacion.md`](../plan-implantacion.md) |
 | Estado | Parcial: 2 `[PENDIENTE]` |
 

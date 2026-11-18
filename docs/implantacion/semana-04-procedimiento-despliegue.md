@@ -4,11 +4,12 @@
 |---|---|
 | Proyecto | RehniMarket |
 | Equipo | 1 persona (responsable técnico) |
+| Autor | Yeinher Jose Algarin Cardozo, aprendiz ADSO, ficha 3171618 |
 | Versión del plan | v1 |
 | Versión del software cubierta | 1.0.1 (actualización desde 1.0.0) |
 | Fecha | 2026-11-18 |
 | Semana | 4 de 9 — Despliegue local y en la nube (CE-1, CE-5) |
-| Guía del bootcamp | `bc-implantacion/bootcamp/week-04-despliegue_local_y_nube/3-proyecto/README.md`, plantilla `3-proyecto/starter/entregable-s04-procedimiento-despliegue.md`, rúbrica `rubrica-evaluacion.md` |
+| Guía | Bootcamp de Implantación del SENA, semana 4: guía del proyecto de la semana, plantilla «Entregable S04» y rúbrica de evaluación (evidencia de Producto) |
 | Sección del plan consolidado | §5 (v1) de [`docs/plan-implantacion.md`](../plan-implantacion.md); reemplaza los pasos de la v0 de la [semana 2](semana-02-migracion-respaldo-instalacion.md) |
 | Estado | Parcial: 9 `[PENDIENTE]` (2 se cierran con los comandos «b» y «c» en la VM) |
 
@@ -276,7 +277,7 @@ asegurada, compilación de una imagen a la vez, salud, `alembic current` y humo 
 URL pública: <https://rehnimarket.duckdns.org> (web) y <https://apirehnimarket.duckdns.org> (API;
 salud en `/health/database`).
 
-**Por qué Azure IaaS y no Render + Neon.** El bootcamp despliega la app de referencia en un PaaS
+**Por qué Azure IaaS y no Render + Neon.** El Bootcamp de Implantación del SENA, semana 4, despliega la app de referencia en un PaaS
 (Render) con base gestionada (Neon). RehniMarket usa un solo `docker-compose.yml` con cinco servicios
 (Caddy, backend, PgBouncer, PostgreSQL y MinIO) y dos redes. En Render habría que partirlo en un
 sitio estático, un servicio web, una base gestionada y un S3 externo para MinIO, con una
