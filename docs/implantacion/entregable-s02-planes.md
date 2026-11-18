@@ -162,10 +162,10 @@ Tiempo de restauración medido: 1,0 s (`pg_restore` del respaldo `2026-11-04_14-
 
 | Fase | Duración | Acumulado |
 |---|---|---|
-| Verificar requisitos (`verificar-requisitos.sh`) | [PENDIENTE: medir en la VM (comando «a»)] | |
+| Verificar requisitos (`verificar-requisitos.sh`) | 0,14 s (VM, 18/11/2026, [`verificar-requisitos-azure-2026-11-18.txt`](../evidencias/verificar-requisitos-azure-2026-11-18.txt)) | 0,14 s |
 | Respaldo previo (`respaldar.sh`) | 1 min 58 s (medido el 04/11/2026 en desarrollo, sección 3.5) | |
-| `git checkout <versión>` + compilación + `docker compose up -d --wait` (incluye `alembic upgrade head`) | [PENDIENTE: medir en la VM (rollback cronometrado, comando «c»)] | |
-| Verificación (`ps`, `/health/database`, `smoke-test.sh`) | [PENDIENTE: medir en la VM (comando «c»)] | |
+| `git checkout <versión>` + compilación + `docker compose up -d --wait` (incluye `alembic upgrade head`) | 26 s a v1.0.0 (12 s de compilación + 14 s de `up`) y 18 s de vuelta (4 + 14), VM, 18/11/2026 ([`rollback-v1.0.1-v1.0.0-2026-11-18.txt`](../evidencias/rollback-v1.0.1-v1.0.0-2026-11-18.txt)) | 26,1 s |
+| Verificación (`ps`, `/health/database`, `smoke-test.sh`) | ~1 s para `ps`, salud, JWT y sitio ([`rollback-v1.0.1-v1.0.0-2026-11-18.txt`](../evidencias/rollback-v1.0.1-v1.0.0-2026-11-18.txt)). [PENDIENTE: duración de `smoke-test.sh` con la cuenta de comprador] | ~27 s |
 | Migración de datos del sistema anterior (si aplica, sección 2) | Opciones 3-5 de `migrar.sh`: 12,2 s en el ensayo del 04/11/2026 sobre una copia (evidencia del ensayo, arriba). Sin contar la apertura y el cierre de la ventana | |
 
 Punto de no retorno: el arranque del backend con la nueva imagen, porque ejecuta `alembic upgrade head` (`docker-compose.yml`). Si la versión trae una migración **no compatible hacia atrás** (tabla de clasificación de la semana 4, §5.2), volver a la versión anterior exige restaurar el respaldo previo (sección 3.4) y se pierde lo escrito después de él.
