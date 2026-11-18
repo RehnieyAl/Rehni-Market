@@ -3,7 +3,7 @@
 > Plan de implantación §8.5 y §9.2. Síntoma: un contenedor `unhealthy`, `/health/database`
 > distinto de 200 o el monitor externo en rojo.
 
-1. **Ver el estado**: `cd /opt/rehnimarket && docker compose ps`. Anotar qué servicio no está `healthy`.
+1. **Ver el estado**: `cd ~/Rehni-Market && docker compose ps`. Anotar qué servicio no está `healthy`.
 2. **Leer los logs** del servicio: `docker compose logs --tail=200 <servicio>`.
 3. **Según el servicio**:
    - `postgres` / `pgbouncer`: `docker compose exec postgres pg_isready`. Si no responde,

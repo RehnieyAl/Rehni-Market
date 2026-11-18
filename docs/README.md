@@ -17,9 +17,10 @@
 | Documento | Para qué |
 |---|---|
 | [`plan-implantacion.md`](plan-implantacion.md) | Plan de implantación consolidado (secciones 1 a 10) |
+| [`implantacion/`](implantacion/README.md) | Evidencia de cada semana del bootcamp de implantación (1 a 7), con su estado |
 | [`aceptacion/`](aceptacion/) | Pruebas de aceptación, guion y registro del simulacro |
 | [`runbooks/`](runbooks/) | Procedimientos de operación |
-| [`evidencias/`](evidencias/) | Evidencias de producción (redes, único owner) |
+| [`evidencias/`](evidencias/) | Evidencias de producción (redes, único owner, hosting y HTTPS) |
 
 ## Calidad y pruebas
 
@@ -43,6 +44,5 @@
 | Carpeta | Contenido |
 |---|---|
 | [`revisiones/`](revisiones/) | Revisiones T7 por fecha |
-| [`plan de implantacion - Rehnimarket/`](plan%20de%20implantacion%20-%20Rehnimarket/) | Entregas de las semanas 1 a 4 del plan |
-| [`implantacion/historico/`](implantacion/historico/) | Guías anteriores (Oracle Cloud) |
+| [`implantacion/historico/`](implantacion/historico/) | Guía anterior de Oracle Cloud (no se usa: producción es Azure), pendientes de las semanas 1-4 y el inventario de los `.env` antiguos |
 | [`sena/`](sena/) | Taller de análisis estático (Guía 8) |

@@ -136,7 +136,7 @@ SECCIONES_INICIO = [
            "variables SMTP de RehniMarket.",
            "El detalle de las pruebas y su informe de resultados, que se documentan en docs/pruebas/.",
            "El plan de implantación (capacitación, cronograma y migración), que se documenta en "
-           "«docs/plan de implantacion - Rehnimarket/»."),
+           "docs/plan-implantacion.md y en docs/implantacion/ (una evidencia por semana)."),
     ]),
     (1, "2", "Descripción de procesos", [
         P("El sistema soporta los siguientes procesos de negocio. Los actores y sus casos de uso se representan "
