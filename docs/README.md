@@ -17,7 +17,7 @@
 | Documento | Para qué |
 |---|---|
 | [`plan-implantacion.md`](plan-implantacion.md) | Plan de implantación: índice de entregables y secciones 9 y 10 |
-| [`implantacion/`](implantacion/README.md) | Entregables de las semanas 1 a 7 del Bootcamp de Implantación del SENA |
+| [`implantacion/`](implantacion/README.md) | Entregables de las semanas 1 a 7 de la implantación |
 | [`aceptacion/`](aceptacion/) | Pruebas de aceptación, guion y registro del simulacro |
 | [`runbooks/`](runbooks/) | Procedimientos de operación |
 | [`evidencias/`](evidencias/) | Evidencias de producción (redes, único owner) |
