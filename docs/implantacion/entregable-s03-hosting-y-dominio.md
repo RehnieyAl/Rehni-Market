@@ -28,7 +28,7 @@ Alternativa en servidor propio (VM Ubuntu del laboratorio o del cliente): los ci
 | Tipo (propio / subdominio gratuito / PaaS) | Subdominio gratuito |
 | Registrador o proveedor | DuckDNS (<https://www.duckdns.org>); servidores de nombres `ns2`, `ns8` y `ns9.duckdns.org` ([`docs/evidencias/hosting-produccion-2026-11-18.txt`](../evidencias/hosting-produccion-2026-11-18.txt)) |
 | Responsable de pago y renovación (rol) | Responsable técnico (dueño de la cuenta de DuckDNS); sin pago |
-| Fecha de vencimiento | [PENDIENTE: política de vigencia de los subdominios, del panel o la FAQ de DuckDNS, con fecha de consulta] |
+| Fecha de vencimiento | Sin fecha publicada: la FAQ de DuckDNS (<https://www.duckdns.org/faqs.jsp>, consultada el 18/11/2026) no menciona vencimiento ni renovación de los subdominios |
 
 ## 4.3 Registros DNS
 
@@ -79,7 +79,7 @@ PostgreSQL publicado en                  127.0.0.1:5433
 
 | Qué se transfiere | Método | Autenticación | Frecuencia |
 |---|---|---|---|
-| `.env` de producción | `scp .env rehni-prod:Rehni-Market/.env` y `chmod 600` en la VM | Llave SSH ed25519 (`~/.ssh/rehni_azure`, alias `rehni-prod`, [`deploy/checklist-azure.md`](../../deploy/checklist-azure.md) §1) | Instalación inicial y al rotar un secreto |
-| Evidencias de producción | `scp "rehni-prod:Rehni-Market/docs/evidencias/*.txt" docs/evidencias/` | Llave SSH ed25519 | Después de cada prueba en la VM |
+| `.env` de producción | `scp .env rehni-prod:Rehni-Market/.env` y `chmod 600` en la VM | Llave SSH del administrador (alias `rehni-prod` en `~/.ssh/config`, [`deploy/checklist-azure.md`](../../deploy/checklist-azure.md) §1) | Instalación inicial y al rotar un secreto |
+| Evidencias de producción | `scp "rehni-prod:Rehni-Market/docs/evidencias/*.txt" docs/evidencias/` | Llave SSH del administrador | Después de cada prueba en la VM |
 | Código | `git fetch --tags` + `git checkout vX.Y.Z` desde GitHub por HTTPS | Ninguna (repositorio público, solo lectura) | En cada liberación |
 | Respaldos de base de datos y MinIO | [PENDIENTE: SFTP o `rsync` sobre SSH hacia la copia fuera del sitio, que todavía no existe (semana 6, §3.1)] | [PENDIENTE: llave SSH de un usuario solo SFTP en el destino] | Diaria (RPO 24 h) |
