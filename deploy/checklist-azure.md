@@ -1,8 +1,8 @@
 # Checklist de despliegue en Azure con DuckDNS — RehniMarket
 
-Resumen operativo de `docs/plan-implantacion.md` §5.2 («Instalación inicial») y del manual técnico
+Resumen operativo de [`docs/implantacion/entregable-s04-procedimiento-despliegue.md`](../docs/implantacion/entregable-s04-procedimiento-despliegue.md) §5.2 («Instalación inicial») y del manual técnico
 §6.8, con DuckDNS como DNS. Producción **sin datos de demo** (`RUN_SEED=false`): el backend crea solo los datos base al arrancar
-(#53) y el owner se crea con registro + `UPDATE` del rol en psql.
+(#53) y el owner se crea en PostgreSQL con `deploy/sql/crear-owner.sql` ([`OWNER.md`](OWNER.md)).
 
 Nombres de producción: `rehnimarket.duckdns.org` (frontend) y `apirehnimarket.duckdns.org` (API).
 `<correo-owner>` es el correo del responsable. No dejar ningún `[PENDIENTE]` sin llenar en el acta.
@@ -10,9 +10,8 @@ Nombres de producción: `rehnimarket.duckdns.org` (frontend) y `apirehnimarket.d
 ## 0. Antes de empezar
 
 - [ ] PR de `refactor/env-unico` integrado a `main` y los checks de `main` en verde.
-- [ ] Versión a desplegar: la etiqueta `v1.0.0` **no existe** todavía (`git ls-remote --tags origin`
-      solo muestra `sonar-antes`). Usar el commit de `main` y anotarlo:
-      `[PENDIENTE: SHA de main desplegado]`.
+- [ ] Versión a desplegar: la última etiqueta publicada (`git ls-remote --tags origin`; hoy
+      `v1.0.1`, release del 17/11/2026).
 - [ ] Datos de la VM anotados: `[PENDIENTE: IP pública]`, `[PENDIENTE: usuario administrador]`.
 
 ## 1. VM y red en Azure (manual técnico §6.8, pasos 1-4)
@@ -20,7 +19,7 @@ Nombres de producción: `rehnimarket.duckdns.org` (frontend) y `apirehnimarket.d
 - [ ] Clave SSH: `ssh-keygen -t ed25519 -C "rehnimarket-azure" -f ~/.ssh/rehni_azure`.
 - [ ] VM Ubuntu Server 24.04 LTS x64, `Standard_B2s` o superior, autenticación solo con clave,
       disco SSD estándar 64 GiB, **IP pública SKU estándar (estática)**: DuckDNS apunta a una IP fija.
-- [ ] `~/.ssh/config` con `Host rehni-azure`; `ssh rehni-azure` entra y
+- [ ] `~/.ssh/config` con `Host rehni-prod`; `ssh rehni-prod` entra y
       `sudo sshd -T | grep -E 'passwordauthentication|permitrootlogin'` muestra `no`.
 - [ ] NSG: TCP 80 y 443 y UDP 443 desde cualquier origen; 22 solo desde la IP del administrador.
       **No** abrir 5433, 8000, 6432, 9000 ni 9001.
@@ -41,9 +40,8 @@ Nombres de producción: `rehnimarket.duckdns.org` (frontend) y `apirehnimarket.d
 - [ ] `docker run hello-world` sin `sudo` y `docker compose version` ≥ 2.24.
 - [ ] Clonar:
       ```bash
-      sudo mkdir -p /opt/rehnimarket && sudo chown "$USER" /opt/rehnimarket
-      git clone https://github.com/RehnieyAl/Rehni-Market.git /opt/rehnimarket && cd /opt/rehnimarket
-      git checkout <SHA-de-main>
+      git clone https://github.com/RehnieyAl/Rehni-Market.git ~/Rehni-Market && cd ~/Rehni-Market
+      git checkout v1.0.1
       PORTS="80 443" bash scripts/verificar-requisitos.sh   # todo CUMPLE, código 0
       ```
 
@@ -59,8 +57,8 @@ Toda la configuración es **un solo `.env`** en la raíz. Su plantilla de produc
         cada `CAMBIAR_*`. Contraseñas y `SECRET_KEY` con `openssl rand -base64 24 | tr '+/' '-_'`;
         la de PostgreSQL va **igual** en `POSTGRES_PASSWORD`, `URL_DATABASE` y `URL_DATABASE_POOLED`.
         `GMAIL_APP_PASSWORD` la emite Google (Azure bloquea el puerto 25: 587, 465 o 2525).
-      - **Ya preparado:** `scp .env rehni-azure:/opt/rehnimarket/.env` desde el equipo del
-        administrador y, en la VM, `chmod 600 /opt/rehnimarket/.env`.
+      - **Ya preparado:** `scp .env rehni-prod:Rehni-Market/.env` desde el equipo del
+        administrador y, en la VM, `chmod 600 ~/Rehni-Market/.env`.
 - [ ] `grep -nE '^[A-Z_]+=.*CAMBIAR' .env` no muestra nada.
 - [ ] `git status` no muestra el `.env`.
 
@@ -96,6 +94,6 @@ Toda la configuración es **un solo `.env`** en la raíz. Su plantilla de produc
 ## 8. Evidencia para el plan y el acta
 
 - [ ] `docker compose ps`, salida de `verificar-redes.sh` y de `smoke-test.sh` guardadas en `docs/evidencias/`.
-- [ ] Llenar en el plan: §5.2 «Evidencia en el servidor», §7.2 (`ufw`/NSG y `nc` desde fuera) y
-      tiempos reales de la ventana (`[PENDIENTE: medir en el servidor]`).
+- [ ] Llenar en `docs/implantacion/`: entregable S04 §5.2 «Evidencia», S06 §7.2 (`ufw`/NSG y `nc`
+      desde fuera) y S02 §5 «Cronograma de la ventana».
 - [ ] Si falla algo: tabla «Si falla…» del manual técnico §6.8 (certificado, CPU, backend, registro, CORS, correo).
