@@ -110,7 +110,7 @@ Enlace al `CHANGELOG.md`: [`CHANGELOG.md`](../../CHANGELOG.md)
 | # | Acción | Comando | Resultado esperado |
 |---|---|---|---|
 | 1 | Decidir el tipo | Clasificación de las migraciones que trajo la versión | Todas compatibles (o ninguna): pasos 2-4. Alguna no compatible: pasos 5-6 |
-| 2 | Variables que la versión anterior necesita | Comparar `deploy/env.prod.example` de las dos etiquetas. De `v1.0.1` a `v1.0.0`: `grep -q '^ALGORITHM=' .env \|\| echo 'ALGORITHM=HS256' >> .env` | `v1.0.0` lee `ALGORITHM` (`git show v1.0.0:RehniMarket-backend/app/Config.py`); sin ella el login falla. `v1.0.1` la ignora |
+| 2 | Variables que la versión anterior necesita | Comparar `deploy/env.prod.example` de las dos etiquetas. De `v1.0.1` a `v1.0.0`: en producción `ALGORITHM` está comentada desde el 18/11/2026; descomentarla con `sed -i 's/^# ALGORITHM=/ALGORITHM=/' .env` (o agregar `ALGORITHM=HS256` si no está) | `v1.0.0` lee `ALGORITHM` (`git show v1.0.0:RehniMarket-backend/app/Config.py`); sin ella el login falla. `v1.0.1` la ignora |
 | 3 | Volver al código anterior | `git checkout <anterior>` | `git describe --tags` = versión anterior |
 | 4 | Compilar, levantar y verificar | Pasos 5 y 6 de la actualización | Cinco `healthy`, humo sin fallos; el esquema queda en la revisión nueva, que la anterior tolera |
 | 5 | Restaurar el respaldo previo | `bash scripts/restore_rehnimarket.sh <TS> --verify-only` y, si da `OK`, `bash scripts/restore_rehnimarket.sh <TS>` ([semana 2](entregable-s02-planes.md), §3.4) | `OK: restore completo.` |
@@ -153,8 +153,14 @@ roles | catalogo | transportadoras = 4 | 120 | 4
 # Prueba de humo contra producción (comando «b»)
 [PENDIENTE: salida de docs/evidencias/smoke-produccion-<fecha>.txt]
 
-# Rollback cronometrado v1.0.1 → v1.0.0 → v1.0.1 (comando «c»)
-[PENDIENTE: salida de docs/evidencias/rollback-v1.0.1-v1.0.0-<fecha>.txt]
+# Rollback cronometrado 0c19dff (v1.0.1-7) → v1.0.0 → 0c19dff · 2026-11-18 (docs/evidencias/rollback-v1.0.1-v1.0.0-2026-11-18.txt)
+# migraciones entre v1.0.0 y 0c19dff: ninguna · respaldo previo 2026-11-18_19-48 OK
+--- v1.0.0 · compilación: 12 s · up: 14 s · total 26 s · 19:48:50 UTC
+    versión: v1.0.0 · salud: 200 · alembic: d7e3f1a9c5b2 (head) · JWT inválido en /auth/me: 401 · sitio: 200
+--- 0c19dff · compilación: 4 s · up: 14 s · total 18 s · 19:49:09 UTC
+    versión: v1.0.1-7-g0c19dff · salud: 200 · alembic: d7e3f1a9c5b2 (head) · JWT inválido en /auth/me: 401 · sitio: 200
+## ALGORITHM comentada en el .env (v1.0.1 no la lee); recrear con el .env nuevo: 35 s · salud: 200 · JWT inválido: 401
+## verificar-redes: 42 pasan, 0 fallan · 5 servicios healthy
 
 # Reproducibilidad (equipo de desarrollo, no es el servidor): clon limpio del 16/11/2026, commit 6b054d0,
 # cinco servicios healthy en 2 min 4 s y humo 7 pasan, 0 fallan (docs/pruebas/evidencias/2026-11-16_gate-docker.txt)
@@ -164,7 +170,7 @@ roles | catalogo | transportadoras = 4 | 120 | 4
 
 | Componente | Proveedor y plan | Región | Configuración |
 |---|---|---|---|
-| App (los cinco servicios de `docker-compose.yml`) | Microsoft Azure IaaS, suscripción Azure for Students: VM Ubuntu Server 24.04 LTS x64, `Standard_B2s` o superior, disco SSD estándar de 64 GiB, IP pública estándar estática ([`deploy/checklist-azure.md`](../../deploy/checklist-azure.md) §1). No se usó Render ni Neon porque todo corre con un solo `docker-compose.yml`. [PENDIENTE: validar con el instructor] | [PENDIENTE: región de la VM (portal de Azure → VM → Información general)] | `docker-compose.yml` + `.env` de [`deploy/env.prod.example`](../../deploy/env.prod.example) en `~/Rehni-Market` (600) |
+| App (los cinco servicios de `docker-compose.yml`) | Microsoft Azure IaaS, suscripción Azure for Students: VM Ubuntu Server 24.04 LTS x64 `Standard_B2ls_v2` (2 vCPU, 4 GiB), disco del SO Premium SSD P4 de 30 GB ([`azure-vm-metadatos-2026-11-18.txt`](../evidencias/azure-vm-metadatos-2026-11-18.txt)), IP pública estática ([`deploy/checklist-azure.md`](../../deploy/checklist-azure.md) §1). No se usó Render ni Neon porque todo corre con un solo `docker-compose.yml`. [PENDIENTE: validar con el instructor] | Chile Central (`chilecentral`, servicio de metadatos de Azure, 18/11/2026) | `docker-compose.yml` + `.env` de [`deploy/env.prod.example`](../../deploy/env.prod.example) en `~/Rehni-Market` (600) |
 | Base de datos | PostgreSQL 17 en contenedor en la misma VM | La misma | `URL_DATABASE` y `URL_DATABASE_POOLED` en el `.env` de la VM, nunca en el repositorio |
 
 URL pública: <https://rehnimarket.duckdns.org> (web) y <https://apirehnimarket.duckdns.org> (API)
@@ -180,7 +186,7 @@ Procedimiento (pasos numerados):
 
 Método de rollback en el PaaS: no aplica PaaS; en la VM, `git checkout <etiqueta-anterior>` y recompilar, con restauración del respaldo si la migración no es compatible (§5.2, «Rollback»).
 
-Límites del plan gratuito que afectan al cliente (con fuente y fecha): Azure for Students: «$100 credit» y servicios «up to free amounts», sin tarjeta de crédito (<https://azure.microsoft.com/en-us/free/students>, consultada el 18/11/2026). [PENDIENTE: vigencia de la suscripción y saldo restante del crédito (portal de Azure → Suscripciones → Créditos)]
+Límites del plan gratuito que afectan al cliente (con fuente y fecha): Azure for Students: «$100 credit» y servicios «up to free amounts», sin tarjeta de crédito (<https://azure.microsoft.com/en-us/free/students>, consultada el 18/11/2026). [PENDIENTE: vigencia de la suscripción y saldo restante del crédito (portal de Azure → Education → Información general)]
 
 ### Evidencia
 
@@ -199,9 +205,9 @@ issuer=C=US, O=Let's Encrypt, CN=YE2   notAfter=Feb 15 00:03:01 2027 GMT
 
 | Concepto | Alternativa 1 | Alternativa 2 |
 |---|---|---|
-| Total mensual | Azure IaaS (lo desplegado), East US: VM `Standard_B2s` 0,0416 USD/h × 730 h = 30,37 USD + disco SSD estándar E6 (64 GiB) 4,80 USD + IP pública estándar estática 0,005 USD/h × 730 h = 3,65 USD = **38,82 USD**, sin tráfico de salida. [PENDIENTE: confirmar tamaño y región reales de la VM; en South Central US la VM cuesta 0,0499 USD/h y en Brazil South 0,0672 USD/h] | Render: servicio web «Standard» (1 CPU, 2 GB) 25 USD/mes. [PENDIENTE: precio de PostgreSQL gestionado y de un almacenamiento S3 para reemplazar a MinIO] |
-| Total anual | 465,84 USD (38,82 × 12) | [PENDIENTE: depende del total mensual] |
+| Total mensual | Azure IaaS (lo desplegado), Chile Central: VM `Standard_B2ls_v2` 0,0582 USD/h × 730 h = 42,49 USD + disco Premium SSD P4 (30 GB) 6,74 USD + IP pública estándar estática 0,005 USD/h × 730 h = 3,65 USD = **52,87 USD**, sin tráfico de salida | Render: servicio web «Standard» (1 CPU, 2 GB) 25 USD + Postgres de 1 GB de RAM 19 USD + almacenamiento de la base 0,30 USD/GB = **44,30 USD** con 1 GB. [PENDIENTE: almacenamiento de objetos para reemplazar a MinIO, que Render no ofrece como servicio gestionado] |
+| Total anual | 634,47 USD (52,87 × 12) | 531,60 USD (44,30 × 12), sin el almacenamiento de objetos |
 | Horas de administración al mes | [PENDIENTE: horas reales registradas por el responsable] | [PENDIENTE: horas reales] |
-| Fuente y fecha | API oficial de precios de Azure, <https://prices.azure.com/api/retail/prices> (filtros `Standard_B2s`, `E6 LRS`, `Standard IPv4 Static Public IP`), consultada el 18/11/2026. Suscripción: Azure for Students | <https://render.com/pricing>, consultada el 18/11/2026 |
+| Fuente y fecha | API oficial de precios de Azure, <https://prices.azure.com/api/retail/prices> (región `chilecentral`; filtros `Standard_B2ls_v2`, `P4 LRS`, `Standard IPv4 Static Public IP`), consultada el 18/11/2026 ([`azure-vm-metadatos-2026-11-18.txt`](../evidencias/azure-vm-metadatos-2026-11-18.txt)). Suscripción: Azure for Students | <https://render.com/pricing>, consultada el 18/11/2026 |
 
-Recomendación al cliente: Alternativa 1 (Azure IaaS), la que está desplegada: corre el mismo `docker-compose.yml` que se prueba en local. Con el crédito de 100 USD de Azure for Students cubre 2,5 meses (100 / 38,82); después, la suscripción debe pasar a pago por uso.
+Recomendación al cliente: Alternativa 1 (Azure IaaS), la que está desplegada: corre el mismo `docker-compose.yml` que se prueba en local. Con el crédito de 100 USD de Azure for Students cubre ~1,9 meses (100 / 52,87). Después de la entrega, la VM se detiene y desasigna cuando no se use (portal → VM → Detener), para que deje de cobrar el cómputo; el disco y la IP estática siguen cobrando mientras existan.
