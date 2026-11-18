@@ -1,0 +1,100 @@
+# Migración ejecutada en producción · 2026-11-18 · v1.0.1-7-g0c19dff
+## CSV de origen
+b29efeac92531725a599418ffe9aa17e1631c47b05ecc9c4f4ce00cf4bd8e990  legacy-data/clientes_legado.csv
+=== opción 1 · respaldo previo · inicio 19:42:53 UTC
+[2026-11-18 19:42:53 UTC] === INICIO backup 2026-11-18_19-42 ===
+[2026-11-18 19:42:53 UTC] deteniendo backend para consistencia...
+[2026-11-18 19:42:54 UTC] pg_dump -> /home/<usuario-admin>/Rehni-Market/backups/postgres/rehni_market_postgres_2026-11-18_19-42.dump
+[2026-11-18 19:42:54 UTC] validando dump con pg_restore -l ...
+[2026-11-18 19:42:54 UTC] dump válido — 38 tablas con datos en el TOC
+[2026-11-18 19:42:54 UTC] mc mirror del bucket uploads -> /home/<usuario-admin>/Rehni-Market/backups/minio/rehni_market_minio_2026-11-18_19-42
+[2026-11-18 19:42:54 UTC] objetos respaldados: 11
+[2026-11-18 19:42:55 UTC] backend reanudado
+[2026-11-18 19:42:55 UTC] manifiesto: rehni_market_backup_2026-11-18_19-42.manifest.txt
+[2026-11-18 19:42:55 UTC] rotación: conservar 7 más recientes de cada tipo
+[2026-11-18 19:42:55 UTC] === FIN backup 2026-11-18_19-42 — OK ===
+Backup completado. Artefactos en: /home/<usuario-admin>/Rehni-Market/backups
+  - /home/<usuario-admin>/Rehni-Market/backups/postgres/rehni_market_postgres_2026-11-18_19-42.dump
+  - /home/<usuario-admin>/Rehni-Market/backups/minio/rehni_market_minio_2026-11-18_19-42.tar.gz
+Restaurar en el proyecto:      scripts/restore_rehnimarket.sh 2026-11-18_19-42
+Validar sin tocar el proyecto: scripts/restore_rehnimarket.sh 2026-11-18_19-42 --verify-only
+/home/<usuario-admin>/Rehni-Market/backups/postgres/rehni_market_postgres_2026-11-18_19-42.dump: OK
+Respaldo previo: TS=2026-11-18_19-42
+=== opción 1 · fin 19:42:55 UTC
+=== opción 2 · abrir ventana (detiene frontend y backend) · inicio 19:42:55 UTC
+ Container rehni-frontend Stopping 
+ Container rehni-frontend Stopped 
+ Container rehni-backend Stopping 
+ Container rehni-backend Stopped 
+Aplicación detenida. SHA del CSV: b29efeac92531725a599418ffe9aa17e1631c47b05ecc9c4f4ce00cf4bd8e990
+=== opción 2 · fin 19:43:06 UTC
+=== opción 3 · carga-staging.sql · inicio 19:43:06 UTC
+DO
+psql:/tmp/migracion/carga-staging.sql:27: NOTICE:  schema "migracion" does not exist, skipping
+DROP SCHEMA
+CREATE SCHEMA
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+COPY 100
+ filas_cargadas 
+            100
+(1 row)
+=== opción 3 · fin 19:43:06 UTC
+=== opción 4 · transformar.sql · inicio 19:43:06 UTC
+BEGIN
+psql:/tmp/migracion/transformar.sql:20: NOTICE:  extension "pgcrypto" already exists, skipping
+CREATE EXTENSION
+psql:/tmp/migracion/transformar.sql:27: ERROR:  pgcrypto ya está instalada fuera del esquema migracion; revisar antes de seguir.
+CONTEXT:  PL/pgSQL function inline_code_block line 5 at RAISE
+=== opción 4 · fin 19:43:06 UTC
+=== opción 5 · validar.sql · inicio 19:43:06 UTC
+ERROR: no hay ninguna ejecución APLICADA.
+=== opción 5 · fin 19:43:06 UTC
+=== opción 7 · cerrar ventana (reabre la aplicación) · inicio 19:43:06 UTC
+ERROR: la última validación no es correcta (opción 5).
+=== opción 7 · fin 19:43:06 UTC
+=== opción 9 · estado · inicio 19:43:06 UTC
+Respaldo previo (TS): 2026-11-18_19-42
+SHA del CSV:          b29efeac92531725a599418ffe9aa17e1631c47b05ecc9c4f4ce00cf4bd8e990
+Última validación:    —
+users: 3
+ id_ejecucion | estado | filas_origen | users_antes | inicio | fin | fin_rollback 
+--------------+--------+--------------+-------------+--------+-----+--------------
+(0 rows)
+=== opción 9 · fin 19:43:06 UTC
+## salud tras el corte 19:43:06 UTC
+pgbouncer_pool Up 22 hours (healthy)
+rehni-minio Up 22 hours (healthy)
+rehni-postgres Up 22 hours (healthy)
+sitio 000
+ api 000
+## reversión · 19:43:24 UTC
+ Container rehni-frontend Starting 
+ Container rehni-frontend Started 
+reabierta 19:43:35 UTC
+DROP SCHEMA
+NOTICE:  drop cascades to 5 other objects
+DETAIL:  drop cascades to table migracion.clientes_legado
+drop cascades to table migracion.ejecuciones
+drop cascades to table migracion.linea_base_users
+drop cascades to table migracion.rechazos
+drop cascades to table migracion.usuarios_migrados
+pgbouncer_pool Up 22 hours (healthy)
+rehni-backend Up 11 seconds (healthy)
+rehni-frontend Up 5 seconds (healthy)
+rehni-minio Up 22 hours (healthy)
+rehni-postgres Up 22 hours (healthy)
+sitio 200
+{"Base de datos":"OK"} api 200
+users=3 owner=1 huella_ids=66cb10be65a40062bee4a1491d71cb99
+esquema_migracion=0
+
+## verificar-redes tras la reversión
+Resultado: 42 pasan, 0 fallan
+
+## causa
+pgcrypto 1.3 ya está instalada en el esquema public (la instala deploy/sql/crear-owner.sql, #54).
+transformar.sql exige que pgcrypto viva solo en el esquema migracion y aborta antes de escribir en users.

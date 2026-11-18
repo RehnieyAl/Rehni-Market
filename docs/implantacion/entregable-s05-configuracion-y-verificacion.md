@@ -101,24 +101,35 @@ Salida contra el servidor y contra la nube:
 |---|---|
 | Origen (tipo y versión) | CSV del sistema anterior, `legacy-data/clientes_legado.csv` (100 filas sintéticas, `;`, UTF-8) — plan de la [semana 2](entregable-s02-planes.md), §2 |
 | Destino (proveedor, versión, región) | PostgreSQL 17 en contenedor, VM de Azure (región: ver [semana 4](entregable-s04-procedimiento-despliegue.md), §5.3) |
-| Diferencias resueltas (dueño, versión, SSL…) | Misma imagen `postgres:17-alpine` en desarrollo y en producción (sin diferencia de versión). Dueño de las tablas: `POSTGRES_USER`, el mismo rol en los dos ambientes. Sin SSL dentro de la red `data` (no sale del servidor). Diferencias del servidor ya resueltas al desplegar: límites de CPU para 2 vCPU, `RUN_SEED=false` con datos base siempre creados (#53), owner creado por SQL ([`deploy/OWNER.md`](../../deploy/OWNER.md)), `ALGORITHM` para volver a v1.0.0 |
+| Diferencias resueltas (dueño, versión, SSL…) | Misma imagen `postgres:17-alpine` en desarrollo y en producción (sin diferencia de versión). Dueño de las tablas: `POSTGRES_USER`, el mismo rol en los dos ambientes. Sin SSL dentro de la red `data` (no sale del servidor). Diferencias del servidor ya resueltas al desplegar: límites de CPU para 2 vCPU, `RUN_SEED=false` con datos base siempre creados (#53), owner creado por SQL ([`deploy/OWNER.md`](../../deploy/OWNER.md)), `ALGORITHM` comentada en el `.env` (v1.0.1 no la lee; se descomenta para volver a v1.0.0). Diferencia encontrada al ejecutar: en producción pgcrypto 1.3 ya está en `public` (la instala `deploy/sql/crear-owner.sql`) y `transformar.sql` la exigía dentro de `migracion`; corregido en [PR #85](https://github.com/RehnieyAl/Rehni-Market/pull/85) |
 
 Registro de la ventana:
 
 | Paso | Hora inicio | Hora fin | Resultado |
 |---|---|---|---|
-| [PENDIENTE: ejecutar `bash scripts/migracion/migrar.sh` en la VM (opciones 1 → 2 → 3 → 4 → 5 → 7) y anotar cada paso; el responsable decide si se ejecuta sobre la base de producción con `rollback.sql` al final o sobre una base aparte restaurada del respaldo de producción] | | | |
+| Intento 1 (18/11/2026), punto de partida | 19:42:20 | 19:42:20 | `users=3`, `owner=1`, huella de los `id` `66cb10be65a40062bee4a1491d71cb99`, sin esquema `migracion` ([`migracion-intento-2026-11-18.txt`](../evidencias/migracion-intento-2026-11-18.txt)) |
+| Intento 1 · opción 1, respaldo previo | 19:42:53 | 19:42:55 | `2026-11-18_19-42`, SHA-256 OK |
+| Intento 1 · opción 2, abrir ventana | 19:42:55 | 19:43:06 | `frontend` y `backend` detenidos; CSV copiado al contenedor |
+| Intento 1 · opción 3, `carga-staging.sql` | 19:43:06 | 19:43:06 | `COPY 100` |
+| Intento 1 · opción 4, `transformar.sql` | 19:43:06 | 19:43:06 | **ERROR**: `pgcrypto ya está instalada fuera del esquema migracion`; la transacción abortó antes de escribir en `users` |
+| Intento 1 · reversión | 19:43:24 | 19:43:35 | `backend` y `frontend` reabiertos; `DROP SCHEMA migracion CASCADE`; estado de la migración limpio. **Caída total: 40 s** (19:42:55 → 19:43:35) |
+| Intento 1 · estado final | 19:43:35 | 19:43:35 | `users=3`, `owner=1`, misma huella de los `id`, sin esquema `migracion`; 5 servicios `healthy`, sitio 200, API 200; `verificar-redes.sh` 42 pasan, 0 fallan |
+| Intento 2, con `transformar.sql` corregido | [PENDIENTE: después del merge del PR #85] | | |
 
 Huellas:
 
 ```
-[PENDIENTE: salida del control 9 de validar.sql (checksum de origen normalizado = destino) y sha256sum del CSV antes y después, en la VM]
+# Intento 1 · origen: sha256sum legacy-data/clientes_legado.csv
+b29efeac92531725a599418ffe9aa17e1631c47b05ecc9c4f4ce00cf4bd8e990
+# Intento 1 · destino: sin cambios (users=3, huella de los id 66cb10be65a40062bee4a1491d71cb99 antes y después)
+[PENDIENTE: intento 2, control 9 de validar.sql (checksum de origen normalizado = destino) y sha256sum del CSV antes y después]
 ```
 
 Prueba de humo después del corte:
 
 ```
-[PENDIENTE: scripts/smoke-test.sh contra producción después de cerrar la ventana]
+# Intento 1 · después de la reversión (19:43:35 UTC): sitio 200, /health/database 200 {"Base de datos":"OK"}
+[PENDIENTE: intento 2, scripts/smoke-test.sh con la cuenta de comprador después de cerrar la ventana (lo corre el responsable)]
 ```
 
-¿Fue necesario el rollback? ¿Por qué? [PENDIENTE: depende de la ejecución]
+¿Fue necesario el rollback? ¿Por qué? Intento 1: sí. `transformar.sql` abortó en su primera verificación (pgcrypto fuera del esquema `migracion`), así que no había datos que revertir con `rollback.sql`: se reabrió la aplicación y se borró el esquema de staging, con el estado final igual al inicial. [PENDIENTE: intento 2]
