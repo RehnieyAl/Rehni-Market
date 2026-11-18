@@ -35,9 +35,9 @@ Reglas de protección:
 
 | Regla | Configuración |
 |---|---|
-| Rama `main` | Ruleset `CODEOWNER` (id 25681376, `gh api repos/RehnieyAl/Rehni-Market/rulesets/25681376` el 18/11/2026), **activo** en `main` y `develop`: pull request obligatorio, sin force-push (`non_fast_forward`), checks obligatorios `backend` y `frontend`. `auditoria` no es obligatorio y `strict_required_status_checks_policy=false` (no exige la rama al día). [PENDIENTE: agregar `auditoria` como check obligatorio y activar `strict` en el ruleset] |
-| Ambiente `produccion` | No existe (`gh api repos/RehnieyAl/Rehni-Market/environments` devuelve 0 ambientes). [PENDIENTE: crearlo con revisor obligatorio (el responsable) y restringido a etiquetas `v*`, para los secretos de despliegue] |
-| Etiquetas | Sin protección. [PENDIENTE: ruleset de etiquetas `v*`: solo el responsable las crea y no se borran ni mueven] |
+| Rama `main` | Ruleset `CODEOWNER` (id 25681376, `gh api repos/RehnieyAl/Rehni-Market/rulesets/25681376` el 18/11/2026), **activo** en `main` y `develop`: pull request obligatorio, sin force-push (`non_fast_forward`), checks obligatorios `backend`, `frontend` y `auditoria`, y la rama al día con la base (`strict_required_status_checks_policy=true`, cambiado el 18/11/2026; antes y después en [`github-reglas-2026-11-18.json`](../evidencias/github-reglas-2026-11-18.json)) |
+| Ambiente `produccion` | Creado el 18/11/2026: revisor obligatorio (el responsable) y despliegue solo desde etiquetas `v*` ([`github-reglas-2026-11-18.json`](../evidencias/github-reglas-2026-11-18.json)); todavía sin secretos |
+| Etiquetas | Ruleset `versiones` (id 27576762), activo desde el 18/11/2026 sobre `refs/tags/v*`: impide crear, mover y borrar etiquetas, salvo el rol administrador del repositorio ([`github-reglas-2026-11-18.json`](../evidencias/github-reglas-2026-11-18.json)) |
 
 ## 8.2 Secretos y variables del pipeline
 
@@ -57,7 +57,7 @@ Reglas de protección:
 | CI en `main`, segunda ejecución seguida | [run 44103349861](https://github.com/RehnieyAl/Rehni-Market/actions/runs/44103349861) (commit `0c19dff`, 17/11/2026 14:27 UTC) | 8 min 44 s | Verde |
 | CI en `develop` | [run 44167682455](https://github.com/RehnieyAl/Rehni-Market/actions/runs/44167682455) (commit `1022695`) | 8 min 14 s | Verde |
 | Liberación `v1.0.1` | [release v1.0.1](https://github.com/RehnieyAl/Rehni-Market/releases/tag/v1.0.1) (etiqueta sobre `45ea99d`, 17/11/2026 05:19 UTC) | — | Release publicado; sin workflow de liberación, así que no hay ejecución que enlazar. [PENDIENTE: run de `release.yml` en verde] |
-| Rollback a `v1.0.0` y vuelta a `v1.0.1` | Manual en la VM ([semana 4](entregable-s04-procedimiento-despliegue.md), §5.2, comando «c») | [PENDIENTE: duración medida] | [PENDIENTE: resultado del humo en cada paso] |
+| Rollback a `v1.0.0` y vuelta a `0c19dff` (v1.0.1) | Manual en la VM, 18/11/2026 ([`rollback-v1.0.1-v1.0.0-2026-11-18.txt`](../evidencias/rollback-v1.0.1-v1.0.0-2026-11-18.txt)) | 26 s a v1.0.0 y 18 s de vuelta; el sitio se cae ~14 s en cada `up` | Salud 200, JWT inválido 401 y sitio 200 en cada paso; `verificar-redes.sh` 42 pasan, 0 fallan. [PENDIENTE: `smoke-test.sh` con login, cuenta de comprador] |
 
 ## 8.4 Procedimiento de despliegue y rollback
 
