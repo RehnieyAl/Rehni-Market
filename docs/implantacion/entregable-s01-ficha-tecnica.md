@@ -94,7 +94,21 @@ Script: `scripts/verificar-requisitos.sh` del repositorio del proyecto.
 Servidor donde se ejecutó: VM Ubuntu 24.04 de Azure (producción), con `PORTS="80 443"`.
 
 ```
-[PENDIENTE: salida de docs/evidencias/verificar-requisitos-azure-<fecha>.txt (comando «a» en la VM)]
+# VM de Azure · 2026-11-18 19:23:43 UTC · v1.0.1-7-g0c19dff (docs/evidencias/verificar-requisitos-azure-2026-11-18.txt)
+REQUISITO          ESPERADO               ENCONTRADO             ESTADO
+------------------------------------------------------------------------
+Procesadores       >= 2                   2                      CUMPLE
+RAM (MB, lsmem)    >= 4096                4096                   CUMPLE
+Disco libre (GB)   >= 30 en /             20                     NO CUMPLE
+Arquitectura       x86_64 aarch64         x86_64                 CUMPLE
+Sistema operativo  ubuntu >= 24.04        ubuntu 24.04           CUMPLE
+Docker             >= 24.0                29.9.3                 CUMPLE
+Docker Compose     >= 2.24                5.7.1                  CUMPLE
+Puerto 80          libre                  RehniMarket            CUMPLE
+Puerto 443         libre                  RehniMarket            CUMPLE
+
+RESULTADO: 1 requisito(s) no se cumplen.
+código de salida: 1
 ```
 
-Resultado: [PENDIENTE: cumple / no cumple según la salida de la VM. La VM tiene 3,8 GiB de RAM y 29 GB de disco (deploy/README.md §3), por debajo de los umbrales de 4096 MB y 30 GB]
+Resultado: no cumple el disco libre: 20 GB de 30 GB exigidos; el disco del SO es un Premium SSD P4 de 30 GB en total ([`azure-vm-metadatos-2026-11-18.txt`](../evidencias/azure-vm-metadatos-2026-11-18.txt)) con 8,2 GB usados. Se haría: ampliar el disco del SO a 64 GB (P6) desde el portal de Azure (VM detenida → Discos → Tamaño y rendimiento). Cumple todo lo demás; la RAM pasa con 4096 MB instalados (`lsmem`), aunque el sistema deja 3855 MB usables (`free -m`). [PENDIENTE: validar con el instructor las excepciones del disco (20 GB libres de 30) y de la RAM (3,8 GiB usables de 4 GB)]
