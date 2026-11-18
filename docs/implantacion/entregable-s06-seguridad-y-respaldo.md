@@ -13,27 +13,40 @@
 
 | Cuenta | Tipo | Persona o servicio | Grupos | Inicia sesión | `sudo` permitido |
 |---|---|---|---|:---:|---|
-| `<usuario-admin>` (creado por Azure al crear la VM; dueño de `~/Rehni-Market`) | Persona | Responsable técnico | `sudo`, `docker` | Llave SSH ed25519 | Todo |
-| `root` | Sistema | — | — | No (`PermitRootLogin no`, [`deploy/checklist-azure.md`](../../deploy/checklist-azure.md) §1) | — |
+| `<usuario-admin>` (creado por Azure al crear la VM; dueño de `~/Rehni-Market`) | Persona | Responsable técnico | `sudo`, `docker`, `adm`, `lxd` ([`seguridad-vm-2026-11-18.txt`](../evidencias/seguridad-vm-2026-11-18.txt)) | Llave SSH | Todo, sin contraseña (`(ALL) NOPASSWD: ALL`). Hallazgo: es la configuración por defecto de la imagen de Azure, con acceso solo por llave; mejora futura: `sudo` con contraseña |
+| `root` | Sistema | — | — | No (`PermitRootLogin no` en `/etc/ssh/sshd_config.d/10-endurecer.conf` desde el 18/11/2026; antes, `without-password` por defecto de Azure) | — |
 | [PENDIENTE: usuario `respaldo` de servicio (`nologin`) para el cron del respaldo, si se separa del administrador] | Servicio | cron | `docker` | No | Nada |
 
 Archivos y carpetas sensibles:
 
 | Ruta | Dueño:grupo | Permisos | Por qué |
 |---|---|:---:|---|
-| `~/Rehni-Market` | `<usuario-admin>` | 755 | Clon del repositorio; no tiene secretos fuera del `.env` |
-| `~/Rehni-Market/.env` | `<usuario-admin>` | 600 | Todos los secretos de la app ([semana 4](entregable-s04-procedimiento-despliegue.md), §5.2, paso 8) |
-| `~/Rehni-Market/backups/` | `<usuario-admin>` | [PENDIENTE: `chmod 700` y anotar `ls -ld`] | Volcados con datos personales |
+| `~/Rehni-Market` | `<usuario-admin>:<usuario-admin>` | 775 | Clon del repositorio; no tiene secretos fuera del `.env` |
+| `~/Rehni-Market/.env` | `<usuario-admin>:<usuario-admin>` | 600 | Todos los secretos de la app ([semana 4](entregable-s04-procedimiento-despliegue.md), §5.2, paso 8) |
+| `~/Rehni-Market/backups/` | `<usuario-admin>:<usuario-admin>` | 700 (`chmod 700` el 18/11/2026; la carpeta la creó el primer respaldo de producción, `2026-11-18_19-25`) | Volcados con datos personales |
 | `~/.ssh/authorized_keys` | `<usuario-admin>` | 600 | Llave pública del administrador |
 
 ## 7.2 Acceso remoto y firewall
 
 ```
-[PENDIENTE: salida de `sudo sshd -T | grep -E 'passwordauthentication|permitrootlogin|pubkeyauthentication'` en la VM (esperado: no / no / yes). Si se crea /etc/ssh/sshd_config.d/10-endurecer.conf, pegarlo aquí]
+# /etc/ssh/sshd_config.d/10-endurecer.conf · 2026-11-18 19:36:41 UTC (docs/evidencias/sshd-y-cron-2026-11-18.txt)
+PermitRootLogin no
+
+# sudo sshd -t → sintaxis OK; systemctl reload ssh; sudo sshd -T:
+permitrootlogin no
+pubkeyauthentication yes
+passwordauthentication no
+# sesión nueva por llave después del reload: OK (19:36:47 UTC)
+# antes del cambio (19:24:50 UTC, docs/evidencias/seguridad-vm-2026-11-18.txt): permitrootlogin without-password
 ```
 
 ```
-[PENDIENTE: `sudo ufw status verbose` en la VM (si UFW está inactivo, el filtro es el NSG: decirlo) y reglas de entrada del NSG: `az network nsg rule list -g <grupo> --nsg-name <nsg> -o table` o captura del portal, sin la IP del administrador]
+# sudo ufw status verbose · 2026-11-18 19:24:50 UTC
+Status: inactive
+# Hallazgo: UFW no está activo; el filtro de entrada es el grupo de seguridad de red (NSG) de Azure.
+# Mejora futura: activar UFW con 22, 80 y 443 como segunda capa.
+# Puertos en escucha del host (ss -tln, sin loopback): 0.0.0.0:22, 0.0.0.0:80, 0.0.0.0:443 y [::] en los mismos
+[PENDIENTE: reglas de entrada del NSG, captura del portal (VM → Redes → Configuración de red) sin la IP del administrador, en docs/evidencias/nsg-entrada-<fecha>.png]
 ```
 
 | Puerto | Abierto | Justificación |
@@ -59,8 +72,16 @@ Evidencia de que la base de datos no está expuesta (`docker compose ps` y prueb
   ✅ Caddy → pgbouncer:6432 no conecta
 Resultado: 41 pasan, 0 fallan
 
-# Desde otro equipo
-[PENDIENTE: `for p in 5432 5433 6432 8000 9000 9001; do nc -zv -w3 <ip-servidor> $p; done` desde el equipo del administrador (todas deben fallar), con fecha]
+# Desde otro equipo · 2026-11-18 19:25:00 UTC (docs/evidencias/puertos-desde-fuera-2026-11-18.txt)
+puerto 22: abierto
+puerto 80: abierto
+puerto 443: abierto
+puerto 5432: cerrado o filtrado (no conecta en 5 s)
+puerto 5433: cerrado o filtrado (no conecta en 5 s)
+puerto 6432: cerrado o filtrado (no conecta en 5 s)
+puerto 8000: cerrado o filtrado (no conecta en 5 s)
+puerto 9000: cerrado o filtrado (no conecta en 5 s)
+puerto 9001: cerrado o filtrado (no conecta en 5 s)
 ```
 
 ## 7.3 Roles de la base de datos
@@ -91,7 +112,7 @@ Enlace al script de roles en el repositorio: [PENDIENTE: no existe. `deploy/sql/
 | `POSTGRES_PASSWORD` | Toda la base | `.env` (en `POSTGRES_PASSWORD`, `URL_DATABASE` y `URL_DATABASE_POOLED`) | 600 | PostgreSQL, PgBouncer, backend | `ALTER ROLE … PASSWORD` y actualizar las tres variables; reiniciar `pgbouncer` y `backend` |
 | `MINIO_ROOT_PASSWORD` | Imágenes y certificados | `.env` | 600 | MinIO, backend | Cambiar y reiniciar los dos servicios |
 | `GMAIL_APP_PASSWORD` | Cuenta de correo transaccional | `.env` | 600 | Backend | Revocar en la cuenta de Google y emitir otra |
-| Llave SSH de la VM | Servidor completo | `~/.ssh/rehni_azure` del equipo del administrador (la pública en Azure) | 600 | Administrador | Llave nueva en Azure («Restablecer contraseña» → llave) y borrar la anterior de `authorized_keys` |
+| Llave SSH de la VM | Servidor completo | llave privada del administrador en `~/.ssh/` de su equipo (la pública en Azure) | 600 | Administrador | Llave nueva en Azure («Restablecer contraseña» → llave) y borrar la anterior de `authorized_keys` |
 | Token de DuckDNS | Cambiar la IP de los dos dominios | Cuenta de DuckDNS; no está en la VM ni en el repositorio | — | Administrador | Regenerar en <https://www.duckdns.org> |
 | `SONAR_TOKEN` | Análisis de SonarCloud | Secretos del repositorio en GitHub | — | Workflow `sonarqube.yml` | Regenerar en SonarCloud y actualizar el secreto ([semana 7](entregable-s07-pipeline-y-monitoreo.md), §8.2) |
 | Llave `age` del respaldo | Copias 2 y 3 | [PENDIENTE: gestor de contraseñas del responsable, fuera del servidor] | — | Administrador | Generar llave nueva y recifrar las copias vigentes |
@@ -118,7 +139,7 @@ RehniMarket-mobile/.env        ← solo EXPO_PUBLIC_API_URL (URL pública, no es
 | Herramienta | `pg_dump` + `mc mirror` con `sha256sum`; cifrado con `age` para las copias que salen del servidor (decisión del 04/11/2026) |
 | Usuario del sistema y rol de base que lo ejecutan | `<usuario-admin>` (grupo `docker`) y rol `POSTGRES_USER`. [PENDIENTE: rol de solo lectura para `pg_dump` tras cerrar #44] |
 | Cifrado y dónde vive la contraseña | [PENDIENTE: implementar `age -r <llave-publica>` sobre el `.dump` y el `.tar.gz` antes de copiarlos fuera; llave privada solo en el gestor de contraseñas del responsable] |
-| Horario (línea de cron) | Propuesta: `0 2 * * * cd /home/rehnimarket/Rehni-Market && bash scripts/respaldar.sh >> backups/cron.log 2>&1` [PENDIENTE: instalar con `crontab -e` en la VM y pegar `crontab -l`] |
+| Horario (línea de cron) | `0 8 * * * cd $HOME/Rehni-Market && bash scripts/respaldar.sh >> backups/cron.log 2>&1` (08:00 UTC = 03:00 en Colombia; la VM está en `Etc/UTC` con NTP), instalada el 18/11/2026 ([`sshd-y-cron-2026-11-18.txt`](../evidencias/sshd-y-cron-2026-11-18.txt)) |
 | Retención | 7 respaldos más recientes de cada tipo (`KEEP_DAILY=7`, `scripts/backup_rehnimarket.sh`) |
 | Verificación automática | `sha256sum` en cada respaldo; `bash scripts/restore_rehnimarket.sh <TS> --verify-only` mensual y tras cada migración |
 | Responsable | Responsable técnico |

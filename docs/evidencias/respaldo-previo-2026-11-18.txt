@@ -1,0 +1,27 @@
+# Respaldo previo · inicio 2026-11-18 19:25:48 UTC · v1.0.1-7-g0c19dff
+└──────────┴─────────────┴──────────┴──────────────┘
+[2026-11-18 19:25:49 UTC] objetos respaldados: 11
+[2026-11-18 19:25:50 UTC] backend reanudado
+[2026-11-18 19:25:50 UTC] manifiesto: rehni_market_backup_2026-11-18_19-25.manifest.txt
+[2026-11-18 19:25:50 UTC] rotación: conservar 7 más recientes de cada tipo
+[2026-11-18 19:25:50 UTC] === FIN backup 2026-11-18_19-25 — OK ===
+
+Backup completado. Artefactos en: /home/<usuario-admin>/Rehni-Market/backups
+  - /home/<usuario-admin>/Rehni-Market/backups/postgres/rehni_market_postgres_2026-11-18_19-25.dump
+  - /home/<usuario-admin>/Rehni-Market/backups/minio/rehni_market_minio_2026-11-18_19-25.tar.gz
+Restaurar en el proyecto:      scripts/restore_rehnimarket.sh 2026-11-18_19-25
+Validar sin tocar el proyecto: scripts/restore_rehnimarket.sh 2026-11-18_19-25 --verify-only
+código de salida: 0 · duración: 2 s
+## archivos
+backups/minio/:
+drwxrwxr-x 6 <usuario-admin> <usuario-admin>    4096 Nov 18 19:25 rehni_market_minio_2026-11-18_19-25
+-rw-rw-r-- 1 <usuario-admin> <usuario-admin> 5636782 Nov 18 19:25 rehni_market_minio_2026-11-18_19-25.tar.gz
+-rw-rw-r-- 1 <usuario-admin> <usuario-admin>     154 Nov 18 19:25 rehni_market_minio_2026-11-18_19-25.tar.gz.sha256
+
+backups/postgres/:
+-rw-rw-r-- 1 <usuario-admin> <usuario-admin> 200471 Nov 18 19:25 rehni_market_postgres_2026-11-18_19-25.dump
+-rw-rw-r-- 1 <usuario-admin> <usuario-admin>    158 Nov 18 19:25 rehni_market_postgres_2026-11-18_19-25.dump.sha256
+-rw-rw-r-- 1 <usuario-admin> <usuario-admin>  18712 Nov 18 19:25 rehni_market_postgres_2026-11-18_19-25.dump.toc.txt
+## huellas
+/home/<usuario-admin>/Rehni-Market/backups/postgres/rehni_market_postgres_2026-11-18_19-25.dump: OK
+/home/<usuario-admin>/Rehni-Market/backups/minio/rehni_market_minio_2026-11-18_19-25.tar.gz: OK
