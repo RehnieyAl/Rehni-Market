@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Proyecto | RehniMarket (Bootcamp de Implantación del SENA, semana 2) |
+| Proyecto | RehniMarket |
 | Equipo | 1 persona: Yeinher Jose Algarin Cardozo, aprendiz ADSO, ficha 3171618 |
 | Fecha | 2026-11-18 |
 

@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Proyecto | RehniMarket (Bootcamp de Implantación del SENA, semana 6) |
+| Proyecto | RehniMarket |
 | Equipo | 1 persona: Yeinher Jose Algarin Cardozo, aprendiz ADSO, ficha 3171618 |
 | Versión del software | 1.0.1 |
 | Fecha | 2026-11-18 |
@@ -115,7 +115,7 @@ RehniMarket-mobile/.env        ← solo EXPO_PUBLIC_API_URL (URL pública, no es
 |---|---|
 | Qué se respalda | Base PostgreSQL (`pg_dump -F c -Z 6`) y bucket `uploads` de MinIO (`mc mirror` + `.tar.gz`), con el mismo `TS` y un `.sha256` cada uno ([`scripts/backup_rehnimarket.sh`](../../scripts/backup_rehnimarket.sh), envoltorio [`scripts/respaldar.sh`](../../scripts/respaldar.sh)). El `.env` no entra en el respaldo: se guarda cifrado fuera del servidor |
 | RPO / RTO acordados | 24 h / 4 h ([semana 2](entregable-s02-planes.md), §3.2) [PENDIENTE: aceptación del cliente en el acta] |
-| Herramienta | `pg_dump` + `mc mirror` con `sha256sum`; cifrado con `age` para las copias que salen del servidor (decisión del 04/11/2026; el Bootcamp de Implantación del SENA, semana 6, propone restic, que también cifra y deduplica) |
+| Herramienta | `pg_dump` + `mc mirror` con `sha256sum`; cifrado con `age` para las copias que salen del servidor (decisión del 04/11/2026) |
 | Usuario del sistema y rol de base que lo ejecutan | `<usuario-admin>` (grupo `docker`) y rol `POSTGRES_USER`. [PENDIENTE: rol de solo lectura para `pg_dump` tras cerrar #44] |
 | Cifrado y dónde vive la contraseña | [PENDIENTE: implementar `age -r <llave-publica>` sobre el `.dump` y el `.tar.gz` antes de copiarlos fuera; llave privada solo en el gestor de contraseñas del responsable] |
 | Horario (línea de cron) | Propuesta: `0 2 * * * cd /home/rehnimarket/Rehni-Market && bash scripts/respaldar.sh >> backups/cron.log 2>&1` [PENDIENTE: instalar con `crontab -e` en la VM y pegar `crontab -l`] |

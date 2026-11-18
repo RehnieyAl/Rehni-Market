@@ -2,7 +2,7 @@
 
 Fecha: 04/11/2026. Rama `docs/implantacion-s1-s4`.
 
-Fuentes de los requisitos: Bootcamp de Implantación del SENA, semanas 1 a 4 (plan curricular, plantilla del plan de implantación y, por semana, la rúbrica, la guía del proyecto y su plantilla).
+Fuentes de los requisitos: plan curricular, plantilla del plan de implantación y, por semana, la rúbrica, la guía del proyecto y su plantilla (semanas 1 a 4).
 
 Regla aplicada: todo dato sale del repositorio (archivo:línea), de la salida de un comando ejecutado el 04/11/2026 o de una página oficial citada. Lo demás queda marcado con `<!-- PENDIENTE: ... -->` en el archivo correspondiente.
 
@@ -55,7 +55,7 @@ Condiciones de las rúbricas:
 |---|---|
 | Ensayo completo (carga, transformación, validación y rollback): 12,2 s para las opciones 3-5, `OK=10 FALLA=0`, 73 migrados y 27 rechazados, rollback en 0,1 s | Ensayo del 04/11/2026 14:41 UTC sobre `rehnimarket_ensayo`, restaurada del respaldo `2026-11-04_14-31` y eliminada al terminar (§2.9) |
 | Duración del respaldo previo: 1 min 58 s (antes: «menos de 1 minuto») | `backups/backup.log`, 04/11/2026 |
-| Encabezado y comentarios de la plantilla, eliminados | Formato de la plantilla del plan del Bootcamp de Implantación del SENA |
+| Encabezado y comentarios de la plantilla, eliminados | Formato de la plantilla del plan de implantación |
 
 ### §3 Respaldo
 | Dato | Fuente |
@@ -126,7 +126,7 @@ Condiciones de las rúbricas:
 | # | Decisión | Dónde | Por qué la tomé | Qué la confirmaría o la cambiaría |
 |---|---|---|---|---|
 | D-1 | **50 usuarios concurrentes** en la prueba de carga (**supuesto, no es la carga esperada**) | §1.4 y §1.5 | La propuse como carga moderada porque el equipo de desarrollo tiene 7 GB y ya usaba swap; tú la elegiste entre las opciones. En el repo no hay ninguna cifra de concurrencia esperada (RNF-011 y RNF-012 no fijan usuarios), y el 1000 por defecto del script anterior `load_test.k6.js` (eliminado; ahora `tests/load/`) tampoco está justificado | La concurrencia acordada con el cliente: repetir k6 con ese valor |
-| D-2 | **CPU recomendada de 6 vCPU** y RAM recomendada de 8 GB | §1.5 | Cálculo del bootcamp (medido × 1,5) aplicado a lo medido con D-1: 3,45 × 1,5 = 5,2 → 6 | Cambia si cambia D-1 |
+| D-2 | **CPU recomendada de 6 vCPU** y RAM recomendada de 8 GB | §1.5 | Cálculo de la matriz (medido × 1,5) aplicado a lo medido con D-1: 3,45 × 1,5 = 5,2 → 6 | Cambia si cambia D-1 |
 | D-3 | Mínimo de 2 vCPU sin medir | §1.5 | Se mantuvo el valor que ya tenía el plan | k6 en una VM de 2 vCPU |
 | D-4 | Frecuencias de la §4.6: «en cada liberación» y «en la instalación inicial y al rotar un secreto» | §4.6 | Se deducen del procedimiento de la §5, no de un acuerdo | Tu política de despliegue y de rotación de secretos |
 | D-5 | Criterio SemVer: MAJOR con migración no compatible hacia atrás o cambio incompatible de la API; MINOR con funcionalidad compatible; PATCH con corrección | §5.1 | Hacía falta un criterio y el proyecto no tenía uno escrito | Tu criterio de versionado |

@@ -1,8 +1,7 @@
 # Implantación — entregables por semana
 
-Entregables de las semanas 1 a 7 del Bootcamp de Implantación del SENA, cada uno con la plantilla
-oficial de su semana. Autor: Yeinher Jose Algarin Cardozo, aprendiz ADSO, ficha 3171618. Las
-semanas 8 y 9 están en [`docs/plan-implantacion.md`](../plan-implantacion.md) (§9 y §10).
+Entregables de las semanas 1 a 7 de la implantación de RehniMarket. Autor: Yeinher Jose Algarin
+Cardozo, aprendiz ADSO, ficha 3171618. Las semanas 8 y 9 están en [`docs/plan-implantacion.md`](../plan-implantacion.md) (§9 y §10).
 
 | Semana | Tema | Archivo | Estado | `[PENDIENTE]` |
 |---|---|---|---|---:|

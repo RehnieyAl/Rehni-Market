@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Proyecto | RehniMarket (Bootcamp de Implantación del SENA, semana 7) |
+| Proyecto | RehniMarket |
 | Equipo | 1 persona: Yeinher Jose Algarin Cardozo, aprendiz ADSO, ficha 3171618 |
 | Versión del software | 1.0.1 |
 | Fecha | 2026-11-18 |
@@ -72,7 +72,7 @@ Reglas de protección:
 Sin `desplegar.sh`: el responsable (`<usuario-admin>`, grupo `docker`, sin `sudo`) aplica a mano en `~/Rehni-Market` la tabla «Actualización» del entregable de la semana 4 (§5.2) y se entera de una versión nueva por el release de GitHub.
 
 ```
-[PENDIENTE: scripts/desplegar.sh (adaptado del desplegar.sh de la app de referencia del Bootcamp de Implantación del SENA, semana 7) con respaldo, cambio de versión, espera de salud, prueba de humo y rollback automático, que escriba ~/Rehni-Market/despliegues.log; pegar el log de un despliegue exitoso y de uno detenido a propósito]
+[PENDIENTE: scripts/desplegar.sh con respaldo, cambio de versión, espera de salud, prueba de humo y rollback automático, que escriba ~/Rehni-Market/despliegues.log; pegar el log de un despliegue exitoso y de uno detenido a propósito]
 ```
 
 ### Migraciones compatibles hacia atrás

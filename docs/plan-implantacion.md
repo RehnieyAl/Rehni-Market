@@ -1,9 +1,8 @@
 # Plan de Implantación — RehniMarket
 
-> Plantilla: Bootcamp de Implantación del SENA. Las semanas 1 a 7 están en un entregable por
-> semana en [`docs/implantacion/`](implantacion/README.md), con la plantilla oficial de cada una;
-> aquí quedan el índice y las secciones 9 y 10. Solo datos sintéticos: ninguna IP, usuario ni
-> contraseña real.
+> Las semanas 1 a 7 están en un entregable por semana en
+> [`docs/implantacion/`](implantacion/README.md); aquí quedan el índice y las secciones 9 y 10.
+> Solo datos sintéticos: ninguna IP, usuario ni contraseña real.
 
 | Campo | Valor |
 |---|---|
@@ -30,8 +29,6 @@
 ---
 
 ## 9. Mantenimiento, soporte y capacitación — Semana 8 (CE-5)
-
-Plantilla: Bootcamp de Implantación del SENA, semana 8.
 
 ### 9.1 Plan de mantenimiento
 
@@ -135,8 +132,6 @@ Registro de la sesión simulada: `docs/aceptacion/sesion-capacitacion.md`.
 Dónde se enlazan: `README.md` (sección de documentación). [PENDIENTE: enlace desde la aplicación]
 
 ## 10. Aceptación y entrega — Semana 9 (CE-1 a CE-5)
-
-Plantilla: Bootcamp de Implantación del SENA, semana 9.
 
 | Campo | Valor |
 |---|---|
