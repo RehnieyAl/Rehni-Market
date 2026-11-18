@@ -114,7 +114,15 @@ Registro de la ventana:
 | Intento 1 · opción 4, `transformar.sql` | 19:43:06 | 19:43:06 | **ERROR**: `pgcrypto ya está instalada fuera del esquema migracion`; la transacción abortó antes de escribir en `users` |
 | Intento 1 · reversión | 19:43:24 | 19:43:35 | `backend` y `frontend` reabiertos; `DROP SCHEMA migracion CASCADE`; estado de la migración limpio. **Caída total: 40 s** (19:42:55 → 19:43:35) |
 | Intento 1 · estado final | 19:43:35 | 19:43:35 | `users=3`, `owner=1`, misma huella de los `id`, sin esquema `migracion`; 5 servicios `healthy`, sitio 200, API 200; `verificar-redes.sh` 42 pasan, 0 fallan |
-| Intento 2, con `transformar.sql` corregido | [PENDIENTE: después del merge del PR #85] | | |
+| Intento 2 (18/11/2026, `transformar.sql` de #85), punto de partida | 20:10:45 | 20:10:45 | `users=3`, `owner=1`, huella de los `id` `66cb10be65a40062bee4a1491d71cb99`, pgcrypto en `public` ([`migracion-ejecutada-2026-11-18.txt`](../evidencias/migracion-ejecutada-2026-11-18.txt)) |
+| Intento 2 · opción 1, respaldo previo | 20:10:45 | 20:10:47 | `2026-11-18_20-10`, SHA-256 OK |
+| Intento 2 · opción 2, abrir ventana | 20:10:47 | 20:10:58 | `frontend` y `backend` detenidos |
+| Intento 2 · opción 3, `carga-staging.sql` | 20:10:58 | 20:10:59 | `COPY 100` |
+| Intento 2 · opción 4, `transformar.sql` | 20:10:59 | 20:11:15 | `INSERT 0 73` en `users`, 27 rechazos, `COMMIT`; `id_ejecucion` 1 |
+| Intento 2 · opción 5, `validar.sql` | 20:11:15 | 20:11:15 | `OK=10 FALLA=0`, CSV sin cambios |
+| Intento 2 · opción 7, cerrar ventana | 20:11:15 | 20:11:21 | Reporte de 27 rechazos; aplicación reabierta. **Caída: 34 s** (20:10:47 → 20:11:21) |
+| Intento 2 · `rollback.sql` (`id_ejecucion` 1), con la aplicación abierta | 20:11:28 | 20:11:28 | 0 migrados restantes en `users`; 0 preexistentes distintos de la línea base; ejecución `REVERTIDA` |
+| Intento 2 · estado final | 20:12:44 | 20:12:44 | `users=3`, `owner=1`, misma huella de los `id`; `usuarios_migrados=73` y 0 de ellas en `users`; `verificar-redes.sh` 42 pasan, 0 fallan; checkout de vuelta en `0c19dff` |
 
 Huellas:
 
@@ -122,14 +130,21 @@ Huellas:
 # Intento 1 · origen: sha256sum legacy-data/clientes_legado.csv
 b29efeac92531725a599418ffe9aa17e1631c47b05ecc9c4f4ce00cf4bd8e990
 # Intento 1 · destino: sin cambios (users=3, huella de los id 66cb10be65a40062bee4a1491d71cb99 antes y después)
-[PENDIENTE: intento 2, control 9 de validar.sql (checksum de origen normalizado = destino) y sha256sum del CSV antes y después]
+# Intento 2 · origen, antes y después: sha256sum legacy-data/clientes_legado.csv
+b29efeac92531725a599418ffe9aa17e1631c47b05ecc9c4f4ce00cf4bd8e990  (antes)
+b29efeac92531725a599418ffe9aa17e1631c47b05ecc9c4f4ce00cf4bd8e990  (después)
+# Intento 2 · validar.sql, control 1 y control 9 (docs/evidencias/migracion-ejecutada-2026-11-18.txt)
+ 1. Conciliación origen = migrados + rechazados | OK | origen=100 migrados=73 rechazados=27
+ 9. Checksum normalizados = destino             | OK | esperado=b512ccb416d5e0d4305a7f3c13f4226d obtenido=b512ccb416d5e0d4305a7f3c13f4226d
+# Intento 2 · destino después del rollback: users=3 owner=1 huella_ids=66cb10be65a40062bee4a1491d71cb99 (igual que al inicio)
 ```
 
 Prueba de humo después del corte:
 
 ```
 # Intento 1 · después de la reversión (19:43:35 UTC): sitio 200, /health/database 200 {"Base de datos":"OK"}
-[PENDIENTE: intento 2, scripts/smoke-test.sh con la cuenta de comprador después de cerrar la ventana (lo corre el responsable)]
+# Intento 2 · después de cerrar la ventana (20:11:27 UTC): 5 servicios healthy · sitio 200 · /health/database 200 · /public/products 200
+[PENDIENTE: scripts/smoke-test.sh con la cuenta de comprador (lo corre el responsable)]
 ```
 
-¿Fue necesario el rollback? ¿Por qué? Intento 1: sí. `transformar.sql` abortó en su primera verificación (pgcrypto fuera del esquema `migracion`), así que no había datos que revertir con `rollback.sql`: se reabrió la aplicación y se borró el esquema de staging, con el estado final igual al inicial. [PENDIENTE: intento 2]
+¿Fue necesario el rollback? ¿Por qué? Intento 1: sí. `transformar.sql` abortó en su primera verificación (pgcrypto fuera del esquema `migracion`), así que no había datos que revertir con `rollback.sql`: se reabrió la aplicación y se borró el esquema de staging, con el estado final igual al inicial. Intento 2: no hizo falta por fallos (`OK=10 FALLA=0`); `rollback.sql` se ejecutó por decisión del responsable para retirar las 73 cuentas sintéticas de la base de producción, y borró solo las de `migracion.usuarios_migrados`.

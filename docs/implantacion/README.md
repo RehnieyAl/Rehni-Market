@@ -9,7 +9,7 @@ Cardozo, aprendiz ADSO, ficha 3171618. Las semanas 8 y 9 están en [`docs/plan-i
 | 2 | Plan de instalación, migración y respaldo | [`entregable-s02-planes.md`](entregable-s02-planes.md) | Parcial | 3 |
 | 3 | Hosting, dominio y transferencia de archivos | [`entregable-s03-hosting-y-dominio.md`](entregable-s03-hosting-y-dominio.md) | Parcial | 2 |
 | 4 | Despliegue local y en la nube | [`entregable-s04-procedimiento-despliegue.md`](entregable-s04-procedimiento-despliegue.md) | Parcial | 7 |
-| 5 | Configuración y pruebas en servidor | [`entregable-s05-configuracion-y-verificacion.md`](entregable-s05-configuracion-y-verificacion.md) | Parcial | 9 |
+| 5 | Configuración y pruebas en servidor | [`entregable-s05-configuracion-y-verificacion.md`](entregable-s05-configuracion-y-verificacion.md) | Parcial | 6 |
 | 6 | Seguridad, usuarios y permisos | [`entregable-s06-seguridad-y-respaldo.md`](entregable-s06-seguridad-y-respaldo.md) | Parcial | 19 |
 | 7 | CI/CD de despliegue y monitoreo | [`entregable-s07-pipeline-y-monitoreo.md`](entregable-s07-pipeline-y-monitoreo.md) | Parcial | 14 |
 
