@@ -1,0 +1,37 @@
+Hosting y dominio en producción · 2026-11-18 18:24:16 UTC · consultas públicas desde el equipo de desarrollo
+
+== DNS (dig; la IP pública se reemplaza por <ip-de-la-vm>)
+rehnimarket.duckdns.org. TTL=60 A <ip-de-la-vm>
+apirehnimarket.duckdns.org. TTL=60 A <ip-de-la-vm>
+NS duckdns.org: ns9.duckdns.org.
+NS duckdns.org: ns2.duckdns.org.
+NS duckdns.org: ns8.duckdns.org.
+
+== HTTP → HTTPS
+http://rehnimarket.duckdns.org/          308 -> https://rehnimarket.duckdns.org/
+http://apirehnimarket.duckdns.org/       308 -> https://apirehnimarket.duckdns.org/
+
+== HTTPS
+https://rehnimarket.duckdns.org/                        200 (1.859994s, HTTP/2)
+https://apirehnimarket.duckdns.org/health/database      {"Base de datos":"OK"} 200
+https://apirehnimarket.duckdns.org/docs                 401
+
+== Certificados
+-- rehnimarket.duckdns.org
+subject=CN=rehnimarket.duckdns.org
+issuer=C=US, O=Let's Encrypt, CN=YE2
+notAfter=Feb 15 00:03:01 2027 GMT
+-- apirehnimarket.duckdns.org
+subject=CN=apirehnimarket.duckdns.org
+issuer=C=US, O=Let's Encrypt, CN=YE2
+notAfter=Feb 15 00:03:01 2027 GMT
+
+== Encabezados de seguridad (GET; sin encabezado Server)
+-- https://rehnimarket.duckdns.org/
+referrer-policy: strict-origin-when-cross-origin
+strict-transport-security: max-age=31536000
+x-content-type-options: nosniff
+x-frame-options: SAMEORIGIN
+-- https://apirehnimarket.duckdns.org/health/database
+referrer-policy: strict-origin-when-cross-origin
+x-content-type-options: nosniff

@@ -1,0 +1,42 @@
+# C8 · sshd sin root · 2026-11-18 19:36:41 UTC
+## /etc/ssh/sshd_config.d/10-endurecer.conf
+PermitRootLogin no
+## sshd -t
+sintaxis OK
+reload OK
+## sshd -T
+permitrootlogin no
+pubkeyauthentication yes
+passwordauthentication no
+nueva sesión OK como <usuario-admin> a las 19:36:47 UTC
+
+# C4 · cron del respaldo · 2026-11-18 19:36:54 UTC
+                Time zone: Etc/UTC (UTC, +0000)
+              NTP service: active
+## crontab -l
+0 8 * * * cd $HOME/Rehni-Market && bash scripts/respaldar.sh >> backups/cron.log 2>&1
+
+# Respaldo previo a C8 y C4: 2026-11-18_19-35 (=== FIN backup 2026-11-18_19-35 — OK ===)
+
+# verificar-redes · tras C8 (sshd)
+  ✅ Solo frontend (Caddy) publica puertos fuera de 127.0.0.1
+  (postgres-test no está corriendo: se omiten sus pruebas)
+
+Resultado: 42 pasan, 0 fallan
+pgbouncer_pool Up 21 hours (healthy)
+rehni-backend Up About a minute (healthy)
+rehni-frontend Up 21 hours (healthy)
+rehni-minio Up 21 hours (healthy)
+rehni-postgres Up 21 hours (healthy)
+sitio 200
+# verificar-redes · tras C4 (cron)
+  ✅ Solo frontend (Caddy) publica puertos fuera de 127.0.0.1
+  (postgres-test no está corriendo: se omiten sus pruebas)
+
+Resultado: 42 pasan, 0 fallan
+pgbouncer_pool Up 21 hours (healthy)
+rehni-backend Up About a minute (healthy)
+rehni-frontend Up 21 hours (healthy)
+rehni-minio Up 21 hours (healthy)
+rehni-postgres Up 21 hours (healthy)
+sitio 200

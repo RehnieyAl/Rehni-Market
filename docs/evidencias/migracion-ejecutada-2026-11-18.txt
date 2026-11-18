@@ -1,0 +1,199 @@
+# Migración ejecutada en producción, intento 2 · 2026-11-18 · checkout 0d1203f (origin/develop, con #85)
+## CSV de origen, antes
+b29efeac92531725a599418ffe9aa17e1631c47b05ecc9c4f4ce00cf4bd8e990  legacy-data/clientes_legado.csv
+## estado previo
+users=3 owner=1 huella_ids=66cb10be65a40062bee4a1491d71cb99
+esquema_migracion=0
+pgcrypto en public
+=== opción 1 · respaldo previo · inicio 20:10:45 UTC
+[2026-11-18 20:10:46 UTC] === INICIO backup 2026-11-18_20-10 ===
+[2026-11-18 20:10:46 UTC] deteniendo backend para consistencia...
+[2026-11-18 20:10:46 UTC] pg_dump -> /home/<usuario-admin>/Rehni-Market/backups/postgres/rehni_market_postgres_2026-11-18_20-10.dump
+[2026-11-18 20:10:46 UTC] validando dump con pg_restore -l ...
+[2026-11-18 20:10:47 UTC] dump válido — 38 tablas con datos en el TOC
+[2026-11-18 20:10:47 UTC] mc mirror del bucket uploads -> /home/<usuario-admin>/Rehni-Market/backups/minio/rehni_market_minio_2026-11-18_20-10
+[2026-11-18 20:10:47 UTC] objetos respaldados: 12
+[2026-11-18 20:10:47 UTC] backend reanudado
+[2026-11-18 20:10:47 UTC] manifiesto: rehni_market_backup_2026-11-18_20-10.manifest.txt
+[2026-11-18 20:10:47 UTC] rotación: conservar 7 más recientes de cada tipo
+[2026-11-18 20:10:47 UTC] === FIN backup 2026-11-18_20-10 — OK ===
+Backup completado. Artefactos en: /home/<usuario-admin>/Rehni-Market/backups
+  - /home/<usuario-admin>/Rehni-Market/backups/postgres/rehni_market_postgres_2026-11-18_20-10.dump
+  - /home/<usuario-admin>/Rehni-Market/backups/minio/rehni_market_minio_2026-11-18_20-10.tar.gz
+Restaurar en el proyecto:      scripts/restore_rehnimarket.sh 2026-11-18_20-10
+Validar sin tocar el proyecto: scripts/restore_rehnimarket.sh 2026-11-18_20-10 --verify-only
+/home/<usuario-admin>/Rehni-Market/backups/postgres/rehni_market_postgres_2026-11-18_20-10.dump: OK
+Respaldo previo: TS=2026-11-18_20-10
+=== opción 1 · fin 20:10:47 UTC
+=== opción 2 · abrir ventana (detiene frontend y backend) · inicio 20:10:47 UTC
+ Container rehni-frontend Stopping 
+ Container rehni-frontend Stopped 
+ Container rehni-backend Stopping 
+ Container rehni-backend Stopped 
+Aplicación detenida. SHA del CSV: b29efeac92531725a599418ffe9aa17e1631c47b05ecc9c4f4ce00cf4bd8e990
+=== opción 2 · fin 20:10:58 UTC
+=== opción 3 · carga-staging.sql · inicio 20:10:58 UTC
+DO
+psql:/tmp/migracion/carga-staging.sql:27: NOTICE:  schema "migracion" does not exist, skipping
+DROP SCHEMA
+CREATE SCHEMA
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+COPY 100
+ filas_cargadas 
+            100
+(1 row)
+=== opción 3 · fin 20:10:59 UTC
+=== opción 4 · transformar.sql · inicio 20:10:59 UTC
+BEGIN
+CREATE EXTENSION
+psql:/tmp/migracion/transformar.sql:21: NOTICE:  extension "pgcrypto" already exists, skipping
+LOCK TABLE
+DO
+INSERT 0 1
+ set_config 
+ 1
+(1 row)
+INSERT 0 3
+CREATE FUNCTION
+psql:/tmp/migracion/transformar.sql:77: NOTICE:  table "normalizados" does not exist, skipping
+DROP TABLE
+SELECT 100
+UPDATE 100
+UPDATE 4
+INSERT 0 27
+INSERT 0 73
+INSERT 0 73
+UPDATE 73
+DO
+UPDATE 1
+COMMIT
+ id_ejecucion 
+            1
+(1 row)
+id_ejecucion aplicada: 1
+=== opción 4 · fin 20:11:15 UTC
+=== opción 5 · validar.sql · inicio 20:11:15 UTC
+                    control                     | resultado |               detalle                
+------------------------------------------------+-----------+--------------------------------------
+ 1. Conciliación origen = migrados + rechazados | OK        | origen=100 migrados=73 rechazados=27
+(1 row)
+              control               | resultado |          detalle           
+------------------------------------+-----------+----------------------------
+ 2. Exclusión migrados / rechazados | OK        | 0 filas en ambos conjuntos
+(1 row)
+             control              | resultado |           detalle            
+----------------------------------+-----------+------------------------------
+ 3. users = línea base + migrados | OK        | antes=3 migrados=73 ahora=76
+(1 row)
+            control             | resultado |   detalle   
+--------------------------------+-----------+-------------
+ 4. Rechazos: CORREO_EXCEDE_50  | INFO      | 1 registros
+ 4. Rechazos: CORREO_INVALIDO   | INFO      | 4 registros
+ 4. Rechazos: CORREO_VACIO      | INFO      | 2 registros
+ 4. Rechazos: DUPLICADO_ORIGEN  | INFO      | 4 registros
+ 4. Rechazos: FECHA_FUTURA      | INFO      | 1 registros
+ 4. Rechazos: FECHA_INVALIDA    | INFO      | 7 registros
+ 4. Rechazos: NOMBRE_EXCEDE_50  | INFO      | 2 registros
+ 4. Rechazos: NOMBRE_VACIO      | INFO      | 2 registros
+ 4. Rechazos: TELEFONO_INVALIDO | INFO      | 4 registros
+(9 rows)
+               control               | resultado |       detalle       
+-------------------------------------+-----------+---------------------
+ 5. Sin duplicados de email en users | OK        | 0 correos repetidos
+(1 row)
+          control           | resultado |        detalle        
+----------------------------+-----------+-----------------------
+ 6. Reglas de normalización | OK        | 0 registros incumplen
+(1 row)
+                control                | resultado |         detalle          
+---------------------------------------+-----------+--------------------------
+ 7. Integridad referencial de migrados | OK        | 0 registros con problema
+(1 row)
+           control            | resultado |                       detalle                       
+------------------------------+-----------+-----------------------------------------------------
+ 8. Preexistentes sin alterar | OK        | 0 usuarios preexistentes distintos de la línea base
+(1 row)
+              control               | resultado |                                       detalle                                       
+------------------------------------+-----------+-------------------------------------------------------------------------------------
+ 9. Checksum normalizados = destino | OK        | esperado=b512ccb416d5e0d4305a7f3c13f4226d obtenido=b512ccb416d5e0d4305a7f3c13f4226d
+(1 row)
+              control              | resultado |                    detalle                    
+-----------------------------------+-----------+-----------------------------------------------
+ 10. Hash bcrypt único por migrado | OK        | 73 migrados, 73 hashes distintos, 0 no bcrypt
+(1 row)
+          control           | resultado |           detalle            
+----------------------------+-----------+------------------------------
+ 11. Migrados sin verificar | OK        | 0 verificados de 73 migrados
+(1 row)
+psql exit=0  OK=10  FALLA=0  CSV sin cambios: OK  (salida en backups/validar_migracion_2026-11-18_20-10.txt)
+VALIDACIÓN CORRECTA: puede cerrar la ventana (opción 7).
+=== opción 5 · fin 20:11:15 UTC
+=== opción 7 · cerrar ventana (reabre la aplicación) · inicio 20:11:15 UTC
+Reporte de rechazos: backups/rechazos_migracion_2026-11-18_20-10.csv (27 rechazos)
+ Container rehni-minio Waiting 
+ Container rehni-minio Healthy 
+ Container rehni-postgres Waiting 
+ Container rehni-postgres Healthy 
+ Container pgbouncer_pool Waiting 
+ Container pgbouncer_pool Healthy 
+ Container rehni-backend Starting 
+ Container rehni-backend Started 
+ Container rehni-backend Waiting 
+ Container rehni-backend Healthy 
+ Container rehni-frontend Starting 
+ Container rehni-frontend Started 
+Aplicación reabierta y copia del CSV eliminada del contenedor.
+=== opción 7 · fin 20:11:21 UTC
+## salud tras el corte 20:11:21 UTC
+pgbouncer_pool Up 21 minutes (healthy)
+rehni-backend Up 11 seconds (healthy)
+rehni-frontend Up 5 seconds (healthy)
+rehni-minio Up 22 minutes (healthy)
+rehni-postgres Up 21 minutes (healthy)
+sitio 200 · api {"Base de datos":"OK"} 200 · registro disponible: 200 · listo 20:11:27 UTC
+## CSV de origen, después
+b29efeac92531725a599418ffe9aa17e1631c47b05ecc9c4f4ce00cf4bd8e990  legacy-data/clientes_legado.csv
+## antes del rollback
+usuarios_migrados=73 aun_en_users=73
+users=76 owner=1 huella_ids=c5bff795f58bfb023da5384b9dcf8a2c
+ejecucion 1 estado=APLICADA users_antes=3 inicio=20:10:59 fin=20:11:15 fin_rollback=-
+=== rollback.sql · id_ejecucion=1 · inicio 20:11:28 UTC (aplicación abierta)
+BEGIN
+LOCK TABLE
+ set_config 
+------------
+ 1
+(1 row)
+
+DO
+                control                | resultado |   detalle   
+---------------------------------------+-----------+-------------
+ Rollback: migrados restantes en users | OK        | 0 restantes
+(1 row)
+
+             control              | resultado |           detalle            
+----------------------------------+-----------+------------------------------
+ Rollback: preexistentes intactos | OK        | 0 distintos de la línea base
+(1 row)
+
+COMMIT
+=== rollback.sql · fin 20:11:28 UTC
+## después del rollback
+usuarios_migrados=73 aun_en_users=0
+users=3 owner=1 huella_ids=66cb10be65a40062bee4a1491d71cb99
+ejecucion 1 estado=REVERTIDA users_antes=3 inicio=20:10:59 fin=20:11:15 fin_rollback=20:11:28
+## checkout de vuelta: v1.0.1-7-g0c19dff
+CSV sintético borrado de la VM
+## verificar-redes
+
+Resultado: 42 pasan, 0 fallan
+pgbouncer_pool Up 23 minutes (healthy)
+rehni-backend Up About a minute (healthy)
+rehni-frontend Up About a minute (healthy)
+rehni-minio Up 23 minutes (healthy)
+rehni-postgres Up 23 minutes (healthy)
+## fin 20:12:44 UTC

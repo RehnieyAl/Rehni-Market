@@ -1,0 +1,11 @@
+# Metadatos de la VM (Azure Instance Metadata Service) · 2026-11-18 19:24:33 UTC
+# ssh rehni-prod 'curl -s -H Metadata:true http://169.254.169.254/metadata/instance/compute?api-version=2021-02-01' (solo estos campos; sin IP)
+location: ChileCentral
+vmSize: Standard_B2ls_v2
+osDisk: Premium_LRS 30 GB
+imagen: canonical ubuntu-24_04-lts server
+
+# Precios de pago por uso, API oficial https://prices.azure.com/api/retail/prices, consultada el 2026-11-18 (USD)
+chilecentral | Virtual Machines Bsv2 Series | B2ls v2 | 0.0582 / hora
+chilecentral | Premium SSD Managed Disks | P4 LRS | 6.736598 / mes
+chilecentral | IP Addresses | Standard IPv4 Static Public IP | 0.005 / hora
