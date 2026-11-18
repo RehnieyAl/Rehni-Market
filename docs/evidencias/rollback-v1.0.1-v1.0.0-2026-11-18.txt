@@ -1,0 +1,47 @@
+# Rollback cronometrado 0c19dff → v1.0.0 → 0c19dff · inicio 2026-11-18 19:48:22 UTC
+## punto de partida: v1.0.1-7-g0c19dff (0c19dff)
+## migraciones entre v1.0.0 y 0c19dff (vacío = ninguna):
+## ALGORITHM en .env: 1 línea(s)
+## respaldo previo
+[2026-11-18 19:48:24 UTC] === FIN backup 2026-11-18_19-48 — OK ===
+--- v1.0.0 · compilación desde 2026-11-18 19:48:24 UTC
+ Image rehni-market-backend Building 
+ Image rehni-market-backend Built 
+ Image rehni-market-frontend Building 
+ Image rehni-market-frontend Built 
+--- v1.0.0 · compilación: 12 s (rc=0) · up desde 2026-11-18 19:48:36 UTC
+--- v1.0.0 · up: 14 s (rc=0) · total 26 s · 2026-11-18 19:48:50 UTC
+    versión: v1.0.0 · salud: 200 · alembic: d7e3f1a9c5b2 (head)
+    JWT inválido en /auth/me: 401 · sitio: 200
+pgbouncer_pool Up 22 hours (healthy)
+rehni-backend Up 12 seconds (healthy)
+rehni-frontend Up 6 seconds (healthy)
+rehni-minio Up 22 hours (healthy)
+rehni-postgres Up 22 hours (healthy)
+--- 0c19dff · compilación desde 2026-11-18 19:48:51 UTC
+ Image rehni-market-backend Building 
+ Image rehni-market-backend Built 
+ Image rehni-market-frontend Building 
+ Image rehni-market-frontend Built 
+--- 0c19dff · compilación: 4 s (rc=0) · up desde 2026-11-18 19:48:55 UTC
+--- 0c19dff · up: 14 s (rc=0) · total 18 s · 2026-11-18 19:49:09 UTC
+    versión: v1.0.1-7-g0c19dff · salud: 200 · alembic: d7e3f1a9c5b2 (head)
+    JWT inválido en /auth/me: 401 · sitio: 200
+pgbouncer_pool Up 22 hours (healthy)
+rehni-backend Up 12 seconds (healthy)
+rehni-frontend Up 6 seconds (healthy)
+rehni-minio Up 22 hours (healthy)
+rehni-postgres Up 22 hours (healthy)
+## ALGORITHM: v1.0.1 ya no la lee (Config.py en 0c19dff: 0 referencias); se comenta
+líneas activas: 0 · comentadas: 1
+backend recreado en 35 s · salud: 200 · JWT inválido en /auth/me: 401
+## verificar-redes
+
+Resultado: 42 pasan, 0 fallan
+## fin 2026-11-18 19:51:01 UTC · v1.0.1-7-g0c19dff
+pgbouncer_pool Up About a minute (healthy)
+rehni-backend Up About a minute (healthy)
+rehni-frontend Up About a minute (healthy)
+rehni-minio Up About a minute (healthy)
+rehni-postgres Up About a minute (healthy)
+

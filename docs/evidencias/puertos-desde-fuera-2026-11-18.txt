@@ -1,0 +1,10 @@
+# Puertos desde fuera · 2026-11-18 19:25:00 UTC · desde el equipo del administrador hacia rehnimarket.duckdns.org
+puerto 22: abierto
+puerto 80: abierto
+puerto 443: abierto
+puerto 5432: cerrado o filtrado (no conecta en 5 s)
+puerto 5433: cerrado o filtrado (no conecta en 5 s)
+puerto 6432: cerrado o filtrado (no conecta en 5 s)
+puerto 8000: cerrado o filtrado (no conecta en 5 s)
+puerto 9000: cerrado o filtrado (no conecta en 5 s)
+puerto 9001: cerrado o filtrado (no conecta en 5 s)
