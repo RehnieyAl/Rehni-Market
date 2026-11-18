@@ -15,16 +15,12 @@
 
 BEGIN;
 
--- pgcrypto (crypt/gen_salt/gen_random_bytes) solo dentro del esquema auxiliar: no toca public
--- y desaparece con DROP SCHEMA migracion CASCADE.
+-- pgcrypto (crypt/gen_salt/gen_random_bytes): si la base ya la tiene en otro esquema
+-- (deploy/sql/crear-owner.sql la instala en public), se usa esa sin tocarla; si no, se crea
+-- dentro de migracion y desaparece con DROP SCHEMA migracion CASCADE.
 CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA migracion;
-DO $$
-BEGIN
-    IF (SELECT extnamespace::regnamespace::text FROM pg_extension WHERE extname = 'pgcrypto')
-       <> 'migracion' THEN
-        RAISE EXCEPTION 'pgcrypto ya está instalada fuera del esquema migracion; revisar antes de seguir.';
-    END IF;
-END $$;
+SELECT extnamespace::regnamespace::text AS pgcrypto_esquema
+FROM pg_extension WHERE extname = 'pgcrypto' \gset
 
 -- Sin altas concurrentes en users mientras dura la transacción.
 LOCK TABLE public.users IN SHARE ROW EXCLUSIVE MODE;
@@ -142,8 +138,8 @@ INSERT INTO public.users
        (id, "fullName", email, hashed_password, tell, "profileImagen",
         verified, "isActive", created_at, role_id)
 SELECT n.user_id, n.nombre, n.correo,
-       migracion.crypt(encode(migracion.gen_random_bytes(32), 'base64'),
-                       migracion.gen_salt('bf', 12)),          -- hash único por cuenta
+       :"pgcrypto_esquema".crypt(encode(:"pgcrypto_esquema".gen_random_bytes(32), 'base64'),
+                                 :"pgcrypto_esquema".gen_salt('bf', 12)),          -- hash único por cuenta
        n.telefono, NULL,
        false, true, n.fecha_alta::timestamp AT TIME ZONE 'UTC', r.id
 FROM migracion.normalizados n

@@ -1,0 +1,34 @@
+# Seguridad de la VM · 2026-11-18 19:24:50 UTC
+## usuario y grupos
+uid=1000(<usuario-admin>) gid=1000(<usuario-admin>) groups=1000(<usuario-admin>),4(adm),24(cdrom),27(sudo),30(dip),105(lxd),988(docker)
+## permisos
+ls: cannot access '/home/<usuario-admin>/Rehni-Market/backups': No such file or directory
+drwxrwxr-x 14 <usuario-admin> <usuario-admin> 4096 Nov 17 22:10 /home/<usuario-admin>/Rehni-Market
+-rw------- 1 <usuario-admin> <usuario-admin> 6332 Nov 17 22:10 /home/<usuario-admin>/Rehni-Market/.env
+## sudo (sudo -n -l)
+User <usuario-admin> may run the following commands on RehniMarket:
+    (ALL : ALL) ALL
+    (ALL) NOPASSWD: ALL
+## sshd (sudo sshd -T)
+permitrootlogin without-password
+pubkeyauthentication yes
+passwordauthentication no
+kbdinteractiveauthentication no
+## ufw
+Status: inactive
+## puertos en escucha del host (ss -tln, sin loopback)
+0.0.0.0:22
+0.0.0.0:443
+0.0.0.0:80
+[::]:22
+[::]:443
+[::]:80
+# chmod 700 backups · 2026-11-18 19:26:00 UTC
+drwx------ 4 <usuario-admin> <usuario-admin> 4096 Nov 18 19:25 backups
+pgbouncer_pool Up 21 hours (healthy)
+rehni-backend Up 10 seconds (healthy)
+rehni-frontend Up 21 hours (healthy)
+rehni-minio Up 21 hours (healthy)
+rehni-postgres Up 21 hours (healthy)
+sitio 200
+{"Base de datos":"OK"} api 200
