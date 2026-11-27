@@ -52,7 +52,7 @@ dependencies = [
     "rich==14.3.3",
     "rich-toolkit==0.19.7",
     "rignore==0.7.6",
-    "sentry-sdk==2.54.0",
+    "sentry-sdk==3.0.0",
     "shellingham==1.5.4",
     "sqlalchemy==2.0.48",
     "typer==0.24.1",
