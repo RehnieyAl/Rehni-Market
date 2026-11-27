@@ -22,7 +22,10 @@ Dependabot → PR a develop → CI obligatorio → revisión y merge manual → 
 
 Documentos relacionados: [dependabot-y-seguridad.md](dependabot-y-seguridad.md) (incluye el procedimiento de los
 PR de seguridad que GitHub abre contra `main`), [servidor-ssh.md](servidor-ssh.md) (usuarios, llaves, sudoers e
-instalación en Azure) y [evidencias-qa-2026-11-26.md](evidencias-qa-2026-11-26.md).
+instalación en Azure), [tailscale.md](tailscale.md) (red privada de CI), [primer-despliegue.md](primer-despliegue.md)
+(primera instalación manual, datos base con `scripts/datos-base.sh` y owner), [contenedores.md](contenedores.md)
+(administración de los contenedores por SSH), [evidencias-qa-2026-11-26.md](evidencias-qa-2026-11-26.md) y
+[evidencias-tailscale-2026-11-27.md](evidencias-tailscale-2026-11-27.md).
 
 ## 1. CI obligatorio
 

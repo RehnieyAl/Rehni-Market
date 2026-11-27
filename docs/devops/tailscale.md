@@ -51,8 +51,13 @@ Sustituye la política por defecto, que lo permite todo:
 
 | Credencial | Issuer | Subject | Scope | Tag | Variables del environment |
 |---|---|---|---|---|---|
-| CI producción | GitHub (`https://token.actions.githubusercontent.com`) | `repo:RehnieyAl/Rehni-Market:environment:produccion` | `auth_keys` (escritura) | `tag:ci-produccion` | `TS_OAUTH_CLIENT_ID`, `TS_AUDIENCE` en `produccion` |
-| CI restore | GitHub | `repo:RehnieyAl/Rehni-Market:environment:produccion-restore` | `auth_keys` (escritura) | `tag:ci-restore` | `TS_OAUTH_CLIENT_ID`, `TS_AUDIENCE` en `produccion-restore` |
+| CI producción | GitHub (`https://token.actions.githubusercontent.com`) | `repo:RehnieyAl@232988648/Rehni-Market@1302198737:environment:produccion` | `auth_keys` (escritura) | `tag:ci-produccion` | `TS_OAUTH_CLIENT_ID`, `TS_AUDIENCE` en `produccion` |
+| CI restore | GitHub | `repo:RehnieyAl@232988648/Rehni-Market@1302198737:environment:produccion-restore` | `auth_keys` (escritura) | `tag:ci-restore` | `TS_OAUTH_CLIENT_ID`, `TS_AUDIENCE` en `produccion-restore` |
+
+El repositorio usa el **subject inmutable** de GitHub (`use_immutable_subject: true`, consultable con
+`gh api repos/RehnieyAl/Rehni-Market/actions/oidc/customization/sub`): el `sub` lleva el ID del propietario
+(`232988648`) y del repositorio (`1302198737`). Con el formato antiguo `repo:RehnieyAl/Rehni-Market:...` Tailscale
+rechaza el canje con `403 Unauthorized`. Los IDs no cambian aunque se renombre el usuario o el repositorio.
 
 El subject con `environment:` hace que solo un job de ese environment (aprobado por el propietario y limitado a
 `main`) obtenga un token válido: un PR u otro workflow no pueden entrar en la tailnet. El Client ID y el Audience no
