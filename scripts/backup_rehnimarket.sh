@@ -1,100 +1,164 @@
+#!/usr/bin/env bash
+# Respaldo versionado de RehniMarket: PostgreSQL (pg_dump -Fc) y el bucket de MinIO, con manifest.json (id, fecha
+# UTC, tag y SHA de la versión desplegada, revisión de Alembic, run de GitHub Actions), SHA256SUMS y verificación.
+# Nunca borra respaldos anteriores. Salida final: BACKUP_ID=<id> (la lee el ejecutor de despliegue).
+#
+#   bash scripts/backup_rehnimarket.sh [--no-stop]
+#   BACKUP_DIR=... LOG_DIR=... APP_DIR=...   (por defecto /var/backups/rehnimarket, /var/log/rehnimarket y el repo)
 set -Eeuo pipefail
 
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BACKUP_DIR="${BACKUP_DIR:-${PROJECT_DIR}/backups}"
+# Configuración del servidor (APP_DIR, rutas, URLs de salud); propiedad de root. En QA: OPS_ENV=/dev/null.
+OPS_ENV="${OPS_ENV:-/etc/rehnimarket/ops.env}"
+# shellcheck source=/dev/null
+[ -r "${OPS_ENV}" ] && . "${OPS_ENV}"
+
+APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/rehnimarket}"
+LOG_DIR="${LOG_DIR:-/var/log/rehnimarket}"
+LOCK_FILE="${LOCK_FILE:-${LOG_DIR}/operacion.lock}"
 PG_CONTAINER="${PG_CONTAINER:-rehni-postgres}"
 MINIO_CONTAINER="${MINIO_CONTAINER:-rehni-minio}"
+BACKEND_SERVICE="${BACKEND_SERVICE:-backend}"
 BUCKET="${BUCKET:-uploads}"
-KEEP_DAILY="${KEEP_DAILY:-7}"
+RUN_ID="${GITHUB_RUN_ID:-manual}"
 STOP_BACKEND=1
-[ "${1:-}" = "--no-stop" ] && STOP_BACKEND=0
 
-TS="$(date -u +%Y-%m-%d_%H-%M)"
-LOG="${BACKUP_DIR}/backup.log"
-PG_OUT="${BACKUP_DIR}/postgres/rehni_market_postgres_${TS}.dump"
-MN_DIR="${BACKUP_DIR}/minio/rehni_market_minio_${TS}"
-MN_TAR="${MN_DIR}.tar.gz"
+for arg in "$@"; do
+  case "${arg}" in
+    --no-stop) STOP_BACKEND=0 ;;
+    *) echo "Opción desconocida: ${arg}" >&2; exit 2 ;;
+  esac
+done
 
-mkdir -p "${BACKUP_DIR}/postgres" "${BACKUP_DIR}/minio"
-chmod 700 "${BACKUP_DIR}" || true
+command -v jq >/dev/null || { echo "ERROR: falta jq (apt install jq)" >&2; exit 1; }
+install -d -m 700 "${BACKUP_DIR}"
+install -d -m 750 "${LOG_DIR}"
+LOG="${LOG_DIR}/backup.log"
 
-log() { echo "[$(date -u '+%Y-%m-%d %H:%M:%S UTC')] $*" | tee -a "${LOG}"; }
-fail() { log "ERROR: $*"; exit 1; }
-trap 'fail "abortado en la línea ${LINENO}"' ERR
-
-cd "${PROJECT_DIR}"
-
-docker inspect "${PG_CONTAINER}"    >/dev/null 2>&1 || fail "contenedor ${PG_CONTAINER} no existe (¿docker compose up -d?)"
-docker inspect "${MINIO_CONTAINER}" >/dev/null 2>&1 || fail "contenedor ${MINIO_CONTAINER} no existe"
-docker exec "${PG_CONTAINER}" pg_isready -U "$(docker exec "${PG_CONTAINER}" printenv POSTGRES_USER)" >/dev/null 2>&1 \
-  || fail "PostgreSQL no acepta conexiones"
-
-log "=== INICIO backup ${TS} ==="
-
-if [ "${STOP_BACKEND}" -eq 1 ]; then
-  log "deteniendo backend para consistencia..."
-  docker compose stop backend >/dev/null 2>&1 || log "aviso: no se pudo detener backend (¿no está gestionado por compose?)"
+# Un solo respaldo, restore o despliegue a la vez. El despliegue ya tiene el candado y llama a este script con
+# REHNI_LOCK_HELD=1 para no bloquearse a sí mismo.
+if [ "${REHNI_LOCK_HELD:-0}" != "1" ]; then
+  exec 9>"${LOCK_FILE}"
+  flock -n 9 || { echo "ERROR: hay otra operación (respaldo, restore o despliegue) en curso" | tee -a "${LOG}" >&2; exit 75; }
 fi
 
-log "pg_dump -> ${PG_OUT}"
+COMMIT_SHA="$(git -C "${APP_DIR}" rev-parse HEAD)"
+GIT_TAG="$(git -C "${APP_DIR}" describe --tags --exact-match HEAD 2>/dev/null || true)"
+GIT_DESCRIBE="$(git -C "${APP_DIR}" describe --tags --always HEAD 2>/dev/null || echo "${COMMIT_SHA:0:12}")"
+CLEAN_TREE=true
+[ -z "$(git -C "${APP_DIR}" status --porcelain --untracked-files=no)" ] || CLEAN_TREE=false
+
+STARTED_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+BACKUP_ID="$(date -u +%Y%m%dT%H%M%SZ)_${COMMIT_SHA:0:12}"
+DEST="${BACKUP_DIR}/${BACKUP_ID}"
+[ -e "${DEST}" ] && { echo "ERROR: ya existe ${DEST}" >&2; exit 1; }
+install -d -m 700 "${DEST}"
+
+log() { echo "[$(date -u '+%Y-%m-%d %H:%M:%S UTC')] [${BACKUP_ID}] $*" | tee -a "${LOG}" "${DEST}/backup.log"; }
+
+audit() {
+  jq -cn --arg op backup --arg id "${BACKUP_ID}" --arg resultado "$1" --arg detalle "$2" \
+    --arg sha "${COMMIT_SHA}" --arg tag "${GIT_TAG}" --arg run "${RUN_ID}" \
+    '{fecha_utc: (now | todate), operacion: $op, backup_id: $id, resultado: $resultado, detalle: $detalle,
+      commit_sha: $sha, git_tag: $tag, github_run_id: $run}' >> "${LOG_DIR}/auditoria.jsonl"
+}
+
+BACKEND_STOPPED=0
+resume_backend() {
+  if [ "${BACKEND_STOPPED}" -eq 1 ]; then
+    docker compose --project-directory "${APP_DIR}" start "${BACKEND_SERVICE}" >/dev/null 2>&1 || true
+    BACKEND_STOPPED=0
+    log "backend reanudado"
+  fi
+}
+
+write_manifest() {
+  local estado="$1" detalle="$2"
+  jq -n \
+    --arg id "${BACKUP_ID}" --arg inicio "${STARTED_UTC}" --arg fin "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+    --arg tag "${GIT_TAG}" --arg describe "${GIT_DESCRIBE}" --arg sha "${COMMIT_SHA}" \
+    --argjson limpio "${CLEAN_TREE}" --arg alembic "${ALEMBIC_REVISION:-}" --arg run "${RUN_ID}" \
+    --arg host "$(hostname)" --arg bucket "${BUCKET}" \
+    --argjson pg_bytes "${PG_BYTES:-0}" --argjson pg_tablas "${TABLES_IN_DUMP:-0}" \
+    --argjson mn_bytes "${MN_BYTES:-0}" --argjson mn_objetos "${OBJ_COUNT:-0}" \
+    --arg estado "${estado}" --arg detalle "${detalle}" \
+    '{formato: 1, id: $id, fecha_inicio_utc: $inicio, fecha_fin_utc: $fin,
+      version: {git_tag: $tag, git_describe: $describe, commit_sha: $sha, arbol_limpio: $limpio,
+                alembic_revision: $alembic},
+      github_run_id: $run, host: $host,
+      postgres: {archivo: "postgres.dump", bytes: $pg_bytes, tablas_con_datos: $pg_tablas},
+      minio: {archivo: "minio.tar.gz", bucket: $bucket, bytes: $mn_bytes, objetos: $mn_objetos},
+      checksums: "SHA256SUMS", estado: $estado, detalle: $detalle}' > "${DEST}/manifest.json"
+  sha256sum "${DEST}/manifest.json" | sed "s#${DEST}/##" > "${DEST}/manifest.json.sha256"
+}
+
+fail() {
+  trap - ERR
+  resume_backend
+  log "ERROR: $*"
+  write_manifest "fallido" "$*"
+  audit "fallido" "$*"
+  echo "BACKUP_FALLIDO=${BACKUP_ID}"
+  exit 1
+}
+trap 'fail "abortado en la línea ${LINENO}"' ERR
+
+docker inspect "${PG_CONTAINER}"    >/dev/null 2>&1 || fail "contenedor ${PG_CONTAINER} no existe"
+docker inspect "${MINIO_CONTAINER}" >/dev/null 2>&1 || fail "contenedor ${MINIO_CONTAINER} no existe"
+docker exec "${PG_CONTAINER}" sh -c 'pg_isready -U "$POSTGRES_USER"' >/dev/null 2>&1 || fail "PostgreSQL no acepta conexiones"
+
+log "=== INICIO respaldo · commit ${COMMIT_SHA} · tag ${GIT_TAG:-sin tag} · run ${RUN_ID} ==="
+[ "${CLEAN_TREE}" = true ] || log "aviso: el árbol de ${APP_DIR} tiene cambios sin commit; el SHA no describe todo el código"
+
+ALEMBIC_REVISION="$(docker exec "${PG_CONTAINER}" sh -c \
+  'PGPASSWORD="$POSTGRES_PASSWORD" psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT string_agg(version_num, chr(44)) FROM alembic_version"' \
+  2>/dev/null | tr -d '[:space:]' || true)"
+log "revisión de Alembic en la base: ${ALEMBIC_REVISION:-desconocida}"
+
+if [ "${STOP_BACKEND}" -eq 1 ]; then
+  log "deteniendo backend para un respaldo consistente"
+  docker compose --project-directory "${APP_DIR}" stop "${BACKEND_SERVICE}" >/dev/null 2>&1 && BACKEND_STOPPED=1 \
+    || log "aviso: no se pudo detener el backend (¿no lo gestiona compose?)"
+fi
+
+log "pg_dump -> postgres.dump"
 docker exec "${PG_CONTAINER}" sh -c \
-  'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -F c -Z 6' > "${PG_OUT}"
-[ -s "${PG_OUT}" ] || fail "el dump de PostgreSQL quedó vacío"
+  'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -F c -Z 6' > "${DEST}/postgres.dump"
+[ -s "${DEST}/postgres.dump" ] || fail "el dump de PostgreSQL quedó vacío"
 
-log "validando dump con pg_restore -l ..."
-docker exec -i "${PG_CONTAINER}" pg_restore -l < "${PG_OUT}" > "${PG_OUT}.toc.txt" \
-  || fail "pg_restore -l falló: el dump no es válido"
-TABLES_IN_DUMP="$(grep -c 'TABLE DATA' "${PG_OUT}.toc.txt" || true)"
-log "dump válido — ${TABLES_IN_DUMP} tablas con datos en el TOC"
-
-sha256sum "${PG_OUT}" | tee "${PG_OUT}.sha256" >> "${LOG}"
-
-log "mc mirror del bucket ${BUCKET} -> ${MN_DIR}"
+log "mc mirror del bucket ${BUCKET}"
 docker exec "${MINIO_CONTAINER}" sh -c '
   mc alias set local http://localhost:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null &&
   rm -rf /tmp/uploads_bk && mkdir -p /tmp/uploads_bk &&
   mc mirror --quiet --overwrite "local/'"${BUCKET}"'" /tmp/uploads_bk
-'
-mkdir -p "${MN_DIR}"
-docker cp "${MINIO_CONTAINER}:/tmp/uploads_bk/." "${MN_DIR}" >/dev/null
+' || fail "mc mirror falló"
+STAGE="$(mktemp -d)"
+docker cp "${MINIO_CONTAINER}:/tmp/uploads_bk/." "${STAGE}" >/dev/null
 docker exec "${MINIO_CONTAINER}" rm -rf /tmp/uploads_bk
-OBJ_COUNT="$(find "${MN_DIR}" -type f | wc -l)"
-log "objetos respaldados: ${OBJ_COUNT}"
+OBJ_COUNT="$(find "${STAGE}" -type f | wc -l)"
+# mktemp crea el directorio con 700 y tar guarda ese modo en «.»: MinIO (usuario sin privilegios) no podría
+# leer los objetos al restaurar.
+chmod -R u=rwX,go=rX "${STAGE}"
+tar -C "${STAGE}" -czf "${DEST}/minio.tar.gz" .
+rm -rf "${STAGE}"
 
-tar -C "${MN_DIR}" -czf "${MN_TAR}" .
-sha256sum "${MN_TAR}" | tee "${MN_TAR}.sha256" >> "${LOG}"
+resume_backend
 
-if [ "${STOP_BACKEND}" -eq 1 ]; then
-  docker compose start backend >/dev/null 2>&1 || true
-  log "backend reanudado"
-fi
+log "verificando el respaldo"
+docker exec -i "${PG_CONTAINER}" pg_restore -l < "${DEST}/postgres.dump" > "${DEST}/postgres.toc.txt" \
+  || fail "pg_restore -l no puede leer el dump"
+TABLES_IN_DUMP="$(grep -c 'TABLE DATA' "${DEST}/postgres.toc.txt" || true)"
+[ "${TABLES_IN_DUMP}" -ge 1 ] || fail "el dump no contiene datos de tablas"
+TAR_OBJECTS="$(tar -tzf "${DEST}/minio.tar.gz" | grep -cv '/$' || true)"
+[ "${TAR_OBJECTS}" -eq "${OBJ_COUNT}" ] || fail "el tar de MinIO tiene ${TAR_OBJECTS} objetos y se copiaron ${OBJ_COUNT}"
 
-cat > "${BACKUP_DIR}/rehni_market_backup_${TS}.manifest.txt" <<EOF
-RehniMarket — Manifiesto de backup
-Identificador (TS): ${TS}
-Fecha UTC        : $(date -u '+%Y-%m-%d %H:%M:%S')
-PostgreSQL dump  : $(basename "${PG_OUT}")   ($(du -h "${PG_OUT}" | cut -f1))
-  tablas con datos: ${TABLES_IN_DUMP}
-MinIO tar        : $(basename "${MN_TAR}")   ($(du -h "${MN_TAR}" | cut -f1))
-  objetos        : ${OBJ_COUNT}
-SHA-256:
-$(cat "${PG_OUT}.sha256")
-$(cat "${MN_TAR}.sha256")
-EOF
-log "manifiesto: rehni_market_backup_${TS}.manifest.txt"
+(cd "${DEST}" && sha256sum postgres.dump postgres.toc.txt minio.tar.gz > SHA256SUMS)
+(cd "${DEST}" && sha256sum --quiet -c SHA256SUMS) || fail "SHA256SUMS no coincide recién escrito"
+PG_BYTES="$(stat -c %s "${DEST}/postgres.dump")"
+MN_BYTES="$(stat -c %s "${DEST}/minio.tar.gz")"
 
-log "rotación: conservar ${KEEP_DAILY} más recientes de cada tipo"
-ls -1t "${BACKUP_DIR}"/postgres/rehni_market_postgres_*.dump 2>/dev/null | tail -n +$((KEEP_DAILY+1)) | while read -r f; do
-  rm -f "$f" "$f".sha256 "$f".toc.txt; log "  borrado $(basename "$f")"
-done
-ls -1dt "${BACKUP_DIR}"/minio/rehni_market_minio_*/ 2>/dev/null | tail -n +$((KEEP_DAILY+1)) | while read -r d; do
-  rm -rf "$d" "${d%/}".tar.gz "${d%/}".tar.gz.sha256; log "  borrado $(basename "$d")"
-done
-
-log "=== FIN backup ${TS} — OK ==="
-echo
-echo "Backup completado. Artefactos en: ${BACKUP_DIR}"
-echo "  - ${PG_OUT}"
-echo "  - ${MN_TAR}"
-echo "Restaurar en el proyecto:      scripts/restore_rehnimarket.sh ${TS}"
-echo "Validar sin tocar el proyecto: scripts/restore_rehnimarket.sh ${TS} --verify-only"
+write_manifest "verificado" "pg_restore -l, ${TABLES_IN_DUMP} tablas con datos, ${OBJ_COUNT} objetos, SHA256SUMS OK"
+chmod 600 "${DEST}"/*
+audit "verificado" "${TABLES_IN_DUMP} tablas, ${OBJ_COUNT} objetos"
+log "=== FIN respaldo — VERIFICADO (${TABLES_IN_DUMP} tablas, ${OBJ_COUNT} objetos) ==="
+echo "BACKUP_ID=${BACKUP_ID}"

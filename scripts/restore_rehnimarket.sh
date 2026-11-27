@@ -1,44 +1,138 @@
 #!/usr/bin/env bash
+# Restore de RehniMarket desde un respaldo de backup_rehnimarket.sh, elegido por su ID (o por la marca de tiempo de
+# los respaldos antiguos). Valida manifest.json y SHA256SUMS antes de tocar nada. Modos:
+#   --list | --find=<tag|sha>  consulta los respaldos           --dry-run      solo valida, sin restaurar
+#   --verify-only              restaura en contenedores desechables (QA aislado) y comprueba el resultado
+#   (sin modo)                 restore real: exige --confirm=<ID>, la misma versión de código que el respaldo
+#                              (o --allow-version-mismatch) y hace antes un respaldo preventivo del estado actual.
 set -Eeuo pipefail
 
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BACKUP_DIR="${BACKUP_DIR:-${PROJECT_DIR}/backups}"
+# Configuración del servidor (APP_DIR, rutas, URLs de salud); propiedad de root. En QA: OPS_ENV=/dev/null.
+OPS_ENV="${OPS_ENV:-/etc/rehnimarket/ops.env}"
+# shellcheck source=/dev/null
+[ -r "${OPS_ENV}" ] && . "${OPS_ENV}"
+
+PROJECT_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+BACKUP_DIR="${BACKUP_DIR:-/var/backups/rehnimarket}"
+LOG_DIR="${LOG_DIR:-/var/log/rehnimarket}"
+LOCK_FILE="${LOCK_FILE:-${LOG_DIR}/operacion.lock}"
 PG_CONTAINER="${PG_CONTAINER:-rehni-postgres}"
 MINIO_CONTAINER="${MINIO_CONTAINER:-rehni-minio}"
 BACKEND_CONTAINER="${BACKEND_CONTAINER:-rehni-backend}"
 BUCKET="${BUCKET:-uploads}"
+RUN_ID="${GITHUB_RUN_ID:-manual}"
 
 TS=""
 MODE="real"
 MINIO_PURGE=0
+CONFIRM=""
+ALLOW_VERSION_MISMATCH=0
+FIND=""
 for arg in "$@"; do
   case "${arg}" in
     --verify-only|--isolated) MODE="verify" ;;
+    --dry-run) MODE="dry-run" ;;
+    --list) MODE="list" ;;
+    --find=*) MODE="list"; FIND="${arg#--find=}" ;;
     --minio-purge) MINIO_PURGE=1 ;;
+    --confirm=*) CONFIRM="${arg#--confirm=}" ;;
+    --allow-version-mismatch) ALLOW_VERSION_MISMATCH=1 ;;
     --*) echo "Opcion desconocida: ${arg}" >&2; exit 2 ;;
     *) TS="${arg}" ;;
   esac
 done
 
+log() { echo "[$(date -u '+%Y-%m-%d %H:%M:%S UTC')] $*"; }
+line() { printf -- '------------------------------------------------------------\n'; }
+
+if [ "${MODE}" = "list" ]; then
+  command -v jq >/dev/null || { echo "ERROR: falta jq" >&2; exit 1; }
+  printf '%-32s %-21s %-14s %-12s %s\n' "BACKUP_ID" "FECHA_UTC" "TAG" "ESTADO" "COMMIT_SHA"
+  # El ID es el nombre del directorio: un manifiesto copiado o editado no puede hacerse pasar por otro respaldo.
+  for manifest in "${BACKUP_DIR}"/*/manifest.json; do
+    [ -f "${manifest}" ] || continue
+    dir="$(dirname "${manifest}")"; id="$(basename "${dir}")"
+    integro=1
+    (cd "${dir}" && sha256sum --quiet -c manifest.json.sha256 >/dev/null 2>&1) || integro=0
+    jq -r --arg id "${id}" --argjson integro "${integro}" \
+      '[$id, .fecha_inicio_utc, (.version.git_tag | if . == "" then "-" else . end),
+        (if $integro == 0 or .id != $id then "alterado" else .estado end), .version.commit_sha] | @tsv' "${manifest}"
+  done | sort | awk -F'\t' -v q="${FIND}" '
+    q == "" || $3 == q || index($5, q) == 1 { n++; printf "%-32s %-21s %-14s %-12s %s\n", $1, $2, $3, $4, $5 }
+    END { exit (q != "" && n == 0) }' || { echo "Sin respaldos para «${FIND}»" >&2; exit 1; }
+  exit 0
+fi
+
 if [ -z "${TS}" ]; then
-  echo "Uso: $0 <TS> [--verify-only] [--minio-purge]" >&2
-  echo "  <TS> como en backups/, p.ej. 2026-08-31_22-14" >&2
-  echo "  --verify-only : restaura en contenedores desechables y valida, sin tocar el proyecto" >&2
-  echo "  --minio-purge : ademas elimina de MinIO los objetos que no esten en el backup" >&2
+  echo "Uso: $0 <BACKUP_ID|TS> [--dry-run|--verify-only] [--confirm=<BACKUP_ID>] [--minio-purge] [--allow-version-mismatch]" >&2
+  echo "     $0 --list | --find=<tag|sha>" >&2
   exit 2
 fi
 
-PG_DUMP="${BACKUP_DIR}/postgres/rehni_market_postgres_${TS}.dump"
-MN_TAR="${BACKUP_DIR}/minio/rehni_market_minio_${TS}.tar.gz"
+case "${TS}" in
+  *[!A-Za-z0-9_-]*) echo "ERROR: identificador de respaldo no válido: ${TS}" >&2; exit 2 ;;
+esac
+
+audit() {
+  command -v jq >/dev/null || return 0
+  mkdir -p "${LOG_DIR}" 2>/dev/null || return 0
+  jq -cn --arg modo "${MODE}" --arg id "${TS}" --arg resultado "$1" --arg detalle "$2" --arg run "${RUN_ID}" \
+    --arg quien "${SUDO_USER:-$(id -un)}" \
+    '{fecha_utc: (now | todate), operacion: "restore", modo: $modo, backup_id: $id, resultado: $resultado,
+      detalle: $detalle, github_run_id: $run, usuario: $quien}' >> "${LOG_DIR}/auditoria.jsonl" 2>/dev/null || true
+}
+
+MANIFEST=""
+if [ -f "${BACKUP_DIR}/${TS}/manifest.json" ]; then
+  # Respaldo versionado: manifiesto íntegro, verificado al crearse y con todos los checksums correctos.
+  command -v jq >/dev/null || { echo "ERROR: falta jq" >&2; exit 1; }
+  MANIFEST="${BACKUP_DIR}/${TS}/manifest.json"
+  (cd "${BACKUP_DIR}/${TS}" && sha256sum --quiet -c manifest.json.sha256) \
+    || { audit "rechazado" "manifest.json alterado"; echo "ERROR: manifest.json no coincide con su checksum" >&2; exit 1; }
+  [ "$(jq -r .id "${MANIFEST}")" = "${TS}" ] \
+    || { audit "rechazado" "manifiesto de otro respaldo"; echo "ERROR: el manifiesto de ${TS} pertenece a otro respaldo" >&2; exit 1; }
+  [ "$(jq -r .estado "${MANIFEST}")" = "verificado" ] \
+    || { audit "rechazado" "respaldo no verificado"; echo "ERROR: el respaldo ${TS} no está verificado ($(jq -r .estado "${MANIFEST}"))" >&2; exit 1; }
+  (cd "${BACKUP_DIR}/${TS}" && sha256sum --quiet -c SHA256SUMS) \
+    || { audit "rechazado" "SHA256SUMS no coincide"; echo "ERROR: los archivos del respaldo ${TS} no coinciden con SHA256SUMS" >&2; exit 1; }
+  PG_DUMP="${BACKUP_DIR}/${TS}/postgres.dump"
+  MN_TAR="${BACKUP_DIR}/${TS}/minio.tar.gz"
+  log "manifiesto OK: commit $(jq -r .version.commit_sha "${MANIFEST}") · tag $(jq -r '.version.git_tag // ""' "${MANIFEST}") · alembic $(jq -r .version.alembic_revision "${MANIFEST}")"
+else
+  PG_DUMP="${BACKUP_DIR}/postgres/rehni_market_postgres_${TS}.dump"
+  MN_TAR="${BACKUP_DIR}/minio/rehni_market_minio_${TS}.tar.gz"
+fi
 
 [ -f "${PG_DUMP}" ] || { echo "ERROR: no existe ${PG_DUMP}" >&2; exit 1; }
 [ -f "${MN_TAR}" ]  || { echo "ERROR: no existe ${MN_TAR}" >&2; exit 1; }
 
+if [ "${MODE}" = "real" ]; then
+  if [ "${CONFIRM}" != "${TS}" ]; then
+    audit "rechazado" "sin --confirm igual al ID"
+    echo "ERROR: el restore real exige --confirm=${TS} (autorización explícita del respaldo exacto)" >&2
+    exit 1
+  fi
+  if [ -n "${MANIFEST}" ]; then
+    CURRENT_SHA="$(git -C "${PROJECT_DIR}" rev-parse HEAD 2>/dev/null || echo desconocido)"
+    BACKUP_SHA="$(jq -r .version.commit_sha "${MANIFEST}")"
+    if [ "${CURRENT_SHA}" != "${BACKUP_SHA}" ] && [ "${ALLOW_VERSION_MISMATCH}" -ne 1 ]; then
+      audit "rechazado" "versión de código ${CURRENT_SHA} distinta de la del respaldo ${BACKUP_SHA}"
+      echo "ERROR: el código desplegado (${CURRENT_SHA}) no es el del respaldo (${BACKUP_SHA})." >&2
+      echo "       Despliega antes ese commit o usa --allow-version-mismatch si la migración es compatible." >&2
+      exit 1
+    fi
+  fi
+fi
+
+if [ "${MODE}" != "verify" ] && [ "${REHNI_LOCK_HELD:-0}" != "1" ]; then
+  mkdir -p "${LOG_DIR}"
+  exec 9>"${LOCK_FILE}"
+  flock -n 9 || { audit "rechazado" "operación concurrente"; echo "ERROR: hay otra operación en curso" >&2; exit 75; }
+  export REHNI_LOCK_HELD=1
+fi
+
 WORKDIR="$(mktemp -d)"
 cleanup_workdir() { rm -rf "${WORKDIR}"; }
-
-log() { echo "[$(date -u '+%Y-%m-%d %H:%M:%S UTC')] $*"; }
-line() { printf -- '------------------------------------------------------------\n'; }
 
 verify_sha256() {
   local file="$1" sidecar="$1.sha256"
@@ -128,8 +222,10 @@ line
 log "RESTORE RehniMarket  |  backup ${TS}  |  modo: ${MODE}"
 line
 
-verify_sha256 "${PG_DUMP}" || { cleanup_workdir; exit 1; }
-verify_sha256 "${MN_TAR}"   || { cleanup_workdir; exit 1; }
+if [ -z "${MANIFEST}" ]; then
+  verify_sha256 "${PG_DUMP}" || { cleanup_workdir; exit 1; }
+  verify_sha256 "${MN_TAR}"   || { cleanup_workdir; exit 1; }
+fi
 
 TABLE_DATA_IN_DUMP="$(docker exec -i "${PG_CONTAINER}" pg_restore -l < "${PG_DUMP}" 2>/dev/null | grep -c 'TABLE DATA' || true)"
 [ "${TABLE_DATA_IN_DUMP}" -ge 1 ] || { echo "ERROR: el dump no contiene datos de tablas (pg_restore -l)" >&2; cleanup_workdir; exit 1; }
@@ -137,8 +233,30 @@ log "dump valido: ${TABLE_DATA_IN_DUMP} tablas con datos"
 
 mkdir -p "${WORKDIR}/objects"
 tar -C "${WORKDIR}/objects" -xzf "${MN_TAR}"
+# MinIO corre sin privilegios: los objetos copiados al contenedor deben ser legibles por cualquiera.
+chmod -R u=rwX,go=rX "${WORKDIR}/objects"
 OBJ_IN_BACKUP="$(find "${WORKDIR}/objects" -type f | wc -l)"
 log "objetos en el backup de MinIO: ${OBJ_IN_BACKUP}"
+
+if [ "${MODE}" = "dry-run" ]; then
+  line
+  log "DRY-RUN: respaldo ${TS} legible y con checksums correctos; no se restauró nada."
+  audit "validado" "dry-run: ${TABLE_DATA_IN_DUMP} tablas, ${OBJ_IN_BACKUP} objetos"
+  cleanup_workdir
+  exit 0
+fi
+
+if [ "${MODE}" = "real" ]; then
+  log "respaldo preventivo del estado actual antes de restaurar"
+  if ! PREVENTIVE="$(bash "$(dirname "${BASH_SOURCE[0]}")/backup_rehnimarket.sh" | tail -n 1)" \
+     || [ "${PREVENTIVE#BACKUP_ID=}" = "${PREVENTIVE}" ]; then
+    audit "cancelado" "falló el respaldo preventivo"
+    echo "ERROR: el respaldo preventivo falló; restore cancelado sin cambios" >&2
+    cleanup_workdir
+    exit 1
+  fi
+  log "respaldo preventivo: ${PREVENTIVE#BACKUP_ID=}"
+fi
 
 PG_RESULT="NO EJECUTADO"
 MINIO_RESULT="NO EJECUTADO"
@@ -303,10 +421,12 @@ line
 case "${PG_RESULT}::${MINIO_RESULT}" in
   RESTAURADO*::RESTAURADO*|VERIFICADO*::VERIFICADO*)
     log "OK: restore completo."
+    audit "ok" "PostgreSQL: ${PG_RESULT} | MinIO: ${MINIO_RESULT}"
     exit 0
     ;;
   *)
     echo "ERROR: el restore NO se completo correctamente en todos los componentes." >&2
+    audit "fallido" "PostgreSQL: ${PG_RESULT} | MinIO: ${MINIO_RESULT}"
     exit 1
     ;;
 esac

@@ -178,40 +178,42 @@ Desde otro equipo, `nc -zv <ip-de-la-vm> 5433` y `nc -zv <ip-de-la-vm> 9001` deb
 
 ## 9. Actualizar
 
-```bash
-bash scripts/respaldar.sh                       # siempre antes de actualizar
-git pull
-docker compose up -d --build --wait
-```
+Camino normal: merge `develop → main` con el CI en verde. El workflow «Deploy producción» respalda la versión
+desplegada, verifica el respaldo, publica el commit de `main` por SSH y comprueba la salud
+([docs/devops/README.md](../docs/devops/README.md)). Está bloqueado hasta que el propietario lo active.
 
-Con versiones etiquetadas (`v*.*.*`), fijar la versión en lugar de seguir `main`:
+A mano en el servidor (mismas comprobaciones, como `rehniops`):
 
 ```bash
-git fetch --tags && git checkout v1.2.0
-docker compose up -d --build --wait
+ID="$(/usr/local/lib/rehnimarket/backup_rehnimarket.sh | sed -n 's/^BACKUP_ID=//p')"
+/usr/local/lib/rehnimarket/deploy_rehnimarket.sh "$(git -C /opt/rehnimarket rev-parse origin/main)" "${ID}" manual
 ```
 
 Revisar antes si la versión trae migraciones no compatibles hacia atrás (plan §5.2, «Clasificación de migraciones»).
 
 ## 10. Rollback
 
+Si los health checks fallan y la versión nueva no trae migraciones, `deploy_rehnimarket.sh` vuelve solo al código
+anterior. Si trae migraciones, no hay rollback automático: el código anterior no conoce el esquema nuevo y hay que
+decidir un restore (sección 11). Volver a una versión anterior a mano usa el mismo ejecutor, que lo rechaza si hay
+migraciones de por medio:
+
 ```bash
-git checkout <etiqueta-anterior>
-docker compose up -d --build --wait
+/usr/local/lib/rehnimarket/deploy_rehnimarket.sh <sha-anterior> <backup_id-de-lo-desplegado> manual
 ```
 
-Si la versión nueva aplicó una migración **no** compatible hacia atrás, el código anterior no basta:
-restaurar el respaldo previo (sección 11). No se usa `alembic downgrade`.
+No se usa `alembic downgrade`. Los datos nunca se restauran automáticamente por un despliegue fallido.
 
 ## 11. Respaldo y restauración
 
 | Qué | Cómo |
 |---|---|
-| Respaldar | `bash scripts/respaldar.sh`: volcado de PostgreSQL y copia de MinIO, cada uno con su `.sha256` |
-| Dónde quedan | `backups/postgres/` y `backups/minio/` del proyecto (fuera de Git) |
-| Cada cuánto | Diario (RPO 24 h); se conservan los 7 más recientes (`KEEP_DAILY=7`) |
-| Probar sin tocar producción | `bash scripts/restore_rehnimarket.sh <TS> --verify-only` |
-| Restaurar | `bash scripts/restore_rehnimarket.sh <TS>` |
+| Respaldar | `scripts/backup_rehnimarket.sh` (o `scripts/respaldar.sh`): PostgreSQL, MinIO, `manifest.json` con tag y SHA de lo desplegado, `SHA256SUMS` |
+| Dónde quedan | `/var/backups/rehnimarket/<AAAAMMDDTHHMMSSZ>_<sha12>/`; logs en `/var/log/rehnimarket/` |
+| Retención | No se borra ningún respaldo automáticamente; vigilar el disco y limpiar a mano |
+| Buscar | `restore_rehnimarket.sh --list` o `--find=<tag|sha>` |
+| Probar sin tocar producción | `restore_rehnimarket.sh <ID> --dry-run` (integridad) o `--verify-only` (restaura en contenedores desechables) |
+| Restaurar | `restore_rehnimarket.sh <ID> --confirm=<ID>`: hace antes un respaldo preventivo |
 
 Copias fuera del servidor y cifrado: plan de implantación §3.3.
 

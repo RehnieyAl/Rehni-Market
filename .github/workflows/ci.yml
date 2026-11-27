@@ -1,7 +1,9 @@
 name: CI
 
-# Pruebas automáticas en cada push y PR (T7-9 · bc-testing-adso S9).
-# El análisis estático va aparte en sonarqube.yml.
+# Pruebas automáticas en cada push y PR (T7-9 · bc-testing-adso S9), incluidos los PR de Dependabot: corren
+# con el GITHUB_TOKEN de solo lectura y sin secretos (pull_request, nunca pull_request_target).
+# El análisis estático va aparte en sonarqube.yml. El despliegue (rehnimarket-deploy.yml) espera a que este
+# workflow termine bien sobre el commit final de main.
 on:
   push:
     branches: [main, develop]
@@ -139,6 +141,10 @@ jobs:
       - name: Pruebas con cobertura
         run: pnpm test:coverage
 
+      # El mismo build que hace el Dockerfile: un PR de dependencias que rompe Vite falla aquí y no en el deploy.
+      - name: Build de producción
+        run: pnpm build
+
       - name: Subir reporte de cobertura
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -191,3 +197,84 @@ jobs:
       - name: Frontend (pnpm audit --prod, altas y críticas)
         working-directory: RehniMarket-frontend
         run: pnpm audit --prod --audit-level=high ${{ steps.excepciones.outputs.pnpm }}
+
+  mobile:
+    # La app móvil también recibe PR de Dependabot: instalación reproducible, tipos y lint.
+    # Aún no tiene pruebas automáticas en main; cuando lleguen, se añade su paso aquí.
+    name: mobile
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: RehniMarket-mobile
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6
+        with:
+          version: 11.15.0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: RehniMarket-mobile/pnpm-lock.yaml
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (tsc --noEmit)
+        run: pnpm exec tsc --noEmit
+
+      - name: Lint (expo lint)
+        run: pnpm lint
+
+  dependencias:
+    # Revisa lo que cambia el PR en manifiestos y lockfiles: falla con vulnerabilidades altas o críticas nuevas
+    # y con licencias incompatibles. Solo en PR (compara la base con la cabeza). Requiere el Dependency Graph.
+    name: dependencias
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/dependency-review-action@bbc44d14a204704ccc493733616cd1e93a0321ec # v5.0.1
+        with:
+          fail-on-severity: high
+          deny-licenses: GPL-3.0, AGPL-3.0
+
+  rama-origen:
+    # A main solo se llega desde develop (flujo normal) o desde hotfix/* (procedimiento excepcional de
+    # docs/devops/dependabot-y-seguridad.md). Así un PR de seguridad de Dependabot, que GitHub abre contra main,
+    # no se fusiona sin pasar por develop. En PR hacia otras ramas el job pasa sin más.
+    name: rama-origen
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Validar la rama de origen
+        env:
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.head_ref }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          if [ "$BASE" != "main" ]; then
+            echo "PR hacia $BASE: sin restricción de origen."
+            exit 0
+          fi
+          if [ "$HEAD_REPO" != "$REPO" ]; then
+            echo "::error::Un PR hacia main debe salir de este repositorio, no de $HEAD_REPO."
+            exit 1
+          fi
+          case "$HEAD" in
+            develop|hotfix/*) echo "Origen permitido hacia main: $HEAD" ;;
+            *)
+              echo "::error::Hacia main solo se fusiona develop o hotfix/*; $HEAD debe ir primero a develop."
+              exit 1
+              ;;
+          esac

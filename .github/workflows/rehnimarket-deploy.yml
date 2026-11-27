@@ -1,0 +1,160 @@
+name: Deploy producción
+
+# Publica main en el servidor de Azure tras un merge develop → main (o hotfix/* → main, procedimiento excepcional)
+# con el CI en verde sobre el commit final: respaldo verificado de la versión desplegada, despliegue por SSH,
+# health checks y registro. Bloqueado hasta que el propietario cree la variable DEPLOY_ENABLED=true y los secretos
+# del environment «produccion» (docs/devops/README.md). Nunca corre por un PR: solo por el CI de un push a main.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Un solo despliegue o restore a la vez; los que lleguen esperan, no se cancelan a medias.
+concurrency:
+  group: rehnimarket-produccion
+  cancel-in-progress: false
+
+jobs:
+  verificar:
+    name: verificar
+    if: >-
+      vars.DEPLOY_ENABLED == 'true'
+      && github.repository == 'RehnieyAl/Rehni-Market'
+      && github.event.workflow_run.conclusion == 'success'
+      && github.event.workflow_run.event == 'push'
+      && github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+      checks: read
+    outputs:
+      sha: ${{ steps.origen.outputs.sha }}
+      pr: ${{ steps.origen.outputs.pr }}
+    steps:
+      - name: Merge autorizado y CI en verde sobre el commit final
+        id: origen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          pr="$(gh api "repos/${REPO}/commits/${SHA}/pulls" --jq \
+            "[.[] | select(.merged_at != null and .base.ref == \"main\" and .merge_commit_sha == \"${SHA}\"
+                    and .head.repo.full_name == \"${REPO}\"
+                    and (.head.ref == \"develop\" or (.head.ref | startswith(\"hotfix/\"))))][0].number // empty")"
+          if [ -z "${pr}" ]; then
+            echo "::error::${SHA} no es el merge de un PR develop → main (ni hotfix/*). No se despliega."
+            exit 1
+          fi
+          tip="$(gh api "repos/${REPO}/git/ref/heads/main" --jq .object.sha)"
+          if [ "${tip}" != "${SHA}" ]; then
+            echo "::error::main ya avanzó a ${tip}; ese commit se despliega en su propia ejecución."
+            exit 1
+          fi
+          for check in backend frontend auditoria mobile; do
+            ok="$(gh api "repos/${REPO}/commits/${SHA}/check-runs?check_name=${check}" \
+              --jq '[.check_runs[] | select(.conclusion == "success")] | length')"
+            if [ "${ok}" -lt 1 ]; then
+              echo "::error::El check ${check} no está en verde sobre ${SHA}."
+              exit 1
+            fi
+          done
+          echo "sha=${SHA}" >> "${GITHUB_OUTPUT}"
+          echo "pr=${pr}" >> "${GITHUB_OUTPUT}"
+          echo "Merge del PR #${pr} verificado: ${SHA}" >> "${GITHUB_STEP_SUMMARY}"
+
+  publicar:
+    name: publicar
+    needs: verificar
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # Aprobación del propietario y secretos solo de este environment (restringido a main).
+    environment: produccion
+    env:
+      SHA: ${{ needs.verificar.outputs.sha }}
+      RUN_ID: ${{ github.run_id }}
+      SSH_HOST: ${{ secrets.AZURE_SSH_HOST }}
+      SSH_PORT: ${{ secrets.AZURE_SSH_PORT }}
+    steps:
+      - name: Preparar SSH (llaves solo en el runner efímero)
+        env:
+          KNOWN_HOSTS: ${{ secrets.AZURE_SSH_KNOWN_HOSTS }}
+          DEPLOY_KEY: ${{ secrets.AZURE_DEPLOY_SSH_KEY }}
+          BACKUP_KEY: ${{ secrets.AZURE_BACKUP_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          for v in SSH_HOST KNOWN_HOSTS DEPLOY_KEY BACKUP_KEY; do
+            [ -n "${!v}" ] || { echo "::error::Falta el secreto de ${v} en el environment produccion."; exit 1; }
+          done
+          install -d -m 700 "${RUNNER_TEMP}/ssh"
+          printf '%s\n' "${KNOWN_HOSTS}" > "${RUNNER_TEMP}/ssh/known_hosts"
+          printf '%s\n' "${DEPLOY_KEY}" > "${RUNNER_TEMP}/ssh/deploy"
+          printf '%s\n' "${BACKUP_KEY}" > "${RUNNER_TEMP}/ssh/backup"
+          chmod 600 "${RUNNER_TEMP}"/ssh/*
+
+      - name: Respaldo de la versión desplegada
+        id: respaldo
+        run: |
+          set -euo pipefail
+          out="$(ssh -i "${RUNNER_TEMP}/ssh/backup" -p "${SSH_PORT:-22}" -o BatchMode=yes -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes -o UserKnownHostsFile="${RUNNER_TEMP}/ssh/known_hosts" \
+            "backup-restore@${SSH_HOST}" "backup ${RUN_ID}")"
+          echo "${out}" | tail -n 5
+          id="$(echo "${out}" | sed -n 's/^BACKUP_ID=//p' | tail -n 1)"
+          if [ -z "${id}" ]; then
+            echo "::error::El respaldo no terminó verificado: despliegue CANCELADO."
+            exit 1
+          fi
+          echo "id=${id}" >> "${GITHUB_OUTPUT}"
+
+      - name: Verificar integridad del respaldo
+        env:
+          BACKUP_ID: ${{ steps.respaldo.outputs.id }}
+        run: |
+          ssh -i "${RUNNER_TEMP}/ssh/backup" -p "${SSH_PORT:-22}" -o BatchMode=yes -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes -o UserKnownHostsFile="${RUNNER_TEMP}/ssh/known_hosts" \
+            "backup-restore@${SSH_HOST}" "verify-backup ${BACKUP_ID}"
+
+      - name: Desplegar
+        env:
+          BACKUP_ID: ${{ steps.respaldo.outputs.id }}
+        run: |
+          ssh -i "${RUNNER_TEMP}/ssh/deploy" -p "${SSH_PORT:-22}" -o BatchMode=yes -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes -o UserKnownHostsFile="${RUNNER_TEMP}/ssh/known_hosts" \
+            "deploy@${SSH_HOST}" "deploy ${SHA} ${BACKUP_ID} ${RUN_ID}"
+
+      - name: Health checks públicos
+        env:
+          URLS: ${{ vars.PUBLIC_HEALTH_URLS }}
+        run: |
+          set -euo pipefail
+          for url in ${URLS:-https://apirehnimarket.duckdns.org/health/database https://rehnimarket.duckdns.org}; do
+            curl -fsS --retry 10 --retry-delay 6 --retry-all-errors --max-time 15 -o /dev/null "${url}"
+            echo "OK ${url}"
+          done
+
+      - name: Registro
+        if: always()
+        env:
+          BACKUP_ID: ${{ steps.respaldo.outputs.id }}
+          PR: ${{ needs.verificar.outputs.pr }}
+          STATUS: ${{ job.status }}
+        run: |
+          {
+            echo "### Despliegue ${STATUS}"
+            echo "| Dato | Valor |"
+            echo "|---|---|"
+            echo "| Commit | \`${SHA}\` |"
+            echo "| PR | #${PR} |"
+            echo "| Respaldo previo | \`${BACKUP_ID:-no generado}\` |"
+            echo "| Run | ${RUN_ID} |"
+            echo "| Fecha UTC | $(date -u +%Y-%m-%dT%H:%M:%SZ) |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+          rm -rf "${RUNNER_TEMP}/ssh"
