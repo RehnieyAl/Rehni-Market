@@ -277,6 +277,101 @@ class TestVariantDiscounts:
         assert response.json()["discount_source"] == "product"
 
 
+def _discount(enable, value=0, discount_type=None, starts_at=None, ends_at=None):
+    """Bloque de descuento tal como lo envía el modal de variante: siempre completo, con null para borrar."""
+    return {
+        "discount_enable": enable,
+        "discount_value": value,
+        "discount_type": discount_type,
+        "discount_starts_at": starts_at,
+        "discount_ends_at": ends_at,
+    }
+
+
+class TestVariantDiscountUpdates:
+    def _patch(self, client, token, product_id, variant_id, payload):
+        return client.patch(
+            _url(product_id, f"/variants/{variant_id}"), json=payload, headers=auth(token)
+        )
+
+    def test_reenabling_without_dates_clears_an_expired_window(
+        self, client, tokens, product, axes
+    ):
+        created = _create(
+            client, tokens["company"], product.id,
+            [str(axes["negro"].id), str(axes["t40"].id)], price=200,
+            **_discount(True, 25, "percent", "2020-01-01T00:00:00", "2020-01-31T00:00:00"),
+        ).json()
+        assert created["effective_price"] == "200.00"
+
+        response = self._patch(
+            client, tokens["company"], product.id, created["id"], _discount(True, 25, "percent")
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["discount_starts_at"] is None
+        assert body["discount_ends_at"] is None
+        assert body["effective_price"] == "150.00"
+        assert body["discount_source"] == "variant"
+
+    def test_disabling_clears_type_and_window(self, client, tokens, product, axes):
+        created = _create(
+            client, tokens["company"], product.id,
+            [str(axes["negro"].id), str(axes["t40"].id)], price=200,
+            **_discount(True, 20, "fixed", "2020-01-01T00:00:00", "2099-01-01T00:00:00"),
+        ).json()
+
+        body = self._patch(
+            client, tokens["company"], product.id, created["id"], _discount(False)
+        ).json()
+
+        assert body["discount_enable"] is False
+        assert body["discount_type"] is None
+        assert body["discount_starts_at"] is None
+        assert body["discount_ends_at"] is None
+        assert body["effective_price"] == "200.00"
+        assert body["discount_source"] is None
+
+    def test_patch_without_discount_fields_keeps_the_discount(
+        self, client, tokens, product, axes
+    ):
+        created = _create(
+            client, tokens["company"], product.id,
+            [str(axes["negro"].id), str(axes["t40"].id)], price=200,
+            **_discount(True, 25, "percent", None, "2099-01-01T00:00:00"),
+        ).json()
+
+        body = self._patch(
+            client, tokens["company"], product.id, created["id"], {"stock": 9}
+        ).json()
+
+        assert body["stock"] == 9
+        assert body["discount_ends_at"].startswith("2099-01-01")
+        assert body["effective_price"] == "150.00"
+
+    def test_updating_one_variant_does_not_touch_another(self, client, tokens, product, axes):
+        first = _create(
+            client, tokens["company"], product.id,
+            [str(axes["negro"].id), str(axes["t40"].id)], price=200,
+            **_discount(True, 10, "percent"),
+        ).json()
+        second = _create(
+            client, tokens["company"], product.id,
+            [str(axes["blanco"].id), str(axes["t41"].id)], price=300,
+            **_discount(True, 50, "fixed"),
+        ).json()
+
+        self._patch(client, tokens["company"], product.id, first["id"], _discount(False))
+        detail = client.get(
+            _url(product.id, f"/variants/{second['id']}"), headers=auth(tokens["company"])
+        ).json()
+
+        assert detail["discount_enable"] is True
+        assert detail["discount_type"] == "fixed"
+        assert detail["effective_price"] == "250.00"
+
+
 class TestGenerate:
     def test_cartesian_product(self, client, tokens, product, axes):
         response = client.post(
