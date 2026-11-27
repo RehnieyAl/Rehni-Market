@@ -35,11 +35,11 @@ Debe mostrar `4|120|4`. Si da `0|0|0`, el backend no arrancó con la versión ac
 
 ## 3. Crear el owner
 
-En el servidor, la vía normal es `ssh -t rehni-prod sudo rehnimarket init owner`. Pide los datos y la clave sin
-mostrarla, usa el hash del backend y se niega si ya hay un owner
-([docs/devops/inicializacion-roles-owner.md](../docs/devops/inicializacion-roles-owner.md)). El procedimiento en SQL
-que sigue es la alternativa, y el único que convierte en owner una cuenta ya registrada. Antes deben existir los
-roles (`sudo rehnimarket init roles` o `deploy/sql/crear-roles.sql`).
+La vía normal es el menú `bash scripts/database/inicializar.sh`, opción 2: ejecuta este mismo SQL, pide la clave
+sin mostrarla, la pasa solo por la variable de entorno `OWNER_CLAVE` y se niega si ya hay un owner
+([docs/base-datos/inicializacion.md](../docs/base-datos/inicializacion.md)). El comando manual que sigue sirve para
+convertir en owner una cuenta ya registrada. Antes deben existir los roles (opción 1 del menú o
+`deploy/sql/crear-roles.sql`).
 
 La clave se escribe sin que se vea (`read -rsp`) y llega a `psql` por una variable de entorno,
 así que no queda en el historial de la terminal. Las demás variables tampoco son secretas, pero

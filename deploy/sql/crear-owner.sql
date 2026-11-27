@@ -1,6 +1,7 @@
--- Crea el único owner de RehniMarket directamente en PostgreSQL (guía: deploy/OWNER.md).
--- Variables de psql: correo, nombre, telefono y clave (obligatorias); convertir=true para dar el
--- rol owner a una cuenta ya registrada con ese correo. Nunca escribir datos reales en este archivo.
+-- Crea el único owner de RehniMarket directamente en PostgreSQL (guía: deploy/OWNER.md; menú:
+-- scripts/database/inicializar.sh). Variables de psql: correo, nombre, telefono y clave (obligatorias; la clave
+-- también puede llegar por la variable de entorno OWNER_CLAVE, así no aparece en los argumentos de psql);
+-- convertir=true da el rol owner a una cuenta ya registrada. Nunca escribir datos reales en este archivo.
 --
 --   docker compose exec -T -e OWNER_CLAVE postgres sh -c \
 --     'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v clave="$OWNER_CLAVE" \
@@ -31,7 +32,11 @@
 \endif
 \if :{?clave}
 \else
-    \warn 'Falta -v clave=... (pásala desde una variable de entorno; ver deploy/OWNER.md)'
+    \getenv clave OWNER_CLAVE
+\endif
+\if :{?clave}
+\else
+    \warn 'Falta la clave: -v clave=... o la variable de entorno OWNER_CLAVE (ver deploy/OWNER.md)'
     \quit 1
 \endif
 \if :{?convertir}
@@ -44,9 +49,9 @@ BEGIN;
 -- crypt() y gen_salt('bf') generan el mismo bcrypt ($2a$) que verifica passlib en el backend.
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- El backend valida el correo con EmailStr, que pasa el dominio a minúsculas, y lo busca exacto.
-SELECT split_part(btrim(:'correo'), '@', 1) || '@' || lower(split_part(btrim(:'correo'), '@', 2))
-       AS correo_normalizado
+-- El mismo criterio que normalize_email del backend: sin espacios y todo en minúsculas. Las búsquedas usan
+-- lower(email) porque cuentas creadas antes de normalizar pueden tener mayúsculas guardadas.
+SELECT lower(btrim(:'correo')) AS correo_normalizado
 \gset
 
 -- Los valores llegan al bloque de validación como ajustes locales de la transacción: un DO no ve
@@ -68,6 +73,9 @@ DECLARE
     v_convertir boolean := current_setting('rehni_owner.convertir')::boolean;
     v_existe    boolean;
 BEGIN
+    -- Dos ejecuciones a la vez se ponen en fila: la segunda ve el owner de la primera y recibe el mensaje claro
+    -- en lugar del unique_violation del índice uq_users_single_owner, que sigue siendo la garantía final.
+    PERFORM pg_advisory_xact_lock(5301121);
     IF NOT EXISTS (SELECT 1 FROM roles WHERE name = 'owner') THEN
         RAISE EXCEPTION 'No existe el rol owner: crea los roles con deploy/sql/crear-roles.sql (o scripts/datos-base.sh) y vuelve a intentarlo.';
     END IF;
@@ -93,7 +101,7 @@ BEGIN
         RAISE EXCEPTION 'La clave debe tener al menos una mayúscula, una minúscula y un número.';
     END IF;
 
-    v_existe := EXISTS (SELECT 1 FROM users WHERE email = v_correo);
+    v_existe := EXISTS (SELECT 1 FROM users WHERE lower(email) = v_correo);
     IF v_existe AND NOT v_convertir THEN
         RAISE EXCEPTION 'El correo ya está registrado. Para convertir esa cuenta en owner, agrega -v convertir=true.';
     END IF;
@@ -109,7 +117,7 @@ UPDATE users
        hashed_password = crypt(:'clave', gen_salt('bf', 12)),
        verified = true,
        "isActive" = true
- WHERE email = :'correo_normalizado';
+ WHERE lower(email) = :'correo_normalizado';
 \else
 INSERT INTO users (id, "fullName", email, hashed_password, tell, verified, "isActive", created_at, role_id)
 SELECT gen_random_uuid(),

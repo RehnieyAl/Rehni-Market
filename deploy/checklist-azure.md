@@ -2,8 +2,8 @@
 
 Resumen operativo de [`docs/implantacion/entregable-s04-procedimiento-despliegue.md`](../docs/implantacion/entregable-s04-procedimiento-despliegue.md) §5.2 («Instalación inicial») y del manual técnico
 §6.8, con DuckDNS como DNS. Producción **sin datos de demo** (`RUN_SEED=false`): el backend no siembra nada al arrancar; los datos base y el
-owner se crean a mano con `sudo rehnimarket init roles | base | owner`
-([`docs/devops/inicializacion-roles-owner.md`](../docs/devops/inicializacion-roles-owner.md)).
+owner se crean a mano con el menú `scripts/database/inicializar.sh`
+([`docs/base-datos/inicializacion.md`](../docs/base-datos/inicializacion.md)).
 
 Nombres de producción: `rehnimarket.duckdns.org` (frontend) y `apirehnimarket.duckdns.org` (API).
 `<correo-owner>` es el correo del responsable. No dejar ningún `[PENDIENTE]` sin llenar en el acta.
@@ -78,8 +78,8 @@ Toda la configuración es **un solo `.env`** en la raíz. Su plantilla de produc
 
 ## 6. Datos base y owner, sin datos de demo (§5.2, paso 8.1)
 
-- [ ] Datos base: `sudo rehnimarket init roles` y luego `sudo rehnimarket init base`; comprobar con `docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT (SELECT count(*) FROM roles), (SELECT count(*) FROM catalog), (SELECT count(*) FROM shipping_carriers);"'` → `4|120|4`.
-- [ ] Crear el owner: `ssh -t rehni-prod sudo rehnimarket init owner` → `owner creado: <correo>` (alternativa en SQL: [`OWNER.md`](OWNER.md) §3).
+- [ ] Datos base: menú `bash scripts/database/inicializar.sh`, opción 1, y luego `bash scripts/datos-base.sh`; comprobar con `docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT (SELECT count(*) FROM roles), (SELECT count(*) FROM catalog), (SELECT count(*) FROM shipping_carriers);"'` → `4|120|4`.
+- [ ] Crear el owner: `ssh -t rehni-prod bash /opt/rehnimarket/scripts/database/inicializar.sh`, opción 2 → `Owner creado, activo y verificado.`; opción 3 para comprobar.
 - [ ] Comprobar con la consulta de `OWNER.md` §4 (una fila, `is_owner = t`) e iniciar sesión en la web: **Panel Propietario**.
 
 ## 7. Prueba de humo y respaldo (§5.2, pasos 9-10)

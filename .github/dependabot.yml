@@ -4,7 +4,7 @@
 #
 # Las actualizaciones de SEGURIDAD que GitHub crea por una alerta van siempre a la rama predeterminada (main):
 # GitHub ignora target-branch para ellas. El job «rama-origen» del CI bloquea que se fusionen directo en main;
-# el procedimiento para pasarlas por develop está en docs/devops/dependabot-y-seguridad.md.
+# el procedimiento para pasarlas por develop está en docs/mantenimiento/dependabot-y-seguridad.md.
 version: 2
 
 updates:

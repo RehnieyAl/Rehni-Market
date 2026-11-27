@@ -1,6 +1,6 @@
 # Runbook — Restaurar el respaldo
 
-> Resumen operativo de `docs/plan-implantacion.md` §3.4 y de `docs/devops/backup-restore.md` §3. Síntoma: pérdida o
+> Resumen operativo de `docs/plan-implantacion.md` §3.4 y de `docs/mantenimiento/backup-restore.md` §2. Síntoma: pérdida o
 > corrupción de datos, o un rollback con migración no compatible (§5.2).
 
 1. Decidir: `sudo rehnimarket status` (contenedores y `/health/database`). El responsable técnico decide si se

@@ -127,7 +127,7 @@ El `.env` nunca se sube a Git.
 ## 6. Primer despliegue
 
 En el servidor de Azure el repositorio está en `/opt/rehnimarket` (cuenta `rehnimarket`, único `.env` ahí mismo) y
-se administra con el comando `rehnimarket` ([docs/devops/servidor-azure.md](../docs/devops/servidor-azure.md)):
+se administra con el comando `rehnimarket` ([docs/instalacion/instalacion-servidor.md](../docs/instalacion/instalacion-servidor.md)):
 
 ```bash
 sudo rehnimarket start --build    # construye desde el código y espera a que los cinco servicios estén sanos
@@ -142,20 +142,19 @@ los certificados a Let's Encrypt en el primer acceso a cada dominio.
 
 El backend **no siembra nada al arrancar** con `RUN_SEED=false` (predeterminado). En una base nueva,
 después del primer arranque, se crean los datos base a mano y en este orden
-([docs/devops/inicializacion-roles-owner.md](../docs/devops/inicializacion-roles-owner.md)):
+([docs/base-datos/inicializacion.md](../docs/base-datos/inicializacion.md)):
 
 ```bash
-sudo rehnimarket init roles       # user, company, admin, owner (deploy/sql/crear-roles.sql)
-sudo rehnimarket init base        # catálogo y transportadoras (scripts/datos-base.sh)
-sudo rehnimarket init owner       # pide los datos y la clave en la terminal
+bash scripts/database/inicializar.sh   # opción 1: roles (deploy/sql/crear-roles.sql)
+bash scripts/datos-base.sh             # catálogo y transportadoras
+bash scripts/database/inicializar.sh   # opción 2: owner (deploy/sql/crear-owner.sql); opción 3: verificar
 ```
 
-En desarrollo, el equivalente de los dos primeros es `bash scripts/datos-base.sh`. Todos son idempotentes: no
-duplican ni modifican lo que ya existe.
+Todos son idempotentes: no duplican ni modifican lo que ya existe.
 
 | Datos | Cuándo se crean | Detalle |
 |---|---|---|
-| Roles `user`, `company`, `admin`, `owner` | Con `init roles`, `scripts/datos-base.sh` o al arrancar con `RUN_SEED=true`, si faltan | Sin el rol `user` el registro falla |
+| Roles `user`, `company`, `admin`, `owner` | Con el menú (opción 1), `scripts/datos-base.sh` o al arrancar con `RUN_SEED=true`, si faltan | Sin el rol `user` el registro falla |
 | Categorías (120), sus especificaciones, atributos de variante y opciones | Igual, solo si la tabla de categorías está vacía | Después las administra el panel; volver a sembrarlas desharía sus cambios |
 | Transportadoras (4) | Igual, solo si no hay ninguna | Las usan los envíos de los pedidos |
 | Cuenta owner del seed (`USER_NAME_OWNER`, `OWNER_DEFAULT`, `OWNER_PASSWORD_DEFAULT`) | Solo con `RUN_SEED=true` y las tres variables con valor | En producción quedan vacías |
@@ -170,9 +169,8 @@ docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -
 # 4|120|4
 ```
 
-**Cuenta owner:** hay una sola y nunca se crea por la web. En el servidor se crea con `sudo rehnimarket init owner`,
-que usa el hash de contraseñas del backend. La alternativa en SQL es [`deploy/sql/crear-owner.sql`](sql/crear-owner.sql),
-que además convierte una cuenta ya registrada. Procedimiento completo
+**Cuenta owner:** hay una sola y nunca se crea por la web. Se crea con la opción 2 del menú, que ejecuta
+[`deploy/sql/crear-owner.sql`](sql/crear-owner.sql) (bcrypt compatible con el backend). Procedimiento completo
 (crear, convertir una cuenta registrada, comprobar, restablecer la clave, transferir y errores
 frecuentes) en **[`deploy/OWNER.md`](OWNER.md)**. La base de datos, el backend y el frontend impiden
 un segundo owner (§13).
@@ -199,7 +197,7 @@ sudo rehnimarket deploy main      # respaldo obligatorio de lo desplegado → de
 ```
 
 Revisar antes si la versión trae migraciones no compatibles hacia atrás (plan §5.2, «Clasificación de
-migraciones»). Detalle y códigos de salida: [docs/devops/backup-restore.md](../docs/devops/backup-restore.md) §4.
+migraciones»). Detalle y códigos de salida: [docs/mantenimiento/backup-restore.md](../docs/mantenimiento/backup-restore.md) §3.
 
 ## 10. Rollback
 

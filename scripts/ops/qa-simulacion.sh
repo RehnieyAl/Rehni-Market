@@ -22,11 +22,9 @@ export BACKUP_DIR="${WORK}/backups" LOG_DIR="${WORK}/logs" APP_DIR="${WORK}/app"
 export PG_CONTAINER="${PG_C}" MINIO_CONTAINER="${MN_C}" BACKEND_SERVICE=web BACKEND_CONTAINER=rehni-sim-web
 export HEALTH_URLS="http://127.0.0.1:${WEB_PORT}/health" HEALTH_RETRIES=3 WAIT_TIMEOUT=120
 export MIGRATIONS_PATH="RehniMarket-backend/alembic/versions" COMPOSE_CMD="docker compose" COMPOSE_PROJECT_NAME=rehni-sim
-export RUNNER="" LIB_DIR="${REPO_ROOT}/scripts"
 BACKUP="${REPO_ROOT}/scripts/backup_rehnimarket.sh"
 RESTORE="${REPO_ROOT}/scripts/restore_rehnimarket.sh"
 DEPLOY="${REPO_ROOT}/scripts/deploy_rehnimarket.sh"
-GATE="${REPO_ROOT}/scripts/ops/ssh-gate.sh"
 
 RESULTS=()
 pass() { RESULTS+=("OK    | $1 | ${2:-}"); echo "OK    $1 ${2:-}"; }
@@ -175,16 +173,12 @@ bash "${RESTORE}" "${ID_A}" --verify-only >"${WORK}/restore-verify.log" 2>&1; ex
 # 12. Restores no autorizados rechazados.
 bash "${RESTORE}" "${ID_C2}" >/dev/null 2>&1; expect_code "Restore sin --confirm rechazado" 1 $?
 bash "${RESTORE}" "${ID_A}" "--confirm=${ID_A}" >/dev/null 2>&1; expect_code "Restore con código de otra versión rechazado" 1 $?
-SSH_ORIGINAL_COMMAND="restore ${ID_C2} ${ID_A} 1" bash "${GATE}" restore >/dev/null 2>&1; expect_code "Gate: confirmación distinta del ID denegada" 126 $?
-SSH_ORIGINAL_COMMAND="restore ${ID_C2} ${ID_C2} 1" bash "${GATE}" backup >/dev/null 2>&1; expect_code "Gate: la llave de backup no puede restaurar" 126 $?
-SSH_ORIGINAL_COMMAND="bash -i" bash "${GATE}" deploy >/dev/null 2>&1; expect_code "Gate: orden arbitraria denegada" 126 $?
-SSH_ORIGINAL_COMMAND="deploy ${SHA_A};id ${ID_A} 1" bash "${GATE}" deploy >/dev/null 2>&1; expect_code "Gate: inyección en argumentos denegada" 126 $?
 
 # 13. Restore real autorizado (solo en esta simulación): cambia datos y vuelve al estado del respaldo de C.
 docker exec "${PG_C}" psql -U rehni -d rehnimarket -q -c "DELETE FROM pedidos;"
-SSH_ORIGINAL_COMMAND="restore ${ID_C2} ${ID_C2} 3001" bash "${GATE}" restore >"${WORK}/restore-real.log" 2>&1; CODE=$?
+GITHUB_RUN_ID=3001 bash "${RESTORE}" "${ID_C2}" "--confirm=${ID_C2}" >"${WORK}/restore-real.log" 2>&1; CODE=$?
 N="$(docker exec "${PG_C}" psql -U rehni -d rehnimarket -tAc 'SELECT count(*) FROM pedidos')"
-expect_code "Restore autorizado por la compuerta restaura los datos" 0 "${CODE}" "pedidos=${N} (esperado 2) y respaldo preventivo previo"
+expect_code "Restore confirmado con el ID restaura los datos" 0 "${CODE}" "pedidos=${N} (esperado 2) y respaldo preventivo previo"
 
 # 14. Operaciones simultáneas bloqueadas.
 ( exec 8>"${LOG_DIR}/operacion.lock"; flock 8; sleep 8 ) &
