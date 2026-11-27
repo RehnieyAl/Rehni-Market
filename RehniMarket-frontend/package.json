@@ -10,7 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "lint:ci": "eslint . --max-warnings 11",
+    "lint:ci": "eslint . --max-warnings 0",
     "typecheck": "tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.test.json --noEmit",
     "test:coverage": "vitest run --coverage"
   },
@@ -19,7 +19,6 @@
     "axios": "^1.20.0",
     "lucide-react": "^1.23.0",
     "react": "^19.2.7",
-    "react-device-detect": "^2.2.3",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.3",
     "zod": "^4.6.7"
@@ -33,7 +32,6 @@
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^6.0.2",
     "@vitest/coverage-v8": "4.1.12",
     "eslint": "^10.5.0",

@@ -69,6 +69,3 @@ export const orderShippingSchema = z.object({
   shippingCarrierId: z.string().min(1, "Selecciona una transportadora."),
   trackingNumber: trackingNumberRule,
 });
-
-export type RegisterUserValues = z.input<typeof registerUserSchema>;
-export type RegisterCompanyValues = z.input<typeof registerCompanySchema>;

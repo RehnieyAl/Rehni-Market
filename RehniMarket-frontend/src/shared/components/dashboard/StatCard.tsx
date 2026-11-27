@@ -1,3 +1,4 @@
+/** Tarjeta de métrica de los paneles: icono con tono, título, cifra destacada y descripción, sobre fondo oscuro. */
 import type { ReactNode } from "react";
 
 import { cn } from "@/shared/utils/cn";
@@ -15,13 +16,15 @@ interface StatCardProps {
 }
 
 const ICON_TONES: Record<StatTone, string> = {
-  brand: "bg-brand-50 text-primary",
+  brand: "bg-secondary/15 text-secondary",
   success: "bg-success-bg text-success",
   warning: "bg-warning-bg text-warning",
   danger: "bg-danger-bg text-danger",
   info: "bg-info-bg text-info",
-  neutral: "bg-gray-100 text-gray-600",
+  neutral: "bg-surface-3 text-ink-muted",
 };
+
+// Resplandor tenue en la esquina con el color del tono (acento moderado, no un fondo de color).
 
 export default function StatCard({
   title,
@@ -37,41 +40,40 @@ export default function StatCard({
   return (
     <div
       className={cn(
-        "rounded-card border border-gray-200 bg-surface-1 shadow-card",
+        "relative h-full overflow-hidden rounded-card border border-hairline bg-surface-1",
         compact ? "p-4" : "p-5",
         className,
       )}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p
+      <div className="relative flex items-start gap-4">
+        {icon && (
+          <div
             className={cn(
-              "font-medium text-gray-500",
-              compact ? "text-xs" : "text-sm",
+              "flex shrink-0 items-center justify-center rounded-full",
+              compact ? "h-10 w-10" : "h-12 w-12",
+              ICON_TONES[tone],
             )}
           >
-            {title}
-          </p>
+            {icon}
+          </div>
+        )}
 
-          <h3
+        <div className="min-w-0">
+          <p className={cn("font-medium text-ink-muted", compact ? "text-xs" : "text-sm")}>{title}</p>
+
+          <p
             className={cn(
-              "mt-1.5 font-bold text-gray-900",
-              compact ? "text-2xl" : "mt-2 text-2xl sm:text-3xl",
+              "font-semibold tabular-nums text-ink",
+              compact ? "mt-1 text-2xl" : "mt-1 text-2xl sm:text-3xl",
             )}
           >
             {value}
-          </h3>
+          </p>
 
           {subtitle && (
-            <p className={cn("text-gray-500", compact ? "mt-1 text-xs" : "mt-2 text-sm")}>
-              {subtitle}
-            </p>
+            <p className={cn("text-ink-muted", compact ? "mt-1 text-xs" : "mt-1 text-sm")}>{subtitle}</p>
           )}
         </div>
-
-        {icon && (
-          <div className={cn("shrink-0 rounded-control p-3", ICON_TONES[tone])}>{icon}</div>
-        )}
       </div>
     </div>
   );

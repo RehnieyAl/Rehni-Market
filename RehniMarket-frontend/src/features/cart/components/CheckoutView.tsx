@@ -53,7 +53,7 @@ export default function CheckoutView() {
       }
     };
 
-    load();
+    void load();
   }, []);
 
   const items = cart?.items ?? [];
@@ -106,8 +106,8 @@ export default function CheckoutView() {
           <CheckCircle2 className="h-10 w-10" />
         </div>
 
-        <h1 className="text-2xl font-bold text-gray-900">
-          ¡Tu compra fue confirmada!
+        <h1 className="text-2xl font-semibold text-gray-900">
+          Compra confirmada
         </h1>
 
         <p className="mt-2 text-gray-500">
@@ -167,7 +167,7 @@ export default function CheckoutView() {
   return (
     <section className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
       <header>
-        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Checkout</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">Checkout</h1>
         <p className="mt-1 text-sm text-gray-500">
           Confirma tu dirección y finaliza el pago con RehniCoin.
         </p>
@@ -185,7 +185,7 @@ export default function CheckoutView() {
               {selectedAddress && (
                 <button
                   onClick={() => setAddressModalOpen(true)}
-                  className="flex items-center gap-1.5 text-sm font-medium text-primary transition hover:text-primary-hover"
+                  className="flex items-center gap-1.5 text-sm font-medium brand-link"
                 >
                   <Pencil size={14} />
                   Cambiar
@@ -209,7 +209,7 @@ export default function CheckoutView() {
             ) : (
               <button
                 onClick={() => setAddressModalOpen(true)}
-                className="mt-4 w-full rounded-control border border-dashed border-gray-300 py-4 text-sm font-medium text-primary transition hover:bg-gray-50"
+                className="mt-4 w-full rounded-control border border-dashed border-gray-300 py-4 text-sm font-medium text-ink transition-colors hover:bg-gray-50"
               >
                 + Agregar dirección de entrega
               </button>
@@ -234,7 +234,7 @@ export default function CheckoutView() {
                       {item.quantity} × {item.name}
                       {optionsLabel ? ` (${optionsLabel})` : ""}
                       {unavailable && (
-                        <span className="ml-2 inline-flex items-center rounded-full bg-danger-bg px-2 py-0.5 text-xs font-bold text-danger">
+                        <span className="ml-2 inline-flex items-center rounded-full bg-danger-bg px-2 py-0.5 text-xs font-semibold text-danger">
                           {item.availableStock <= 0 ? "Agotado" : "Sin stock suficiente"}
                         </span>
                       )}
@@ -263,7 +263,7 @@ export default function CheckoutView() {
               <dd>{tax > 0 ? formatPrice(cart?.tax ?? "0") : "No aplica"}</dd>
             </div>
 
-            <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-bold text-gray-900">
+            <div className="flex justify-between border-t border-gray-100 pt-3 text-base font-semibold text-gray-900">
               <dt>Total</dt>
               <dd>{formatPrice(total)}</dd>
             </div>

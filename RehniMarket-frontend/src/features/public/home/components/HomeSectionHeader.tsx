@@ -23,17 +23,17 @@ export default function HomeSectionHeader({
     <div className="flex items-end justify-between gap-4">
       <div className="flex items-center gap-3">
         {icon && (
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-accent/15 text-accent">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-secondary/15 text-secondary">
             {icon}
           </span>
         )}
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold tracking-tight text-gray-900 dark:text-ink sm:text-xl">
+            <h2 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-ink sm:text-xl">
               {title}
             </h2>
             {badge && (
-              <span className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+              <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-white">
                 {badge}
               </span>
             )}
@@ -47,7 +47,7 @@ export default function HomeSectionHeader({
       {viewAllHref && (
         <Link
           to={viewAllHref}
-          className="flex shrink-0 items-center gap-1 text-sm font-medium text-primary transition hover:text-primary-hover dark:text-accent dark:hover:text-accent-hover"
+          className="flex shrink-0 items-center gap-1 text-sm font-medium brand-link"
         >
           <span className="hidden sm:inline">Ver todas</span>
           <span className="sm:hidden">Ver</span>

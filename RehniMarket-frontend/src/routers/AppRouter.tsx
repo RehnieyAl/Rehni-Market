@@ -1,7 +1,10 @@
+/** Rutas de la app: páginas públicas, flujo de acceso, paneles protegidos por rol y el modal de login. */
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import RequireAuth from "@/shared/components/auth/RequireAuth";
 import ScrollToTop from "@/shared/components/ScrollToTop";
+import LoginModalProvider from "@/features/public/auth/components/LoginModalProvider";
+import SessionNavigator from "@/features/public/auth/components/SessionNavigator";
 import { useAuth } from "@/features/public/auth/context/useAuth";
 
 import Home from "../pages/public/Home";
@@ -33,56 +36,59 @@ export default function AppRouter() {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/categories" element={<Categories />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/offers" element={<Offers />} />
-        <Route path="/new" element={<NewProducts />} />
-        <Route path="/products/:id" element={<ProductsDetail />} />
-        <Route path="/company/:companyId" element={<CompanyProfilePage />} />
-        <Route path="/cart" element={<CartPage />} />
-        <Route
-          path="/checkout"
-          element={
-            <RequireAuth key={sessionKey} area="user">
-              <CheckoutPage />
-            </RequireAuth>
-          }
-        />
-        <Route path="/register-user" element={<RegisterUser />} />
-        <Route path="/register-company" element={<RegisterCompany />} />
-        <Route path="/verify-email" element={<VerifyEmail />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/actualizar-certificado" element={<UpdateCertificate />} />
+      <SessionNavigator />
+      <LoginModalProvider>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/categories" element={<Categories />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/offers" element={<Offers />} />
+          <Route path="/new" element={<NewProducts />} />
+          <Route path="/products/:id" element={<ProductsDetail />} />
+          <Route path="/company/:companyId" element={<CompanyProfilePage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route
+            path="/checkout"
+            element={
+              <RequireAuth key={sessionKey} area="user">
+                <CheckoutPage />
+              </RequireAuth>
+            }
+          />
+          <Route path="/register-user" element={<RegisterUser />} />
+          <Route path="/register-company" element={<RegisterCompany />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/actualizar-certificado" element={<UpdateCertificate />} />
 
-        <Route
-          path="/company/dashboard"
-          element={
-            <RequireAuth key={sessionKey} area="company">
-              <Company />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/admin/dashboard"
-          element={
-            <RequireAuth key={sessionKey} area="admin">
-              <Admin />
-            </RequireAuth>
-          }
-        />
-        <Route
-          path="/user/dashboard"
-          element={
-            <RequireAuth key={sessionKey} area="user">
-              <UserDashboard />
-            </RequireAuth>
-          }
-        />
-      </Routes>
+          <Route
+            path="/company/dashboard"
+            element={
+              <RequireAuth key={sessionKey} area="company">
+                <Company />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <RequireAuth key={sessionKey} area="admin">
+                <Admin />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/user/dashboard"
+            element={
+              <RequireAuth key={sessionKey} area="user">
+                <UserDashboard />
+              </RequireAuth>
+            }
+          />
+        </Routes>
+      </LoginModalProvider>
     </BrowserRouter>
   );
 }

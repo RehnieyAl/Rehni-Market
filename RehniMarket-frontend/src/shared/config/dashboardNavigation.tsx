@@ -1,9 +1,9 @@
+/** Secciones de la navegación lateral de cada panel (admin, owner, empresa y comprador). */
 import {
   House,
   User,
   Package,
   Truck,
-  Store,
   Users,
   Building2,
   Megaphone,
@@ -15,13 +15,14 @@ import {
   Wallet,
   Receipt,
   RotateCcw,
+  Globe,
 } from "lucide-react";
 
 import type { SidebarItem } from "../components/dashboard/Sidebar";
 
 export type UserRole = "admin" | "company" | "user" | "owner";
 
-export const OWNER_ONLY_NAV_IDS: string[] = ["payouts"];
+export const OWNER_ONLY_NAV_IDS: string[] = ["payouts", "site"];
 
 const adminSharedNavigation: SidebarItem[] = [
   {
@@ -55,6 +56,11 @@ const adminSharedNavigation: SidebarItem[] = [
     icon: <BarChart3 size={22} />,
   },
   {
+    id: "returns",
+    text: "Devoluciones",
+    icon: <RotateCcw size={22} />,
+  },
+  {
     id: "carriers",
     text: "Transportadoras",
     icon: <Truck size={22} />,
@@ -76,6 +82,11 @@ const ownerExclusiveNavigation: SidebarItem[] = [
     id: "payouts",
     text: "Liquidaciones",
     icon: <Receipt size={22} />,
+  },
+  {
+    id: "site",
+    text: "Configuración web",
+    icon: <Globe size={22} />,
   },
 ];
 
@@ -115,11 +126,6 @@ export const dashboardNavigation: Record<UserRole, SidebarItem[]> = {
       icon: <Wallet size={22} />,
     },
     {
-      id: "company",
-      text: "Mi tienda",
-      icon: <Store size={22} />,
-    },
-    {
       id: "profile",
       text: "Configuración de cuenta",
       icon: <User size={22} />,
@@ -138,13 +144,18 @@ export const dashboardNavigation: Record<UserRole, SidebarItem[]> = {
       icon: <Package size={22} />,
     },
     {
+      id: "returns",
+      text: "Mis devoluciones",
+      icon: <RotateCcw size={22} />,
+    },
+    {
       id: "favorites",
       text: "Favoritos",
       icon: <Heart size={22} />,
     },
     {
       id: "wallet",
-      text: "RehniCoins",
+      text: "RehniCoin",
       icon: <Coins size={22} />,
     },
     {

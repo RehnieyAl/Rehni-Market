@@ -15,7 +15,7 @@ export default function ProductPrice({
 }: ProductPriceProps) {
   if (!discountEnabled) {
     return (
-      <span className="text-3xl font-bold text-gray-900 dark:text-ink">
+      <span className="text-3xl font-semibold text-gray-900 dark:text-ink">
         {formatPrice(price)}
       </span>
     );
@@ -26,12 +26,12 @@ export default function ProductPrice({
       <span className="text-base text-gray-400 line-through dark:text-ink-muted">
         {formatPrice(price)}
       </span>
-      <span className="text-3xl font-bold text-gray-900 dark:text-ink">
+      <span className="text-3xl font-semibold text-gray-900 dark:text-ink">
         {formatPrice(finalPrice)}
       </span>
 
       {discountPercentage !== null && (
-        <span className="rounded-md bg-brand-50 px-2 py-0.5 text-sm font-semibold text-primary dark:bg-brand-600/25 dark:text-brand-300">
+        <span className="rounded-md bg-secondary px-2 py-0.5 text-sm font-semibold text-white">
           {discountPercentage}% descuento
         </span>
       )}

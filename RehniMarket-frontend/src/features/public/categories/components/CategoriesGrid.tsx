@@ -1,7 +1,7 @@
+/** Página Explorar categorías: búsqueda, filtro y orden en cliente sobre /public/catalogs, con paginación. */
 import { useEffect, useMemo, useState } from "react";
 import { FolderSearch } from "lucide-react";
 
-import CategoriesHero from "./CategoriesHero";
 import CategoriesFilterBar from "./CategoriesFilterBar";
 import CategoryCard from "./CategoryCard";
 import CategoryCardSkeleton from "./CategoryCardSkeleton";
@@ -15,6 +15,9 @@ import type { CategorySort } from "../utils/categorySort";
 
 const PAGE_SIZE = 8;
 const SKELETON_COUNT = PAGE_SIZE;
+// 1 columna en móviles muy estrechos, 2 en móvil ancho y tablet, 3 en escritorio estándar y 4 en grande.
+const GRID =
+  "grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4";
 
 export default function CategoriesGrid() {
   const [categories, setCategories] = useState<PublicCatalog[]>([]);
@@ -23,7 +26,7 @@ export default function CategoriesGrid() {
 
   const [search, setSearch] = useState("");
   const [selectedName, setSelectedName] = useState("");
-  const [sort, setSort] = useState<CategorySort>("popular");
+  const [sort, setSort] = useState<CategorySort>("featured");
   const [page, setPage] = useState(1);
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -53,7 +56,7 @@ export default function CategoriesGrid() {
       }
     };
 
-    load();
+    void load();
 
     return () => {
       cancelled = true;
@@ -111,10 +114,17 @@ export default function CategoriesGrid() {
   };
 
   return (
-    <div>
-      <CategoriesHero />
+    <div className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-3 py-6 sm:px-4 sm:py-8 lg:px-8">
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+          Explorar categorías
+        </h1>
+        <p className="mt-1 text-sm text-ink-muted sm:text-base">
+          Encuentra productos increíbles en todas nuestras categorías.
+        </p>
+      </header>
 
-      <div className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-2 py-6 sm:px-4 sm:py-8 lg:px-8">
+      <div className="mt-6">
         <CategoriesFilterBar
           search={search}
           onSearchChange={handleSearchChange}
@@ -127,7 +137,7 @@ export default function CategoriesGrid() {
 
         <div className="mt-6 sm:mt-8">
           {loading ? (
-            <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
+            <div className={GRID}>
               {Array.from({ length: SKELETON_COUNT }).map((_, index) => (
                 <CategoryCardSkeleton key={index} />
               ))}
@@ -149,7 +159,7 @@ export default function CategoriesGrid() {
             />
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
+              <div className={GRID}>
                 {pagedCategories.map((category) => (
                   <CategoryCard key={category.id} category={category} />
                 ))}

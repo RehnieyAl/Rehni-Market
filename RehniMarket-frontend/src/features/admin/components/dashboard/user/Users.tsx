@@ -1,11 +1,5 @@
 /** Listado de usuarios del panel admin: filtros, detalle y bloqueo (la cuenta owner no se bloquea). */
-import {
-  Search,
-  Eye,
-  Lock,
-  Unlock,
-  Coins,
-} from "lucide-react";
+import { Search, Eye, Lock, Unlock, Coins, Users as UsersIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Badge, Button, EmptyState, ErrorState, Input, TableSkeleton } from "@/shared/components/ui";
@@ -19,6 +13,7 @@ import {
 } from "@/features/admin/api/userService";
 
 import type { AdminUserResponse } from "@/features/admin/types/response";
+import DashboardPageHeader from "@/shared/components/dashboard/DashboardPageHeader";
 
 export default function Users() {
 
@@ -79,7 +74,7 @@ export default function Users() {
       }
     };
 
-    loadInitialUsers();
+    void loadInitialUsers();
 
     return () => {
       cancelled = true;
@@ -194,14 +189,11 @@ export default function Users() {
     <div className="shrink-0">
 
       <div className="shrink-0">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Usuarios
-        </h1>
-
-        <p className="mt-1 text-sm text-gray-500">
-          Gestiona los usuarios registrados
-          en la plataforma.
-        </p>
+        <DashboardPageHeader
+          icon={<UsersIcon size={26} />}
+          title="Usuarios"
+          description="Gestiona los usuarios registrados en la plataforma."
+        />
       </div>
 
       <section className="mt-6 shrink-0 rounded-card border border-gray-200 bg-surface-1 p-5 shadow-card">
@@ -230,10 +222,10 @@ export default function Users() {
           </div>
         </div>
 
-        <div className="h-[360px] overflow-y-auto overflow-x-auto">
+        <div className="overflow-x-auto">
           <table className="w-full min-w-[900px]">
-            <thead className="sticky top-0 z-10 bg-surface-1">
-              <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-400">
+            <thead className="bg-surface-1">
+              <tr className="border-b border-gray-200 text-left text-xs text-ink-muted">
                 <th className="px-5 py-3 font-medium">
                   Usuario
                 </th>

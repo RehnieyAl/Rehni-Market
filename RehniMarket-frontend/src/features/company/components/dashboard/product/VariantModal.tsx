@@ -1,3 +1,5 @@
+/** Modal de alta y edición de una variante: atributos, SKU, precio, stock, descuento e imágenes, con la
+ * plantilla de imagen descargable. Una variante dada de baja se muestra en solo lectura. */
 import { X, Upload, Trash2, Loader2, Star } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
@@ -13,6 +15,7 @@ import {
 import { getCatalogAttributes } from "@/features/company/api/catalogService";
 
 import DiscountFields from "./DiscountFields";
+import ProductImageTemplateButton, { PRODUCT_IMAGE_HINT } from "./ProductImageTemplateButton";
 import {
   discountToLocalState,
   localStateToDiscountInput,
@@ -20,12 +23,13 @@ import {
 } from "./discountForm";
 import ConfirmModal from "@/shared/components/ConfirmModal";
 import { useAlert } from "@/shared/components/alert/useAlert";
-import { ErrorState, Spinner } from "@/shared/components/ui";
+import { Button, ErrorState, Spinner } from "@/shared/components/ui";
 import { parseNumericField } from "@/shared/utils/parseNumericField";
 
 import type { VariantDetailResponse } from "@/features/company/types/response";
 import type { VariantImage } from "@/features/company/types/request";
 import type { CatalogAttribute } from "@/features/company/types/catalogAttributes";
+import { FILE_ACCEPT, firstFileError } from "@/shared/validation/files";
 
 interface VariantModalProps {
   isOpen: boolean;
@@ -142,7 +146,7 @@ export default function VariantModal({
       }
     };
 
-    load();
+    void load();
 
     return () => {
       cancelled = true;
@@ -162,6 +166,13 @@ export default function VariantModal({
   const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
+
+    const fileError = firstFileError(Array.from(files), "image", "Imagen de la variante");
+    if (fileError) {
+      e.target.value = "";
+      showAlert("error", fileError);
+      return;
+    }
 
     const added = Array.from(files).map((file) => ({
       file,
@@ -352,7 +363,7 @@ export default function VariantModal({
         ) : (
           <div className="space-y-6 p-6">
             {isDeleted && (
-              <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-warning">
+              <p className="rounded-lg bg-warning-bg px-4 py-3 text-sm text-warning">
                 Esta variante fue eliminada. El backend no permite editarla; vuelve a crear la
                 combinación si la necesitas.
               </p>
@@ -384,7 +395,7 @@ export default function VariantModal({
                             }
                             className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm transition disabled:opacity-50 ${
                               active
-                                ? "border-primary bg-primary text-primary-fg"
+                                ? "border-secondary bg-primary text-primary-fg"
                                 : "border-gray-300 text-gray-700 hover:border-gray-400"
                             }`}
                           >
@@ -415,7 +426,7 @@ export default function VariantModal({
                 onChange={(e) => setName(e.target.value)}
                 disabled={isDeleted}
                 placeholder={suggestedName || "Nombre de la variante"}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-brand-600 disabled:opacity-50"
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-secondary disabled:opacity-50"
               />
               {!name.trim() && suggestedName && (
                 <p className="mt-1 text-xs text-gray-400">Se usará: {suggestedName}</p>
@@ -430,7 +441,7 @@ export default function VariantModal({
                   onChange={(e) => setSku(e.target.value)}
                   disabled={isDeleted}
                   placeholder="Opcional"
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-brand-600 disabled:opacity-50"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-secondary disabled:opacity-50"
                 />
               </div>
 
@@ -442,7 +453,7 @@ export default function VariantModal({
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
                   disabled={isDeleted}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-brand-600 disabled:opacity-50"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-secondary disabled:opacity-50"
                 />
                 {errors.price && <p className="mt-1 text-xs text-danger">{errors.price}</p>}
               </div>
@@ -455,7 +466,7 @@ export default function VariantModal({
                   value={stock}
                   onChange={(e) => setStock(e.target.value)}
                   disabled={isDeleted}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-brand-600 disabled:opacity-50"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none focus:border-secondary disabled:opacity-50"
                 />
                 {errors.stock && <p className="mt-1 text-xs text-danger">{errors.stock}</p>}
               </div>
@@ -474,22 +485,25 @@ export default function VariantModal({
             </div>
 
             <div>
-              <div className="mb-2 flex items-center justify-between">
-                <label className="text-sm font-medium text-gray-700">Imágenes</label>
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Imágenes</label>
+                  <p className="text-xs text-gray-500">{PRODUCT_IMAGE_HINT}</p>
+                </div>
 
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingImages || isDeleted}
-                  className="flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:border-danger hover:text-danger disabled:opacity-50"
-                >
-                  {uploadingImages ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    <Upload size={16} />
-                  )}
-                  Agregar imágenes
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <ProductImageTemplateButton />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leadingIcon={<Upload size={16} />}
+                    loading={uploadingImages}
+                    disabled={isDeleted}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    Agregar imágenes
+                  </Button>
+                </div>
               </div>
 
               <input
@@ -497,7 +511,7 @@ export default function VariantModal({
                 type="file"
                 hidden
                 multiple
-                accept="image/*"
+                accept={FILE_ACCEPT.image}
                 onChange={handleAddImages}
               />
 
@@ -508,8 +522,8 @@ export default function VariantModal({
                     onClick={() => handleSetMainExistingImage(image.id)}
                     className={`relative cursor-pointer overflow-hidden rounded-xl border-2 transition ${
                       image.is_main
-                        ? "border-primary"
-                        : "border-gray-200 hover:border-brand-300"
+                        ? "border-secondary"
+                        : "border-gray-200 hover:border-secondary"
                     }`}
                   >
                     <img src={image.url} alt="" className="h-24 w-24 object-cover" />
@@ -543,7 +557,7 @@ export default function VariantModal({
                   <div
                     key={index}
                     className={`relative overflow-hidden rounded-xl border-2 ${
-                      index === 0 ? "border-primary" : "border-gray-200"
+                      index === 0 ? "border-secondary" : "border-gray-200"
                     }`}
                   >
                     <img src={image.preview} alt="" className="h-24 w-24 object-cover" />
@@ -587,7 +601,7 @@ export default function VariantModal({
           <button
             onClick={handleSubmit}
             disabled={saving || loading || isDeleted || price === "" || stock === ""}
-            className="rounded-lg bg-primary px-6 py-2 text-white hover:bg-primary-hover disabled:opacity-50"
+            className="rounded-lg bg-primary px-6 py-2 text-white fill-hover disabled:opacity-50"
           >
             {saving ? "Guardando…" : isEditMode ? "Guardar cambios" : "Crear variante"}
           </button>

@@ -101,7 +101,7 @@ export default function VariantsPanel({ productId, catalogId }: VariantsPanelPro
           type="checkbox"
           checked={includeDeleted}
           onChange={(e) => setIncludeDeleted(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300 accent-brand-600"
+          className="h-4 w-4 rounded border-gray-300 accent-secondary"
         />
         Mostrar variantes eliminadas
       </label>

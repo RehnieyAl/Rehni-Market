@@ -1,5 +1,7 @@
+/** Verificación del correo de un registro (comprador o empresa): código de 6 dígitos, cambio de correo
+ * y reenvío con el cooldown del backend. El correo del proceso sobrevive a una recarga. */
 import { useEffect, useState } from "react";
-import { Mail, Timer, RefreshCw, AlertCircle } from "lucide-react";
+import { AlertCircle, Mail, MailCheck, Timer } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -12,14 +14,26 @@ import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 import AuthLayout from "@/features/public/auth/components/AuthLayout";
 import OtpInput from "@/features/public/auth/components/OtpInput";
+import ResendCode from "@/features/public/auth/components/ResendCode";
+import { formatCountdown } from "@/features/public/auth/utils/countdown";
 import { Button, Input } from "@/shared/components/ui";
 
-function formatCountdown(totalSeconds: number): string {
-  const safe = Math.max(0, Math.floor(totalSeconds));
-  const minutes = Math.floor(safe / 60);
-  const seconds = safe % 60;
+const EMAIL_KEY = "verifyEmail.email";
 
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+function rememberedEmail(): string {
+  try {
+    return sessionStorage.getItem(EMAIL_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function rememberEmail(email: string) {
+  try {
+    sessionStorage.setItem(EMAIL_KEY, email);
+  } catch {
+    // Sin sessionStorage (modo privado estricto) solo se pierde el correo al recargar.
+  }
 }
 
 function toDeadline(seconds: number | undefined | null): number | null {
@@ -39,7 +53,7 @@ export default function VerifyEmail() {
     resendAvailableIn?: number;
   };
 
-  const email = navState.email ?? "";
+  const email = navState.email ?? rememberedEmail();
 
   const [currentEmail, setCurrentEmail] = useState(email);
   const [newEmail, setNewEmail] = useState("");
@@ -47,7 +61,6 @@ export default function VerifyEmail() {
   const [loading, setLoading] = useState(false);
   const [changingEmail, setChangingEmail] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
-  const [resending, setResending] = useState(false);
 
   const [code, setCode] = useState(["", "", "", "", "", ""]);
   const [focusKey, setFocusKey] = useState(0);
@@ -56,9 +69,8 @@ export default function VerifyEmail() {
     toDeadline(navState.expiresIn),
   );
 
-  const [resendDeadline, setResendDeadline] = useState<number>(() =>
-    toDeadline(navState.resendAvailableIn) ?? Date.now(),
-  );
+  const [resendAvailableIn, setResendAvailableIn] = useState(navState.resendAvailableIn);
+  const [resendKey, setResendKey] = useState(0);
 
   const [nowTs, setNowTs] = useState(() => Date.now());
 
@@ -67,22 +79,22 @@ export default function VerifyEmail() {
     return () => window.clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    if (currentEmail) rememberEmail(currentEmail);
+  }, [currentEmail]);
+
   const codeSecondsLeft =
     codeDeadline === null
       ? null
       : Math.max(0, Math.ceil((codeDeadline - nowTs) / 1000));
 
-  const resendSecondsLeft = Math.max(0, Math.ceil((resendDeadline - nowTs) / 1000));
-
   const codeExpired = codeSecondsLeft === 0;
-  const canResend = resendSecondsLeft === 0 && !resending && !changingEmail;
 
   const applyCodeState = (state: {
     expires_in?: number;
     resend_available_in?: number;
   }) => {
     setCodeDeadline(toDeadline(state.expires_in));
-    setResendDeadline(toDeadline(state.resend_available_in) ?? Date.now());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,7 +122,7 @@ export default function VerifyEmail() {
 
       showAlert("success", "Cuenta verificada correctamente.");
 
-      navigate("/login", {
+      void navigate("/login", {
         state: {
           email: currentEmail,
         },
@@ -139,38 +151,10 @@ export default function VerifyEmail() {
     }
   };
 
-  const handleResend = async () => {
-    if (!canResend) return;
-
-    setResending(true);
-
-    try {
-      const res = await resendVerificationCode({ email: currentEmail });
-
-      applyCodeState(res);
-      setCode(["", "", "", "", "", ""]);
-      setFocusKey((key) => key + 1);
-
-      showAlert(
-        "success",
-        res.message ?? "Se ha enviado un nuevo código a tu correo electrónico.",
-      );
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        const detail = err.response?.data?.detail;
-
-        if (
-          detail?.code === ErrorCode.RESEND_COOLDOWN_ACTIVE &&
-          typeof detail.retry_after === "number"
-        ) {
-          setResendDeadline(Date.now() + detail.retry_after * 1000);
-        }
-      } else {
-        showAlert("error", "No fue posible reenviar el código.");
-      }
-    } finally {
-      setResending(false);
-    }
+  const handleResent = (state: { expires_in?: number }) => {
+    applyCodeState(state);
+    setCode(["", "", "", "", "", ""]);
+    setFocusKey((key) => key + 1);
   };
 
   const handleChangeEmail = async () => {
@@ -194,14 +178,16 @@ export default function VerifyEmail() {
       setFocusKey((key) => key + 1);
 
       applyCodeState(res ?? {});
+      setResendAvailableIn(res?.resend_available_in);
+      setResendKey((key) => key + 1);
 
       showAlert(
         "success",
         "Correo actualizado correctamente. Se ha enviado un nuevo código de verificación.",
       );
     } catch (error) {
-      console.error(error);
-      showAlert("error", "No fue posible cambiar el correo.");
+      const message = axios.isAxiosError(error) ? error.response?.data?.detail?.message : undefined;
+      showAlert("error", message ?? "No fue posible cambiar el correo.");
     } finally {
       setChangingEmail(false);
     }
@@ -209,12 +195,13 @@ export default function VerifyEmail() {
 
   return (
     <AuthLayout
-      icon={<Mail size={24} />}
+      icon={<MailCheck size={28} />}
+      backFallback="/login"
       title="Verifica tu correo"
       subtitle={
         <>
           Enviamos un código de 6 dígitos a{" "}
-          <span className="font-medium text-gray-700 break-all">{currentEmail}</span>
+          <span className="font-medium text-ink break-all">{currentEmail}</span>
         </>
       }
       belowCard={
@@ -223,7 +210,7 @@ export default function VerifyEmail() {
           <Link
             to="/login"
             state={{ email: currentEmail }}
-            className="font-semibold text-primary hover:underline"
+            className="font-semibold brand-link"
           >
             Iniciar sesión
           </Link>
@@ -236,7 +223,7 @@ export default function VerifyEmail() {
             <button
               type="button"
               onClick={() => setEditingEmail(true)}
-              className="text-sm font-medium text-primary hover:underline"
+              className="text-sm font-medium brand-link"
             >
               ¿El correo es incorrecto? Cambiarlo
             </button>
@@ -293,15 +280,24 @@ export default function VerifyEmail() {
           </div>
         ) : (
           codeSecondsLeft !== null && (
-            <p className="flex items-center justify-center gap-2 text-sm text-gray-500">
+            <p className="flex items-center justify-center gap-2 text-sm text-ink-muted">
               <Timer size={15} />
               Código válido durante{" "}
-              <span className="font-semibold tabular-nums text-gray-800">
+              <span className="font-semibold tabular-nums text-ink">
                 {formatCountdown(codeSecondsLeft)}
               </span>
             </p>
           )
         )}
+
+        <ResendCode
+          key={resendKey}
+          email={currentEmail}
+          availableIn={resendAvailableIn}
+          disabled={changingEmail}
+          onResend={() => resendVerificationCode({ email: currentEmail })}
+          onResent={handleResent}
+        />
 
         <Button
           type="submit"
@@ -314,30 +310,6 @@ export default function VerifyEmail() {
         </Button>
       </form>
 
-      <div className="mt-6 border-t border-gray-100 pt-5 text-center">
-        <p className="text-sm text-gray-500">¿No recibiste el código?</p>
-
-        {!canResend && resendSecondsLeft > 0 && (
-          <p className="mt-1 text-sm text-gray-500">
-            Podrás reenviar en{" "}
-            <span className="font-semibold tabular-nums text-gray-800">
-              {formatCountdown(resendSecondsLeft)}
-            </span>
-          </p>
-        )}
-
-        <Button
-          variant="outline"
-          fullWidth
-          className="mt-3"
-          leadingIcon={<RefreshCw size={16} />}
-          onClick={handleResend}
-          loading={resending}
-          disabled={!canResend}
-        >
-          Reenviar código
-        </Button>
-      </div>
     </AuthLayout>
   );
 }

@@ -1,7 +1,13 @@
+/** Inicio del panel de administración: estadísticas, actividad reciente y usuarios recientes. */
 import { useEffect, useState } from "react";
 import {
   Activity,
+  Ban,
   Building2,
+  House,
+  ShieldCheck,
+  ShieldX,
+  Users,
   UserRound,
   UserX,
   Mail,
@@ -16,6 +22,7 @@ import {
 } from "@/features/admin/api/dashboardService";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { Badge, EmptyState, Skeleton, Spinner, TableSkeleton } from "@/shared/components/ui";
+import DashboardPageHeader from "@/shared/components/dashboard/DashboardPageHeader";
 import StatCard from "@/shared/components/dashboard/StatCard";
 
 import type {
@@ -76,8 +83,8 @@ export default function Home({ onNavigate }: HomeProps) {
       }
     };
 
-    loadStatistics();
-  }, []);
+    void loadStatistics();
+  }, [showAlert]);
 
   useEffect(() => {
     const loadActivities = async () => {
@@ -100,7 +107,7 @@ export default function Home({ onNavigate }: HomeProps) {
       }
     };
 
-    loadActivities();
+    void loadActivities();
   }, []);
 
   useEffect(() => {
@@ -122,7 +129,7 @@ export default function Home({ onNavigate }: HomeProps) {
       }
     };
 
-    loadRecentUsers();
+    void loadRecentUsers();
   }, []);
 
   useEffect(() => {
@@ -152,13 +159,7 @@ export default function Home({ onNavigate }: HomeProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="shrink-0">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Inicio
-        </h1>
-
-        <p className="mt-1 text-sm text-gray-500">
-          Resumen general de RehniMarket.
-        </p>
+        <DashboardPageHeader icon={<House size={26} />} title="Inicio" description="Resumen general de RehniMarket." />
       </div>
 
       <div className="min-h-0 flex-1 overflow-hidden">
@@ -166,10 +167,10 @@ export default function Home({ onNavigate }: HomeProps) {
           <div className="mb-3 flex items-center gap-2">
             <UserRound
               size={18}
-              className="text-primary"
+              className="text-secondary"
             />
 
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
+            <h2 className="text-sm font-semibold text-gray-700">
               Usuarios
             </h2>
           </div>
@@ -178,6 +179,8 @@ export default function Home({ onNavigate }: HomeProps) {
             <StatCard
               size="sm"
               title="Registrados"
+              icon={<Users size={20} />}
+              tone="brand"
               value={getValue(
                 statistics?.users,
               )}
@@ -186,6 +189,8 @@ export default function Home({ onNavigate }: HomeProps) {
             <StatCard
               size="sm"
               title="Activos"
+              icon={<CheckCircle size={20} />}
+              tone="success"
               value={getValue(
                 statistics?.active_users,
               )}
@@ -194,6 +199,8 @@ export default function Home({ onNavigate }: HomeProps) {
             <StatCard
               size="sm"
               title="Bloqueados"
+              icon={<Ban size={20} />}
+              tone="danger"
               value={getValue(
                 statistics?.blocked_users,
               )}
@@ -202,6 +209,8 @@ export default function Home({ onNavigate }: HomeProps) {
             <StatCard
               size="sm"
               title="Administradores"
+              icon={<ShieldCheck size={20} />}
+              tone="info"
               value={getValue(
                 statistics?.administrators,
               )}
@@ -213,10 +222,10 @@ export default function Home({ onNavigate }: HomeProps) {
           <div className="mb-3 flex items-center gap-2">
             <Building2
               size={18}
-              className="text-primary"
+              className="text-secondary"
             />
 
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-700">
+            <h2 className="text-sm font-semibold text-gray-700">
               Empresas
             </h2>
           </div>
@@ -225,6 +234,8 @@ export default function Home({ onNavigate }: HomeProps) {
             <StatCard
               size="sm"
               title="Registradas"
+              icon={<Store size={20} />}
+              tone="brand"
               value={getValue(
                 statistics?.companies,
               )}
@@ -233,6 +244,8 @@ export default function Home({ onNavigate }: HomeProps) {
             <StatCard
               size="sm"
               title="Activas"
+              icon={<CheckCircle size={20} />}
+              tone="success"
               value={getValue(
                 statistics?.active_companies,
               )}
@@ -241,6 +254,8 @@ export default function Home({ onNavigate }: HomeProps) {
             <StatCard
               size="sm"
               title="Bloqueadas"
+              icon={<ShieldX size={20} />}
+              tone="danger"
               value={getValue(
                 statistics?.blocked_companies,
               )}
@@ -250,8 +265,12 @@ export default function Home({ onNavigate }: HomeProps) {
 
         <section className="mt-5 grid min-h-0 grid-cols-1 gap-4 xl:grid-cols-2">
           <div className="min-h-0 overflow-hidden rounded-card border border-gray-200 bg-surface-1">
-            <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
-              <div>
+            <div className="flex items-center justify-between gap-3 border-b border-gray-200 px-5 py-4">
+              <div className="rounded-lg bg-gray-100 p-2 text-gray-600">
+                <Users size={18} />
+              </div>
+
+              <div className="min-w-0 flex-1">
                 <h2 className="font-semibold text-gray-900">
                   Usuarios recientes
                 </h2>
@@ -264,7 +283,7 @@ export default function Home({ onNavigate }: HomeProps) {
               <button
                 type="button"
                 onClick={() => onNavigate("users")}
-                className="text-sm font-medium text-primary transition hover:text-primary-hover"
+                className="text-sm font-medium brand-link"
               >
                 Ver todos →
               </button>
@@ -273,7 +292,7 @@ export default function Home({ onNavigate }: HomeProps) {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[420px]">
                 <thead>
-                  <tr className="border-b border-gray-100 text-left text-xs uppercase tracking-wide text-gray-400">
+                  <tr className="border-b border-gray-100 text-left text-xs text-ink-muted">
                     <th className="px-5 py-3 font-medium">
                       Usuario
                     </th>
@@ -405,9 +424,7 @@ function UserRow({
       </td>
 
       <td className="px-5 py-3">
-        <span className="text-sm text-gray-600">
-          {role}
-        </span>
+        <Badge tone="neutral">{role}</Badge>
       </td>
 
       <td className="px-5 py-3">
@@ -427,6 +444,9 @@ function getRoleLabel(role: string): string {
 
     case "user":
       return "Usuario";
+
+    case "owner":
+      return "Propietario";
 
     default:
       return role;

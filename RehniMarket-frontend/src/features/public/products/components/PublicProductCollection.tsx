@@ -63,7 +63,7 @@ export default function PublicProductCollection({
       }
     };
 
-    load();
+    void load();
 
     return () => {
       cancelled = true;

@@ -1,3 +1,4 @@
+/** Modal del administrador para generar la liquidación mensual de una empresa: periodo, vista previa y confirmación. */
 import { useEffect, useState } from "react";
 import { AlertTriangle, Building2, Search, X } from "lucide-react";
 import axios from "axios";
@@ -13,6 +14,7 @@ import {
 } from "@/features/admin/api/payoutService";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { Spinner } from "@/shared/components/ui";
+import { formatPeriodStartLabel } from "@/features/payouts/utils/period";
 
 import type { AdminCompanyResponse } from "@/features/admin/types/response";
 import type { PayoutAvailablePeriod, PayoutPreview } from "@/features/payouts/types/response";
@@ -21,16 +23,6 @@ interface GeneratePayoutModalProps {
   isOpen: boolean;
   onClose: () => void;
   onGenerated: () => void;
-}
-
-const MONTH_NAMES = [
-  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
-];
-
-function formatPeriodLabel(period: PayoutAvailablePeriod): string {
-  const [year, month] = period.periodStart.split("-").map(Number);
-  return `${MONTH_NAMES[month - 1]} ${year}`;
 }
 
 export default function GeneratePayoutModal({
@@ -231,23 +223,23 @@ export default function GeneratePayoutModal({
             <label className="mb-1.5 block text-sm text-gray-700">Empresa</label>
 
             {selectedCompany ? (
-              <div className="flex items-center justify-between rounded-xl border border-primary/30 bg-primary/5 px-4 py-2.5">
+              <div className="flex items-center justify-between rounded-xl border border-secondary/30 bg-primary/5 px-4 py-2.5">
                 <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
-                  <Building2 size={16} className="text-primary" />
+                  <Building2 size={16} className="text-secondary" />
                   {selectedCompany.nameCompany}
                 </div>
 
                 <button
                   type="button"
                   onClick={() => setSelectedCompany(null)}
-                  className="text-xs font-medium text-primary hover:underline"
+                  className="text-xs font-medium brand-link"
                 >
                   Cambiar
                 </button>
               </div>
             ) : (
               <div className="relative">
-                <div className="flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2.5">
+                <div className="flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-2.5 transition-colors focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary/20">
                   <Search size={16} className="text-gray-400" />
 
                   <input
@@ -311,7 +303,7 @@ export default function GeneratePayoutModal({
                       periods.find((period) => period.periodStart === e.target.value) ?? null,
                     )
                   }
-                  className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-brand-600"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-secondary"
                 >
                   <option value="" disabled>
                     Selecciona un mes...
@@ -319,7 +311,7 @@ export default function GeneratePayoutModal({
 
                   {periods.map((period) => (
                     <option key={period.periodStart} value={period.periodStart}>
-                      {formatPeriodLabel(period)}
+                      {formatPeriodStartLabel(period.periodStart)}
                     </option>
                   ))}
                 </select>
@@ -364,7 +356,7 @@ export default function GeneratePayoutModal({
             type="button"
             onClick={handleSubmit}
             disabled={generating || previewLoading || !selectedCompany || !selectedPeriod || !preview}
-            className="rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition fill-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             {generating ? "Generando..." : "Generar liquidación"}
           </button>

@@ -1,3 +1,4 @@
+/** Panel de empresa: elige la sección según ?tab= y la pinta dentro del layout de paneles. */
 import { useSearchParams } from "react-router-dom";
 
 import DashboardLayout from "@/shared/components/dashboard/DashboardLayout";
@@ -8,10 +9,9 @@ import Products from "@/features/company/components/dashboard/product/Products";
 import Orders from "@/features/company/components/dashboard/Orders";
 import Returns from "@/features/company/components/dashboard/Returns";
 import Finance from "@/features/company/components/dashboard/Finance";
-import MyCompany from "@/features/company/components/dashboard/MyCompany";
 import Profile from "@/features/company/components/dashboard/Profile";
 
-const VALID_TABS = ["home", "products", "orders", "returns", "finance", "company", "profile"];
+const VALID_TABS = ["home", "products", "orders", "returns", "finance", "profile"];
 
 export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -19,8 +19,8 @@ export default function Dashboard() {
   const tab = searchParams.get("tab");
   const view = tab && VALID_TABS.includes(tab) ? tab : "home";
 
-  const handleViewChange = (id: string) => {
-    setSearchParams(id === "home" ? {} : { tab: id });
+  const handleViewChange = (id: string, params?: Record<string, string>) => {
+    setSearchParams(id === "home" ? {} : { tab: id, ...params });
   };
 
   const views = {
@@ -29,7 +29,6 @@ export default function Dashboard() {
     orders: <Orders />,
     returns: <Returns />,
     finance: <Finance />,
-    company: <MyCompany />,
     profile: <Profile />,
   };
 
@@ -39,7 +38,7 @@ export default function Dashboard() {
       activeItem={view}
       onNavigate={handleViewChange}
       title="Panel Empresa"
-      description="Administra tu negocio"
+      description="Administra tu negocio en RehniMarket"
       roleName="Empresa"
     >
       {views[view as keyof typeof views]}

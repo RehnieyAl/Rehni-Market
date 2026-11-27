@@ -1,8 +1,13 @@
+/** Finanzas del panel de empresa: resumen (métricas, liquidaciones recientes y cuentas bancarias),
+ * liquidaciones completas y gestión de cuentas bancarias. */
 import { useState } from "react";
+import { Wallet } from "lucide-react";
 
 import FinanceSummary from "./finance/FinanceSummary";
 import PayoutsList from "./finance/PayoutsList";
 import BankAccountsList from "./finance/BankAccountsList";
+import DashboardFilterTabs from "@/shared/components/dashboard/DashboardFilterTabs";
+import DashboardPageHeader from "@/shared/components/dashboard/DashboardPageHeader";
 
 type TabId = "summary" | "payouts" | "bankAccounts";
 
@@ -17,32 +22,26 @@ export default function Finance() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Finanzas</h1>
+      <DashboardPageHeader
+        icon={<Wallet size={26} />}
+        title="Finanzas"
+        description="Consulta tus ventas, comisiones, liquidaciones y administra las cuentas bancarias donde recibes tus pagos."
+      />
 
-      <p className="mt-1 text-sm text-gray-500">
-        Consulta tus ventas, comisiones y liquidaciones mensuales, y administra las cuentas
-        bancarias donde recibes tus pagos.
-      </p>
-
-      <div className="mt-6 flex flex-wrap gap-2">
-        {TABS.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setTab(item.id)}
-            aria-pressed={tab === item.id}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-              tab === item.id
-                ? "bg-primary text-primary-fg"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            {item.label}
-          </button>
-        ))}
+      <div className="mt-6">
+        <DashboardFilterTabs label="Secciones de finanzas" options={TABS} value={tab} onChange={setTab} />
       </div>
 
-      <div className="mt-8">
-        {tab === "summary" && <FinanceSummary />}
+      <div className="mt-6">
+        {tab === "summary" && (
+          <div className="space-y-6">
+            <FinanceSummary />
+            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+              <PayoutsList recentOnly onViewAll={() => setTab("payouts")} />
+              <BankAccountsList compact />
+            </div>
+          </div>
+        )}
         {tab === "payouts" && <PayoutsList />}
         {tab === "bankAccounts" && <BankAccountsList />}
       </div>

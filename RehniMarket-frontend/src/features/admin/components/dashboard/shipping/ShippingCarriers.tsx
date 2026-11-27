@@ -15,6 +15,7 @@ import {
 import ShippingCarrierFormModal from "./ShippingCarrierFormModal";
 
 import type { ShippingCarrier } from "@/features/admin/types/response";
+import DashboardPageHeader from "@/shared/components/dashboard/DashboardPageHeader";
 
 export default function ShippingCarriers() {
   const [carriers, setCarriers] = useState<ShippingCarrier[]>([]);
@@ -44,7 +45,7 @@ export default function ShippingCarriers() {
       }
     };
 
-    load();
+    void load();
 
     return () => {
       cancelled = true;
@@ -79,30 +80,30 @@ export default function ShippingCarriers() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex flex-wrap items-start justify-between gap-3 shrink-0">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Transportadoras</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Catálogo global. Las empresas eligen una transportadora activa al despachar un pedido.
-          </p>
-        </div>
-
-        <Button
-          leadingIcon={<Plus size={18} />}
-          onClick={() => {
-            setEditing(null);
-            setFormOpen(true);
-          }}
-        >
-          Nueva transportadora
-        </Button>
+      <div className="shrink-0">
+        <DashboardPageHeader
+          icon={<Truck size={26} />}
+          title="Transportadoras"
+          description="Catálogo global. Las empresas eligen una transportadora activa al despachar un pedido."
+          action={
+            <Button
+              leadingIcon={<Plus size={18} />}
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              Nueva transportadora
+            </Button>
+          }
+        />
       </div>
 
       <section className="mt-6 flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-gray-200 bg-surface-1 shadow-card">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px]">
             <thead>
-              <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-400">
+              <tr className="border-b border-gray-200 text-left text-xs text-ink-muted">
                 <th className="px-5 py-3 font-medium">Transportadora</th>
                 <th className="px-5 py-3 font-medium">URL de seguimiento</th>
                 <th className="px-5 py-3 font-medium">Estado</th>

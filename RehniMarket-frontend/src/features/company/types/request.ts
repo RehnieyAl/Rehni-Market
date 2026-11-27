@@ -4,6 +4,10 @@ export interface UpdateProfileRequest {
   nameCompany?: string;
   addressCompany?: string;
   description?: string;
+  /** Contacto empresarial; "" lo borra. Solo se publica si contactPublic es true. */
+  contactEmail?: string;
+  contactPhone?: string;
+  contactPublic?: boolean;
 }
 
 export interface CompanyMediaUpload {

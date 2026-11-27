@@ -33,7 +33,7 @@ export default function PayoutPreviewCard({ preview }: { preview: PayoutPreview 
       </dl>
 
       <div className="border-t border-gray-200 pt-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+        <p className="text-xs font-medium text-ink-muted">
           Cuenta bancaria destino
         </p>
 

@@ -1,11 +1,18 @@
+/** Productos del panel de empresa: métricas, búsqueda, listado paginado y alta, edición o borrado de productos. */
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
+  AlertTriangle,
+  Eye,
+  EyeOff,
+  ImageOff,
+  Layers,
+  List,
+  Package,
+  Pencil,
   Plus,
   Search,
-  Eye,
-  Pencil,
   Trash2,
-  ImageOff,
 } from "lucide-react";
 
 import ProductForm from "./ProductForm";
@@ -20,7 +27,11 @@ import { getProductsSummary } from "@/features/company/api/companyService";
 import ConfirmModal from "@/shared/components/ConfirmModal";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { Badge, Button, EmptyState, Input, Skeleton } from "@/shared/components/ui";
+import DashboardPageHeader from "@/shared/components/dashboard/DashboardPageHeader";
+import DashboardPager from "@/shared/components/dashboard/DashboardPager";
+import DashboardSection from "@/shared/components/dashboard/DashboardSection";
 import StatCard from "@/shared/components/dashboard/StatCard";
+import { cn } from "@/shared/utils/cn";
 
 import type {
   MyProductResponse,
@@ -40,7 +51,9 @@ export default function Products() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const [openProductModal, setOpenProductModal] = useState(false);
+  // ?new=1 (acción "Crear producto" del inicio del panel) abre directamente el formulario de alta.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [openProductModal, setOpenProductModal] = useState(() => searchParams.get("new") === "1");
   const [openEditModal, setOpenEditModal] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
 
@@ -78,7 +91,7 @@ export default function Products() {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      loadProducts();
+      void loadProducts();
     }, 300);
 
     return () => clearTimeout(timeout);
@@ -105,7 +118,7 @@ export default function Products() {
       }
     };
 
-    loadInitialSummary();
+    void loadInitialSummary();
 
     return () => {
       cancelled = true;
@@ -113,13 +126,13 @@ export default function Products() {
   }, []);
 
   const handleProductSaved = () => {
-    loadProducts();
-    loadSummary();
+    void loadProducts();
+    void loadSummary();
   };
 
   const handleProductCreated = (productId: string) => {
-    loadProducts();
-    loadSummary();
+    void loadProducts();
+    void loadSummary();
     setEditingProductId(productId);
     setOpenEditModal(true);
   };
@@ -144,7 +157,7 @@ export default function Products() {
         ),
       );
 
-      loadSummary();
+      void loadSummary();
     } catch (error) {
       console.error(
         "Error cambiando estado del producto:",
@@ -168,7 +181,7 @@ export default function Products() {
 
       showAlert("success", "Producto eliminado correctamente.");
 
-      loadSummary();
+      void loadSummary();
     } catch (error) {
       console.error(
         "Error eliminando producto:",
@@ -181,53 +194,30 @@ export default function Products() {
     }
   };
 
+  const statValue = (value: number | undefined) => (summaryLoading ? "…" : String(value ?? 0));
+
   return (
     <>
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Productos</h1>
+      <DashboardPageHeader
+        icon={<Package size={26} />}
+        title="Productos"
+        description="Administra todos los productos de tu empresa."
+        action={
+          <Button leadingIcon={<Plus size={18} />} onClick={() => setOpenProductModal(true)}>
+            Nuevo producto
+          </Button>
+        }
+      />
 
-          <p className="mt-1 text-sm text-gray-500">
-            Administra todos los productos de tu empresa.
-          </p>
-        </div>
-
-        <Button leadingIcon={<Plus size={18} />} onClick={() => setOpenProductModal(true)}>
-          Nuevo producto
-        </Button>
-      </div>
-
-      <section className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-        <StatCard
-          size="sm"
-          title="Productos publicados"
-          value={summaryLoading ? "…" : String(summary?.total ?? 0)}
-        />
-
-        <StatCard
-          size="sm"
-          title="Activos"
-          value={summaryLoading ? "…" : String(summary?.active ?? 0)}
-        />
-
-        <StatCard
-          size="sm"
-          title="Agotados"
-          value={summaryLoading ? "…" : String(summary?.out_of_stock ?? 0)}
-        />
-
-        <StatCard
-          size="sm"
-          title="Ocultos"
-          value={summaryLoading ? "…" : String(summary?.hidden ?? 0)}
-        />
+      <section aria-label="Resumen de productos" className="mt-6 grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 xl:grid-cols-4">
+        <StatCard size="sm" title="Productos publicados" value={statValue(summary?.total)} icon={<Package size={20} />} tone="brand" />
+        <StatCard size="sm" title="Activos" value={statValue(summary?.active)} icon={<Layers size={20} />} tone="success" />
+        <StatCard size="sm" title="Agotados" value={statValue(summary?.out_of_stock)} icon={<AlertTriangle size={20} />} tone="warning" />
+        <StatCard size="sm" title="Ocultos" value={statValue(summary?.hidden)} icon={<EyeOff size={20} />} tone="neutral" />
       </section>
 
-      <section className="mt-8 rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card sm:p-8">
-        <h2 className="text-lg font-semibold text-gray-900">Lista de productos</h2>
-
+      <DashboardSection title="Lista de productos" icon={<List size={20} />} className="mt-6">
         <Input
-          className="mt-6"
           type="search"
           value={search}
           onChange={(e) => {
@@ -239,160 +229,51 @@ export default function Products() {
           leadingIcon={<Search size={16} />}
         />
 
-        <div className="mt-8 max-h-[600px] overflow-y-auto pr-2">
-          <div className="grid gap-5">
-            {loading ? (
-              Array.from({ length: 4 }).map((_, index) => (
-                <Skeleton key={index} className="h-28 rounded-card" />
-              ))
-            ) : products.length === 0 ? (
+        <ul className="mt-5 space-y-3" aria-busy={loading || undefined}>
+          {loading ? (
+            Array.from({ length: 4 }).map((_, index) => (
+              <li key={index}>
+                <Skeleton className="h-24 rounded-card dark:bg-surface-2" />
+              </li>
+            ))
+          ) : products.length === 0 ? (
+            <li>
               <EmptyState
                 variant="plain"
+                icon={<Package size={22} />}
                 title="No se encontraron productos"
                 description="Ajusta la búsqueda o crea un producto nuevo."
               />
-            ) : (
-              products.map((product) => (
-                <div
-                  key={product.id}
-                  className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 p-5 shadow-card transition hover:shadow-pop"
-                >
-                  <div className="flex min-w-0 items-center gap-5">
-                    {product.image ? (
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="h-20 w-20 shrink-0 rounded-control object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-control border border-dashed border-gray-300 text-gray-300">
-                        <ImageOff size={22} />
-                      </div>
-                    )}
+            </li>
+          ) : (
+            products.map((product) => (
+              <ProductRow
+                key={product.id}
+                product={product}
+                onToggleStatus={() => handleChangeStatus(product.id, !product.is_active)}
+                onEdit={() => {
+                  setEditingProductId(product.id);
+                  setOpenEditModal(true);
+                }}
+                onDelete={() => setConfirmDeleteId(product.id)}
+              />
+            ))
+          )}
+        </ul>
 
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-gray-900">
-                        {product.name}
-                      </h3>
-
-                      <p className="line-clamp-1 text-sm text-gray-500">
-                        {product.description}
-                      </p>
-
-                      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                        <span className="text-gray-600">
-                          {product.category}
-                        </span>
-
-                        <span className="font-semibold text-gray-900">
-                          ${product.price.toLocaleString()}
-                        </span>
-
-                        <span className="text-gray-600">
-                          Stock: {product.stock}
-                        </span>
-
-                        <Badge
-                          tone={
-                            product.deleted_at
-                              ? "danger"
-                              : product.is_active
-                                ? "success"
-                                : "warning"
-                          }
-                        >
-                          {product.deleted_at
-                            ? "Eliminado"
-                            : product.is_active
-                              ? "Activo"
-                              : "Inactivo"}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-1">
-                    {!product.deleted_at && (
-                      <button
-                        onClick={() =>
-                          handleChangeStatus(
-                            product.id,
-                            !product.is_active,
-                          )
-                        }
-                        className="flex h-9 w-9 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
-                        title={
-                          product.is_active
-                            ? "Desactivar producto"
-                            : "Activar producto"
-                        }
-                        aria-label={
-                          product.is_active
-                            ? `Desactivar ${product.name}`
-                            : `Activar ${product.name}`
-                        }
-                      >
-                        <Eye size={18} />
-                      </button>
-                    )}
-
-                    <button
-                      onClick={() => {
-                        setEditingProductId(product.id);
-                        setOpenEditModal(true);
-                      }}
-                      className="flex h-9 w-9 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
-                      title="Editar producto"
-                      aria-label={`Editar ${product.name}`}
-                    >
-                      <Pencil size={18} />
-                    </button>
-
-                    {!product.deleted_at && (
-                      <button
-                        onClick={() => setConfirmDeleteId(product.id)}
-                        className="flex h-9 w-9 items-center justify-center rounded-control text-danger transition hover:bg-danger-bg"
-                        title="Eliminar producto"
-                        aria-label={`Eliminar ${product.name}`}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="mt-8 flex items-center justify-center gap-5">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page === 1}
-            onClick={() => setPage(page - 1)}
-          >
-            Anterior
-          </Button>
-
-          <span className="text-sm text-gray-600">
-            Página {page} de {totalPages}
-          </span>
-
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={page === totalPages}
-            onClick={() => setPage(page + 1)}
-          >
-            Siguiente
-          </Button>
-        </div>
-      </section>
+        <DashboardPager page={page} totalPages={totalPages} onPageChange={setPage} />
+      </DashboardSection>
 
       <ProductForm
         isOpen={openProductModal}
-        onClose={() => setOpenProductModal(false)}
+        onClose={() => {
+          setOpenProductModal(false);
+          if (searchParams.has("new")) {
+            const next = new URLSearchParams(searchParams);
+            next.delete("new");
+            setSearchParams(next, { replace: true });
+          }
+        }}
         onSuccess={handleProductCreated}
       />
 
@@ -416,5 +297,105 @@ export default function Products() {
         onClose={() => setConfirmDeleteId(null)}
       />
     </>
+  );
+}
+
+const ICON_BUTTON =
+  "flex h-10 w-10 items-center justify-center rounded-control border border-hairline bg-surface-2 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary";
+
+interface ProductRowProps {
+  product: MyProductResponse;
+  onToggleStatus: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+function productStatus(product: MyProductResponse) {
+  if (product.deleted_at) return { label: "Eliminado", tone: "danger" as const };
+  return product.is_active ? { label: "Activo", tone: "success" as const } : { label: "Inactivo", tone: "warning" as const };
+}
+
+function ProductRow({ product, onToggleStatus, onEdit, onDelete }: ProductRowProps) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const status = productStatus(product);
+
+  return (
+    <li className="grid grid-cols-[4rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 rounded-card border border-hairline bg-surface-2/40 p-3 sm:p-4 lg:grid-cols-[5rem_minmax(0,1fr)_7.5rem_5rem_7rem_auto]">
+      {product.image && !imageFailed ? (
+        <img
+          src={product.image}
+          alt=""
+          width={80}
+          height={80}
+          loading="lazy"
+          onError={() => setImageFailed(true)}
+          className="h-16 w-16 rounded-control bg-surface-2 object-contain lg:h-20 lg:w-20"
+        />
+      ) : (
+        <div className="flex h-16 w-16 items-center justify-center rounded-control border border-dashed border-gray-300 text-gray-400 lg:h-20 lg:w-20">
+          <ImageOff size={22} aria-hidden="true" />
+        </div>
+      )}
+
+      <div className="min-w-0">
+        <h3 className="truncate font-semibold text-ink" title={product.name}>
+          {product.name}
+        </h3>
+        <p className="line-clamp-1 text-sm text-ink-muted">{product.description}</p>
+      </div>
+
+      <dl className="col-span-2 grid grid-cols-[auto_auto_1fr] items-center gap-x-5 gap-y-3 text-sm lg:col-span-3 lg:grid-cols-[7.5rem_5rem_7rem] lg:gap-3">
+        <div>
+          <dt className="text-xs text-ink-muted">Precio</dt>
+          <dd className="font-semibold tabular-nums text-ink">${product.price.toLocaleString("es-CO")}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-ink-muted">Stock</dt>
+          <dd className="font-semibold tabular-nums text-ink">{product.stock}</dd>
+        </div>
+        <div>
+          <dt className="sr-only">Estado</dt>
+          <dd>
+            <Badge tone={status.tone} dot>
+              {status.label}
+            </Badge>
+          </dd>
+        </div>
+      </dl>
+
+      <div className="col-span-2 flex justify-end gap-2 lg:col-span-1">
+        {!product.deleted_at && (
+          <button
+            type="button"
+            onClick={onToggleStatus}
+            className={cn(ICON_BUTTON, "text-ink-muted hover:text-ink")}
+            title={product.is_active ? "Desactivar producto" : "Activar producto"}
+            aria-label={product.is_active ? `Desactivar ${product.name}` : `Activar ${product.name}`}
+          >
+            {product.is_active ? <Eye size={18} aria-hidden="true" /> : <EyeOff size={18} aria-hidden="true" />}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onEdit}
+          className={cn(ICON_BUTTON, "text-ink-muted hover:text-ink")}
+          title="Editar producto"
+          aria-label={`Editar ${product.name}`}
+        >
+          <Pencil size={18} aria-hidden="true" />
+        </button>
+        {!product.deleted_at && (
+          <button
+            type="button"
+            onClick={onDelete}
+            className={cn(ICON_BUTTON, "text-danger hover:bg-danger-bg")}
+            title="Eliminar producto"
+            aria-label={`Eliminar ${product.name}`}
+          >
+            <Trash2 size={18} aria-hidden="true" />
+          </button>
+        )}
+      </div>
+    </li>
   );
 }

@@ -1,3 +1,4 @@
+/** Código de un solo uso en casillas: un dígito por casilla, pegado del código completo y navegación con flechas. */
 import { useEffect, useRef } from "react";
 import type { ClipboardEvent, KeyboardEvent } from "react";
 
@@ -80,9 +81,9 @@ export default function OtpInput({
           onKeyDown={(event) => handleKeyDown(event, index)}
           onPaste={handlePaste}
           className={cn(
-            "h-12 w-full rounded-control border border-gray-300 text-center text-lg font-bold text-gray-900 outline-none transition",
-            "focus:border-brand-600 focus:ring-2 focus:ring-brand-600/25 sm:h-14 sm:text-xl",
-            "disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400",
+            "h-12 w-full min-w-0 rounded-control border border-white/10 bg-surface-0 text-center text-lg font-semibold text-ink outline-none transition",
+            "focus:border-secondary focus:ring-2 focus:ring-secondary/30 sm:h-14 sm:text-xl",
+            "disabled:cursor-not-allowed disabled:opacity-50",
           )}
         />
       ))}

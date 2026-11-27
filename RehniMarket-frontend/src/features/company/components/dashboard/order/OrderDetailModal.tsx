@@ -1,3 +1,4 @@
+/** Detalle de un pedido para la empresa: ítems, cambio de estado y datos de envío (transportadora y guía). */
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Mail, MapPin, Phone, Store, Truck, Pencil } from "lucide-react";
@@ -86,12 +87,12 @@ export default function OrderDetailModal({
       }
     };
 
-    load();
+    void load();
 
     return () => {
       cancelled = true;
     };
-  }, [isOpen, orderId]);
+  }, [isOpen, orderId, showAlert]);
 
   const next = order ? NEXT_STATUS[order.status] : undefined;
 
@@ -183,7 +184,7 @@ export default function OrderDetailModal({
 
           <section className="rounded-card border bg-gray-50 p-4">
             <div className="flex items-start gap-4">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-lg font-bold text-white">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-lg font-semibold text-white">
                 {order.buyerPhoto ? (
                   <img
                     src={order.buyerPhoto}
@@ -234,7 +235,7 @@ export default function OrderDetailModal({
 
               <Link
                 to={`/company/${order.companyId}`}
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-2 hover:underline"
+                className="inline-flex items-center gap-1.5 text-sm font-medium brand-link"
                 aria-label={`Ver la tienda de ${order.companyName}`}
               >
                 <Store size={14} />

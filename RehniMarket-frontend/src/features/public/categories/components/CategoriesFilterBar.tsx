@@ -1,3 +1,4 @@
+/** Controles de Explorar categorías: búsqueda por nombre, filtro por categoría y orden. */
 import { Search } from "lucide-react";
 
 import { Input, Select } from "@/shared/components/ui";
@@ -26,9 +27,9 @@ export default function CategoriesFilterBar({
   onSortChange,
 }: CategoriesFilterBarProps) {
   return (
-    <div className="flex flex-col gap-3 rounded-card border border-gray-200 bg-surface-1 p-4 shadow-card sm:flex-row sm:items-center sm:gap-4">
+    <div role="search" className="flex flex-col gap-3 md:flex-row md:items-center">
       <Input
-        className="flex-1"
+        className="min-w-0 flex-1"
         type="search"
         value={search}
         onChange={(e) => onSearchChange(e.target.value)}
@@ -37,9 +38,9 @@ export default function CategoriesFilterBar({
         leadingIcon={<Search size={16} />}
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 md:flex">
         <Select
-          className="sm:w-52"
+          className="md:w-56"
           aria-label="Filtrar por categoría"
           value={selectedName}
           onChange={(e) => onSelectedNameChange(e.target.value)}
@@ -53,7 +54,7 @@ export default function CategoriesFilterBar({
         </Select>
 
         <Select
-          className="sm:w-44"
+          className="md:w-48"
           aria-label="Ordenar categorías"
           value={sort}
           onChange={(e) => onSortChange(e.target.value as CategorySort)}

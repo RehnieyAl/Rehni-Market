@@ -1,3 +1,4 @@
+/** Selector de variantes del detalle: un grupo de opciones por eje (color, talla…) con su disponibilidad. */
 import { useMemo } from "react";
 
 import type { PublicProductVariant } from "../types/response";
@@ -36,38 +37,42 @@ export default function VariantAttributePicker({
   };
 
   return (
-    <div className="space-y-5">
+    <>
       {axes.map((axis) => {
         const chosen = selected[axis.name];
+        const labelId = `variant-axis-${axis.name.replace(/\s+/g, "-").toLowerCase()}`;
 
         return (
-          <div key={axis.name}>
-            <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-ink">
+          <div key={axis.name} role="group" aria-labelledby={labelId} className="min-w-0">
+            <p id={labelId} className="mb-2 text-sm font-semibold text-ink">
               {axis.name}
               {chosen ? `: ${chosen}` : ""}
-            </h3>
+            </p>
 
-            <div className="flex flex-wrap gap-2.5">
+            <div className="flex flex-wrap gap-2">
               {axis.values.map(({ value, hex }) => {
                 const available = isAvailable(axis.name, value);
                 const isSelected = chosen === value;
+                const unavailableHint = `${value} (no disponible con la selección actual)`;
 
                 if (axis.isColor) {
                   return (
                     <button
                       key={value}
                       type="button"
-                      title={available ? value : `${value} (no disponible con la selección actual)`}
+                      title={available ? value : unavailableHint}
+                      aria-label={available ? value : unavailableHint}
+                      aria-pressed={isSelected}
                       disabled={!available}
                       onClick={() => onChange(axis.name, value)}
-                      className={`h-9 w-9 rounded-full border-2 transition ${
+                      className={`h-9 w-9 touch-manipulation rounded-full border-2 transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary ${
                         !available
-                          ? "cursor-not-allowed border-gray-200 opacity-40"
+                          ? "cursor-not-allowed border-hairline opacity-40"
                           : isSelected
-                            ? "border-primary ring-2 ring-brand-600/25"
-                            : "border-gray-300 hover:border-gray-400"
+                            ? "border-secondary ring-2 ring-secondary/40 ring-offset-2 ring-offset-surface-1"
+                            : "border-white/25 hover:border-white/50"
                       }`}
-                      style={{ backgroundColor: hex ?? "#e5e7eb" }}
+                      style={{ backgroundColor: hex ?? "var(--color-gray-700)" }}
                     />
                   );
                 }
@@ -76,17 +81,16 @@ export default function VariantAttributePicker({
                   <button
                     key={value}
                     type="button"
-                    title={
-                      available ? undefined : `${value} (no disponible con la selección actual)`
-                    }
+                    title={available ? undefined : unavailableHint}
+                    aria-pressed={isSelected}
                     disabled={!available}
                     onClick={() => onChange(axis.name, value)}
-                    className={`rounded-control border px-3.5 py-2 text-sm font-medium transition ${
+                    className={`h-9 min-w-12 touch-manipulation rounded-full border px-3.5 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary ${
                       !available
-                        ? "cursor-not-allowed border-gray-200 text-gray-300 line-through dark:border-hairline dark:text-white/25"
+                        ? "cursor-not-allowed border-hairline text-white/25 line-through"
                         : isSelected
-                          ? "border-primary bg-primary text-primary-fg dark:border-brand-400"
-                          : "border-gray-300 text-gray-700 hover:border-gray-400 dark:border-white/25 dark:text-ink dark:hover:border-white/45"
+                          ? "border-secondary bg-secondary/20 text-ink"
+                          : "border-white/20 text-ink hover:border-white/45"
                     }`}
                   >
                     {value}
@@ -97,6 +101,6 @@ export default function VariantAttributePicker({
           </div>
         );
       })}
-    </div>
+    </>
   );
 }

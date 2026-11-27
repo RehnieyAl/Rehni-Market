@@ -80,7 +80,7 @@ export default function UserDetailModal({
       }
     };
 
-    loadUser();
+    void loadUser();
   }, [isOpen, userId]);
 
   if (!isOpen) {
@@ -169,7 +169,7 @@ export default function UserDetailModal({
 
         <div className="shrink-0 border-b border-gray-200 px-6 py-5">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl font-semibold text-gray-900">
               {isEditing
                 ? "Editar información"
                 : "Detalle de usuario"}
@@ -201,13 +201,13 @@ export default function UserDetailModal({
                     className="h-20 w-20 shrink-0 rounded-xl object-cover"
                   />
                 ) : (
-                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-2xl font-bold text-gray-500">
+                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-2xl font-semibold text-gray-500">
                     {user.fullName.charAt(0).toUpperCase()}
                   </div>
                 )}
 
                 <div className="min-w-0">
-                  <h3 className="text-2xl font-bold text-gray-900">
+                  <h3 className="text-2xl font-semibold text-gray-900">
                     {user.fullName}
                   </h3>
 

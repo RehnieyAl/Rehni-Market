@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+/** Carrito del comprador en sesión: una sola fuente para el navbar, el desplegable, la página del carrito y el
+ * checkout. Al cambiar de usuario se recarga y se descartan respuestas del anterior. */
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { useAuth } from "@/features/public/auth/context/useAuth";
@@ -24,8 +26,11 @@ export function CartProvider({ children }: Props) {
 
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState(false);
+  const requestRef = useRef(0);
 
   const refreshCart = useCallback(async () => {
+    const request = ++requestRef.current;
+
     if (role !== "user") {
       setCart(null);
       return;
@@ -34,34 +39,19 @@ export function CartProvider({ children }: Props) {
     try {
       setLoading(true);
       const data = await getCart();
-      setCart(data);
+      if (request === requestRef.current) setCart(data);
     } catch (error) {
       console.error("Error cargando el carrito:", error);
     } finally {
-      setLoading(false);
+      if (request === requestRef.current) setLoading(false);
     }
   }, [role]);
 
+  // identity recarga al cambiar de comprador sin cambiar de rol; diferido como el resto de cargas iniciales.
   useEffect(() => {
-    const loadCart = async () => {
-      if (role !== "user") {
-        setCart(null);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const data = await getCart();
-        setCart(data);
-      } catch (error) {
-        console.error("Error cargando el carrito:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCart();
-  }, [role, identity]);
+    const timeout = setTimeout(() => void refreshCart());
+    return () => clearTimeout(timeout);
+  }, [refreshCart, identity]);
 
   const addItem = async (productId: string, quantity: number, variantId?: string) => {
     const data = await addToCart({ productId, quantity, variantId });

@@ -31,13 +31,13 @@ export default defineConfig({
       reporter: ["text-summary", "text", "html", "lcov", "json-summary"],
       reportsDirectory: "coverage",
       // Gate de CI (ratchet: solo sube). Línea base 2026-11-03: líneas 7,73 %,
-      // ramas 7,37 %. Tras la Fase 2 (2026-11-03): líneas 10,58 %, ramas 9,20 %,
-      // sentencias 10,34 %, funciones 7,92 %.
+      // ramas 7,37 %. Medición 2026-11-24: líneas 92,55 %, ramas 83,77 %,
+      // sentencias 91,05 %, funciones 90,56 %; el gate queda un punto por debajo.
       thresholds: {
-        lines: 10,
-        branches: 9,
-        statements: 10,
-        functions: 7,
+        lines: 91,
+        branches: 82,
+        statements: 90,
+        functions: 89,
       },
     },
   },

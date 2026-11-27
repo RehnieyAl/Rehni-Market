@@ -1,5 +1,9 @@
+/** Pie de las páginas públicas: navegación, contacto institucional publicado por el owner y redes. */
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { Mail, Phone } from "lucide-react";
+
+import usePublicPlatformContact from "@/features/platform/hooks/usePublicPlatformContact";
 
 import logo from "@/assets/logo.png";
 
@@ -75,13 +79,42 @@ const COLUMNS: { title: string; links: FooterLink[] }[] = [
 ];
 
 const linkClass =
-  "text-sm text-gray-500 transition hover:text-primary dark:text-ink-muted dark:hover:text-accent";
+  "text-sm text-ink-muted transition-colors hover:text-secondary";
+
+function ContactColumn() {
+  const contact = usePublicPlatformContact();
+  if (!contact?.email && !contact?.phone) return null;
+
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-gray-900 dark:text-ink">Contacto</h3>
+      <ul className="mt-4 space-y-2.5">
+        {contact.email && (
+          <li>
+            <a href={`mailto:${contact.email}`} className={`${linkClass} inline-flex items-center gap-2 break-all`}>
+              <Mail size={15} aria-hidden="true" />
+              {contact.email}
+            </a>
+          </li>
+        )}
+        {contact.phone && (
+          <li>
+            <a href={`tel:${contact.phone}`} className={`${linkClass} inline-flex items-center gap-2`}>
+              <Phone size={15} aria-hidden="true" />
+              {contact.phone}
+            </a>
+          </li>
+        )}
+      </ul>
+    </div>
+  );
+}
 
 export default function Footer() {
   return (
     <footer className="mt-12 border-t border-gray-200 bg-gray-50 dark:border-hairline dark:bg-surface-1">
       <div className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_auto]">
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr_auto]">
           <div className="max-w-xs">
             <img src={logo} alt="RehniMarket" className="h-9 w-auto object-contain" />
             <p className="mt-4 text-sm leading-relaxed text-gray-500 dark:text-ink-muted">
@@ -112,6 +145,8 @@ export default function Footer() {
               </ul>
             </div>
           ))}
+
+          <ContactColumn />
 
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-ink">Síguenos</h3>

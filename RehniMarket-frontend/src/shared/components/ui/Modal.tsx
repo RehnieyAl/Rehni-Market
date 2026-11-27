@@ -1,3 +1,5 @@
+/** Modal accesible compartido: portal, contención y restauración del foco, Escape, bloqueo del scroll
+ * de fondo y fondo atenuado o desenfocado. */
 import { useCallback, useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
@@ -6,6 +8,13 @@ import type { ReactNode } from "react";
 import { cn } from "@/shared/utils/cn";
 
 export type ModalSize = "sm" | "md" | "lg" | "xl";
+
+// "blur": el contenido de fondo se desenfoca con backdrop-filter en el overlay; el panel no lleva
+// filtro, así que permanece nítido.
+const BACKDROP_CLASS = {
+  dim: "bg-black/50 backdrop-blur-[2px]",
+  blur: "bg-black/60 backdrop-blur-sm",
+} as const;
 
 const SIZE_CLASS: Record<ModalSize, string> = {
   sm: "max-w-md",
@@ -28,6 +37,7 @@ interface ModalProps {
   busy?: boolean;
   className?: string;
   ariaLabel?: string;
+  backdrop?: keyof typeof BACKDROP_CLASS;
 }
 
 let openModalCount = 0;
@@ -49,6 +59,7 @@ export default function Modal({
   busy = false,
   className,
   ariaLabel,
+  backdrop = "dim",
 }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const restoreFocusRef = useRef<HTMLElement | null>(null);
@@ -64,11 +75,18 @@ export default function Modal({
 
     openModalCount += 1;
     const previousOverflow = document.body.style.overflow;
+    const previousPadding = document.body.style.paddingRight;
+    // Al ocultar la barra de desplazamiento la página se ensancharía: se compensa su ancho.
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
 
     return () => {
       openModalCount -= 1;
-      if (openModalCount === 0) document.body.style.overflow = previousOverflow;
+      if (openModalCount === 0) {
+        document.body.style.overflow = previousOverflow;
+        document.body.style.paddingRight = previousPadding;
+      }
     };
   }, [isOpen]);
 
@@ -130,7 +148,11 @@ export default function Modal({
 
   return createPortal(
     <div
-      className="animate-overlay-in fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-[2px]"
+      data-backdrop={backdrop}
+      className={cn(
+        "animate-overlay-in fixed inset-0 z-[100] flex items-center justify-center p-4",
+        BACKDROP_CLASS[backdrop],
+      )}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && closeOnOverlayClick) {
           requestClose();

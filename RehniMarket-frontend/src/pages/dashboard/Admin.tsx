@@ -16,8 +16,10 @@ import Advertisements from "@/features/admin/components/dashboard/advertisement/
 import AdminPayouts from "@/features/admin/components/dashboard/payout/AdminPayouts";
 import RehniCoin from "@/features/admin/components/dashboard/wallet/RehniCoin";
 import Reports from "@/features/admin/components/dashboard/report/Reports";
+import AdminReturns from "@/features/admin/components/dashboard/returns/AdminReturns";
 import ShippingCarriers from "@/features/admin/components/dashboard/shipping/ShippingCarriers";
 import AccountSettings from "@/features/public/auth/components/AccountSettings";
+import SiteSettings from "@/features/admin/components/dashboard/site/SiteSettings";
 
 const VALID_TABS = [
   "home",
@@ -26,9 +28,11 @@ const VALID_TABS = [
   "products",
   "hero",
   "reports",
+  "returns",
   "carriers",
   "payouts",
   "wallet",
+  "site",
   "account",
 ];
 
@@ -53,9 +57,11 @@ export default function Admin() {
     products: <CatalogManagement />,
     hero: <Advertisements />,
     reports: <Reports />,
+    returns: <AdminReturns />,
     carriers: <ShippingCarriers />,
     payouts: isOwner ? <AdminPayouts /> : null,
     wallet: <RehniCoin />,
+    site: isOwner ? <SiteSettings /> : null,
     account: <AccountSettings />,
   };
 

@@ -10,16 +10,16 @@ import BusinessCtaSection from "@/features/public/home/components/BusinessCtaSec
 
 export default function Home() {
   return (
-    <div className="theme-dark flex min-h-screen flex-col bg-canvas text-ink">
+    <div className="flex min-h-screen flex-col bg-canvas text-ink">
       <NavBar />
 
       <main className="flex-1 pb-4">
-        <section className="pt-3 sm:pt-5">
+        <section className="pt-4 sm:pt-6 lg:pt-7">
           <Hero />
         </section>
 
         <div className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-3 sm:px-4 lg:px-8">
-          <div className="mt-4 sm:mt-6">
+          <div className="mt-4 sm:mt-6 lg:mt-7">
             <HomeInfoCards />
           </div>
 

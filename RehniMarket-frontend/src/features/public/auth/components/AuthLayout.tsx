@@ -1,14 +1,21 @@
+/** Marco de las pantallas de acceso independientes: fondo carbón, tarjeta tonal compacta con flecha de
+ * regreso, cabecera centrada y un texto opcional bajo la tarjeta. */
 import type { ReactNode } from "react";
 
 import { cn } from "@/shared/utils/cn";
 
+import AuthBackButton from "./AuthBackButton";
+import AuthHeader from "./AuthHeader";
+
 interface AuthLayoutProps {
   title: string;
   subtitle?: ReactNode;
-  icon?: ReactNode;
+  icon: ReactNode;
   children: ReactNode;
   belowCard?: ReactNode;
   size?: "md" | "lg";
+  /** Destino de la flecha cuando no hay un paso anterior en el historial. */
+  backFallback?: string;
 }
 
 export default function AuthLayout({
@@ -18,39 +25,24 @@ export default function AuthLayout({
   children,
   belowCard,
   size = "md",
+  backFallback = "/",
 }: AuthLayoutProps) {
   return (
-    <div className="flex min-h-dvh flex-col bg-gray-50 px-4 py-8 sm:py-12">
+    <main className="flex min-h-dvh flex-col bg-canvas px-4 py-6 sm:py-12">
       <div
         className={cn(
           "mx-auto flex w-full flex-1 flex-col justify-center",
           size === "lg" ? "max-w-xl" : "max-w-md",
         )}
       >
-        <div className="animate-fade-in rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card sm:p-8">
-          {icon && (
-            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-primary">
-              {icon}
-            </div>
-          )}
-
-          <h1 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl">
-            {title}
-          </h1>
-
-          {subtitle && (
-            <p className="mx-auto mt-2 max-w-sm text-center text-sm leading-relaxed text-gray-500">
-              {subtitle}
-            </p>
-          )}
-
+        <div className="animate-fade-in relative rounded-[28px] border border-white/[0.06] bg-surface-1 px-5 pb-6 pt-16 sm:px-8 sm:pb-8 sm:pt-20">
+          <AuthBackButton fallback={backFallback} />
+          <AuthHeader icon={icon} title={title} subtitle={subtitle} />
           <div className="mt-7">{children}</div>
         </div>
 
-        {belowCard && (
-          <div className="mt-6 text-center text-sm text-gray-500">{belowCard}</div>
-        )}
+        {belowCard && <div className="mt-6 text-center text-sm text-ink-muted">{belowCard}</div>}
       </div>
-    </div>
+    </main>
   );
 }
