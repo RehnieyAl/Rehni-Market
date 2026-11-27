@@ -318,18 +318,16 @@ def update_variant_service(
             )
             _apply_attribute_values(database, variant, resolved_values)
 
-        for field in (
-            "price",
-            "stock",
-            "discount_enable",
-            "discount_value",
-            "discount_type",
-            "discount_starts_at",
-            "discount_ends_at",
-        ):
+        for field in ("price", "stock", "discount_enable", "discount_value"):
             value = getattr(data, field)
             if value is not None:
                 setattr(variant, field, value)
+
+        # null es un valor válido para el tipo y la ventana del descuento (sin fechas, o descuento apagado):
+        # se aplican si vienen en la petición, para que borrar una fecha no deje la anterior guardada.
+        for field in ("discount_type", "discount_starts_at", "discount_ends_at"):
+            if field in data.model_fields_set:
+                setattr(variant, field, getattr(data, field))
 
         if data.name is not None:
             variant.name = data.name.strip()
