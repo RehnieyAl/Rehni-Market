@@ -50,6 +50,19 @@ SELECT email, "isActive" FROM users WHERE email LIKE '%@rehnimarket.example' OR 
 
 Si aparecen filas en producción, desactivarlas o cambiarles la clave.
 
+## Code smells del mismo análisis
+
+No bloquean el Quality Gate (mantenibilidad A), pero aparecen entre las anotaciones del PR.
+
+| Regla | Cantidad | Veredicto |
+|---|---|---|
+| `python:S6903` `datetime.utcnow()` | 3 | **Corregido**: `datetime.now(timezone.utc).replace(tzinfo=None)`, el mismo valor UTC sin zona que guardan las columnas (una fecha con zona fallaría al compararse con ellas). Se cambiaron también las otras 3 de `publicService/Products.py`; las demás del proyecto ya existían antes del PR. |
+| `python:S8495` tuplas de distinto largo | 1 | **Corregido**: `_catalog_order` devuelve una lista de criterios para `order_by(*...)`, cuyo largo depende del orden pedido. |
+| `python:S8396` campo `Optional` sin valor por defecto | 15 | **Aceptado por diseño** («Won't fix»): todos son modelos de **respuesta**. Sin valor por defecto, la clave es obligatoria aunque pueda ser `null`: si un servicio olvida un campo, la validación falla en vez de responder `null` en silencio. Ningún campo de petición está afectado. |
+| `typescript:S6845` `tabIndex` en elemento no interactivo | 3 | **Falso positivo**: son contenedores con desplazamiento (`role="region"` con nombre); `tabIndex={0}` permite desplazarlos con el teclado, como exige la regla `scrollable-region-focusable` de axe. La galería además maneja flechas. |
+| `typescript:S6852` `tablist` no enfocable | 1 | **Falso positivo**: patrón de pestañas WAI-ARIA con *roving tabindex*; el foco va a las pestañas, no al contenedor. |
+| `python:S8786` / `typescript:S8786` expresión regular costosa | 3 | **Abierto, riesgo bajo**: `[^@\s]+@[^@\s]+\.[^@\s]+` puede retroceder de forma cuadrática. En el backend la longitud se limita a 254 antes de evaluar; en la web solo afecta al navegador de quien escribe. Pendiente de simplificar sin cambiar qué correos se aceptan. |
+
 ## Cómo marcarlos en SonarCloud
 
 Necesita el permiso *Administer Issues* del proyecto (el propietario lo tiene).
@@ -61,6 +74,8 @@ Necesita el permiso *Administer Issues* del proyecto (el propietario lo tiene).
    ver docs/calidad/sonar-falsos-positivos-pr106.md». Aplicar.
 5. Repetir con **Rule** = `css:S8776` (comentario: «@utility de Tailwind v4») y `pythonbugs:S2259`
    (comentario: «api_error -> NoReturn»).
+   Para los code smells: `typescript:S6845` y `typescript:S6852` como **False Positive**, y
+   `python:S8396` como **Won't Fix** (comentario: «modelos de respuesta: clave obligatoria anulable»).
 6. Volver a la pestaña del PR: el Quality Gate se recalcula al momento. Si el check de GitHub no se
    actualiza, relanzar el workflow «SonarCloud Analysis» del PR.
 
