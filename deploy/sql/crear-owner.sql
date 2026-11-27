@@ -69,7 +69,7 @@ DECLARE
     v_existe    boolean;
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM roles WHERE name = 'owner') THEN
-        RAISE EXCEPTION 'No existe el rol owner: arranca el backend (crea los roles) y vuelve a intentarlo.';
+        RAISE EXCEPTION 'No existe el rol owner: crea los roles con deploy/sql/crear-roles.sql (o scripts/datos-base.sh) y vuelve a intentarlo.';
     END IF;
     IF EXISTS (SELECT 1 FROM users u JOIN roles r ON r.id = u.role_id WHERE r.name = 'owner') THEN
         RAISE EXCEPTION 'Ya existe un owner: RehniMarket admite uno solo. Para cambiarlo, usa la transferencia de deploy/OWNER.md.';
