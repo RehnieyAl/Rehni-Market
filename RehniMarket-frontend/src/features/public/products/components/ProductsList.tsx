@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+/** Catálogo /products: filtros en la URL (categoría, precio, descuento, disponibilidad, orden), búsqueda y paginación. */
+import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Filter, RotateCcw } from "lucide-react";
 
@@ -40,23 +41,26 @@ export default function ProductsList() {
   const [failed, setFailed] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const updateParams = (changes: Record<string, string | null>, resetPage = true) => {
-    const next = new URLSearchParams(searchParams);
+  const updateParams = useCallback(
+    (changes: Record<string, string | null>, resetPage = true) => {
+      const next = new URLSearchParams(searchParams);
 
-    for (const [key, value] of Object.entries(changes)) {
-      if (value) {
-        next.set(key, value);
-      } else {
-        next.delete(key);
+      for (const [key, value] of Object.entries(changes)) {
+        if (value) {
+          next.set(key, value);
+        } else {
+          next.delete(key);
+        }
       }
-    }
 
-    if (resetPage) {
-      next.delete("page");
-    }
+      if (resetPage) {
+        next.delete("page");
+      }
 
-    setSearchParams(next);
-  };
+      setSearchParams(next);
+    },
+    [searchParams, setSearchParams],
+  );
 
   const handleCatalogChange = (nextCatalog: string) => {
     updateParams({ catalog: nextCatalog || null, search: null });
@@ -115,7 +119,7 @@ export default function ProductsList() {
     }, 400);
 
     return () => clearTimeout(timeout);
-  }, [minPriceInput, maxPriceInput]);
+  }, [minPriceInput, maxPriceInput, minPriceParam, maxPriceParam, updateParams]);
 
   useEffect(() => {
     const timeout = setTimeout(() => setCategorySearchInput(search));
@@ -133,7 +137,7 @@ export default function ProductsList() {
     }, 400);
 
     return () => clearTimeout(timeout);
-  }, [categorySearchInput, catalog]);
+  }, [categorySearchInput, catalog, search, updateParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -172,7 +176,7 @@ export default function ProductsList() {
       }
     };
 
-    load();
+    void load();
 
     return () => {
       cancelled = true;
@@ -223,7 +227,7 @@ export default function ProductsList() {
   return (
     <section className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-3 py-6 sm:px-4 sm:py-8 lg:px-8">
       <div className="mb-5">
-        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">{heading}</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">{heading}</h1>
         <p className="mt-1 text-sm text-gray-500">
           {loading ? "Buscando productos…" : `${total} productos encontrados`}
         </p>
@@ -240,7 +244,7 @@ export default function ProductsList() {
             {hasActiveFilters && (
               <button
                 onClick={handleClearFilters}
-                className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                className="flex items-center gap-1.5 text-sm font-medium brand-link"
               >
                 <RotateCcw size={13} />
                 Limpiar
@@ -261,7 +265,7 @@ export default function ProductsList() {
             >
               Filtros
               {activeFilterCount > 0 && (
-                <span className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-bold text-primary-fg">
+                <span className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-semibold text-primary-fg">
                   {activeFilterCount}
                 </span>
               )}

@@ -74,7 +74,7 @@ export default function CertificateRejectedModal({
 
   return createPortal(
     <div
-      className="theme-dark animate-overlay-in fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-[2px]"
+      className="animate-overlay-in fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-[2px]"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) handleClose();
       }}
@@ -87,12 +87,12 @@ export default function CertificateRejectedModal({
       >
         <div className="flex shrink-0 items-start justify-between gap-4 border-b border-hairline px-6 py-4">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-600/25 text-brand-300">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/25 text-secondary">
               {canReplace ? <FileWarning size={20} /> : <Ban size={20} />}
             </span>
             <h2
               id="certificate-notice-title"
-              className="text-lg font-bold tracking-tight text-ink"
+              className="text-lg font-semibold tracking-tight text-ink"
             >
               {title}
             </h2>
@@ -111,7 +111,7 @@ export default function CertificateRejectedModal({
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
           <p className="text-sm leading-relaxed text-ink-muted">{intro}</p>
 
-          <p className="mt-4 text-sm font-semibold text-brand-300">Motivo</p>
+          <p className="mt-4 text-sm font-semibold text-ink">Motivo</p>
           <div className="mt-1.5 max-h-40 overflow-y-auto rounded-control border border-hairline bg-surface-2 px-4 py-3">
             {trimmedReason ? (
               <p className="whitespace-pre-line text-sm leading-relaxed text-ink">
@@ -129,9 +129,9 @@ export default function CertificateRejectedModal({
               type="button"
               onClick={() => {
                 handleClose();
-                navigate("/actualizar-certificado");
+                void navigate("/actualizar-certificado");
               }}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-control bg-brand-600 px-5 text-sm font-semibold text-white transition hover:bg-brand-700"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-control bg-primary px-5 text-sm font-semibold text-white transition fill-hover"
             >
               <FileUp size={17} />
               Actualizar certificado

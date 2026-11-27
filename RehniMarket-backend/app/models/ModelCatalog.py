@@ -1,10 +1,10 @@
-from sqlalchemy import String,Numeric,Boolean,Text,ForeignKey,Integer,DateTime
-from decimal import Decimal
+"""Modelos ORM de categorías y plantillas de especificaciones (tablas catalog y specification_templates)."""
+
+from sqlalchemy import String,Boolean,ForeignKey,Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
-from datetime import datetime
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 class Catalog(Base):
     """`description`/`image_url`/`display_order`/`is_active` nullable/con default

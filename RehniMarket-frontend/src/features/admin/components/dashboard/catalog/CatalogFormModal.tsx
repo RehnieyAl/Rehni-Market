@@ -1,7 +1,10 @@
+/** Modal de alta y edición de una categoría del catálogo, con su imagen. */
 import { useRef, useState } from "react";
 import { X, Save, Upload } from "lucide-react";
 
 import type { AdminCatalogResponse } from "@/features/admin/types/response";
+import { useAlert } from "@/shared/components/alert/useAlert";
+import { FILE_ACCEPT, validateFile } from "@/shared/validation/files";
 
 export interface CatalogFormValues {
   name: string;
@@ -27,6 +30,7 @@ export default function CatalogFormModal({
   onClose,
   onSubmit,
 }: CatalogFormModalProps) {
+  const { showAlert } = useAlert();
   const [name, setName] = useState(catalog?.name ?? "");
   const [description, setDescription] = useState(catalog?.description ?? "");
   const [displayOrder, setDisplayOrder] = useState(catalog?.display_order ?? 0);
@@ -46,6 +50,13 @@ export default function CatalogFormModal({
     const file = e.target.files?.[0];
 
     if (!file) return;
+
+    const error = validateFile(file, "image", "Imagen de la categoría");
+    if (error) {
+      e.target.value = "";
+      showAlert("error", error);
+      return;
+    }
 
     setImage(file);
     setPreview(URL.createObjectURL(file));
@@ -107,7 +118,7 @@ export default function CatalogFormModal({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept={FILE_ACCEPT.image}
                 hidden
                 onChange={handleImageChange}
               />
@@ -138,7 +149,7 @@ export default function CatalogFormModal({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex h-40 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 transition hover:border-primary hover:text-primary"
+                  className="flex h-40 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 transition hover:border-secondary hover:text-secondary"
                 >
                   <Upload size={24} />
                   <span className="text-sm">Subir imagen</span>
@@ -160,7 +171,7 @@ export default function CatalogFormModal({
                 required
                 autoFocus
                 placeholder="Ej: Computadoras"
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
               />
             </div>
 
@@ -175,7 +186,7 @@ export default function CatalogFormModal({
                 rows={3}
                 maxLength={500}
                 placeholder="Describe brevemente esta categoría"
-                className="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+                className="w-full resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
               />
             </div>
 
@@ -193,7 +204,7 @@ export default function CatalogFormModal({
                     setDisplayOrder(Number.isFinite(parsed) ? parsed : 0);
                   }}
                   min={0}
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
                 />
 
                 <p className="mt-1.5 text-xs text-gray-400">Menor número aparece primero.</p>
@@ -209,7 +220,7 @@ export default function CatalogFormModal({
                   onClick={() => setIsActive((current) => !current)}
                   className={`flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition ${
                     isActive
-                      ? "border-green-200 bg-success-bg text-success"
+                      ? "border-success/30 bg-success-bg text-success"
                       : "border-gray-200 bg-gray-50 text-gray-500"
                   }`}
                 >
@@ -232,7 +243,7 @@ export default function CatalogFormModal({
             <button
               type="submit"
               disabled={loading || !isValid}
-              className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition fill-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Save size={16} />
               {loading ? "Guardando…" : "Guardar"}

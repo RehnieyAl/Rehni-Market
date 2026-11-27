@@ -1,47 +1,25 @@
-import { useCallback, useEffect, useState } from "react";
+/** Favoritos del comprador: tarjetas de los productos guardados con precio, empresa, disponibilidad y la acción de
+ * quitarlos. Usa la misma lista de FavoritesProvider que el desplegable del navbar, así ambos quedan sincronizados. */
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Heart, ImageOff, Trash2 } from "lucide-react";
 
-import { getFavorites } from "@/features/favorites/api/favoriteService";
 import { useFavorites } from "@/features/favorites/context/useFavorites";
 import { formatPrice } from "@/shared/utils/formatPrice";
+import DashboardPageHeader from "@/shared/components/dashboard/DashboardPageHeader";
 import { EmptyState, ErrorState, Skeleton } from "@/shared/components/ui";
 import { buttonClasses } from "@/shared/components/ui/buttonVariants";
 
 import type { Favorite } from "@/features/favorites/types/response";
 
 export default function Favorites() {
-  const { toggleFavorite } = useFavorites();
-
-  const [favorites, setFavorites] = useState<Favorite[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [failed, setFailed] = useState(false);
+  const { favorites, loading, failed, toggleFavorite, refreshFavorites } = useFavorites();
   const [removingId, setRemovingId] = useState<string | null>(null);
-
-  const loadFavorites = useCallback(async () => {
-    try {
-      setLoading(true);
-      setFailed(false);
-      const data = await getFavorites();
-      setFavorites(data);
-    } catch (error) {
-      console.error("Error cargando favoritos:", error);
-      setFailed(true);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const timeout = setTimeout(loadFavorites);
-    return () => clearTimeout(timeout);
-  }, [loadFavorites]);
 
   const handleRemove = async (favorite: Favorite) => {
     try {
       setRemovingId(favorite.id);
       await toggleFavorite(favorite.product.id);
-      setFavorites((prev) => prev.filter((f) => f.id !== favorite.id));
     } catch (error) {
       console.error("Error eliminando favorito:", error);
     } finally {
@@ -50,14 +28,17 @@ export default function Favorites() {
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Favoritos</h1>
-      <p className="mt-1 text-sm text-gray-500">Productos que guardaste para más tarde.</p>
+    <div className="space-y-6">
+      <DashboardPageHeader
+        icon={<Heart size={26} />}
+        title="Favoritos"
+        description="Productos que guardaste para más tarde."
+      />
 
-      {loading ? (
-        <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+      {loading && favorites.length === 0 ? (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 8 }).map((_, index) => (
-            <div key={index} className="overflow-hidden rounded-card border bg-surface-1">
+            <div key={index} className="overflow-hidden rounded-card border border-hairline bg-surface-1">
               <Skeleton className="aspect-square w-full rounded-none" />
               <div className="space-y-2 p-4">
                 <Skeleton className="h-3 w-20" />
@@ -69,13 +50,11 @@ export default function Favorites() {
         </div>
       ) : failed ? (
         <ErrorState
-          className="mt-8"
           title="No pudimos cargar tus favoritos"
-          onRetry={loadFavorites}
+          onRetry={() => void refreshFavorites()}
         />
       ) : favorites.length === 0 ? (
         <EmptyState
-          className="mt-8"
           icon={<Heart size={22} />}
           title="Aún no tienes favoritos"
           description="Guarda los productos que te interesan y vuelve a ellos cuando quieras."
@@ -86,38 +65,38 @@ export default function Favorites() {
           }
         />
       ) : (
-        <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
           {favorites.map((favorite) => (
             <div
               key={favorite.id}
-              className="overflow-hidden rounded-card border bg-surface-1"
+              className="group flex flex-col overflow-hidden rounded-card border border-hairline bg-surface-1 transition hover:border-white/15"
             >
               <Link to={`/products/${favorite.product.id}`} className="block">
                 {favorite.product.image ? (
                   <img
                     src={favorite.product.image}
                     alt={favorite.product.name}
-                    className="aspect-square w-full object-cover"
+                    className="aspect-square w-full bg-surface-0 object-contain p-2"
                   />
                 ) : (
-                  <div className="flex aspect-square w-full items-center justify-center bg-gray-100 text-gray-300">
+                  <div className="flex aspect-square w-full items-center justify-center bg-surface-0 text-ink-muted">
                     <ImageOff size={32} />
                   </div>
                 )}
               </Link>
 
               <div className="p-4">
-                <p className="text-xs text-gray-500">{favorite.product.companyName}</p>
+                <p className="truncate text-xs text-ink-muted">{favorite.product.companyName}</p>
 
                 <Link
                   to={`/products/${favorite.product.id}`}
-                  className="line-clamp-1 font-semibold text-gray-900 hover:underline"
+                  className="mt-0.5 line-clamp-2 font-semibold text-ink hover:text-secondary"
                 >
                   {favorite.product.name}
                 </Link>
 
                 <div className="mt-2 flex items-center justify-between">
-                  <span className="font-bold text-primary">
+                  <span className="font-semibold tabular-nums text-ink">
                     {formatPrice(favorite.product.finalPrice)}
                   </span>
 

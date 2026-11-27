@@ -1,3 +1,6 @@
+"""Límites de frecuencia en memoria: tope global por IP (middleware) y topes por clave para
+operaciones sensibles, como el envío de códigos por correo."""
+
 import time
 
 from collections import defaultdict
@@ -46,3 +49,19 @@ async def rate_limit_middleware(
     requests[client_ip].append(current_time)
 
     return await call_next(request)
+
+def retry_after_if_limited(key: str, limit: int, window_seconds: int) -> int | None:
+    """Registra un intento para `key` (p. ej. "code:reset:correo") y devuelve los segundos que faltan
+    si ya se alcanzó `limit` en la ventana; None si el intento se permite. No depende de
+    RATE_LIMIT_ENABLED: protege el envío de correos aunque el tope global esté apagado."""
+
+    now = time.time()
+    attempts = [stamp for stamp in requests[key] if now - stamp < window_seconds]
+
+    if len(attempts) >= limit:
+        requests[key] = attempts
+        return max(1, int(window_seconds - (now - attempts[0])) + 1)
+
+    attempts.append(now)
+    requests[key] = attempts
+    return None

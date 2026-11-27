@@ -1,5 +1,6 @@
+/** RehniCoin del panel admin/owner: recarga de saldo por correo del usuario e historial de recargas con su corrección. */
 import { useCallback, useEffect, useState } from "react";
-import { Coins, PencilLine } from "lucide-react";
+import { Coins, FileText, Layers, Mail, PencilLine } from "lucide-react";
 import axios from "axios";
 
 import {
@@ -18,6 +19,7 @@ import { Badge, Button, EmptyState, Input, TableSkeleton } from "@/shared/compon
 import CorrectRechargeModal from "./CorrectRechargeModal";
 
 import type { WalletRechargeHistoryItem } from "@/features/wallet/types/response";
+import DashboardPageHeader from "@/shared/components/dashboard/DashboardPageHeader";
 
 const EMPTY_FORM = { email: "", amount: "", description: "" };
 
@@ -141,16 +143,15 @@ export default function RehniCoin() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">RehniCoin</h1>
-
-      <p className="mt-2 text-sm text-gray-500">
-        Recarga saldo de RehniCoin a un usuario registrado. 1 RehniCoin = 1
-        COP — es una billetera interna simulada, no una criptomoneda real.
-      </p>
+      <DashboardPageHeader
+        icon={<Coins size={26} />}
+        title="RehniCoin"
+        description="Recarga saldo de RehniCoin a un usuario registrado. 1 RehniCoin = 1 COP — es una billetera interna simulada, no una criptomoneda real."
+      />
 
       <div className="mt-6 rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card">
         <h2 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
-          <Coins size={18} className="text-primary" />
+          <Coins size={18} className="text-secondary" />
           Recargar saldo
         </h2>
 
@@ -162,6 +163,7 @@ export default function RehniCoin() {
             value={form.email}
             onChange={(e) => handleChange("email", e.target.value)}
             placeholder="usuario@email.com"
+            leadingIcon={<Mail size={17} />}
           />
 
           <Input
@@ -171,6 +173,7 @@ export default function RehniCoin() {
             value={form.amount}
             onChange={(e) => handleChange("amount", e.target.value)}
             placeholder="0"
+            leadingIcon={<Coins size={17} />}
             hint={`Monto máximo de recarga: ${MAX_ADMIN_RECHARGE_AMOUNT_LABEL}`}
             error={amountOverLimit ? MAX_ADMIN_RECHARGE_MESSAGE : undefined}
           />
@@ -181,6 +184,7 @@ export default function RehniCoin() {
             value={form.description}
             onChange={(e) => handleChange("description", e.target.value)}
             placeholder="Ej. Recarga administrativa"
+            leadingIcon={<FileText size={17} />}
           />
         </div>
 
@@ -189,13 +193,15 @@ export default function RehniCoin() {
           onClick={handleSubmit}
           disabled={!isValid}
           loading={saving}
+          leadingIcon={<Coins size={18} />}
         >
           Recargar saldo
         </Button>
       </div>
 
       <div className="mt-8">
-        <h2 className="mb-4 font-semibold text-gray-900">
+        <h2 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
+          <Layers size={18} className="text-secondary" />
           Últimas recargas
         </h2>
 
@@ -203,7 +209,7 @@ export default function RehniCoin() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[820px]">
               <thead className="bg-surface-1">
-                <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-400">
+                <tr className="border-b border-gray-200 text-left text-xs text-ink-muted">
                   <th className="px-5 py-3 font-medium">Fecha</th>
                   <th className="px-5 py-3 font-medium">Usuario</th>
                   <th className="px-5 py-3 font-medium">Correo</th>
@@ -250,7 +256,7 @@ export default function RehniCoin() {
                         {item.userEmail}
                       </td>
 
-                      <td className="px-5 py-3 text-sm font-semibold text-primary">
+                      <td className="px-5 py-3 text-sm font-semibold tabular-nums text-ink">
                         {formatPrice(item.amount)} RC
                       </td>
 

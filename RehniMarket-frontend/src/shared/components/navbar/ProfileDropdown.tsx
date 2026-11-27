@@ -1,252 +1,124 @@
-import {
-  cloneElement,
-  useEffect,
-  useRef,
-  useState,
-  type ReactElement,
-} from "react";
+/** Menú desplegable de perfil del navbar de escritorio: secciones del panel según el rol y cierre de sesión. */
+import { cloneElement, type ReactElement } from "react";
 import { ChevronDown, LogOut } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import { useAuth } from "@/features/public/auth/context/useAuth";
+import { useSignOut } from "@/features/public/auth/hooks/useSignOut";
 import { Skeleton } from "@/shared/components/ui";
-import { dashboardNavigation } from "@/shared/config/dashboardNavigation";
-import type { SidebarItem } from "@/shared/components/dashboard/Sidebar";
-import type { Role } from "@/features/public/auth/types/auth";
+import { getAccountLinks, ROLE_NAME } from "./accountLinks";
+import NavDropdown from "./NavDropdown";
 
-const ADMIN_DROPDOWN_BASE = {
-  basePath: "/admin/dashboard",
-  navIds: ["home", "companies", "users", "products"],
-  settingsId: "account",
-};
+const ITEM_CLASS =
+  "flex items-center gap-3 rounded-control px-3 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900";
 
-const DROPDOWN_CONFIG: Record<
-  Role,
-  { basePath: string; navIds: string[]; settingsId: string }
-> = {
-  admin: ADMIN_DROPDOWN_BASE,
+interface ProfileDropdownProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
 
-  owner: {
-    ...ADMIN_DROPDOWN_BASE,
-    navIds: [...ADMIN_DROPDOWN_BASE.navIds, "payouts"],
-  },
-
-  company: {
-    basePath: "/company/dashboard",
-    navIds: ["home", "products", "orders", "finance", "company"],
-    settingsId: "profile",
-  },
-
-  user: {
-    basePath: "/user/dashboard",
-    navIds: ["home", "orders", "favorites", "wallet"],
-    settingsId: "profile",
-  },
-};
-
-const buildTabPath = (basePath: string, tabId: string) =>
-  tabId === "home" ? basePath : `${basePath}?tab=${tabId}`;
-
-const pickItems = (items: SidebarItem[], ids: string[]): SidebarItem[] =>
-  ids
-    .map((id) => items.find((item) => item.id === id))
-    .filter((item): item is SidebarItem => Boolean(item));
-
-export default function ProfileDropdown() {
-  const { role, user, logout } = useAuth();
-
-  const navigate = useNavigate();
-
-  const [open, setOpen] = useState(false);
-
-  const ref = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    function handleClick(event: MouseEvent) {
-      if (
-        ref.current &&
-        !ref.current.contains(event.target as Node)
-      ) {
-        setOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClick);
-
-    return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClick,
-      );
-    };
-  }, []);
+export default function ProfileDropdown({ open, onOpenChange }: ProfileDropdownProps) {
+  const { role, user } = useAuth();
+  const signOut = useSignOut();
 
   if (!role) return null;
 
-  const roleName = {
-    admin: "Administrador",
-    company: "Empresa",
-    user: "Usuario",
-    owner: "Propietario",
-  };
+  const { sections: navItems, settings: settingsItem } = getAccountLinks(role);
+  const displayName = user?.name ?? ROLE_NAME[role];
+  const initial = displayName.charAt(0).toUpperCase();
+  const close = () => onOpenChange(false);
 
-  const config = DROPDOWN_CONFIG[role];
-  const dashboardItems = dashboardNavigation[role];
-
-  const navItems = pickItems(dashboardItems, config.navIds);
-  const [settingsItem] = pickItems(dashboardItems, [config.settingsId]);
-
-  const handleLogout = () => {
-    setOpen(false);
-    logout();
-    navigate("/", { replace: true });
-  };
-
-  const displayName =
-    user?.name ?? roleName[role];
-
-  const initial =
-    displayName.charAt(0).toUpperCase();
-
-  return (
+  const avatar = (sizeClass: string) => (
     <div
-      ref={ref}
-      className="relative"
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary font-semibold text-primary-fg ${sizeClass}`}
     >
-
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        className="flex items-center gap-3 rounded-xl px-2 py-1.5 transition hover:bg-gray-100 dark:hover:bg-white/5"
-      >
-
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-bold text-primary-fg">
-          {user?.profileImagen ? (
-            <img
-              src={user.profileImagen}
-              alt={displayName}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            initial
-          )}
-        </div>
-
-        <div className="min-w-0 text-left">
-          {user?.name ? (
-            <p className="max-w-[150px] truncate text-sm font-semibold text-gray-900 dark:text-ink">
-              {user.name}
-            </p>
-          ) : (
-            <Skeleton className="h-3.5 w-20" />
-          )}
-
-          <p className="text-xs text-gray-500 dark:text-ink-muted">{roleName[role]}</p>
-        </div>
-
-        <ChevronDown
-          size={17}
-          className={`shrink-0 text-gray-500 transition-transform dark:text-ink-muted ${
-            open ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-
-      {open && (
-        <div className="absolute right-0 z-50 mt-3 w-72 overflow-hidden rounded-2xl bg-surface-1 shadow-xl">
-
-          <div className="bg-gray-50 p-4">
-            <div className="flex items-center gap-3">
-
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-lg font-bold text-primary-fg">
-                {user?.profileImagen ? (
-                  <img
-                    src={user.profileImagen}
-                    alt={displayName}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  initial
-                )}
-              </div>
-
-              <div className="min-w-0">
-                {user?.name ? (
-                  <p className="truncate font-semibold text-gray-900">{user.name}</p>
-                ) : (
-                  <Skeleton className="h-4 w-32" />
-                )}
-
-                <p className="truncate text-sm text-gray-500">
-                  {user?.email ?? ""}
-                </p>
-
-                <p className="mt-1 text-xs font-medium text-primary">
-                  {roleName[role]}
-                </p>
-              </div>
-
-            </div>
-          </div>
-
-          <div className="p-2">
-
-            {navItems.map((item) => (
-              <Link
-                key={item.id}
-                to={buildTabPath(config.basePath, item.id)}
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-900"
-              >
-                {cloneElement(
-                  item.icon as ReactElement<{ size?: number }>,
-                  { size: 18 },
-                )}
-
-                <span>
-                  {item.text}
-                </span>
-              </Link>
-            ))}
-
-            {settingsItem && (
-              <>
-                <div className="my-2 h-px bg-gray-100" />
-
-                <Link
-                  to={buildTabPath(config.basePath, settingsItem.id)}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-100 hover:text-gray-900"
-                >
-                  {cloneElement(
-                    settingsItem.icon as ReactElement<{ size?: number }>,
-                    { size: 18 },
-                  )}
-
-                  <span>
-                    {settingsItem.text}
-                  </span>
-                </Link>
-              </>
-            )}
-
-            <div className="my-2 h-px bg-gray-100" />
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex w-full items-center gap-3 rounded-control px-3 py-3 text-sm font-medium text-danger transition hover:bg-danger-bg"
-            >
-              <LogOut size={18} />
-
-              <span>
-                Cerrar sesión
-              </span>
-            </button>
-
-          </div>
-        </div>
+      {user?.profileImagen ? (
+        <img src={user.profileImagen} alt={displayName} className="h-full w-full object-cover" />
+      ) : (
+        initial
       )}
     </div>
+  );
+
+  return (
+    <NavDropdown
+      id="profile-menu"
+      open={open}
+      onOpenChange={onOpenChange}
+      // En lg el nombre se oculta para dejar sitio al buscador; la etiqueta conserva el texto visible de xl.
+      triggerLabel={`${displayName}, ${ROLE_NAME[role]}`}
+      panelLabel="Menú de perfil"
+      panelClassName="w-72"
+      triggerClassName="flex items-center gap-3 rounded-control px-2 py-1.5 transition-colors hover:bg-white/5"
+      trigger={
+        <>
+          {avatar("h-10 w-10 text-sm")}
+
+          <div className="hidden min-w-0 text-left xl:block">
+            {user?.name ? (
+              <p className="max-w-[150px] truncate text-sm font-semibold text-ink">{user.name}</p>
+            ) : (
+              <Skeleton className="h-3.5 w-20" />
+            )}
+            <p className="text-xs text-ink-muted">{ROLE_NAME[role]}</p>
+          </div>
+
+          <ChevronDown
+            size={17}
+            aria-hidden="true"
+            className={`shrink-0 text-ink-muted transition-transform ${open ? "rotate-180" : ""}`}
+          />
+        </>
+      }
+    >
+      <div className="bg-gray-50 p-4">
+        <div className="flex items-center gap-3">
+          {avatar("h-12 w-12 text-lg")}
+
+          <div className="min-w-0">
+            {user?.name ? (
+              <p className="truncate font-semibold text-gray-900">{user.name}</p>
+            ) : (
+              <Skeleton className="h-4 w-32" />
+            )}
+            <p className="truncate text-sm text-gray-500">{user?.email ?? ""}</p>
+            <p className="mt-1 text-xs font-medium text-ink-muted">{ROLE_NAME[role]}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-2">
+        {navItems.map((item) => (
+          <Link key={item.id} to={item.to} onClick={close} className={ITEM_CLASS}>
+            {cloneElement(item.icon as ReactElement<{ size?: number }>, { size: 18 })}
+            <span>{item.text}</span>
+          </Link>
+        ))}
+
+        {settingsItem && (
+          <>
+            <div className="my-2 h-px bg-gray-100" />
+            <Link to={settingsItem.to} onClick={close} className={ITEM_CLASS}>
+              {cloneElement(settingsItem.icon as ReactElement<{ size?: number }>, { size: 18 })}
+              <span>{settingsItem.text}</span>
+            </Link>
+          </>
+        )}
+
+        <div className="my-2 h-px bg-gray-100" />
+
+        <button
+          type="button"
+          onClick={() => {
+            close();
+            signOut();
+          }}
+          className="flex w-full items-center gap-3 rounded-control px-3 py-3 text-sm font-medium text-danger transition-colors hover:bg-danger-bg"
+        >
+          <LogOut size={18} aria-hidden="true" />
+          <span>Cerrar sesión</span>
+        </button>
+      </div>
+    </NavDropdown>
   );
 }

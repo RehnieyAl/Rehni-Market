@@ -28,7 +28,11 @@ export interface AuthContextType {
     role: Role;
   }): Promise<void>;
 
-  logout(): void;
+  /** `byUser`: cierre pedido por el usuario (no por expiración); RequireAuth lo envía a una página
+   * pública en lugar de al login. */
+  logout(options?: { byUser?: boolean }): void;
+
+  signedOutByUser: boolean;
 
   refreshProfile(): Promise<void>;
 }

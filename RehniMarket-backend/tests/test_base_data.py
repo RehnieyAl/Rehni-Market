@@ -1,10 +1,11 @@
-"""Datos base al arrancar (#53): existen con RUN_SEED=false, no se duplican y no deshacen cambios del panel."""
+"""Datos base: el arranque no siembra nada con RUN_SEED=false; con RUN_SEED=true (o a mano con
+ensure_base_data) se crean, no se duplican y no deshacen cambios del panel."""
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 from app.models.ModelCatalog import Catalog
 from app.models.ModelCatalogAttribute import CatalogAttribute, CatalogAttributeOption
 from app.models.ModelRole import Role
@@ -22,12 +23,14 @@ def empty_db(engine):
     Base.metadata.drop_all(engine)
 
 
-def _start_app(engine, monkeypatch):
+def _start_app(engine, monkeypatch, run_seed=True):
     from app import main
 
-    monkeypatch.setattr(main.config, "RUN_SEED", False)
+    monkeypatch.setattr(main.config, "RUN_SEED", run_seed)
     monkeypatch.setattr(main, "ensure_bucket", lambda: None)
     monkeypatch.setattr(main, "ensure_base_data", lambda: ensure_base_data(engine))
+    # Los datos de demostración no son objeto de estas pruebas y usarían la conexión de la app.
+    monkeypatch.setattr(main, "run_seed", lambda db: None)
     with TestClient(main.app):
         pass
 
@@ -37,7 +40,20 @@ def _counts(engine):
         return {model.__name__: db.query(func.count()).select_from(model).scalar() for model in COUNTED}
 
 
-def test_roles_and_base_catalogs_exist_after_startup_without_run_seed(empty_db, monkeypatch):
+def test_startup_without_run_seed_seeds_nothing(empty_db, monkeypatch):
+    _start_app(empty_db, monkeypatch, run_seed=False)
+
+    assert set(_counts(empty_db).values()) == {0}
+
+
+def test_manual_ensure_base_data_creates_roles_and_catalogs(empty_db):
+    ensure_base_data(empty_db)
+
+    with Session(empty_db) as db:
+        assert {role.name for role in db.query(Role)} == {"user", "company", "admin", "owner"}
+
+
+def test_roles_and_base_catalogs_exist_after_startup_with_run_seed(empty_db, monkeypatch):
     _start_app(empty_db, monkeypatch)
 
     with Session(empty_db) as db:

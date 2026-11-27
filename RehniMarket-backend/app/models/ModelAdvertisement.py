@@ -1,3 +1,5 @@
+"""Modelo ORM de la publicidad del inicio y su segmentación (tabla advertisements)."""
+
 from sqlalchemy import String, Boolean, Integer, DateTime, ForeignKey, Enum
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
@@ -5,7 +7,7 @@ import uuid
 from datetime import datetime
 from enum import Enum as PyEnum
 
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 
 class AdvertisementTargetType(str, PyEnum):

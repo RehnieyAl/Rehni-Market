@@ -1,4 +1,6 @@
-import traceback
+"""Billetera RehniCoin: saldo, movimientos, recargas administrativas, correcciones, cobros y reembolsos."""
+
+import logging
 from decimal import Decimal
 from uuid import UUID
 
@@ -33,6 +35,8 @@ from app.services.email.WalletEmailService import (
     send_recharge_email,
     send_recharge_correction_email,
 )
+
+logger = logging.getLogger(__name__)
 
 def _validate_admin_recharge_amount(amount: Decimal) -> None:
     """Tope por operación de recarga administrativa (aplica a recarga y a la
@@ -98,7 +102,7 @@ def recharge_wallet_service(
         if not target_user:
             api_error(404, ErrorCodes.USER_NOT_FOUND, "Usuario no encontrado.")
 
-        wallet = get_or_create_wallet(database, data.userId)
+        wallet = repo.lock_wallet_by_user_id(database, data.userId)
 
         wallet.balance = Decimal(wallet.balance) + data.amount
 
@@ -130,7 +134,7 @@ def recharge_wallet_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
@@ -151,7 +155,7 @@ def recharge_wallet_by_email_service(
                 "No existe ningun usuario registrado con ese correo.",
             )
 
-        wallet = get_or_create_wallet(database, target_user.id)
+        wallet = repo.lock_wallet_by_user_id(database, target_user.id)
 
         wallet.balance = Decimal(wallet.balance) + data.amount
 
@@ -187,7 +191,7 @@ def recharge_wallet_by_email_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
@@ -284,7 +288,7 @@ def correct_recharge_service(
                 "La cantidad corregida es igual a la original: no hay nada que ajustar.",
             )
 
-        wallet = original.wallet
+        wallet = repo.lock_wallet_by_user_id(database, original.wallet.user_id)
         new_balance = Decimal(wallet.balance) + adjustment
 
         if new_balance < 0:
@@ -339,7 +343,7 @@ def correct_recharge_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
@@ -347,9 +351,9 @@ def charge_wallet(database: Session, user_id: UUID, amount: Decimal, description
     """Descuenta `amount` de la billetera (usado por el checkout). No hace commit;
     lanza INSUFFICIENT_BALANCE si no alcanza el saldo."""
 
-    wallet = repo.get_wallet_by_user_id(database, user_id)
+    wallet = repo.lock_wallet_by_user_id(database, user_id)
 
-    if not wallet or Decimal(wallet.balance) < amount:
+    if Decimal(wallet.balance) < amount:
         api_error(
             402,
             ErrorCodes.INSUFFICIENT_BALANCE,
@@ -376,11 +380,13 @@ def refund_wallet(
     amount: Decimal,
     description: str,
     order_id: UUID | None = None,
+    return_request_id: UUID | None = None,
 ):
-    """Acredita `amount` a la billetera (reembolso). No hace commit. `order_id` enlaza
-    el movimiento con el pedido; la idempotencia contra el doble reembolso es del llamador."""
+    """Acredita `amount` a la billetera (reembolso). No hace commit. `order_id` enlaza el movimiento
+    con un pedido cancelado y `return_request_id` con una reclamación de devolución; ambos tienen
+    índice único, así que un segundo reembolso del mismo origen falla con IntegrityError al hacer flush."""
 
-    wallet = get_or_create_wallet(database, user_id)
+    wallet = repo.lock_wallet_by_user_id(database, user_id)
 
     wallet.balance = Decimal(wallet.balance) + amount
 
@@ -390,6 +396,7 @@ def refund_wallet(
         amount=amount,
         description=description,
         order_id=order_id,
+        return_request_id=return_request_id,
     )
 
     repo.create_transaction(database, transaction)

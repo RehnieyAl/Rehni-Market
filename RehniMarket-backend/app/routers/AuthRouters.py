@@ -1,7 +1,13 @@
-from fastapi import APIRouter,Depends, UploadFile, File, Request
+"""Rutas de autenticación: registro, verificación, login, refresh y perfil propio (/auth/me)."""
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, File, Request, UploadFile
 
 from sqlalchemy.orm import Session
-from app.database.Connection import get_db
+from app.core.dbconexion import get_db
+from app.core.AuthDependencies import AuthContext, require_role
+from app.utils.FileValidator import IMAGE_EXTENSIONS, PDF_EXTENSIONS, validate_upload
 
 from app.schemas.schemaAuth.SchemaRegister import (
     CreateUserRequest,
@@ -54,6 +60,7 @@ def registerCompany(
     certificate: UploadFile = File(...),
     nas: NasService = Depends(get_nas_service),
     database: Session = Depends(get_db, scope="function")):
+    validate_upload(certificate, PDF_EXTENSIONS, "Certificado")
 
     return register_company_service(
         user=user,
@@ -73,10 +80,18 @@ def change_email(changeEmail: ChangeEmailRequestOnlyRegistered, database: Sessio
 
     return change_email_service(changeEmail, database)
 
-@router.post("/resend-verification-code")
-def resend_verification_code(data: ResendVerificationCodeRequest, database: Session = Depends(get_db, scope="function")):
+def _client_ip(request: Request) -> str | None:
+    return request.client.host if request.client else None
 
-    return resend_verification_code_service(data, database)
+
+@router.post("/resend-verification-code")
+def resend_verification_code(
+    data: ResendVerificationCodeRequest, request: Request, database: Session = Depends(get_db, scope="function")
+):
+    """Reenvía el código de verificación (registro de comprador o de empresa). 429 con Retry-After
+    durante el cooldown de 60 s o al superar los topes de envío."""
+
+    return resend_verification_code_service(data, database, _client_ip(request))
 
 @router.post("/login-user")
 def login_user(user: LoginRequest, database: Session = Depends(get_db, scope="function")):
@@ -85,9 +100,11 @@ def login_user(user: LoginRequest, database: Session = Depends(get_db, scope="fu
 
 
 @router.post("/forgot-password-user")
-def forgot_password(user: ForgotPasswordRequest, database: Session = Depends(get_db, scope="function")):
+def forgot_password(user: ForgotPasswordRequest, request: Request, database: Session = Depends(get_db, scope="function")):
+    """Envía (o reenvía) el código de recuperación. Responde igual exista o no la cuenta; 429 con
+    Retry-After durante el cooldown o al superar los topes de envío."""
 
-    return forgot_password_service(user, database)
+    return forgot_password_service(user, database, _client_ip(request))
 
 @router.post("/reset-password-user")
 def reset_password(user: ResetPasswordRequest, database: Session = Depends(get_db, scope="function")):
@@ -101,19 +118,32 @@ def refresh_token(data:RefreshRequest, database: Session = Depends(get_db, scope
 
 
 @router.get("/me")
-def get_me(request: Request, database: Session = Depends(get_db, scope="function")):
+def get_me(
+    current: Annotated[
+        AuthContext,
+        Depends(require_role("admin", "owner", "company", "user", allow_unapproved_company=True)),
+    ],
+    database: Session = Depends(get_db, scope="function"),
+):
 
     return get_me_profile_service(
-        user_id=request.state.user_id,
+        user_id=current.user_id,
         database=database
     )
 
 
 @router.patch("/me")
-def update_me(request: Request, data: UpdateMeRequest, database: Session = Depends(get_db, scope="function")):
+def update_me(
+    current: Annotated[
+        AuthContext,
+        Depends(require_role("admin", "owner", "company", "user", allow_unapproved_company=True)),
+    ],
+    data: UpdateMeRequest,
+    database: Session = Depends(get_db, scope="function"),
+):
 
     return update_me_profile_service(
-        user_id=request.state.user_id,
+        user_id=current.user_id,
         data=data,
         database=database,
     )
@@ -121,14 +151,18 @@ def update_me(request: Request, data: UpdateMeRequest, database: Session = Depen
 
 @router.patch("/me/photo")
 def update_me_photo(
-    request: Request,
+    current: Annotated[
+        AuthContext,
+        Depends(require_role("admin", "owner", "company", "user", allow_unapproved_company=True)),
+    ],
     photo: UploadFile = File(...),
     nas: NasService = Depends(get_nas_service),
     database: Session = Depends(get_db, scope="function"),
 ):
+    validate_upload(photo, IMAGE_EXTENSIONS, "Foto de perfil")
 
     return update_me_photo_service(
-        user_id=request.state.user_id,
+        user_id=current.user_id,
         photo=photo,
         nas=nas,
         database=database,

@@ -1,3 +1,4 @@
+/** Contrato del contexto del carrito del comprador en sesión. */
 import { createContext } from "react";
 import type { Cart } from "../types/response";
 

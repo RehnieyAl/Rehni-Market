@@ -91,7 +91,7 @@ export default function ReportDetailModal({
       }
     };
 
-    loadReport();
+    void loadReport();
   }, [isOpen, reportId]);
 
   const handleConfirmAction = async (status: ReportStatus) => {
@@ -226,7 +226,7 @@ export default function ReportDetailModal({
                 href={`/products/${report.productId}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                className="inline-flex items-center gap-1.5 text-sm font-medium brand-link"
               >
                 Ver producto
                 <ExternalLink size={14} />
@@ -238,7 +238,7 @@ export default function ReportDetailModal({
                 href={`/company/${report.companyId}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                className="inline-flex items-center gap-1.5 text-sm font-medium brand-link"
               >
                 Ver empresa
                 <ExternalLink size={14} />
@@ -259,7 +259,7 @@ export default function ReportDetailModal({
 
             {report.evidences.length > 0 && (
               <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                <div className="text-xs font-medium text-ink-muted">
                   Evidencias
                 </div>
 
@@ -462,7 +462,7 @@ function InfoRow({
 }) {
   return (
     <div>
-      <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-gray-400">
+      <div className="flex items-center gap-2 text-xs font-medium text-ink-muted">
         {icon}
         {label}
       </div>

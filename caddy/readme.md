@@ -82,7 +82,7 @@ docker compose ps                       # los 3 servicios en "healthy"
 
 Para verlo en el navegador (opcional), los nombres `.test` deben apuntar a tu equipo. Elige una:
 
-- `/etc/hosts` (en tu terminal, no en Claude Code):
+- `/etc/hosts` (desde tu terminal):
   `echo "127.0.0.1 sitio.lab.test api.lab.test equipo.lab.test rehnimarket api.rehnimarket" | sudo tee -a /etc/hosts`
 - Solo Firefox: `about:config` → `network.dns.localDomains` = `sitio.lab.test,api.lab.test,equipo.lab.test,rehnimarket,api.rehnimarket`
 

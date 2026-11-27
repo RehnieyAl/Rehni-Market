@@ -1,7 +1,7 @@
-"""CRUD de cuentas bancarias de la empresa. Mismo patrón que AddressService (una sola
-predeterminada), pero el dueño es una Company, resuelta desde el usuario autenticado."""
+"""CRUD de cuentas bancarias de la empresa (una sola predeterminada), con el banco elegido del catálogo.
+El dueño es la Company del usuario autenticado; las respuestas solo llevan los últimos dígitos."""
 
-import traceback
+import logging
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -10,10 +10,12 @@ from sqlalchemy.orm import Session
 from app.core.ErrorCodes import ErrorCodes
 from app.core.Exceptions import api_error
 
+from app.models.ModelBank import Bank
 from app.models.ModelCompany import Company
 from app.models.ModelCompanyBankAccount import CompanyBankAccount
 
 from app.repository import CompanyRepository
+from app.repository import BankRepository
 from app.repository import CompanyBankAccountRepository as repo
 
 from app.schemas.SchemaDashboard.SchemaBankAccount import (
@@ -21,6 +23,9 @@ from app.schemas.SchemaDashboard.SchemaBankAccount import (
     UpdateBankAccountRequest,
     BankAccountResponse,
 )
+from app.services.DashboardService.admin.BankService import bank_logo_url
+
+logger = logging.getLogger(__name__)
 
 
 def _get_company_for_user(database: Session, user_id: UUID) -> Company:
@@ -37,13 +42,27 @@ def _to_response(bank_account: CompanyBankAccount) -> BankAccountResponse:
         id=bank_account.id,
         accountHolder=bank_account.account_holder,
         documentNumber=bank_account.document_number,
+        bankId=bank_account.bank_id,
         bankName=bank_account.bank_name,
+        bankLogoUrl=bank_logo_url(bank_account.bank),
         accountType=bank_account.account_type.value,
-        accountNumber=bank_account.account_number,
+        lastFourDigits=bank_account.account_number[-4:],
         isDefault=bank_account.is_default,
         createdAt=bank_account.created_at,
         updatedAt=bank_account.updated_at,
     )
+
+
+def _get_selectable_bank(database: Session, bank_id: UUID) -> Bank:
+    bank = BankRepository.get_bank(database, bank_id)
+
+    if not bank:
+        api_error(404, ErrorCodes.BANK_NOT_FOUND, "El banco seleccionado no existe.")
+
+    if not bank.is_active:
+        api_error(400, ErrorCodes.BANK_INACTIVE, "El banco seleccionado no está disponible.")
+
+    return bank
 
 
 def list_bank_accounts_service(user_id: UUID, database: Session) -> list[BankAccountResponse]:
@@ -60,6 +79,8 @@ def create_bank_account_service(
     company = _get_company_for_user(database, user_id)
 
     try:
+        bank = _get_selectable_bank(database, data.bankId)
+        repo.lock_company_accounts(database, company.id)
         existing = repo.list_bank_accounts(database, company.id)
 
         is_default = data.isDefault or len(existing) == 0
@@ -71,7 +92,8 @@ def create_bank_account_service(
             company_id=company.id,
             account_holder=data.accountHolder,
             document_number=data.documentNumber,
-            bank_name=data.bankName,
+            bank_id=bank.id,
+            bank_name=bank.name,
             account_type=data.accountType,
             account_number=data.accountNumber,
             is_default=is_default,
@@ -90,8 +112,17 @@ def create_bank_account_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
+
+
+# Campo del schema (camelCase) -> columna del modelo. El banco se trata aparte (catálogo).
+_UPDATABLE_FIELDS = {
+    "accountHolder": "account_holder",
+    "documentNumber": "document_number",
+    "accountType": "account_type",
+    "accountNumber": "account_number",
+}
 
 
 def update_bank_account_service(
@@ -105,26 +136,21 @@ def update_bank_account_service(
         if not bank_account:
             api_error(404, ErrorCodes.BANK_ACCOUNT_NOT_FOUND, "Cuenta bancaria no encontrada.")
 
-        if data.accountHolder is not None:
-            bank_account.account_holder = data.accountHolder
+        for field, column in _UPDATABLE_FIELDS.items():
+            value = getattr(data, field)
+            if value is not None:
+                setattr(bank_account, column, value)
 
-        if data.documentNumber is not None:
-            bank_account.document_number = data.documentNumber
+        if data.bankId is not None and data.bankId != bank_account.bank_id:
+            bank = _get_selectable_bank(database, data.bankId)
+            bank_account.bank_id = bank.id
+            bank_account.bank_name = bank.name
 
-        if data.bankName is not None:
-            bank_account.bank_name = data.bankName
-
-        if data.accountType is not None:
-            bank_account.account_type = data.accountType
-
-        if data.accountNumber is not None:
-            bank_account.account_number = data.accountNumber
-
+        # isDefault=false se ignora: la predeterminada solo cambia al marcar otra.
         if data.isDefault is True:
+            repo.lock_company_accounts(database, company.id)
             repo.clear_default(database, company.id)
             bank_account.is_default = True
-        elif data.isDefault is False and bank_account.is_default:
-            pass
 
         database.commit()
         database.refresh(bank_account)
@@ -137,7 +163,7 @@ def update_bank_account_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
@@ -151,6 +177,8 @@ def delete_bank_account_service(
 
         if not bank_account:
             api_error(404, ErrorCodes.BANK_ACCOUNT_NOT_FOUND, "Cuenta bancaria no encontrada.")
+
+        repo.lock_company_accounts(database, company.id)
 
         if repo.is_bank_account_referenced_by_payout(database, bank_account.id):
             api_error(
@@ -180,5 +208,5 @@ def delete_bank_account_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")

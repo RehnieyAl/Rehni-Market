@@ -48,7 +48,7 @@ export default function HomeProductSection({
       }
     };
 
-    load();
+    void load();
 
     return () => {
       cancelled = true;

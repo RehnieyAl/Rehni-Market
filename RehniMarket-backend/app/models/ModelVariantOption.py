@@ -1,3 +1,5 @@
+"""Modelo ORM de la opción elegida de cada atributo en una variante (tabla variant_options)."""
+
 from __future__ import annotations
 
 import uuid
@@ -6,7 +8,7 @@ from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 
 class VariantOption(Base):

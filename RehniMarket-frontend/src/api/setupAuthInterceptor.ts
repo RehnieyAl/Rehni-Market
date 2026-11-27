@@ -1,3 +1,5 @@
+/** Interceptor de respuestas: renueva el access token una vez ante un 401 y, si no se puede, da la
+ * sesión por expirada (la app decide si el usuario sigue como visitante o va al login). */
 import axios, {
   type AxiosError,
   type AxiosInstance,
@@ -5,10 +7,9 @@ import axios, {
 } from "axios";
 
 import {
+  expireSession,
   getRefreshToken,
   saveTokens,
-  redirectToLogin,
-  redirectToLoginWithMessage,
 } from "./session";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 
@@ -42,7 +43,7 @@ export const setupAuthInterceptor = (
           "/auth/refresh",
         )
       ) {
-        redirectToLogin();
+        expireSession();
 
         return Promise.reject(error);
       }
@@ -54,7 +55,7 @@ export const setupAuthInterceptor = (
       }
 
       if (originalRequest._retry) {
-        redirectToLogin();
+        expireSession();
 
         return Promise.reject(error);
       }
@@ -63,7 +64,7 @@ export const setupAuthInterceptor = (
         getRefreshToken();
 
       if (!refreshToken) {
-        redirectToLogin();
+        expireSession();
 
         return Promise.reject(error);
       }
@@ -114,12 +115,12 @@ export const setupAuthInterceptor = (
           detail.code &&
           ACCOUNT_BLOCKED_CODES.includes(detail.code)
         ) {
-          redirectToLoginWithMessage(
+          expireSession(
             detail.message ||
               "Tu cuenta se encuentra bloqueada.",
           );
         } else {
-          redirectToLogin();
+          expireSession();
         }
 
         return Promise.reject(

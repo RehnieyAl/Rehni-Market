@@ -1,13 +1,16 @@
+/** Detalle de una liquidación, compartido por empresa y administración (cada una pasa su consulta). */
 import { useEffect, useState } from "react";
 import axios from "axios";
 
 import PayoutStatusBadge from "./PayoutStatusBadge";
 import AccountNumberDisplay from "./AccountNumberDisplay";
+import PayoutAmountsBreakdown from "./PayoutAmountsBreakdown";
 
 import { formatPrice } from "@/shared/utils/formatPrice";
 import { useAlert } from "@/shared/components/alert/useAlert";
-import { Modal, Spinner } from "@/shared/components/ui";
+import { Badge, Modal, Spinner } from "@/shared/components/ui";
 import { BANK_ACCOUNT_TYPE_LABEL } from "../utils/payoutStatus";
+import { formatDateOnly } from "../utils/period";
 
 import type { ReactNode } from "react";
 import type { CompanyPayout } from "../types/response";
@@ -58,12 +61,12 @@ export default function PayoutDetailModal({
       }
     };
 
-    load();
+    void load();
 
     return () => {
       cancelled = true;
     };
-  }, [isOpen, payoutId]);
+  }, [isOpen, payoutId, fetchDetail, showAlert]);
 
   const periodLabel = (p: CompanyPayout) =>
     `${new Date(p.periodStart).toLocaleDateString("es-CO")} — ${new Date(p.periodEnd).toLocaleDateString("es-CO")}`;
@@ -88,34 +91,15 @@ export default function PayoutDetailModal({
         <div className="space-y-6">
 
               <div className="flex items-center justify-between">
-                <PayoutStatusBadge status={payout.payoutStatus} />
+                <div className="flex items-center gap-2">
+                  <PayoutStatusBadge status={payout.payoutStatus} />
+                  {payout.isOverdue && <Badge tone="danger">Vencida</Badge>}
+                </div>
 
                 <span className="text-sm text-gray-500">{periodLabel(payout)}</span>
               </div>
 
-              <section className="rounded-card border bg-gray-50 p-4">
-                <dl className="space-y-2 text-sm">
-                  <div className="flex justify-between text-gray-600">
-                    <dt>Ventas brutas</dt>
-                    <dd className="font-medium text-gray-900">{formatPrice(payout.grossSales)}</dd>
-                  </div>
-
-                  <div className="flex justify-between text-gray-600">
-                    <dt>
-                      Comisión Rehni Market (
-                      {(Number(payout.commissionPercentage) * 100).toFixed(0)}%)
-                    </dt>
-                    <dd className="font-medium text-gray-900">
-                      -{formatPrice(payout.commissionAmount)}
-                    </dd>
-                  </div>
-
-                  <div className="flex justify-between border-t border-gray-200 pt-2 text-base font-semibold text-gray-900">
-                    <dt>Valor neto</dt>
-                    <dd>{formatPrice(payout.netAmount)}</dd>
-                  </div>
-                </dl>
-              </section>
+              <PayoutAmountsBreakdown amounts={payout} />
 
               <section>
                 <h3 className="mb-3 font-semibold text-gray-900">Cuenta de destino</h3>
@@ -151,6 +135,13 @@ export default function PayoutDetailModal({
               )}
 
               <section className="space-y-1.5 border-t border-gray-100 pt-4 text-sm text-gray-500">
+                {payout.consignmentDeadline && (
+                  <div className="flex justify-between">
+                    <span>Fecha límite de consignación</span>
+                    <span>{formatDateOnly(payout.consignmentDeadline)}</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between">
                   <span>Generada</span>
                   <span>{new Date(payout.createdAt).toLocaleString("es-CO")}</span>

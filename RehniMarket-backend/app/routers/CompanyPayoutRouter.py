@@ -1,8 +1,13 @@
-from fastapi import APIRouter, Request, Depends, Query
+"""Rutas de liquidaciones y saldo de la empresa autenticada (solo rol company)."""
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from uuid import UUID
 
-from app.database.Connection import get_db
+from app.core.dbconexion import get_db
+from app.core.AuthDependencies import AuthContext, require_role
 
 from app.schemas.SchemaDashboard.SchemaPayout import (
     CompanyPayoutResponse,
@@ -21,21 +26,26 @@ router = APIRouter(prefix="/company", tags=["company", "payouts"])
 
 @router.get("/payouts", response_model=CompanyPayoutsPaginatedResponse)
 def get_my_payouts(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=50),
     database: Session = Depends(get_db, scope="function"),
 ):
-    return list_company_payouts_service(request.state.user_id, database, page=page, limit=limit)
+    return list_company_payouts_service(current.user_id, database, page=page, limit=limit)
 
 
 @router.get("/payouts/{payout_id}", response_model=CompanyPayoutResponse)
 def get_my_payout_detail(
-    request: Request, payout_id: UUID, database: Session = Depends(get_db, scope="function")
+    current: Annotated[AuthContext, Depends(require_role("company"))],
+    payout_id: UUID,
+    database: Session = Depends(get_db, scope="function"),
 ):
-    return get_company_payout_detail_service(request.state.user_id, payout_id, database)
+    return get_company_payout_detail_service(current.user_id, payout_id, database)
 
 
 @router.get("/balance", response_model=CompanyBalanceResponse)
-def get_my_balance(request: Request, database: Session = Depends(get_db, scope="function")):
-    return get_company_balance_service(request.state.user_id, database)
+def get_my_balance(
+    current: Annotated[AuthContext, Depends(require_role("company"))],
+    database: Session = Depends(get_db, scope="function"),
+):
+    return get_company_balance_service(current.user_id, database)

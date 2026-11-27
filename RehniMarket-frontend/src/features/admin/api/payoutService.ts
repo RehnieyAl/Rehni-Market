@@ -1,8 +1,9 @@
+/** Llamadas del owner al módulo de liquidaciones: listado por urgencia, detalle, generación y pago. */
 import { api } from "@/api/Client";
 
 import type {
+  AdminPayoutsPaginated,
   CompanyPayout,
-  CompanyPayoutsPaginated,
   PayoutAvailablePeriod,
   PayoutPreview,
   PayoutStatus,
@@ -18,8 +19,8 @@ export async function getAdminPayouts(
   page = 1,
   limit = 10,
   status?: PayoutStatus,
-): Promise<CompanyPayoutsPaginated> {
-  const { data } = await api.get<CompanyPayoutsPaginated>("/admin/payouts", {
+): Promise<AdminPayoutsPaginated> {
+  const { data } = await api.get<AdminPayoutsPaginated>("/admin/payouts", {
     params: { page, limit, status },
   });
 

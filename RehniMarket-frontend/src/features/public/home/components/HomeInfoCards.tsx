@@ -36,7 +36,7 @@ export default function HomeInfoCards() {
           key={title}
           className="flex items-center gap-3 rounded-card border border-gray-200 bg-surface-1 p-3.5 sm:p-4 dark:border-hairline dark:bg-surface-1"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent sm:h-10 sm:w-10">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/15 text-secondary sm:h-10 sm:w-10">
             <Icon size={17} />
           </span>
           <div className="min-w-0">

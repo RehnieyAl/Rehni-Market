@@ -520,7 +520,6 @@ class TestCheckoutStockDiscount:
         el otro recibe INSUFFICIENT_STOCK. Nunca dos pedidos, nunca stock negativo."""
 
         import threading
-        from uuid import UUID
 
         from fastapi import HTTPException
         from sqlalchemy.orm import sessionmaker

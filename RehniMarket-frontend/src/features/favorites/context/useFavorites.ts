@@ -1,3 +1,4 @@
+/** Acceso al contexto de favoritos; falla si se usa fuera de FavoritesProvider. */
 import { useContext } from "react";
 import { FavoritesContext } from "./FavoritesContext";
 

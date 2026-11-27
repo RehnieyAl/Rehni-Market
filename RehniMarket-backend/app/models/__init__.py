@@ -20,13 +20,18 @@ from .ModelAdvertisement import Advertisement
 from .ModelCart import Cart, CartItem
 from .ModelOrder import Order, OrderItem, OrderStatusEnum
 from .ModelReturnRequest import ReturnRequest, ReturnStatusEnum
+from .ModelReturnRequestEvent import ReturnRequestEvent, ReturnEventType, CallOutcome
+from .ModelReturnNotification import ReturnNotification, NotificationStatus
 from .ModelFavorite import Favorite
+from .ModelCompanyFollower import CompanyFollower
 from .ModelAddress import Address
 from .ModelWallet import Wallet, WalletTransaction, WalletTransactionType
 from .ModelReview import Review
 
+from .ModelBank import Bank
 from .ModelCompanyBankAccount import CompanyBankAccount, BankAccountTypeEnum
 from .ModelCompanyPayout import CompanyPayout, PayoutStatusEnum
 from .ModelRehniCoinMovement import RehniCoinMovement
 from .ModelReport import Report, ReportTargetType, ReportStatus, ReportEvidence
 from .ModelShippingCarrier import ShippingCarrier
+from .ModelPlatformSetting import PlatformSetting

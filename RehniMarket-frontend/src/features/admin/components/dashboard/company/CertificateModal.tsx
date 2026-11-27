@@ -22,7 +22,7 @@ export default function CertificateModal({
       <div className="flex h-[95vh] w-full max-w-6xl flex-col overflow-hidden rounded-card bg-surface-1 shadow-2xl">
         <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">
+            <h2 className="text-lg font-semibold text-gray-900">
               Certificado empresarial
             </h2>
 

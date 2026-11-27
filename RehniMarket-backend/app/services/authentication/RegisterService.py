@@ -1,3 +1,4 @@
+import logging
 from fastapi import HTTPException
 from app.core.ErrorCodes import ErrorCodes
 from app.core.Exceptions import api_error
@@ -5,9 +6,6 @@ from sqlalchemy.orm import Session
 from app.services.email.CodeService import (
     issue_verification_code
 )
-from app.services.email.template.EmailRegisterCompany import EmailRegisterCompany
-from app.core.ErrorCodes import ErrorCodes
-import traceback
 
 from app.repository.RoleRepository import (
     get_role_by_name
@@ -28,6 +26,8 @@ from app.schemas.schemaAuth.SchemaRegister import (
     CreateUserRequest,
     CreateCompanyRequest
 )
+
+logger = logging.getLogger(__name__)
 
 def register_user_service(user: CreateUserRequest, database: Session):
     try:
@@ -62,7 +62,7 @@ def register_user_service(user: CreateUserRequest, database: Session):
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR,"Error interno del servidor.")
 
 
@@ -127,13 +127,13 @@ def register_company_service(user: CreateUserRequest, company: CreateCompanyRequ
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
 
         if uploaded:
 
             try:
                 nas.delete_file(path)
             except Exception:
-                traceback.print_exc()
+                logger.exception("Error inesperado")
         
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor")

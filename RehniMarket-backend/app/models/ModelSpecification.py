@@ -1,10 +1,10 @@
-from sqlalchemy import String,Numeric,Boolean,Text,ForeignKey,Integer,DateTime
-from decimal import Decimal
+"""Modelo ORM de especificaciones de un producto (tabla product_specifications)."""
+
+from sqlalchemy import Text,ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
-from datetime import datetime
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 class ProductSpecification(Base):
 

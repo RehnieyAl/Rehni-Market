@@ -185,6 +185,9 @@ class PublicCompanyProfileResponse(BaseModel):
     is_verified: bool
     created_at: datetime
     total_products: int
+    # Contacto empresarial solo si la empresa autorizó publicarlo; nunca el correo de su cuenta.
+    contact_email: str | None = None
+    contact_phone: str | None = None
 
 
 class CompanyRatingResponse(BaseModel):

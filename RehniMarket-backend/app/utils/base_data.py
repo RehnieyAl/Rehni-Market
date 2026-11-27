@@ -1,7 +1,7 @@
 """Datos base sin los que la app no funciona (roles, catálogo y transportadoras).
 
-El lifespan los asegura en cada arranque, con o sin RUN_SEED; los datos de demostración
-siguen en app/utils/seed.py:run_seed.
+No corren solos: se crean a mano con scripts/datos-base.sh o al arrancar con RUN_SEED=true, junto
+con los de demostración (app/utils/seed.py, grupo demo).
 """
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
@@ -10,13 +10,11 @@ from sqlalchemy.pool import NullPool
 
 from app.Config import config
 from app.models.ModelCatalog import Catalog
-from app.utils.seed import (
-    seed_catalog,
-    seed_catalog_attributes,
-    seed_roles,
-    seed_shipping_carriers,
-    seed_specifications,
-)
+from app.utils.seed_attributes import seed_catalog_attributes
+from app.utils.seed_categories import seed_catalog
+from app.utils.seed_roles import seed_roles
+from app.utils.seed_shipping import seed_shipping_carriers
+from app.utils.seed_specifications import seed_specifications
 
 # Los workers de Uvicorn ejecutan el lifespan a la vez: el advisory lock hace que siembren de
 # a uno y que el segundo encuentre todo creado en lugar de chocar con las restricciones UNIQUE.

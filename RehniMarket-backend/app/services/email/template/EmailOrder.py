@@ -64,7 +64,6 @@ def EmailOrderCreated(
 
     rows_html = "".join(
         product_row_html(
-            item.get("image_url"),
             item["name"],
             item.get("variant_name"),
             item["quantity"],
@@ -86,7 +85,7 @@ def EmailOrderCreated(
     )
 
     content = (
-        heading_html("¡Pedido recibido!")
+        heading_html("Recibimos tu pedido")
         + greeting_html(buyer_name)
         + paragraph_html(
             "Hemos recibido tu pedido correctamente y ya se encuentra en proceso de validación."
@@ -151,7 +150,7 @@ def EmailOrderShipped(
     address_section = _address_section(address) if address else ""
 
     content = (
-        heading_html("¡Tu pedido va en camino!")
+        heading_html("Tu pedido va en camino")
         + greeting_html(buyer_name)
         + paragraph_html(
             "Tu pedido ha sido enviado y se encuentra camino a la dirección registrada."
@@ -186,7 +185,7 @@ def EmailOrderDelivered(
     subject = f"Tu pedido #{reference} fue entregado"
 
     content = (
-        heading_html("¡Tu pedido fue entregado!")
+        heading_html("Tu pedido fue entregado")
         + greeting_html(buyer_name)
         + paragraph_html("Confirmamos que tu pedido fue entregado correctamente.")
         + info_box(

@@ -1,3 +1,4 @@
+/** Opiniones del detalle de producto: resumen real a la izquierda y comentarios con gestión de la reseña propia a la derecha. */
 import { useCallback, useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 
@@ -87,8 +88,8 @@ export default function ReviewsSection({
   const handleCreated = () => {
     setPage(1);
     setExpanded(true);
-    loadReviews();
-    loadEligibility();
+    void loadReviews();
+    void loadEligibility();
   };
 
   const handleDeleteMyReview = async () => {
@@ -100,8 +101,8 @@ export default function ReviewsSection({
       await deleteReview(eligibility.my_review_id);
 
       showAlert("success", "Tu reseña fue eliminada.");
-      loadReviews();
-      loadEligibility();
+      void loadReviews();
+      void loadEligibility();
     } catch (error) {
       console.error("Error eliminando la reseña:", error);
       showAlert("error", "No se pudo eliminar tu reseña.");
@@ -114,7 +115,7 @@ export default function ReviewsSection({
   const visibleReviews = expanded ? reviews : reviews.slice(0, COMPACT_COUNT);
 
   return (
-    <div id="opiniones" className="grid gap-6 lg:grid-cols-[280px_1fr]">
+    <div id="opiniones" className="grid items-start gap-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-6">
 
       <ProductReviewsSummary
         averageRating={averageRating}
@@ -122,7 +123,7 @@ export default function ReviewsSection({
         distribution={distribution}
       />
 
-      <div>
+      <div className="min-w-0 rounded-card border border-hairline bg-surface-1 p-4 sm:p-5">
         <div className="mb-4">
           {eligibility?.can_review ? (
             <ReviewForm productId={productId} onCreated={handleCreated} />
@@ -131,6 +132,7 @@ export default function ReviewsSection({
               <p className="text-sm text-gray-600 dark:text-ink-muted">Ya reseñaste este producto.</p>
 
               <button
+                type="button"
                 onClick={() => setConfirmDeleteOpen(true)}
                 disabled={deleting}
                 className="text-sm font-medium text-danger hover:underline disabled:opacity-50"
@@ -155,8 +157,9 @@ export default function ReviewsSection({
 
         {!expanded && !loading && total > COMPACT_COUNT && (
           <button
+            type="button"
             onClick={() => setExpanded(true)}
-            className="mt-4 flex items-center gap-1 text-sm font-medium text-primary hover:underline dark:text-brand-300"
+            className="mt-4 flex items-center gap-1 text-sm font-medium brand-link"
           >
             Ver todas las opiniones
             <ChevronRight size={16} />

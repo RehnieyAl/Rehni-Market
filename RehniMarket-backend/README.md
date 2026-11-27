@@ -36,43 +36,53 @@ catálogo público, autenticación y autorización, carrito y checkout con pago 
 
 ```text
 app/
-├── main.py                 # Entrypoint FastAPI (lifespan: ensure_bucket + run_seed opcional). 24 routers.
+├── main.py                 # Entrypoint FastAPI (lifespan: ensure_bucket; seeds solo con RUN_SEED=true). 25 routers.
 ├── Config.py               # Carga de variables de entorno (python-dotenv)
-├── core/                   # ErrorCodes (102 códigos), Exceptions (api_error), TaxConfig (IVA 19%), PayoutConfig (comisión 5%)
-├── database/Connection.py  # Motor SQLAlchemy + SessionLocal + Base
-├── middleware/             # AuthMiddleware, CorsMiddleware (orígenes desde URL_FRONTEND),
-│                           # RateLimitMiddleware (activable con RATE_LIMIT_ENABLED),
-│                           # RolePermissions (lista blanca por rol), PublicRoutes
+├── core/                   # ErrorCodes (102 códigos), Exceptions (api_error), TaxConfig (IVA 19%), PayoutConfig (comisión 5%),
+│                           # AuthDependencies (JWT + require_role por endpoint), dbconexion (engine, sesiones, Base)
+├── middleware/             # CorsMiddleware (orígenes desde URL_FRONTEND), PublicBaseUrlMiddleware,
+│                           # RateLimitMiddleware (activable con RATE_LIMIT_ENABLED)
 ├── models/                 # 28 módulos de modelo ORM (~36 tablas: Users, Company, Product, Variant, Order, Wallet, ...)
 ├── repository/             # Acceso a datos
-├── routers/                # 24 routers REST
+├── routers/                # 25 routers REST (incluye seguimiento de empresas: /company-follows)
 ├── schemas/                # Esquemas Pydantic (auth, commerce, dashboard, public)
 ├── services/               # Lógica de negocio (auth, commerce, dashboard, email, variants, pricing, PayoutService)
 │   ├── NasService.py       # Cliente MinIO + ensure_bucket() + build_media_url()
 │   └── email/EmailService.py  # SMTP Gmail (smtp.gmail.com:587, STARTTLS)
-└── utils/                  # Security (bcrypt), seed.py, CheckNetwork, TestDatabase, Response
-alembic/versions/           # 10 migraciones en cadena lineal: 29fe206320ce -> ... -> a1b2c3d4e5f6 (head)
-tests/                      # 7 archivos de pruebas, 113 funciones test_ (pytest + PostgreSQL real "rehnimarket_test")
+└── utils/                  # Security (bcrypt), FileValidator, seed.py + seed_*.py, CheckNetwork, TestDatabase
+alembic/versions/           # 19 migraciones en cadena lineal: 29fe206320ce -> ... -> c6e8a0b2d4f7 (head)
+tests/                      # 33 archivos de pruebas (pytest + PostgreSQL real "rehnimarket_test")
 ```
 
 ## Migraciones (Alembic)
 
-10 revisiones, cadena lineal, sin ramas:
+19 revisiones, cadena lineal, sin ramas:
 
 ```
 29fe206320ce  (base)
   -> d72ef7fa597e   upgrade_table_product
   -> 048871b47f63   add_catalog_attributes
   -> a90540bebea    variant_combinations_and_discounts
-  -> b6f8fd31fbe     backfill_legacy_to_attributes
-  -> cb6d38ee0bd     order_item_attributes_snapshot
-  -> d4e5f6a7b8c9    advertisement_drop_text_fields
-  -> e7a1c9d24b30    shipping_carriers_and_order_shipping
-  -> f2b7c4e91a05    product_applies_tax
-  -> a1b2c3d4e5f6    product_search_fuzzy_trgm   (HEAD — crea pg_trgm, unaccent, rehni_search_norm, índice GIN)
+  -> b6f8fd31fbe    backfill_legacy_to_attributes
+  -> cb6d38ee0bd    order_item_attributes_snapshot
+  -> d4e5f6a7b8c9   advertisement_drop_text_fields
+  -> e7a1c9d24b30   shipping_carriers_and_order_shipping
+  -> f2b7c4e91a05   product_applies_tax
+  -> a1b2c3d4e5f6   product_search_fuzzy_trgm   (pg_trgm, unaccent, rehni_search_norm, índice GIN)
+  -> c3d5e7f9a1b2   wallet_refund_idempotency_index
+  -> e1f2a3b4c5d6   company_certificate_rejection_reason
+  -> f7a2b9c1d3e4   return_requests
+  -> a7c4e1f9b2d8   company_certificate_needs_update
+  -> b8d1c4f7a2e9   wallet_recharge_correction
+  -> c3e5a7f9d1b2   fk_indexes_hot_paths
+  -> d7e3f1a9c5b2   single_owner
+  -> b5d7f9a1c3e6   company_followers
+  -> c6e8a0b2d4f7   shipping_carriers_created_at_not_null   (HEAD)
 ```
 
-`alembic/env.py` toma la URL de `app.Config` (no de `alembic.ini`). Se aplica
+`alembic/env.py` toma la URL de `app.Config` (no de `alembic.ini`) y excluye de la comparación
+el índice de expresión `ix_products_name_search_trgm` (solo existe en su migración), así
+`alembic check` no reporta diferencias; el CI lo ejecuta tras `upgrade head`. Se aplica
 automáticamente en el arranque del contenedor `backend`
 (`uv run alembic upgrade head`).
 
@@ -140,8 +150,12 @@ Las migraciones se aplican solas en el arranque del backend. Comando del servici
 (`docker-compose.yml` por defecto):
 
 ```
-sh -c "uv run alembic upgrade head && uv run uvicorn app.main:app --host 0.0.0.0 --port 8000"
+sh -c "uv run --no-sync alembic upgrade head && exec uv run --no-sync uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers $UVICORN_WORKERS ..."
 ```
+
+`--no-sync` usa el entorno que instaló el Dockerfile (`uv sync --frozen --no-dev`): el arranque
+no descarga nada de PyPI ni instala el grupo `dev`. Un cambio en `pyproject.toml` o `uv.lock`
+exige reconstruir la imagen (`docker compose up -d --build backend`).
 
 El backend se publica en `${BACKEND_BIND:-127.0.0.1}:${BACKEND_PORT:-8000}` y, a
 través de Caddy, en `https://api.localhost`.
@@ -158,18 +172,30 @@ xdg-open http://127.0.0.1:8000/docs               # Swagger UI (DOCS_ENABLED=tru
 curl https://api.localhost/health/database
 ```
 
-### 5. Datos iniciales (seed) — opcional
+### 5. Datos iniciales (seed) — manuales
 
-`run_seed()` (`app/utils/seed.py`) crea: roles (`user`, `company`, `admin`,
-`owner`), catálogos, especificaciones, atributos de variante, transportadoras y
-las cuentas `admin` / `owner` por defecto. La carga de empresas y productos de
-ejemplo (`seed_companies_and_products`) está **comentada** en el código.
+Ningún seed corre solo (`RUN_SEED=false` por defecto). Cada conjunto de datos es un seed
+independiente e idempotente en `app/utils/seed_*.py`, y `app/utils/seed.py` los ejecuta en orden de
+dependencias solo cuando se eligen:
 
-1. En el `.env` de la raíz: definir `ADMIN_DEFAULT` / `USER_NAME_ADMIN` /
-   `PASSWORD_DEFAULT` (y, opcionalmente, `OWNER_DEFAULT` / `USER_NAME_OWNER` /
-   `OWNER_PASSWORD_DEFAULT`) y poner `RUN_SEED=true`.
-2. `docker compose restart backend` (el seed corre en el arranque).
-3. Volver a `RUN_SEED=false` y `docker compose restart backend`.
+```bash
+docker compose exec backend uv run --no-sync python -m app.utils.seed --list
+docker compose exec backend uv run --no-sync python -m app.utils.seed colores
+docker compose exec backend uv run --no-sync python -m app.utils.seed categorias especificaciones
+docker compose exec backend uv run --no-sync python -m app.utils.seed base   # roles, categorías, especificaciones, atributos, transportadoras
+docker compose exec backend uv run --no-sync python -m app.utils.seed demo   # owner del .env, empresas y productos demo
+```
+
+Si falta una dependencia que no se eligió (p. ej. `atributos` sin categorías), no se ejecuta nada.
+El seed `owner` nunca crea un segundo owner. `RUN_SEED=true` siembra `base` y `demo` al arrancar
+(solo desarrollo). En una base nueva de producción: `bash scripts/datos-base.sh`.
+
+**Imágenes de las demos.** `demo` no descarga fotos: genera un marcador PNG de 480 × 480 (fondo
+claro con un círculo del color de la variante) y solo lo sube a MinIO si el objeto `seed/...` no
+existe. Las bases sembradas antes del 2026-11-25 conservan el marcador anterior (un lienzo entero
+del color, que en la tienda se ve como una foto vacía). Para regenerarlos es una operación de datos
+aparte y manual: borrar del bucket `uploads` solo los objetos con prefijo `seed/` y volver a correr
+`python -m app.utils.seed demo`; no toca imágenes subidas por empresas ni filas de la base.
 
 ---
 

@@ -1,21 +1,16 @@
+/** Ruta /offers: navegación, catálogo de ofertas con filtros y pie de página. */
 import NavBar from "@/shared/components/navbar/navbar";
 import Footer from "@/shared/components/Footer";
 
-import CollectionView from "@/features/public/products/components/CollectionView";
-import { getPublicOffers } from "@/features/public/products/api/productsService";
+import OffersCatalog from "@/features/public/products/components/OffersCatalog";
 
 export default function Offers() {
   return (
-    <div className="flex min-h-screen flex-col bg-surface-1">
+    <div className="flex min-h-screen flex-col bg-canvas">
       <NavBar />
 
       <main className="flex-1">
-        <CollectionView
-          title="Ofertas"
-          subtitle="Productos con descuento vigente en alguna de sus variantes disponibles."
-          emptyMessage="No hay ofertas disponibles en este momento."
-          fetchPage={getPublicOffers}
-        />
+        <OffersCatalog />
       </main>
 
       <Footer />

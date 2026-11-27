@@ -19,7 +19,7 @@ def EmailCertificateApproved(
     subject = "Certificado empresarial aprobado | Rehni Market"
 
     content = (
-        heading_html("¡Tu empresa ha sido aprobada!")
+        heading_html("Tu empresa fue aprobada")
         + greeting_html(company_name)
         + paragraph_html(
             "Nos complace informarte que nuestro equipo ha revisado y aprobado "

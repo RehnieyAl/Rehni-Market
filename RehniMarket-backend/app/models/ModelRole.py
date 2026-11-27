@@ -1,8 +1,10 @@
+"""Modelo ORM de roles: user, company, admin y owner (tabla roles)."""
+
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 class Role(Base):
     __tablename__ = "roles"

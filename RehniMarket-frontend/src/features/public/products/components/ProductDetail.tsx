@@ -1,4 +1,6 @@
-import { ChevronLeft, Flag, PackageX, ShoppingCart } from "lucide-react";
+/** Detalle público de producto: galería, precio por variante, vendedor, compra, pestañas, opiniones,
+ * preguntas frecuentes y relacionados. Solo compradores (o visitantes, vía login) compran y guardan. */
+import { ChevronLeft, Flag, Heart, PackageX, ShoppingCart } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
@@ -16,10 +18,14 @@ import ProductFaq from "./ProductFaq";
 import RelatedProducts from "./RelatedProducts";
 import VariantAttributePicker from "./VariantAttributePicker";
 import { deriveVariantAxes, firstLiveVariant, resolveVariant } from "../utils/variantAxes";
+import { resolveDisplayPricing, resolveGalleryImages } from "../utils/productDisplay";
+import QuantityStepper from "./QuantityStepper";
+import StockStatus from "./StockStatus";
 import ReviewsSection from "@/features/public/reviews/components/ReviewsSection";
 import ReportModal from "@/features/reports/components/ReportModal";
 import { useRole } from "@/hooks/useRole";
 import { useCart } from "@/features/cart/context/useCart";
+import { useFavorites } from "@/features/favorites/context/useFavorites";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 import { useRedirectToLogin } from "@/features/public/auth/hooks/useRedirectToLogin";
@@ -27,6 +33,16 @@ import { Button, EmptyState } from "@/shared/components/ui";
 import { buttonClasses } from "@/shared/components/ui/buttonVariants";
 
 import type { PublicProductDetail } from "../types/response";
+
+function addToCartErrorMessage(error: unknown): string {
+  const detail = axios.isAxiosError(error) ? error.response?.data?.detail : undefined;
+
+  if (detail?.code === ErrorCode.INSUFFICIENT_STOCK) {
+    return detail.message ?? "Ya tienes la cantidad máxima disponible en tu carrito.";
+  }
+
+  return detail?.message ?? "Ocurrió un error al agregar el producto al carrito.";
+}
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -39,6 +55,8 @@ export default function ProductDetail() {
   const { showAlert } = useAlert();
   const redirectToLogin = useRedirectToLogin();
   const [addingToCart, setAddingToCart] = useState(false);
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const [savingFavorite, setSavingFavorite] = useState(false);
 
   const [reportModalOpen, setReportModalOpen] = useState(false);
 
@@ -76,7 +94,7 @@ export default function ProductDetail() {
       }
     };
 
-    load();
+    void load();
 
     return () => {
       cancelled = true;
@@ -103,31 +121,10 @@ export default function ProductDetail() {
     [product],
   );
 
-  const images = useMemo(() => {
-    if (!product) return [];
-
-    if (activeVariant && activeVariant.images.length > 0) {
-      return activeVariant.images;
-    }
-
-    const chosen = Object.entries(selected).filter(([, value]) => value);
-    if (chosen.length > 0) {
-      const representative = product.variants.find((variant) => {
-        if (variant.images.length === 0) return false;
-        const optionValues = Object.fromEntries(
-          variant.options.map((option) => [option.attribute, option.value]),
-        );
-        return chosen.every(([name, value]) => optionValues[name] === value);
-      });
-      if (representative) return representative.images;
-    }
-
-    if (firstVariant && firstVariant.images.length > 0) {
-      return firstVariant.images;
-    }
-
-    return product.images ?? [];
-  }, [activeVariant, product, selected, firstVariant]);
+  const images = useMemo(
+    () => (product ? resolveGalleryImages(product, activeVariant, selected, firstVariant) : []),
+    [activeVariant, product, selected, firstVariant],
+  );
 
   const attributePairs = useMemo(() => {
     if (!product) return [];
@@ -135,22 +132,6 @@ export default function ProductDetail() {
   }, [product]);
 
   const stock = activeVariant ? activeVariant.stock : product?.stock ?? 0;
-  const displayPrice = activeVariant ? activeVariant.price : product?.price ?? "0";
-  const displayFinalPrice = activeVariant
-    ? activeVariant.final_price
-    : product?.final_price ?? "0";
-  const discountEnabled = activeVariant
-    ? activeVariant.discount_enabled
-    : product?.discount_enabled ?? false;
-  const discountPercentage = activeVariant
-    ? activeVariant.discount_percentage
-    : product?.discount_percentage ?? null;
-  const displayTaxAmount = activeVariant
-    ? activeVariant.tax_amount
-    : product?.tax_amount ?? "0";
-  const displayPriceWithTax = activeVariant
-    ? activeVariant.final_price_with_tax
-    : product?.price_with_tax ?? "0";
 
   const anyVariantInStock = useMemo(
     () => (product?.variants ?? []).some((variant) => variant.stock > 0),
@@ -200,19 +181,30 @@ export default function ProductDetail() {
     try {
       setAddingToCart(true);
       await addItem(product.id, quantity, activeVariant?.id);
-      if (redirectToCart) navigate("/cart");
+      if (redirectToCart) void navigate("/cart");
     } catch (error) {
       console.error("Error agregando al carrito:", error);
-
-      const detail = axios.isAxiosError(error) ? error.response?.data?.detail : undefined;
-      const message =
-        detail?.code === ErrorCode.INSUFFICIENT_STOCK
-          ? (detail?.message ?? "Ya tienes la cantidad máxima disponible en tu carrito.")
-          : detail?.message;
-
-      showAlert("error", message ?? "Ocurrió un error al agregar el producto al carrito.");
+      showAlert("error", addToCartErrorMessage(error));
     } finally {
       setAddingToCart(false);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!product || savingFavorite || status === "loading") return;
+    if (role === null) {
+      redirectToLogin();
+      return;
+    }
+    if (role !== "user") return;
+
+    try {
+      setSavingFavorite(true);
+      await toggleFavorite(product.id);
+    } catch (error) {
+      console.error("Error actualizando favoritos:", error);
+    } finally {
+      setSavingFavorite(false);
     }
   };
 
@@ -229,7 +221,7 @@ export default function ProductDetail() {
 
   if (notFound || !product) {
     return (
-      <div className="theme-dark mx-auto w-full max-w-2xl px-4 py-16">
+      <div className="mx-auto w-full max-w-2xl px-4 py-16">
         <EmptyState
           icon={<PackageX size={22} />}
           title="No encontramos este producto"
@@ -245,8 +237,10 @@ export default function ProductDetail() {
     );
   }
 
+  const display = resolveDisplayPricing(product, activeVariant);
+
   return (
-    <div className="theme-dark mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-2 py-6 text-ink sm:px-4 sm:py-8 lg:px-8">
+    <div className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] px-3 py-6 text-ink sm:px-4 sm:py-8 lg:px-8">
       <Link
         to="/products"
         className="mb-6 inline-flex items-center gap-2 text-sm text-ink-muted transition hover:text-ink"
@@ -255,24 +249,28 @@ export default function ProductDetail() {
         Volver a productos
       </Link>
 
-      <div className="overflow-hidden rounded-card border border-hairline bg-surface-1 shadow-pop">
+      {/* overflow-clip (no hidden): recorta las esquinas sin volverse contenedor de scroll, que anularía el sticky de la galería. */}
+      <div className="overflow-clip rounded-card border border-hairline bg-surface-1 shadow-pop">
         <div className="grid items-stretch lg:grid-cols-2">
-          <div className="border-b border-hairline p-4 sm:p-6 lg:border-b-0 lg:border-r">
-            <ProductGallery
-              images={images}
-              productName={product.name}
-              selectedUrl={selectedImage}
-              onSelect={setManualImage}
-            />
+          <div className="min-w-0 border-b border-hairline p-4 sm:p-6 lg:border-b-0 lg:border-r">
+            {/* La columna de compra es más alta: la galería acompaña el scroll en vez de dejar un hueco. */}
+            <div className="lg:sticky lg:top-28">
+              <ProductGallery
+                images={images}
+                productName={product.name}
+                selectedUrl={selectedImage}
+                onSelect={setManualImage}
+              />
+            </div>
           </div>
 
           <div className="p-4 sm:p-6 lg:p-8">
-            <p className="text-sm font-medium uppercase tracking-wide text-brand-400">
+            <p className="text-sm font-medium text-ink-muted">
               {product.catalog_name}
             </p>
 
             <div className="mt-1 flex items-start justify-between gap-3">
-              <h1 className="text-3xl font-bold leading-tight text-ink">
+              <h1 className="text-3xl font-semibold leading-tight text-ink">
                 {product.name}
               </h1>
 
@@ -296,22 +294,22 @@ export default function ProductDetail() {
 
             <div className="mt-4 rounded-card border border-hairline bg-surface-2 p-4">
               {requiresVariant && !activeVariant && (
-                <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
+                <p className="text-xs font-medium text-ink-muted">
                   Desde
                 </p>
               )}
               <ProductPrice
-                price={displayPrice}
-                discountEnabled={discountEnabled}
-                discountPercentage={discountPercentage}
-                finalPrice={displayFinalPrice}
+                price={display.price}
+                discountEnabled={display.discountEnabled}
+                discountPercentage={display.discountPercentage}
+                finalPrice={display.finalPrice}
               />
 
               <ProductTaxLine
                 appliesTax={product.applies_tax}
                 taxRate={product.tax_rate}
-                taxAmount={displayTaxAmount}
-                priceWithTax={displayPriceWithTax}
+                taxAmount={display.taxAmount}
+                priceWithTax={display.priceWithTax}
               />
             </div>
 
@@ -332,59 +330,14 @@ export default function ProductDetail() {
               </div>
             )}
 
-            <div className="mt-6">
-              <h3 className="mb-2 text-sm font-semibold text-ink">Cantidad</h3>
+            <QuantityStepper quantity={quantity} stock={stock} onChange={setQuantity} />
 
-              <div className="flex w-fit items-center overflow-hidden rounded-control border border-hairline bg-surface-2">
-                <button
-                  type="button"
-                  aria-label="Disminuir cantidad"
-                  className="flex h-11 w-11 items-center justify-center text-lg text-ink-muted transition hover:bg-white/5 hover:text-ink disabled:opacity-40"
-                  onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                  disabled={quantity <= 1}
-                >
-                  −
-                </button>
-
-                <span className="w-12 text-center text-sm font-medium tabular-nums text-ink">
-                  {quantity}
-                </span>
-
-                <button
-                  type="button"
-                  aria-label="Aumentar cantidad"
-                  className="flex h-11 w-11 items-center justify-center text-lg text-ink-muted transition hover:bg-white/5 hover:text-ink disabled:opacity-40"
-                  onClick={() => setQuantity((prev) => Math.min(stock || 1, prev + 1))}
-                  disabled={stock > 0 && quantity >= stock}
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            <p className="mt-4 flex items-center gap-2 text-sm">
-              {invalidCombination ? (
-                <span className="font-semibold text-danger">
-                  Esa combinación no está disponible.
-                </span>
-              ) : requiresVariant && !allAxesChosen ? (
-                anyVariantInStock ? (
-                  <span className="text-ink-muted">
-                    Selecciona una opción para ver el stock disponible.
-                  </span>
-                ) : (
-                  <span className="font-semibold text-danger">Sin stock</span>
-                )
-              ) : stock > 0 ? (
-                <>
-                  <span className="h-2 w-2 shrink-0 rounded-full bg-stock" />
-                  <span className="text-ink-muted">En stock · </span>
-                  <span className="font-semibold text-stock">{stock} unidades disponibles</span>
-                </>
-              ) : (
-                <span className="font-semibold text-danger">Sin stock</span>
-              )}
-            </p>
+            <StockStatus
+              stock={stock}
+              invalidCombination={invalidCombination}
+              pendingSelection={requiresVariant && !allAxesChosen}
+              anyVariantInStock={anyVariantInStock}
+            />
 
             {activeVariant?.sku && (
               <p className="mt-1 text-sm text-ink-muted">
@@ -402,16 +355,33 @@ export default function ProductDetail() {
                     </p>
                   )}
 
-                  <Button
-                    size="lg"
-                    fullWidth
-                    loading={addingToCart}
-                    onClick={() => handleAddToCart(false)}
-                    disabled={!canAddToCart || stock <= 0}
-                    leadingIcon={<ShoppingCart size={18} />}
-                  >
-                    {addingToCart ? "Agregando…" : "Agregar al carrito"}
-                  </Button>
+                  <div className="flex flex-col gap-3 min-[420px]:flex-row">
+                    <Button
+                      size="lg"
+                      className="min-[420px]:flex-1"
+                      loading={addingToCart}
+                      onClick={() => handleAddToCart(false)}
+                      disabled={!canAddToCart || stock <= 0}
+                      leadingIcon={<ShoppingCart size={18} />}
+                    >
+                      {addingToCart ? "Agregando…" : "Agregar al carrito"}
+                    </Button>
+
+                    <button
+                      type="button"
+                      onClick={handleToggleFavorite}
+                      disabled={savingFavorite}
+                      aria-pressed={isFavorite(product.id)}
+                      className="flex h-12 items-center justify-center gap-2 rounded-control border border-white/20 px-6 text-sm font-medium text-ink transition hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary disabled:opacity-60"
+                    >
+                      <Heart
+                        size={18}
+                        aria-hidden="true"
+                        className={isFavorite(product.id) ? "fill-secondary text-secondary" : undefined}
+                      />
+                      Guardar
+                    </button>
+                  </div>
 
                   <button
                     type="button"

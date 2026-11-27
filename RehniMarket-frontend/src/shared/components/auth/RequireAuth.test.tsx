@@ -15,6 +15,7 @@ const baseValue: AuthContextType = {
   login: async () => {},
   logout: () => {},
   refreshProfile: async () => {},
+  signedOutByUser: false,
 };
 
 function renderAt(path: string, value: Partial<AuthContextType>) {

@@ -1,5 +1,8 @@
+/** Proveedor de alertas globales: una alerta a la vez, cierre automático a los 5 s y puente con alertManager. */
 import {
+  useCallback,
   useEffect,
+  useMemo,
   useState,
   type ReactNode,
 } from "react";
@@ -27,47 +30,25 @@ interface AlertState {
 export default function AlertProvider({
   children,
 }: AlertProviderProps) {
-  const [alert, setAlert] =
-    useState<AlertState | null>(() => {
-      const pendingMessage =
-        sessionStorage.getItem("auth_alert");
+  const [alert, setAlert] = useState<AlertState | null>(null);
 
-      if (!pendingMessage) {
-        return null;
-      }
-
-      sessionStorage.removeItem("auth_alert");
-
-      return {
-        id: 1,
-        type: "error",
-        message: pendingMessage,
-      };
-    });
-
-  const showAlert = (
-    type: AlertType,
-    message: string,
-  ) => {
+  // Referencias estables: los consumidores las usan en dependencias de efectos y el contexto no
+  // debe re-renderizar a toda la app cada vez que cambia la alerta visible.
+  const showAlert = useCallback((type: AlertType, message: string) => {
     setAlert((currentAlert) => ({
       id: (currentAlert?.id ?? 0) + 1,
       type,
       message,
     }));
-  };
-
-  useEffect(() => {
-    const unregister =
-      registerAlertListener(
-        showAlert,
-      );
-
-    return unregister;
   }, []);
 
-  const closeAlert = () => {
+  useEffect(() => registerAlertListener(showAlert), [showAlert]);
+
+  const closeAlert = useCallback(() => {
     setAlert(null);
-  };
+  }, []);
+
+  const contextValue = useMemo(() => ({ showAlert, closeAlert }), [showAlert, closeAlert]);
 
   useEffect(() => {
     if (!alert) {
@@ -85,12 +66,7 @@ export default function AlertProvider({
   }, [alert]);
 
   return (
-    <AlertContext.Provider
-      value={{
-        showAlert,
-        closeAlert,
-      }}
-    >
+    <AlertContext.Provider value={contextValue}>
       {children}
 
       {alert && (

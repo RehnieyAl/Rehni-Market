@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 
 from app.core.PayoutConfig import COMMISSION_PERCENTAGE
-from app.models.ModelCompanyPayout import CompanyPayout, PayoutStatusEnum
+from app.models.ModelCompanyPayout import CompanyPayout
 from app.models.ModelOrder import OrderStatusEnum
 from app.models.ModelRehniCoinMovement import RehniCoinMovement
 from tests.conftest import auth
@@ -20,8 +20,6 @@ SEPT = {"periodStart": "2026-09-01", "periodEnd": "2026-09-30"}
 @pytest.fixture(autouse=True)
 def _silence(monkeypatch):
     silence_emails(monkeypatch)
-    for name in ("EmailReturnRequested", "EmailReturnApproved", "EmailReturnRejected"):
-        monkeypatch.setattr(f"app.services.commerce.ReturnService.{name}", lambda *a, **k: None)
 
 
 @pytest.fixture()
@@ -58,7 +56,7 @@ class TestAuthorization:
         assert client.get("/admin/payouts").status_code == 401
 
     @pytest.mark.parametrize("role", ["user", "company"])
-    def test_non_staff_is_forbidden_by_middleware(self, client, tokens, role):
+    def test_non_staff_is_forbidden(self, client, tokens, role):
         response = client.get("/admin/payouts", headers=auth(tokens[role]))
         assert response.status_code == 403
         assert response.json()["detail"]["code"] == "FORBIDDEN"
@@ -100,9 +98,9 @@ class TestGenerate:
     def test_amounts_use_only_delivered_orders_of_the_period(
         self, client, tokens, db, company, bank_account, delivered_sept, product, address
     ):
-        # Pedido entregado fuera del periodo: no debe sumar.
+        # 1 oct 00:00 en Bogotá (05:00 UTC): primer instante fuera de septiembre, no debe sumar.
         place_order(client, tokens["user"], db, product, address, 1,
-                    OrderStatusEnum.DELIVERED, utc(2026, 10, 1, 0))
+                    OrderStatusEnum.DELIVERED, utc(2026, 10, 1, 5))
 
         response = generate(client, tokens["owner"], company.id)
 
@@ -152,21 +150,19 @@ class TestGenerate:
         assert response.json()["detail"]["code"] == "PAYOUT_ALREADY_EXISTS"
         assert db.query(CompanyPayout).count() == 1
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="H-07 (#36): el duplicado solo se detecta con el periodo exacto; un periodo solapado vuelve a liquidar las mismas ventas",
-    )
     def test_overlapping_period_does_not_pay_the_same_sales_twice(
         self, client, tokens, db, company, bank_account, delivered_sept
     ):
+        # H-07 (#36): solo se liquidan meses calendario completos y cada venta queda enlazada a su liquidación.
         assert generate(client, tokens["owner"], company.id).status_code == 200
 
         overlap = generate(
             client, tokens["owner"], company.id, {"periodStart": "2026-09-15", "periodEnd": "2026-10-15"}
         )
 
-        paid_twice = db.query(CompanyPayout).count() == 2
-        assert overlap.status_code == 409 or not paid_twice
+        assert overlap.status_code == 422
+        assert overlap.json()["detail"]["code"] == "PAYOUT_INVALID_PERIOD"
+        assert db.query(CompanyPayout).count() == 1
 
     def test_available_periods_exclude_already_generated_months(
         self, client, tokens, db, company, bank_account, delivered_sept, product, address
@@ -183,10 +179,6 @@ class TestGenerate:
         assert [p["periodStart"] for p in after] == ["2026-10-01"]
         assert after[0]["periodEnd"] == "2026-10-31"
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="H-08 (#37): una devolución aprobada se reembolsa al comprador pero su importe sigue en las ventas liquidadas a la empresa",
-    )
     def test_approved_return_is_not_paid_out_to_the_company(
         self, client, tokens, db, company, bank_account, product, address, buyer_wallet
     ):
@@ -278,6 +270,46 @@ class TestCompanyView:
 
         assert response.status_code == 404
         assert response.json()["detail"]["code"] == "PAYOUT_NOT_FOUND"
+
+    def test_balance_counts_delivered_sales_not_yet_liquidated(
+        self, client, tokens, company, delivered_sept
+    ):
+        valid = delivered_sept[:2]
+        gross = gross_of(valid)
+        commission = (gross * COMMISSION_PERCENTAGE).quantize(Decimal("0.01"))
+
+        body = client.get("/company/balance", headers=auth(tokens["company"])).json()
+
+        assert Decimal(body["grossSalesAccumulated"]) == gross > 0
+        assert Decimal(body["commissionAccumulated"]) == commission
+        assert Decimal(body["netBalance"]) == gross - commission
+
+    def test_balance_adds_liquidated_and_pending_sales_without_double_counting(
+        self, client, tokens, db, product, address, company, bank_account, delivered_sept
+    ):
+        payout = generate(client, tokens["owner"], company.id).json()
+        october = place_order(client, tokens["user"], db, product, address, 1,
+                              OrderStatusEnum.DELIVERED, utc(2026, 10, 3))
+        oct_gross = Decimal(october["total"])
+        oct_commission = (oct_gross * COMMISSION_PERCENTAGE).quantize(Decimal("0.01"))
+
+        body = client.get("/company/balance", headers=auth(tokens["company"])).json()
+
+        assert Decimal(body["grossSalesAccumulated"]) == Decimal(payout["grossSales"]) + oct_gross
+        assert Decimal(body["commissionAccumulated"]) == Decimal(payout["commissionAmount"]) + oct_commission
+        assert Decimal(body["netBalance"]) == Decimal(payout["netAmount"]) + oct_gross - oct_commission
+
+        client.patch(f"/admin/payouts/{payout['id']}/pay", headers=auth(tokens["owner"]))
+        after = client.get("/company/balance", headers=auth(tokens["company"])).json()
+        assert Decimal(after["netBalance"]) == oct_gross - oct_commission
+
+    def test_balance_only_includes_own_sales(self, client, db, company, delivered_sept):
+        owner, other_token = make_user(db, "company", "empresa.dos@test.local")
+        make_company(db, owner, "Segunda Co", "800197268")
+
+        body = client.get("/company/balance", headers=auth(other_token)).json()
+
+        assert Decimal(body["grossSalesAccumulated"]) == Decimal(body["netBalance"]) == 0
 
     def test_balance_without_payouts_is_zero(self, client, tokens, company):
         body = client.get("/company/balance", headers=auth(tokens["company"])).json()

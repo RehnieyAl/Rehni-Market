@@ -1,3 +1,4 @@
+/** Modal para reportar un producto o una empresa: motivo, descripción y hasta 5 imágenes de evidencia. */
 import { AlertTriangle, ImagePlus, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -5,6 +6,7 @@ import { createReport } from "../api/reportService";
 import { useAlert } from "@/shared/components/alert/useAlert";
 
 import type { ReportTargetType } from "../types/response";
+import { FILE_ACCEPT, validateFile } from "@/shared/validation/files";
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -18,8 +20,6 @@ const REASON_MAX_LENGTH = 150;
 const DESCRIPTION_MAX_LENGTH = 1000;
 
 const MAX_EVIDENCE_IMAGES = 5;
-const MAX_EVIDENCE_FILE_SIZE_BYTES = 5 * 1024 * 1024;
-const ALLOWED_EVIDENCE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 interface EvidencePreview {
   file: File;
@@ -43,11 +43,23 @@ export default function ReportModal({
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Vistas previas blob: vivas. El cierre del efecto lee este conjunto (no el estado del primer
+  // render), así al desmontar se liberan también las imágenes agregadas después.
+  const livePreviews = useRef(new Set<string>());
+
   useEffect(() => {
+    const previews = livePreviews.current;
+
     return () => {
-      evidences.forEach((evidence) => URL.revokeObjectURL(evidence.previewUrl));
+      previews.forEach((url) => URL.revokeObjectURL(url));
+      previews.clear();
     };
   }, []);
+
+  const revokePreview = (url: string) => {
+    URL.revokeObjectURL(url);
+    livePreviews.current.delete(url);
+  };
 
   if (!isOpen) {
     return null;
@@ -56,7 +68,7 @@ export default function ReportModal({
   const reasonMissing = reason.trim().length === 0;
 
   const resetForm = () => {
-    evidences.forEach((evidence) => URL.revokeObjectURL(evidence.previewUrl));
+    evidences.forEach((evidence) => revokePreview(evidence.previewUrl));
     setReason("");
     setDescription("");
     setEvidences([]);
@@ -86,17 +98,15 @@ export default function ReportModal({
         break;
       }
 
-      if (!ALLOWED_EVIDENCE_TYPES.includes(file.type)) {
-        setEvidenceError("Solo se permiten imágenes JPEG, PNG o WEBP.");
+      const fileError = validateFile(file, "image", "Evidencia");
+      if (fileError) {
+        setEvidenceError(fileError);
         continue;
       }
 
-      if (file.size > MAX_EVIDENCE_FILE_SIZE_BYTES) {
-        setEvidenceError("Cada imagen debe pesar como máximo 5 MB.");
-        continue;
-      }
-
-      accepted.push({ file, previewUrl: URL.createObjectURL(file) });
+      const previewUrl = URL.createObjectURL(file);
+      livePreviews.current.add(previewUrl);
+      accepted.push({ file, previewUrl });
     }
 
     if (accepted.length > 0) {
@@ -113,7 +123,7 @@ export default function ReportModal({
       const target = prev[index];
 
       if (target) {
-        URL.revokeObjectURL(target.previewUrl);
+        revokePreview(target.previewUrl);
       }
 
       return prev.filter((_, i) => i !== index);
@@ -192,7 +202,7 @@ export default function ReportModal({
             htmlFor="report-reason"
             className="block text-sm font-medium text-gray-700"
           >
-            Motivo <span className="text-red-600">*</span>
+            Motivo <span className="text-danger">*</span>
           </label>
 
           <input
@@ -211,8 +221,8 @@ export default function ReportModal({
             }
             className={`mt-2 w-full rounded-xl border px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:ring-2 disabled:cursor-not-allowed disabled:bg-gray-100 ${
               reasonMissing
-                ? "border-red-300 focus:border-red-500 focus:ring-red-200"
-                : "border-gray-300 focus:border-brand-600 focus:ring-brand-600/20"
+                ? "border-danger focus:border-danger focus:ring-danger/30"
+                : "border-gray-300 focus:border-secondary focus:ring-secondary/20"
             }`}
           />
         </div>
@@ -236,7 +246,7 @@ export default function ReportModal({
             disabled={submitting}
             rows={3}
             placeholder="Cuéntanos más detalles sobre el problema."
-            className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20 disabled:cursor-not-allowed disabled:bg-gray-100"
+            className="mt-2 w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm text-gray-900 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 disabled:cursor-not-allowed disabled:bg-gray-100"
           />
         </div>
 
@@ -253,7 +263,7 @@ export default function ReportModal({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept={FILE_ACCEPT.image}
             multiple
             className="hidden"
             onChange={(event) => handleAddEvidences(event.target.files)}
@@ -263,14 +273,14 @@ export default function ReportModal({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={submitting || evidences.length >= MAX_EVIDENCE_IMAGES}
-            className="mt-2 flex items-center gap-2 rounded-xl border border-dashed border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 transition hover:border-brand-600 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-2 flex items-center gap-2 rounded-xl border border-dashed border-gray-300 px-4 py-2 text-sm font-medium text-gray-600 transition hover:border-secondary hover:text-secondary disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ImagePlus size={16} />
             Añadir imágenes
           </button>
 
           {evidenceError && (
-            <p className="mt-2 text-xs text-red-600">{evidenceError}</p>
+            <p className="mt-2 text-xs text-danger">{evidenceError}</p>
           )}
 
           {evidences.length > 0 && (
@@ -316,7 +326,7 @@ export default function ReportModal({
             onClick={handleSubmit}
             disabled={submitting || reasonMissing}
             title={reasonMissing ? "Debes indicar un motivo" : undefined}
-            className="rounded-xl bg-red-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition-shadow fill-hover disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submitting ? "Enviando..." : "Enviar reporte"}
           </button>

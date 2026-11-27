@@ -1,9 +1,5 @@
-"""Catálogo ampliado de RehniMarket: empresas y productos generados para pruebas.
-
-Consume la misma estructura de datos que `COMPANIES` en `app/utils/seed.py` y se
-inyecta a través de `seed_companies_and_products`. Las opciones de variante usan
-exactamente los mismos valores que `CATALOGS` para que las combinaciones resuelvan.
-"""
+"""Datos de demostración: empresas con sus productos y variantes (COMPANIES, escrito a mano, y
+build_extra_companies, generado). Las opciones de variante usan los mismos valores que CATALOGS."""
 
 from __future__ import annotations
 
@@ -20,25 +16,25 @@ NONZERO_STOCK = [3, 4, 5, 6, 8, 10, 12, 15, 18, 20, 25, 30, 35, 40, 50, 7, 9, 14
 STOCK_POOL = NONZERO_STOCK + [0, 0]
 
 COMPANY_DEFS = [
-    ("TechZone Colombia", "techzone@rehnimarket.test", "900600601", "6",
+    ("TechZone Colombia", "techzone@rehnimarket.example", "900600601", "6",
      "Autopista Norte #120-35, Bogotá", "Computadores, componentes y armado de PC a medida."),
-    ("Compumarket", "compumarket@rehnimarket.test", "900700702", "7",
+    ("Compumarket", "compumarket@rehnimarket.example", "900700702", "7",
      "Calle 33 #6-24, Bucaramanga", "Portátiles, impresión y soluciones de oficina."),
-    ("Digital Store", "digitalstore@rehnimarket.test", "900800803", "8",
+    ("Digital Store", "digitalstore@rehnimarket.example", "900800803", "8",
      "Carrera 15 #93-40, Bogotá", "Celulares, tablets, wearables y accesorios móviles."),
-    ("PC Center", "pccenter@rehnimarket.test", "900900904", "9",
+    ("PC Center", "pccenter@rehnimarket.example", "900900904", "9",
      "Avenida 30 de Agosto #45-12, Pereira", "Hardware para gaming y estaciones de trabajo."),
-    ("MegaTech", "megatech@rehnimarket.test", "901000105", "0",
+    ("MegaTech", "megatech@rehnimarket.example", "901000105", "0",
      "Calle 10 #43-30, Medellín", "Monitores, almacenamiento y periféricos."),
-    ("ElectroWorld", "electroworld@rehnimarket.test", "901100106", "1",
+    ("ElectroWorld", "electroworld@rehnimarket.example", "901100106", "1",
      "Carrera 43A #14-50, Medellín", "Electrodomésticos, audio y televisores."),
-    ("Gaming Hub", "gaminghub@rehnimarket.test", "901200107", "2",
+    ("Gaming Hub", "gaminghub@rehnimarket.example", "901200107", "2",
      "Calle 5 #38-25, Cali", "Consolas, sillas gamer y setups de juego."),
-    ("SmartTech", "smarttech@rehnimarket.test", "901300108", "3",
+    ("SmartTech", "smarttech@rehnimarket.example", "901300108", "3",
      "Carrera 7 #45-16, Barranquilla", "Domótica, seguridad y redes para el hogar."),
-    ("ByteStore", "bytestore@rehnimarket.test", "901400109", "4",
+    ("ByteStore", "bytestore@rehnimarket.example", "901400109", "4",
      "Calle 72 #11-30, Bogotá", "Cables, adaptadores, hubs y protección eléctrica."),
-    ("Mundo Digital", "mundodigital@rehnimarket.test", "901500110", "5",
+    ("Mundo Digital", "mundodigital@rehnimarket.example", "901500110", "5",
      "Avenida El Poblado #7-40, Medellín", "Fotografía, video y creación de contenido."),
 ]
 
@@ -51,14 +47,7 @@ def _fix(value):
     return {"type": "fixed", "value": value}
 
 
-def _build_variants(code, gidx, base_price, axes, rng):
-    reduced = []
-    for name, pool in axes:
-        vals = [opt[0] if isinstance(opt, (list, tuple)) else opt for opt in pool]
-        reduced.append((name, vals))
-
-    index_of = {name: {v: i for i, v in enumerate(vals)} for name, vals in reduced}
-
+def _pick_axis_values(reduced, rng):
     picks = []
     for position, (name, vals) in enumerate(reduced):
         if len(vals) <= 2:
@@ -67,6 +56,30 @@ def _build_variants(code, gidx, base_price, axes, rng):
             size = min(3 if position == 0 else 2, len(vals))
             chosen = [vals[i] for i in sorted(rng.sample(range(len(vals)), size))]
         picks.append((name, chosen))
+    return picks
+
+
+def _scaled_price(base_price, pairs, index_of):
+    multiplier = 1.0
+    for name, value in pairs:
+        if name in SCALING_AXES:
+            multiplier *= 1 + 0.16 * index_of[name].get(value, 0)
+    return max(1000, round(base_price * multiplier / 1000) * 1000)
+
+
+def _combo_stock(order, force_zero, rng):
+    if force_zero:
+        return 0
+    return rng.choice(NONZERO_STOCK) if order == 1 else rng.choice(STOCK_POOL)
+
+
+def _build_variants(code, gidx, base_price, axes, rng):
+    reduced = [
+        (name, [opt[0] if isinstance(opt, (list, tuple)) else opt for opt in pool])
+        for name, pool in axes
+    ]
+    index_of = {name: {v: i for i, v in enumerate(vals)} for name, vals in reduced}
+    picks = _pick_axis_values(reduced, rng)
 
     raw = list(itertools.product(*[values for _, values in picks]))
     if len(raw) > 5:
@@ -78,24 +91,10 @@ def _build_variants(code, gidx, base_price, axes, rng):
 
     for order, values in enumerate(raw, start=1):
         pairs = list(zip(axis_names, values))
-
-        multiplier = 1.0
-        for name, value in pairs:
-            if name in SCALING_AXES:
-                multiplier *= 1 + 0.16 * index_of[name].get(value, 0)
-        price = max(1000, round(base_price * multiplier / 1000) * 1000)
-
-        if force_zero:
-            stock = 0
-        elif order == 1:
-            stock = rng.choice(NONZERO_STOCK)
-        else:
-            stock = rng.choice(STOCK_POOL)
-
-        combo = {name: value for name, value in pairs}
+        combo = dict(pairs)
         combo["sku"] = f"{code}{gidx:04d}-{order:02d}"
-        combo["price"] = price
-        combo["stock"] = stock
+        combo["price"] = _scaled_price(base_price, pairs, index_of)
+        combo["stock"] = _combo_stock(order, force_zero, rng)
         if not force_zero and rng.random() < 0.07:
             combo["discount"] = _pct(rng.choice([10, 15, 20, 25]))
         combos.append(combo)
@@ -103,9 +102,654 @@ def _build_variants(code, gidx, base_price, axes, rng):
     return {"axes": axis_names, "combos": combos}
 
 
+def _combos(axes, rows):
+    """rows: lista de tuplas (valores..., sku, price, stock[, discount])."""
+    out = []
+    for row in rows:
+        values = row[: len(axes)]
+        rest = row[len(axes):]
+        combo = dict(zip(axes, values))
+        combo["sku"] = rest[0]
+        combo["price"] = rest[1]
+        combo["stock"] = rest[2]
+        if len(rest) > 3 and rest[3]:
+            combo["discount"] = rest[3]
+        out.append(combo)
+    return {"axes": list(axes), "combos": out}
+
+
+COMPANIES = [
+    {
+        "name": "TechNova",
+        "email": "technova@rehnimarket.example",
+        "nit": "900100100",
+        "dv": "1",
+        "address": "Calle 100 #15-20, Bogotá",
+        "description": "Computadoras, componentes y periféricos para PC.",
+        "products": [
+            {
+                "name": "PC Gamer RTX",
+                "catalog": "Computadoras",
+                "descripcion": "Torre gamer ensamblada, lista para juegos en 1440p a altos FPS.",
+                "price": 4200000,
+                "image": (34, 34, 42),
+                "specs": {
+                    "Marca": "ASUS", "Modelo": "ROG Strix GT15",
+                    "Garantía": "12 meses", "Procesador": "Intel Core i7-13700F",
+                    "Tarjeta gráfica": "NVIDIA GeForce RTX 4070 12 GB",
+                    "Sistema operativo": "Windows 11 Home",
+                    "Fuente de poder": "750 W 80+ Gold",
+                    "Conectividad": "WiFi 6 + Bluetooth 5.2",
+                },
+                "variants": _combos(
+                    ("Color", "Memoria RAM", "Almacenamiento"),
+                    [
+                        ("Negro", "16 GB", "1 TB", "TECH-PC-001", 4200000, 6),
+                        ("Negro", "32 GB", "1 TB", "TECH-PC-002", 4650000, 4),
+                        ("Negro", "32 GB", "2 TB", "TECH-PC-003", 5100000, 3),
+                        ("Blanco", "16 GB", "1 TB", "TECH-PC-004", 4300000, 5),
+                    ],
+                ),
+            },
+            {
+                "name": "Laptop Gamer",
+                "catalog": "Laptops",
+                "descripcion": "Portátil gamer de 16 pulgadas con pantalla de alta tasa de refresco.",
+                "price": 5100000,
+                "image": (40, 40, 48),
+                "discount": _pct(12),
+                "specs": {
+                    "Marca": "Lenovo", "Modelo": "Legion Pro 5",
+                    "Garantía": "12 meses", "Procesador": "AMD Ryzen 7 7840HS",
+                    "Pantalla": '16" IPS 240 Hz', "Resolución": "2560 x 1600",
+                    "Tarjeta gráfica": "NVIDIA GeForce RTX 4060 8 GB",
+                    "Batería": "80 Wh", "Sistema operativo": "Windows 11 Home",
+                    "Peso": "2.5 kg",
+                },
+                "variants": _combos(
+                    ("Color", "Memoria RAM", "Almacenamiento"),
+                    [
+                        ("Gris", "16 GB", "512 GB", "TECH-LAP-001", 5100000, 5),
+                        ("Gris", "32 GB", "1 TB", "TECH-LAP-002", 5750000, 3),
+                        ("Negro", "16 GB", "1 TB", "TECH-LAP-003", 5350000, 4),
+                        ("Negro", "32 GB", "1 TB", "TECH-LAP-004", 5800000, 2),
+                    ],
+                ),
+            },
+            {
+                "name": "Memoria RAM DDR4",
+                "catalog": "Memorias RAM",
+                "descripcion": "Kit de memoria DDR4 para escritorio con perfil XMP.",
+                "price": 210000,
+                "image": (60, 70, 90),
+                "specs": {
+                    "Marca": "Corsair", "Modelo": "Vengeance LPX",
+                    "Garantía": "Garantía limitada de por vida", "Tipo": "DDR4",
+                    "Latencia": "CL16", "Voltaje": "1.35 V",
+                    "Perfil XMP/EXPO": "XMP 2.0", "Disipador": "Aluminio",
+                },
+                "variants": _combos(
+                    ("Capacidad", "Frecuencia"),
+                    [
+                        ("8 GB (1x8)", "2666 MHz", "TECH-RAM-001", 160000, 20),
+                        ("16 GB (2x8)", "3200 MHz", "TECH-RAM-002", 240000, 15),
+                        ("32 GB (2x16)", "3200 MHz", "TECH-RAM-003", 420000, 8),
+                        ("16 GB (2x8)", "3600 MHz", "TECH-RAM-004", 290000, 10),
+                    ],
+                ),
+            },
+            {
+                "name": "Monitor Gaming 27",
+                "catalog": "Monitores",
+                "descripcion": "Monitor gaming de 27 pulgadas con panel rápido para esports.",
+                "price": 920000,
+                "image": (28, 30, 34),
+                "specs": {
+                    "Marca": "LG", "Modelo": "UltraGear 27GP",
+                    "Garantía": "12 meses", "Tipo de panel": "IPS",
+                    "Resolución": "2560 x 1440 (QHD)", "Tiempo de respuesta": "1 ms (GtG)",
+                    "Puertos": "2x HDMI 2.1, 1x DisplayPort 1.4",
+                    "Curvatura": "Plano", "Soporte VESA": "100 x 100 mm",
+                },
+                "variants": _combos(
+                    ("Tamaño", 'Frecuencia de actualización'),
+                    [
+                        ('27"', "144 Hz", "TECH-MON-001", 850000, 10),
+                        ('27"', "165 Hz", "TECH-MON-002", 920000, 8),
+                        ('27"', "240 Hz", "TECH-MON-003", 1150000, 4),
+                        ('32"', "165 Hz", "TECH-MON-004", 1090000, 5),
+                    ],
+                ),
+            },
+            {
+                "name": "Teclado Mecánico RGB",
+                "catalog": "Periféricos",
+                "descripcion": "Teclado mecánico con iluminación RGB por tecla.",
+                "price": 260000,
+                "image": (44, 44, 50),
+                "specs": {
+                    "Marca": "Redragon", "Modelo": "Kumara K552 RGB",
+                    "Garantía": "12 meses", "Tipo": "Teclado mecánico",
+                    "Compatibilidad": "Windows, macOS, Linux",
+                    "Cable": "USB-C desmontable trenzado de 1.8 m",
+                    "Software": "Redragon Software (perfiles y macros)",
+                },
+                "variants": _combos(
+                    ("Color", "Conexión"),
+                    [
+                        ("Negro", "Alámbrico", "TECH-KEY-001", 240000, 14),
+                        ("Blanco", "Alámbrico", "TECH-KEY-002", 250000, 9),
+                        ("Negro", "Bluetooth", "TECH-KEY-003", 300000, 7),
+                        ("Rojo", "Alámbrico", "TECH-KEY-004", 250000, 6),
+                    ],
+                ),
+            },
+        ],
+    },
+    {
+        "name": "GameZone",
+        "email": "gamezone@rehnimarket.example",
+        "nit": "900200200",
+        "dv": "2",
+        "address": "Carrera 43A #1-50, Medellín",
+        "description": "Consolas, videojuegos y accesorios gaming.",
+        "products": [
+            {
+                "name": "Nintendo Switch OLED",
+                "catalog": "Consolas",
+                "descripcion": "Consola híbrida con pantalla OLED de 7 pulgadas.",
+                "price": 1650000,
+                "image": (220, 40, 40),
+                "specs": {
+                    "Marca": "Nintendo", "Modelo": "Switch OLED",
+                    "Garantía": "12 meses", "Generación": "8.ª generación",
+                    "Resolución máxima": "1080p (dock) / 720p (portátil)",
+                    "Retrocompatibilidad": "No", "Conectividad": "WiFi + Bluetooth",
+                    "Servicios incluidos": "Prueba de Nintendo Switch Online",
+                },
+                "variants": _combos(
+                    ("Color", "Edición"),
+                    [
+                        ("Blanco", "Estándar", "GAME-SWI-001", 1650000, 8),
+                        ("Rojo", "Estándar", "GAME-SWI-002", 1650000, 6),
+                        ("Blanco", "Bundle", "GAME-SWI-003", 1890000, 4),
+                    ],
+                ),
+            },
+            {
+                "name": "PlayStation 5",
+                "catalog": "Consolas",
+                "descripcion": "Consola de sobremesa de última generación con SSD ultrarrápido.",
+                "price": 2800000,
+                "image": (235, 235, 240),
+                "specs": {
+                    "Marca": "Sony", "Modelo": "PlayStation 5 Slim",
+                    "Garantía": "12 meses", "Generación": "9.ª generación",
+                    "Resolución máxima": "4K a 120 Hz / 8K",
+                    "Retrocompatibilidad": "Juegos de PS4",
+                    "Conectividad": "WiFi 6 + Bluetooth 5.1",
+                    "Servicios incluidos": "Prueba de PlayStation Plus",
+                },
+                "variants": _combos(
+                    ("Almacenamiento", "Edición"),
+                    [
+                        ("1 TB", "Estándar", "GAME-PS5-001", 2800000, 7),
+                        ("1 TB", "Digital", "GAME-PS5-002", 2500000, 6),
+                        ("2 TB", "Bundle", "GAME-PS5-003", 3200000, 3),
+                    ],
+                ),
+            },
+            {
+                "name": "Control Inalámbrico",
+                "catalog": "Accesorios Gaming",
+                "descripcion": "Mando inalámbrico con retroalimentación háptica.",
+                "price": 230000,
+                "image": (30, 30, 34),
+                "specs": {
+                    "Marca": "Sony", "Modelo": "DualSense",
+                    "Garantía": "12 meses", "Tipo": "Control inalámbrico",
+                    "Material": "Plástico ABS", "Instalación": "Plug and play",
+                    "Peso": "280 g",
+                },
+                "variants": _combos(
+                    ("Color", "Plataforma compatible"),
+                    [
+                        ("Blanco", "PlayStation", "GAME-CTL-001", 230000, 12),
+                        ("Negro", "PlayStation", "GAME-CTL-002", 235000, 9),
+                        ("Azul", "PlayStation", "GAME-CTL-003", 245000, 5),
+                        ("Negro", "PC", "GAME-CTL-004", 210000, 8),
+                    ],
+                ),
+            },
+            {
+                "name": "Mouse Gaming RGB",
+                "catalog": "Periféricos",
+                "descripcion": "Ratón gaming ligero con sensor óptico de alta precisión.",
+                "price": 190000,
+                "image": (36, 36, 42),
+                "specs": {
+                    "Marca": "Logitech", "Modelo": "G502 X",
+                    "Garantía": "24 meses", "Tipo": "Ratón gaming",
+                    "Compatibilidad": "Windows, macOS",
+                    "Cable": "USB-A trenzado de 2.1 m",
+                    "Software": "Logitech G HUB",
+                },
+                "variants": _combos(
+                    ("Color", "Conexión"),
+                    [
+                        ("Negro", "Alámbrico", "GAME-MOU-001", 190000, 16),
+                        ("Blanco", "Alámbrico", "GAME-MOU-002", 195000, 10),
+                        ("Negro", "Inalámbrico 2.4 GHz", "GAME-MOU-003", 320000, 6),
+                        ("Blanco", "Inalámbrico 2.4 GHz", "GAME-MOU-004", 330000, 4),
+                    ],
+                ),
+            },
+            {
+                "name": "Audífonos Gaming",
+                "catalog": "Audio",
+                "descripcion": "Diadema gamer con sonido envolvente y micrófono desmontable.",
+                "price": 320000,
+                "image": (26, 26, 30),
+                "specs": {
+                    "Marca": "HyperX", "Modelo": "Cloud III",
+                    "Garantía": "24 meses", "Tipo": "Diadema gaming",
+                    "Conectividad": "USB / Jack 3.5 mm",
+                    "Duración de batería": "No aplica (alámbrico)",
+                    "Cancelación de ruido": "Pasiva",
+                    "Resistencia al agua": "No",
+                },
+                "variants": _combos(
+                    ("Color", "Tipo de uso"),
+                    [
+                        ("Negro", "Over-ear", "GAME-HED-001", 320000, 11),
+                        ("Rojo", "Over-ear", "GAME-HED-002", 330000, 7),
+                        ("Blanco", "Over-ear", "GAME-HED-003", 335000, 5),
+                        ("Gris", "Over-ear", "GAME-HED-004", 320000, 6),
+                    ],
+                ),
+            },
+        ],
+    },
+    {
+        "name": "UrbanStyle",
+        "email": "urbanstyle@rehnimarket.example",
+        "nit": "900300300",
+        "dv": "3",
+        "address": "Calle 10 #5-51, Cali",
+        "description": "Ropa urbana, streetwear y calzado.",
+        "products": [
+            {
+                "name": "Camiseta Oversize",
+                "catalog": "Ropa Anime",
+                "descripcion": "Camiseta de corte holgado en algodón peinado.",
+                "price": 75000,
+                "image": (32, 32, 36),
+                "specs": {
+                    "Marca": "UrbanStyle", "Modelo": "Oversize Basic",
+                    "Garantía": "30 días por defectos de fábrica",
+                    "Material": "Algodón", "Composición": "100% algodón peinado 180 g/m²",
+                    "Tipo de estampado": "Serigrafía",
+                    "Instrucciones de cuidado": "Lavar a máquina en frío, no usar secadora",
+                    "País de fabricación": "Colombia",
+                },
+                "variants": _combos(
+                    ("Talla", "Color"),
+                    [
+                        ("S", "Negro", "URBAN-TEE-S-BLK", 75000, 12),
+                        ("M", "Negro", "URBAN-TEE-M-BLK", 75000, 15),
+                        ("L", "Negro", "URBAN-TEE-L-BLK", 75000, 10),
+                        ("S", "Blanco", "URBAN-TEE-S-WHT", 75000, 9),
+                        ("M", "Blanco", "URBAN-TEE-M-WHT", 75000, 11),
+                        ("L", "Blanco", "URBAN-TEE-L-WHT", 75000, 8),
+                    ],
+                ),
+            },
+            {
+                "name": "Hoodie Anime",
+                "catalog": "Ropa Anime",
+                "descripcion": "Buzo con capucha y estampado inspirado en anime.",
+                "price": 150000,
+                "image": (40, 30, 55),
+                "specs": {
+                    "Marca": "UrbanStyle", "Modelo": "Anime Hoodie",
+                    "Garantía": "30 días por defectos de fábrica",
+                    "Material": "Mezcla algodón-poliéster",
+                    "Composición": "80% algodón / 20% poliéster 320 g/m²",
+                    "Tipo de estampado": "DTF",
+                    "Instrucciones de cuidado": "Lavar del revés, secar a la sombra",
+                    "País de fabricación": "Colombia",
+                },
+                "variants": _combos(
+                    ("Talla", "Color"),
+                    [
+                        ("M", "Negro", "URBAN-HOD-M-BLK", 150000, 10),
+                        ("L", "Negro", "URBAN-HOD-L-BLK", 150000, 9),
+                        ("XL", "Negro", "URBAN-HOD-XL-BLK", 155000, 6),
+                        ("M", "Gris", "URBAN-HOD-M-GRY", 150000, 7),
+                        ("L", "Gris", "URBAN-HOD-L-GRY", 150000, 8),
+                        ("XL", "Gris", "URBAN-HOD-XL-GRY", 155000, 4),
+                    ],
+                ),
+            },
+            {
+                "name": "Tenis Urbanos",
+                "catalog": "Calzado",
+                "descripcion": "Zapatillas urbanas de silueta clásica para uso diario.",
+                "price": 260000,
+                "image": (28, 28, 30),
+                "specs": {
+                    "Marca": "UrbanStyle", "Modelo": "Street Classic",
+                    "Garantía": "60 días por defectos de fábrica",
+                    "Material exterior": "Cuero sintético y malla",
+                    "Material interior": "Textil transpirable",
+                    "Tipo de suela": "Caucho antideslizante",
+                    "Género": "Unisex", "Uso recomendado": "Casual / caminata",
+                },
+                "variants": _combos(
+                    ("Talla", "Color"),
+                    [
+                        ("37", "Negro", "URBAN-SHOE-037-BLK", 260000, 8),
+                        ("38", "Negro", "URBAN-SHOE-038-BLK", 260000, 10),
+                        ("39", "Negro", "URBAN-SHOE-039-BLK", 260000, 9),
+                        ("40", "Negro", "URBAN-SHOE-040-BLK", 260000, 7, _pct(15)),
+                        ("41", "Negro", "URBAN-SHOE-041-BLK", 260000, 6),
+                        ("38", "Blanco", "URBAN-SHOE-038-WHT", 260000, 5),
+                        ("39", "Blanco", "URBAN-SHOE-039-WHT", 260000, 6),
+                        ("40", "Blanco", "URBAN-SHOE-040-WHT", 260000, 4),
+                    ],
+                ),
+            },
+            {
+                "name": "Gorra Streetwear",
+                "catalog": "Gorras",
+                "descripcion": "Gorra tipo snapback con visera plana y bordado frontal.",
+                "price": 55000,
+                "image": (34, 34, 38),
+                "specs": {
+                    "Marca": "UrbanStyle", "Modelo": "Snap Flat",
+                    "Garantía": "30 días por defectos de fábrica",
+                    "Material": "Algodón y poliéster",
+                    "Tipo de visera": "Plana", "Cierre": "Snapback ajustable",
+                    "Estructura": "Estructurada 6 paneles",
+                },
+                "variants": _combos(
+                    ("Talla",),
+                    [
+                        ("S/M", "URBAN-CAP-001", 55000, 14),
+                        ("L/XL", "URBAN-CAP-002", 55000, 10),
+                        ("Ajustable", "URBAN-CAP-003", 55000, 18),
+                    ],
+                ),
+            },
+            {
+                "name": "Chaqueta Urbana",
+                "catalog": "Ropa Anime",
+                "descripcion": "Chaqueta bomber ligera con forro interior.",
+                "price": 220000,
+                "image": (30, 34, 30),
+                "specs": {
+                    "Marca": "UrbanStyle", "Modelo": "Bomber City",
+                    "Garantía": "30 días por defectos de fábrica",
+                    "Material": "Poliéster", "Composición": "100% poliéster con forro acolchado",
+                    "Tipo de estampado": "Parche bordado",
+                    "Instrucciones de cuidado": "Limpieza en seco recomendada",
+                    "País de fabricación": "Colombia",
+                },
+                "variants": _combos(
+                    ("Talla", "Color"),
+                    [
+                        ("M", "Negro", "URBAN-JKT-M-BLK", 220000, 6),
+                        ("L", "Negro", "URBAN-JKT-L-BLK", 220000, 7),
+                        ("XL", "Negro", "URBAN-JKT-XL-BLK", 225000, 4),
+                        ("M", "Verde", "URBAN-JKT-M-GRN", 220000, 5),
+                        ("L", "Verde", "URBAN-JKT-L-GRN", 220000, 5),
+                    ],
+                ),
+            },
+        ],
+    },
+    {
+        "name": "Kawaii World",
+        "email": "kawaiiworld@rehnimarket.example",
+        "nit": "900400400",
+        "dv": "4",
+        "address": "Avenida 6 #23-45, Pereira",
+        "description": "Figuras, peluches, mangas y coleccionables de anime.",
+        "products": [
+            {
+                "name": "Peluche Pikachu",
+                "catalog": "Peluches",
+                "descripcion": "Peluche suave de Pikachu con bordados de alta calidad.",
+                "price": 90000,
+                "applies_tax": False,
+                "image": (245, 205, 60),
+                "specs": {
+                    "Marca": "Kawaii World", "Modelo": "Plush Pikachu",
+                    "Garantía": "30 días por defectos de fábrica",
+                    "Franquicia": "Pokémon", "Material exterior": "Felpa de poliéster",
+                    "Relleno": "Fibra siliconada hipoalergénica",
+                    "Edad recomendada": "3+ años", "Lavable": "Lavado a mano",
+                },
+                "variants": _combos(
+                    ("Tamaño",),
+                    [
+                        ("15 cm", "KAWAII-PLU-001", 55000, 20),
+                        ("25 cm", "KAWAII-PLU-002", 90000, 15),
+                        ("40 cm", "KAWAII-PLU-003", 150000, 8),
+                        ("60 cm", "KAWAII-PLU-004", 240000, 4),
+                    ],
+                ),
+            },
+            {
+                "name": "Figura Coleccionable",
+                "catalog": "Figuras Coleccionables",
+                "descripcion": "Figura de PVC pintada a mano, escala 1/7, con base.",
+                "price": 320000,
+                "stock": 12,
+                "image": (60, 40, 80),
+                "specs": {
+                    "Marca": "Kawaii World", "Modelo": "PVC Statue",
+                    "Garantía": "30 días por defectos de fábrica",
+                    "Franquicia": "Original", "Fabricante": "Good Smile Company",
+                    "Material": "PVC y ABS", "Altura aproximada": "24 cm",
+                    "Licencia oficial": "Sí",
+                },
+            },
+            {
+                "name": "Manga One Piece",
+                "catalog": "Mangas",
+                "descripcion": "Tomo de la serie One Piece en edición estándar.",
+                "price": 45000,
+                "image": (40, 80, 150),
+                "specs": {
+                    "Autor": "Eiichiro Oda", "Editorial": "Panini Manga",
+                    "Idioma original": "Japonés", "Número de páginas": "208",
+                    "ISBN": "978-84-1121-000-0", "Dibujante": "Eiichiro Oda",
+                    "Demografía": "Shōnen", "Estado de publicación": "En publicación",
+                },
+                "variants": _combos(
+                    ("Idioma", "Formato"),
+                    [
+                        ("Español", "Tomo individual", "KAWAII-MAN-001", 45000, 25),
+                        ("Español", "Pack 1-3", "KAWAII-MAN-002", 120000, 12),
+                        ("Inglés", "Tomo individual", "KAWAII-MAN-003", 55000, 10),
+                        ("Japonés", "Tomo individual", "KAWAII-MAN-004", 60000, 6),
+                    ],
+                ),
+            },
+            {
+                "name": "Llavero Anime",
+                "catalog": "Llaveros",
+                "descripcion": "Llavero de acrílico de doble cara con impresión a color.",
+                "price": 18000,
+                "image": (232, 67, 147),
+                "specs": {
+                    "Marca": "Kawaii World", "Modelo": "Acrylic Charm",
+                    "Garantía": "Sin garantía por su naturaleza",
+                    "Material": "Acrílico de 4 mm", "Dimensiones": "6 x 6 cm",
+                    "Tipo de anilla": "Anilla metálica con mosquetón",
+                    "Tema": "Personajes de anime",
+                },
+                "variants": _combos(
+                    ("Color",),
+                    [
+                        ("Rojo", "KAWAII-KEY-001", 18000, 30),
+                        ("Azul", "KAWAII-KEY-002", 18000, 28),
+                        ("Verde", "KAWAII-KEY-003", 18000, 25),
+                        ("Rosa", "KAWAII-KEY-004", 18000, 22),
+                    ],
+                ),
+            },
+            {
+                "name": "Artbook Anime",
+                "catalog": "Artbooks",
+                "descripcion": "Libro de arte con ilustraciones oficiales y bocetos.",
+                "price": 130000,
+                "stock": 8,
+                "image": (25, 30, 45),
+                "discount": _pct(10),
+                "specs": {
+                    "Autor": "Estudio de animación", "Editorial": "Norma Editorial",
+                    "Idioma original": "Japonés", "Número de páginas": "160",
+                    "ISBN": "978-84-6789-000-0", "Estudio": "Estudio original",
+                    "Formato del libro": "Tapa dura 24 x 30 cm",
+                    "Contenido": "Ilustraciones, bocetos y entrevistas",
+                },
+            },
+        ],
+    },
+    {
+        "name": "AudioMax",
+        "email": "audiomax@rehnimarket.example",
+        "nit": "900500500",
+        "dv": "5",
+        "address": "Calle 72 #10-34, Barranquilla",
+        "description": "Audífonos, parlantes y wearables de audio.",
+        "products": [
+            {
+                "name": "Audífonos Bluetooth",
+                "catalog": "Audio",
+                "descripcion": "Audífonos over-ear inalámbricos con hasta 30 h de autonomía.",
+                "price": 180000,
+                "image": (30, 30, 34),
+                "specs": {
+                    "Marca": "AudioMax", "Modelo": "AM-BT700",
+                    "Garantía": "12 meses", "Tipo": "Diadema over-ear",
+                    "Conectividad": "Bluetooth 5.3", "Duración de batería": "Hasta 30 horas",
+                    "Cancelación de ruido": "Híbrida activa (ANC)",
+                    "Resistencia al agua": "No",
+                },
+                "variants": _combos(
+                    ("Color", "Tipo de uso"),
+                    [
+                        ("Negro", "Over-ear", "AUDIO-BT-001", 180000, 14),
+                        ("Blanco", "Over-ear", "AUDIO-BT-002", 185000, 9),
+                        ("Azul", "Over-ear", "AUDIO-BT-003", 185000, 6),
+                        ("Rojo", "Over-ear", "AUDIO-BT-004", 185000, 5),
+                    ],
+                ),
+            },
+            {
+                "name": "Audífonos TWS Pro",
+                "catalog": "Audio",
+                "descripcion": "Audífonos true wireless in-ear con estuche de carga rápida.",
+                "price": 260000,
+                "image": (34, 34, 40),
+                "specs": {
+                    "Marca": "AudioMax", "Modelo": "AM-TWS Pro",
+                    "Garantía": "12 meses", "Tipo": "In-ear true wireless",
+                    "Conectividad": "Bluetooth 5.3", "Duración de batería": "8 h + 24 h con estuche",
+                    "Cancelación de ruido": "ANC adaptativa",
+                    "Resistencia al agua": "IPX5",
+                },
+                "variants": _combos(
+                    ("Color", "Conexión"),
+                    [
+                        ("Negro", "Bluetooth", "AUDIO-TWS-BLK-001", 260000, 12),
+                        ("Blanco", "Bluetooth", "AUDIO-TWS-WHT-001", 260000, 10, _pct(10)),
+                        ("Azul", "Bluetooth", "AUDIO-TWS-BLU-001", 265000, 6),
+                        ("Morado", "Bluetooth", "AUDIO-TWS-PUR-001", 265000, 4),
+                    ],
+                ),
+            },
+            {
+                "name": "Parlante Bluetooth",
+                "catalog": "Audio",
+                "descripcion": "Parlante portátil resistente al agua con 20 h de reproducción.",
+                "price": 210000,
+                "image": (44, 44, 50),
+                "discount": _fix(30000),
+                "specs": {
+                    "Marca": "AudioMax", "Modelo": "AM-Boom 20",
+                    "Garantía": "12 meses", "Tipo": "Parlante portátil",
+                    "Conectividad": "Bluetooth 5.3 + entrada AUX",
+                    "Duración de batería": "Hasta 20 horas",
+                    "Cancelación de ruido": "No aplica",
+                    "Resistencia al agua": "IP67",
+                },
+                "variants": _combos(
+                    ("Color",),
+                    [
+                        ("Negro", "AUDIO-SPK-001", 210000, 12),
+                        ("Azul", "AUDIO-SPK-002", 210000, 8),
+                        ("Verde", "AUDIO-SPK-003", 210000, 6),
+                    ],
+                ),
+            },
+            {
+                "name": "Smartwatch Sport",
+                "catalog": "Smartwatch",
+                "descripcion": "Reloj inteligente con GPS y más de 100 modos deportivos.",
+                "price": 290000,
+                "image": (28, 28, 32),
+                "specs": {
+                    "Marca": "AudioMax", "Modelo": "AM-Watch S1",
+                    "Garantía": "12 meses", "Sistema operativo": "RTOS propietario",
+                    "Sensores": "Ritmo cardíaco, SpO2, acelerómetro",
+                    "Autonomía": "Hasta 12 días", "GPS": "GPS + GLONASS",
+                    "Resistencia al agua": "5 ATM",
+                },
+                "variants": _combos(
+                    ("Color", "Correa"),
+                    [
+                        ("Negro", "Silicona", "AUDIO-WCH-001", 290000, 10),
+                        ("Negro", "Metal", "AUDIO-WCH-002", 340000, 5),
+                        ("Gris", "Silicona", "AUDIO-WCH-003", 290000, 7),
+                        ("Azul", "Silicona", "AUDIO-WCH-004", 290000, 6),
+                        ("Negro", "Nylon", "AUDIO-WCH-005", 300000, 4),
+                    ],
+                ),
+            },
+            {
+                "name": "Mouse Inalámbrico",
+                "catalog": "Periféricos",
+                "descripcion": "Ratón inalámbrico compacto para oficina y viajes.",
+                "price": 95000,
+                "image": (40, 40, 46),
+                "specs": {
+                    "Marca": "AudioMax", "Modelo": "AM-M300",
+                    "Garantía": "12 meses", "Tipo": "Ratón inalámbrico",
+                    "Compatibilidad": "Windows, macOS, Linux, ChromeOS",
+                    "Cable": "No incluye (receptor USB + Bluetooth)",
+                    "Software": "No requiere",
+                },
+                "variants": _combos(
+                    ("Color", "Conexión"),
+                    [
+                        ("Negro", "Bluetooth", "AUDIO-MOU-001", 95000, 18),
+                        ("Blanco", "Bluetooth", "AUDIO-MOU-002", 95000, 12),
+                        ("Negro", "Inalámbrico 2.4 GHz", "AUDIO-MOU-003", 90000, 15),
+                        ("Rosa", "Bluetooth", "AUDIO-MOU-004", 98000, 6),
+                    ],
+                ),
+            },
+        ],
+    },
+]
+
+
 def _catalog_configs(S):
-    """Devuelve la lista de categorías a poblar. `S` es el módulo `app.utils.seed`
-    del que se toman las mismas listas de opciones usadas al sembrar `CATALOGS`."""
+    """Categorías a poblar. `S` es app.utils.seed_catalog_data, con las mismas opciones de CATALOGS."""
 
     impresora_color = [("Negro", "#1A1A1A"), ("Blanco", "#F2F2F2"), ("Gris", "#8E8E93")]
     rgb_body = [("Negro", "#1A1A1A"), ("Blanco", "#F2F2F2"),
@@ -3164,10 +3808,9 @@ def _block_home(S, impresora_color, rgb_body, chair_material):
 
 
 def build_extra_companies():
-    """Construye la lista de empresas y productos ampliados en el mismo formato que
-    `COMPANIES` de `app/utils/seed.py`."""
+    """Empresas y productos ampliados, en el mismo formato que COMPANIES."""
 
-    from app.utils import seed as S
+    from app.utils import seed_catalog_data as S
 
     rng = random.Random(20260901)
 

@@ -1,9 +1,10 @@
+/** Navegación lateral de los paneles (rail contraíble en escritorio o cajón en móvil): secciones, volver a la tienda y cerrar sesión. */
 import type { ReactNode } from "react";
 import { LogOut, ArrowLeft, PanelLeftClose, PanelLeft, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import logo from "@/assets/logo.png";
-import { useAuth } from "@/features/public/auth/context/useAuth";
+import { useSignOut } from "@/features/public/auth/hooks/useSignOut";
 import { cn } from "@/shared/utils/cn";
 
 export interface SidebarItem {
@@ -29,25 +30,21 @@ export default function SidebarNav({
   onToggleCollapse,
   onClose,
 }: SidebarNavProps) {
-  const { logout } = useAuth();
+  const signOut = useSignOut();
 
   const rail = collapsed && !onClose;
-
-  const handleLogout = () => {
-    logout();
-    window.location.replace("/");
-  };
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface-1">
       <div
         className={cn(
-          "flex h-16 items-center gap-2 border-b border-gray-100 px-3",
+          // Misma altura que la barra superior: las dos líneas divisorias quedan alineadas.
+          "flex h-16 shrink-0 items-center gap-2 border-b border-hairline px-3 sm:h-[72px]",
           rail && "justify-center",
         )}
       >
         {!rail && (
-          <img src={logo} alt="RehniMarket" className="h-8 w-auto object-contain" />
+          <img src={logo} alt="RehniMarket" className="h-10 w-auto max-w-[10.5rem] object-contain" />
         )}
 
         {onClose ? (
@@ -55,7 +52,7 @@ export default function SidebarNav({
             type="button"
             onClick={onClose}
             aria-label="Cerrar menú"
-            className="ml-auto rounded-control p-2 text-gray-500 transition hover:bg-gray-100"
+            className="ml-auto rounded-control p-2 text-ink-muted transition hover:bg-white/5 hover:text-ink"
           >
             <X size={22} />
           </button>
@@ -67,7 +64,7 @@ export default function SidebarNav({
               aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
               aria-pressed={collapsed}
               className={cn(
-                "rounded-control p-2 text-gray-500 transition hover:bg-gray-100",
+                "rounded-control p-2 text-ink-muted transition hover:bg-white/5 hover:text-ink",
                 !rail && "ml-auto",
               )}
             >
@@ -90,13 +87,13 @@ export default function SidebarNav({
         ))}
       </nav>
 
-      <div className="space-y-1 border-t border-gray-200 p-3">
+      <div className="space-y-1 border-t border-hairline p-3">
         <Link
           to="/"
           onClick={onClose}
           title={rail ? "Volver a la tienda" : undefined}
           className={cn(
-            "flex min-h-11 w-full items-center rounded-control text-sm font-medium text-gray-700 transition hover:bg-gray-100",
+            "flex min-h-11 w-full items-center rounded-control text-sm font-medium text-ink-muted transition hover:bg-white/5 hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary",
             rail ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5",
           )}
         >
@@ -109,7 +106,7 @@ export default function SidebarNav({
           text="Cerrar sesión"
           danger
           rail={rail}
-          onClick={handleLogout}
+          onClick={signOut}
         />
       </div>
     </div>
@@ -133,13 +130,13 @@ function NavButton({ icon, text, active, danger, rail, onClick }: NavButtonProps
       title={rail ? text : undefined}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex min-h-11 w-full items-center rounded-control text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600/40",
+        "flex min-h-11 w-full items-center rounded-control text-left text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary",
         rail ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5",
         active
-          ? "bg-brand-50 font-semibold text-primary"
+          ? "bg-primary font-medium text-white"
           : danger
             ? "text-danger hover:bg-danger-bg"
-            : "text-gray-700 hover:bg-gray-100",
+            : "text-ink-muted hover:bg-white/5 hover:text-ink",
       )}
     >
       <span className="shrink-0">{icon}</span>

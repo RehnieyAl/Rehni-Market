@@ -1,3 +1,4 @@
+/** Modal "Atributos y variantes" de una categoría: atributos de producto y ejes de variante con su tipo de entrada. */
 import { useEffect, useState } from "react";
 import { X, Plus, Trash2, Loader2, Power } from "lucide-react";
 
@@ -72,7 +73,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
       }
     };
 
-    load();
+    void load();
   }, [isOpen, catalog]);
 
   if (!isOpen || !catalog) return null;
@@ -95,7 +96,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
     event.preventDefault();
     if (name.trim().length < 1) return;
 
-    run(async () => {
+    void run(async () => {
       await createCatalogAttribute(catalog.id, {
         name: name.trim(),
         role,
@@ -112,7 +113,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
     const value = (optionDraft[attributeId] ?? "").trim();
     if (!value) return;
 
-    run(async () => {
+    void run(async () => {
       await addAttributeOption(attributeId, {
         value,
         hex_color: isColor ? optionHexDraft[attributeId] || "#000000" : null,
@@ -153,7 +154,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder="Ej: Color, Talla, Marca"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-600"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-secondary"
               />
             </div>
 
@@ -162,7 +163,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
               <select
                 value={role}
                 onChange={(event) => setRole(event.target.value as CatalogAttributeRole)}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-600"
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-secondary"
               >
                 <option value="variant">Eje de variante</option>
                 <option value="product">Atributo de producto</option>
@@ -176,7 +177,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
                 onChange={(event) =>
                   setInputType(event.target.value as CatalogAttributeInputType)
                 }
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-600"
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-secondary"
               >
                 <option value="select">Lista de opciones</option>
                 <option value="color">Color</option>
@@ -193,7 +194,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
                   value={unit}
                   onChange={(event) => setUnit(event.target.value)}
                   placeholder="Ej: GB, cm"
-                  className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-600"
+                  className="w-24 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-secondary"
                 />
               </div>
             )}
@@ -201,7 +202,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
             <button
               type="submit"
               disabled={busy || name.trim().length < 1}
-              className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition fill-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Plus size={16} />
               Agregar
@@ -283,7 +284,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
                             )
                           }
                           disabled={busy}
-                          className="rounded-lg p-2 text-danger transition hover:bg-red-50 disabled:opacity-50"
+                          className="rounded-lg p-2 text-danger transition hover:bg-danger-bg disabled:opacity-50"
                           title="Eliminar atributo"
                         >
                           <Trash2 size={16} />
@@ -334,7 +335,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
                               }))
                             }
                             placeholder="Nuevo valor"
-                            className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-brand-600"
+                            className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-sm outline-none focus:border-secondary"
                           />
                           {isColor && (
                             <input
@@ -353,7 +354,7 @@ export default function AttributesModal({ isOpen, catalog, onClose }: Attributes
                             type="button"
                             onClick={() => handleAddOption(attribute.id, isColor)}
                             disabled={busy}
-                            className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white transition hover:bg-primary-hover disabled:opacity-50"
+                            className="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-white transition fill-hover disabled:opacity-50"
                           >
                             {busy ? <Loader2 size={14} className="animate-spin" /> : "Agregar"}
                           </button>

@@ -1,8 +1,13 @@
-from fastapi import APIRouter, Request, Depends
+"""Rutas de favoritos del comprador (solo rol user)."""
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from uuid import UUID
 
-from app.database.Connection import get_db
+from app.core.dbconexion import get_db
+from app.core.AuthDependencies import AuthContext, require_role
 
 from app.schemas.SchemaCommerce.SchemaFavorite import AddFavoriteRequest, FavoriteResponse
 
@@ -16,15 +21,26 @@ router = APIRouter(prefix="/favorites", tags=["favorites"])
 
 
 @router.get("", response_model=list[FavoriteResponse])
-def get_favorites(request: Request, database: Session = Depends(get_db, scope="function")):
-    return list_favorites_service(request.state.user_id, request.state.role, database)
+def get_favorites(
+    current: Annotated[AuthContext, Depends(require_role("user"))],
+    database: Session = Depends(get_db, scope="function"),
+):
+    return list_favorites_service(current.user_id, current.role, database)
 
 
 @router.post("")
-def add_favorite(request: Request, data: AddFavoriteRequest, database: Session = Depends(get_db, scope="function")):
-    return add_favorite_service(request.state.user_id, request.state.role, data, database)
+def add_favorite(
+    current: Annotated[AuthContext, Depends(require_role("user"))],
+    data: AddFavoriteRequest,
+    database: Session = Depends(get_db, scope="function"),
+):
+    return add_favorite_service(current.user_id, current.role, data, database)
 
 
 @router.delete("/{product_id}")
-def remove_favorite(request: Request, product_id: UUID, database: Session = Depends(get_db, scope="function")):
-    return remove_favorite_service(request.state.user_id, request.state.role, product_id, database)
+def remove_favorite(
+    current: Annotated[AuthContext, Depends(require_role("user"))],
+    product_id: UUID,
+    database: Session = Depends(get_db, scope="function"),
+):
+    return remove_favorite_service(current.user_id, current.role, product_id, database)

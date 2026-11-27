@@ -1,7 +1,7 @@
 """Renovación de sesión: valida el refresh token y emite un par nuevo de tokens."""
+import logging
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-import traceback
 
 from app.schemas.schemaAuth.SchemaToken import RefreshRequest, TokenResponse
 
@@ -15,6 +15,8 @@ from app.services.authentication.JWTService import (
 
 from app.core.ErrorCodes import ErrorCodes
 from app.core.Exceptions import api_error
+
+logger = logging.getLogger(__name__)
 
 
 def refresh_token_service(data: RefreshRequest,database: Session):
@@ -71,5 +73,5 @@ def refresh_token_service(data: RefreshRequest,database: Session):
         raise
 
     except Exception:
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500,ErrorCodes.INTERNAL_SERVER_ERROR,"Error interno del servidor.")

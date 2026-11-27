@@ -1,12 +1,17 @@
+/** Configuración de cuenta (todos los roles): perfil del representante (foto, nombre y teléfono), correo de
+ * acceso y cambio de contraseña con código. Los datos de la tienda no se editan aquí. */
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, Save, ShieldCheck, Upload, X } from "lucide-react";
+import type { ReactNode } from "react";
+import { Mail, Pencil, Save, ShieldCheck, Upload, User, X } from "lucide-react";
 
 import ConfirmModal from "@/shared/components/ConfirmModal";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { useAuth } from "@/features/public/auth/context/useAuth";
 import { forgotPassword, updateMe, updateMePhoto } from "@/features/public/auth/api/authService";
 import { Button, Input } from "@/shared/components/ui";
+import DashboardPageHeader from "@/shared/components/dashboard/DashboardPageHeader";
+import { FILE_ACCEPT, validateFile } from "@/shared/validation/files";
 
 export default function AccountSettings() {
   const navigate = useNavigate();
@@ -68,6 +73,13 @@ export default function AccountSettings() {
 
     if (!file) return;
 
+    const error = validateFile(file, "image", "Foto de perfil");
+    if (error) {
+      e.target.value = "";
+      showAlert("error", error);
+      return;
+    }
+
     setSelectedPhoto(file);
     setPreviewPhoto(URL.createObjectURL(file));
   };
@@ -122,7 +134,7 @@ export default function AccountSettings() {
     try {
       setSendingCode(true);
       await forgotPassword({ email: user.email });
-      navigate("/reset-password", { state: { email: user.email } });
+      void navigate("/reset-password", { state: { email: user.email } });
     } catch (error) {
       console.error("Error enviando el código de recuperación", error);
       showAlert("error", "No se pudo enviar el código. Intenta de nuevo más tarde.");
@@ -135,136 +147,82 @@ export default function AccountSettings() {
   const initial = user?.name?.charAt(0)?.toUpperCase() ?? "?";
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Configuración de cuenta</h1>
+    <div className="w-full">
+      <DashboardPageHeader
+        icon={<User size={26} />}
+        title="Configuración de cuenta"
+        description="Administra tu información personal y la seguridad de tu cuenta."
+      />
 
-        <p className="mt-1 text-sm text-gray-500">
-          Administra tu información personal y la seguridad de tu cuenta.
-        </p>
-      </div>
+      <SettingsSection
+        icon={<User size={20} />}
+        title="Perfil"
+        description="Tu foto, tu nombre y tu teléfono de contacto."
+        action={!editingProfile && <EditButton label="Editar perfil" onClick={handleStartEditProfile} />}
+      >
+        <div className="grid gap-6 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center">
+          <div className="flex flex-wrap items-center gap-5 lg:border-r lg:border-hairline lg:pr-8">
+            <div className="h-24 w-24 shrink-0 overflow-hidden rounded-full border-2 border-secondary/80 bg-surface-2 p-1">
+              {previewPhoto || user?.profileImagen ? (
+                <img
+                  src={previewPhoto ?? user?.profileImagen ?? undefined}
+                  alt={user?.name ?? "Foto de perfil"}
+                  className="h-full w-full rounded-full object-cover"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center rounded-full text-3xl font-semibold text-ink">
+                  <span aria-hidden="true">{initial}</span>
+                </div>
+              )}
+            </div>
 
-      <section className="mt-6 rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card sm:p-8">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Perfil</h2>
+            <div className="flex flex-col gap-2">
+              <label className="flex h-11 w-fit cursor-pointer items-center gap-2 rounded-control border border-hairline bg-surface-2 px-4 text-sm font-medium text-ink transition hover:bg-surface-3 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-secondary">
+                <Upload size={16} aria-hidden="true" />
+                Cambiar foto
+                <input type="file" className="sr-only" accept={FILE_ACCEPT.image} onChange={handleSelectPhoto} />
+              </label>
 
-            <p className="mt-1 text-sm text-gray-500">
-              Tu foto, tu nombre y tu teléfono de contacto.
-            </p>
+              {selectedPhoto && (
+                <Button size="sm" loading={uploadingPhoto} leadingIcon={<Save size={16} />} onClick={handleUploadPhoto}>
+                  {uploadingPhoto ? "Guardando…" : "Guardar foto"}
+                </Button>
+              )}
+            </div>
           </div>
 
-          {!editingProfile && (
-            <button
-              type="button"
-              onClick={handleStartEditProfile}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
-              aria-label="Editar perfil"
-            >
-              <Pencil size={18} />
-            </button>
-          )}
-        </div>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <Input
+              label="Nombre"
+              value={editingProfile ? nameForm : (user?.name ?? "")}
+              disabled={!editingProfile}
+              onChange={(e) => setNameForm(e.target.value)}
+            />
 
-        <div className="mt-6 flex flex-wrap items-center gap-5">
-          <div className="h-20 w-20 shrink-0 overflow-hidden rounded-full border-4 border-white bg-gray-100 shadow-card">
-            {previewPhoto || user?.profileImagen ? (
-              <img
-                src={previewPhoto ?? user?.profileImagen ?? undefined}
-                alt={user?.name ?? "Foto de perfil"}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-2xl font-semibold text-gray-500">
-                {initial}
-              </div>
-            )}
+            <Input
+              label="Teléfono"
+              type="tel"
+              inputMode="numeric"
+              maxLength={10}
+              value={editingProfile ? tellForm : (user?.tell ?? "")}
+              disabled={!editingProfile}
+              onChange={(e) => setTellForm(e.target.value.replace(/\D/g, ""))}
+            />
           </div>
-
-          <div>
-            <label className="flex w-fit cursor-pointer items-center gap-2 rounded-control border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
-              <Upload size={16} />
-              Cambiar foto
-              <input type="file" hidden accept="image/*" onChange={handleSelectPhoto} />
-            </label>
-
-            {selectedPhoto && (
-              <Button
-                className="mt-2"
-                size="sm"
-                loading={uploadingPhoto}
-                leadingIcon={<Save size={16} />}
-                onClick={handleUploadPhoto}
-              >
-                {uploadingPhoto ? "Guardando…" : "Guardar foto"}
-              </Button>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-6 sm:grid-cols-2">
-          <Input
-            label="Nombre"
-            value={editingProfile ? nameForm : (user?.name ?? "")}
-            disabled={!editingProfile}
-            onChange={(e) => setNameForm(e.target.value)}
-          />
-
-          <Input
-            label="Teléfono"
-            type="tel"
-            inputMode="numeric"
-            maxLength={10}
-            value={editingProfile ? tellForm : (user?.tell ?? "")}
-            disabled={!editingProfile}
-            onChange={(e) => setTellForm(e.target.value.replace(/\D/g, ""))}
-          />
         </div>
 
         {editingProfile && (
-          <div className="mt-6 flex justify-end gap-3">
-            <Button
-              variant="outline"
-              disabled={savingProfile}
-              leadingIcon={<X size={18} />}
-              onClick={() => setEditingProfile(false)}
-            >
-              Cancelar
-            </Button>
-
-            <Button
-              loading={savingProfile}
-              leadingIcon={<Save size={18} />}
-              onClick={handleSaveProfile}
-            >
-              {savingProfile ? "Guardando…" : "Guardar"}
-            </Button>
-          </div>
+          <FormActions saving={savingProfile} onCancel={() => setEditingProfile(false)} onSave={handleSaveProfile} />
         )}
-      </section>
+      </SettingsSection>
 
-      <section className="mt-6 rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card sm:p-8">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Cuenta</h2>
-
-            <p className="mt-1 text-sm text-gray-500">El correo con el que inicias sesión.</p>
-          </div>
-
-          {!editingEmail && (
-            <button
-              type="button"
-              onClick={handleStartEditEmail}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control text-gray-600 transition hover:bg-gray-100"
-              aria-label="Editar correo"
-            >
-              <Pencil size={18} />
-            </button>
-          )}
-        </div>
-
+      <SettingsSection
+        icon={<Mail size={20} />}
+        title="Cuenta"
+        description="El correo con el que inicias sesión."
+        action={!editingEmail && <EditButton label="Editar correo" onClick={handleStartEditEmail} />}
+      >
         <Input
-          className="mt-6"
           label="Correo electrónico"
           type="email"
           value={editingEmail ? emailForm : (user?.email ?? "")}
@@ -272,37 +230,11 @@ export default function AccountSettings() {
           onChange={(e) => setEmailForm(e.target.value)}
         />
 
-        {editingEmail && (
-          <div className="mt-6 flex justify-end gap-3">
-            <Button
-              variant="outline"
-              disabled={savingEmail}
-              leadingIcon={<X size={18} />}
-              onClick={() => setEditingEmail(false)}
-            >
-              Cancelar
-            </Button>
+        {editingEmail && <FormActions saving={savingEmail} onCancel={() => setEditingEmail(false)} onSave={handleSaveEmail} />}
+      </SettingsSection>
 
-            <Button
-              loading={savingEmail}
-              leadingIcon={<Save size={18} />}
-              onClick={handleSaveEmail}
-            >
-              {savingEmail ? "Guardando…" : "Guardar"}
-            </Button>
-          </div>
-        )}
-      </section>
-
-      <section className="mt-6 rounded-card border border-gray-200 bg-surface-1 p-6 shadow-card sm:p-8">
-        <h2 className="text-lg font-semibold text-gray-900">Seguridad</h2>
-
-        <p className="mt-1 text-sm text-gray-500">
-          Cambia tu contraseña verificando tu correo electrónico.
-        </p>
-
+      <SettingsSection icon={<ShieldCheck size={20} />} title="Seguridad" description="Cambia tu contraseña verificando tu correo electrónico.">
         <Button
-          className="mt-6"
           variant="outline"
           disabled={sendingCode}
           leadingIcon={<ShieldCheck size={18} />}
@@ -310,7 +242,7 @@ export default function AccountSettings() {
         >
           {sendingCode ? "Enviando código…" : "Cambiar contraseña"}
         </Button>
-      </section>
+      </SettingsSection>
 
       <ConfirmModal
         isOpen={confirmPasswordOpen}
@@ -321,6 +253,60 @@ export default function AccountSettings() {
         onConfirm={handleChangePassword}
         onClose={() => setConfirmPasswordOpen(false)}
       />
+    </div>
+  );
+}
+
+interface SettingsSectionProps {
+  icon: ReactNode;
+  title: string;
+  description: string;
+  action?: ReactNode;
+  children: ReactNode;
+}
+
+function SettingsSection({ icon, title, description, action, children }: SettingsSectionProps) {
+  return (
+    <section className="mt-6 rounded-card border border-hairline bg-surface-1 p-5 sm:p-6">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <span aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-card bg-secondary/15 text-secondary">
+            {icon}
+          </span>
+          <div>
+            <h2 className="text-lg font-semibold text-ink">{title}</h2>
+            <p className="mt-0.5 text-sm text-ink-muted">{description}</p>
+          </div>
+        </div>
+        {action}
+      </div>
+      <div className="mt-6">{children}</div>
+    </section>
+  );
+}
+
+function EditButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control border border-hairline bg-surface-2 text-ink-muted transition hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary"
+      aria-label={label}
+    >
+      <Pencil size={18} aria-hidden="true" />
+    </button>
+  );
+}
+
+function FormActions({ saving, onCancel, onSave }: { saving: boolean; onCancel: () => void; onSave: () => void }) {
+  return (
+    <div className="mt-6 flex justify-end gap-3">
+      <Button variant="outline" disabled={saving} leadingIcon={<X size={18} />} onClick={onCancel}>
+        Cancelar
+      </Button>
+      <Button loading={saving} leadingIcon={<Save size={18} />} onClick={onSave}>
+        {saving ? "Guardando…" : "Guardar"}
+      </Button>
     </div>
   );
 }

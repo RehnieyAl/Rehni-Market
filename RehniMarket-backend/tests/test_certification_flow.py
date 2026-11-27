@@ -10,6 +10,7 @@ from app.models.ModelUser import Users
 from app.services.NasService import get_nas_service
 from app.utils.Security import hash_password
 from tests.conftest import auth
+from tests.factories import valid_pdf, valid_png
 
 CERT_STATUS_URL = "/admin/dashboard/companies/certificate/status/{}"
 MY_PROFILE_URL = "/company/dashboard/my-profile"
@@ -45,7 +46,7 @@ def nas(client):
 
 
 def _pdf(name="certificado.pdf"):
-    return {"certificate": (name, b"%PDF-1.4 fake certificate", "application/pdf")}
+    return {"certificate": (name, valid_pdf(), "application/pdf")}
 
 
 def _reject(client, tokens, company_id, reason=None):
@@ -374,12 +375,12 @@ class TestReplaceCertificate:
 
         response = client.put(
             REPLACE_CERT_URL,
-            files={"certificate": ("cert.png", b"\x89PNG", "image/png")},
+            files={"certificate": ("cert.png", valid_png(), "image/png")},
             headers=auth(tokens["company"]),
         )
 
-        assert response.status_code == 400
-        assert response.json()["detail"]["code"] == "INVALID_FILE"
+        assert response.status_code == 415
+        assert response.json()["detail"]["code"] == "UNSUPPORTED_FILE_TYPE"
 
     def test_replace_updates_file_and_resets_to_pending(
         self, client, tokens, company, nas, db
@@ -475,7 +476,7 @@ def _big_pdf():
     return {
         "certificate": (
             "grande.pdf",
-            b"%PDF-1.4" + b"0" * (5 * 1024 * 1024 + 64),
+            valid_pdf(padding=5 * 1024 * 1024 + 64),
             "application/pdf",
         )
     }
@@ -620,19 +621,19 @@ class TestCertificateUpdateWithCredentials:
         self._flag_needs_update(client, tokens, company, db)
 
         response = _update_cert(
-            client, files={"certificate": ("cert.png", b"\x89PNG", "image/png")}
+            client, files={"certificate": ("cert.png", valid_png(), "image/png")}
         )
 
-        assert response.status_code == 400
-        assert response.json()["detail"]["code"] == "INVALID_FILE"
+        assert response.status_code == 415
+        assert response.json()["detail"]["code"] == "UNSUPPORTED_FILE_TYPE"
 
     def test_file_over_5mb_is_rejected(self, client, tokens, company, nas, db):
         self._flag_needs_update(client, tokens, company, db)
 
         response = _update_cert(client, files=_big_pdf())
 
-        assert response.status_code == 400
-        assert response.json()["detail"]["code"] == "INVALID_FILE"
+        assert response.status_code == 413
+        assert response.json()["detail"]["code"] == "FILE_TOO_LARGE"
 
     def test_does_not_touch_another_company(self, client, tokens, company, nas, db, users):
         role = users["company"].role

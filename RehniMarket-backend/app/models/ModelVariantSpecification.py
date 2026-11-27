@@ -1,9 +1,11 @@
+"""Modelo ORM de especificaciones propias de una variante (tabla variant_specifications)."""
+
 from sqlalchemy import Text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 
 class VariantSpecification(Base):

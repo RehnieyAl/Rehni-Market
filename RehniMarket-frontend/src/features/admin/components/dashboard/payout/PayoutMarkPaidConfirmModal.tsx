@@ -42,7 +42,7 @@ export default function PayoutMarkPaidConfirmModal({
 
           {bankAccount && (
             <div className="rounded-control border border-gray-200 bg-gray-50 p-3">
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+              <p className="text-xs font-medium text-ink-muted">
                 Transfiere a
               </p>
               <p className="mt-1 text-sm font-medium text-gray-900">

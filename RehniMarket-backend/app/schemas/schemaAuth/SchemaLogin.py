@@ -1,10 +1,13 @@
+"""Schemas de login y de la propia cuenta (/auth/me)."""
+
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, field_validator
+from app.schemas.SchemaEmail import NormalizedEmail
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: NormalizedEmail
     password: str
 
 class MeProfileResponse(BaseModel):
@@ -20,7 +23,7 @@ class UpdateMeRequest(BaseModel):
     teléfono son de la cuenta, no del perfil público de una empresa."""
 
     fullName: Optional[str] = None
-    email: Optional[EmailStr] = None
+    email: Optional[NormalizedEmail] = None
     tell: Optional[str] = None
 
     @field_validator("fullName")

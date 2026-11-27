@@ -1,3 +1,4 @@
+/** Detalle de empresa en el panel admin: datos, representante, certificado y su revisión. */
 import {
   MapPin,
   FileText,
@@ -12,6 +13,7 @@ import {
   Shield,
   IdCard,
 } from "lucide-react";
+import CompanyBanner from "@/features/company/components/CompanyBanner";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { Badge, Button, ErrorState, Modal, Skeleton, Spinner } from "@/shared/components/ui";
@@ -101,7 +103,7 @@ export default function CompanyDetailModal({
       }
     };
 
-    load();
+    void load();
   }, [isOpen, companyId, reloadKey]);
 
   const handleCertificateStatus = async (
@@ -168,21 +170,16 @@ export default function CompanyDetailModal({
         {!loading && !failed && company && (
           <div className="space-y-6">
             <div className="overflow-hidden rounded-card border border-gray-200">
-              <div className="relative h-40 w-full bg-gray-100 sm:h-52">
-                {company.CompanyBanner ? (
-                  <img
-                    src={company.CompanyBanner}
-                    alt={`Banner de ${company.nameCompany}`}
-                    className="h-full w-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">
-                    Sin banner
-                  </div>
-                )}
+              <div className="relative">
+                <CompanyBanner
+                  src={company.CompanyBanner}
+                  alt={`Banner de ${company.nameCompany}`}
+                  placeholder={
+                    <div className="flex h-full w-full items-center justify-center text-sm text-gray-400">
+                      Sin banner
+                    </div>
+                  }
+                />
 
                 <div className="absolute -bottom-10 left-5 sm:left-6">
                   {company.CompanyLogo ? (
@@ -195,7 +192,7 @@ export default function CompanyDetailModal({
                       }}
                     />
                   ) : (
-                    <div className="flex h-24 w-24 items-center justify-center rounded-card border-4 border-white bg-brand-50 text-3xl font-bold text-primary shadow-card">
+                    <div className="flex h-24 w-24 items-center justify-center rounded-card border-4 border-white bg-primary/15 text-3xl font-bold text-secondary shadow-card">
                       {company.nameCompany.charAt(0).toUpperCase()}
                     </div>
                   )}
@@ -204,7 +201,7 @@ export default function CompanyDetailModal({
 
               <div className="flex flex-col gap-3 px-5 pb-5 pt-14 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <div className="min-w-0">
-                  <h3 className="truncate text-xl font-bold text-gray-900">
+                  <h3 className="truncate text-xl font-semibold text-gray-900">
                     {company.nameCompany}
                   </h3>
                   <p className="mt-0.5 text-sm text-gray-500">
@@ -349,13 +346,13 @@ export default function CompanyDetailModal({
                         }}
                       />
                     ) : (
-                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-50 text-xl font-bold text-primary">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xl font-bold text-secondary">
                         {representative.fullName.charAt(0).toUpperCase()}
                       </div>
                     )}
 
                     <div className="min-w-0">
-                      <p className="truncate text-lg font-bold text-gray-900">
+                      <p className="truncate text-lg font-semibold text-gray-900">
                         {representative.fullName}
                       </p>
                       <p className="truncate text-sm text-gray-500">{representative.email}</p>
@@ -438,7 +435,7 @@ export default function CompanyDetailModal({
 function SectionHeader({ icon, title }: { icon: ReactNode; title: string }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-brand-50 text-primary">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-primary/15 text-secondary">
         {icon}
       </span>
       <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
@@ -459,7 +456,7 @@ function Field({
     <div className="rounded-card border border-gray-200 p-4">
       <div className="flex items-center gap-2 text-gray-500">
         {icon}
-        <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
+        <span className="text-xs font-medium">{label}</span>
       </div>
       <div className="mt-2 text-sm font-semibold text-gray-900">{children}</div>
     </div>

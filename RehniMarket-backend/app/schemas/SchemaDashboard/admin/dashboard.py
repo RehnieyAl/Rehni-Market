@@ -1,3 +1,4 @@
+"""Esquemas del inicio del panel de administración: estadísticas y actividad reciente."""
 from datetime import datetime
 from pydantic import BaseModel
 from uuid import UUID
@@ -23,11 +24,3 @@ class AdminRecentActivityResponse(BaseModel):
 
     admin_id: UUID
     admin_name: str | None = None
-
-class AdminRecentUserResponse(BaseModel):
-    id: UUID
-    fullName: str
-    email: str
-    role: str | None
-    isActive: bool
-    created_at: datetime

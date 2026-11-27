@@ -1,3 +1,4 @@
+/** Anuncios del Hero (admin/owner): plantillas web y móvil, listado con vista previa, alta, edición, activación y baja. */
 import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Eye, Loader2, Power, Megaphone, Download } from "lucide-react";
 
@@ -19,17 +20,8 @@ import {
 } from "@/features/admin/api/advertisementService";
 
 import type { AdminAdvertisementResponse } from "@/features/admin/types/response";
-
-const downloadTemplate = (file: string, name: string) => {
-  const link = document.createElement("a");
-
-  link.href = file;
-  link.download = name;
-
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-};
+import DashboardPageHeader from "@/shared/components/dashboard/DashboardPageHeader";
+import { downloadFile } from "@/shared/utils/downloadFile";
 
 const TARGET_TYPE_LABELS: Record<string, string> = {
   PRODUCT: "Producto específico",
@@ -73,7 +65,7 @@ export default function Advertisements() {
       }
     };
 
-    loadAdvertisements();
+    void loadAdvertisements();
   }, []);
 
   const handleOpenCreate = () => {
@@ -211,38 +203,37 @@ export default function Advertisements() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">Anuncios</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Administra el Hero que se muestra al comienzo del Home. Descarga una
-            plantilla como base para diseñar tu banner.
-          </p>
-        </div>
+      <div className="shrink-0">
+        <DashboardPageHeader
+          icon={<Megaphone size={26} />}
+          title="Anuncios"
+          description="Administra el Hero que se muestra al comienzo del Home. Descarga una plantilla como base para diseñar tu banner."
+          action={
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                leadingIcon={<Download size={16} />}
+                onClick={() => downloadFile(bannerTemplateDesktop, "banner-template-desktop.png")}
+              >
+                Plantilla web
+              </Button>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            leadingIcon={<Download size={16} />}
-            onClick={() => downloadTemplate(bannerTemplateDesktop, "banner-template-desktop.png")}
-          >
-            Plantilla web
-          </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                leadingIcon={<Download size={16} />}
+                onClick={() => downloadFile(bannerTemplateMobile, "banner-template-mobile.png")}
+              >
+                Plantilla móvil
+              </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            leadingIcon={<Download size={16} />}
-            onClick={() => downloadTemplate(bannerTemplateMobile, "banner-template-mobile.png")}
-          >
-            Plantilla móvil
-          </Button>
-
-          <Button onClick={handleOpenCreate} leadingIcon={<Plus size={18} />}>
-            Nuevo anuncio
-          </Button>
-        </div>
+              <Button onClick={handleOpenCreate} leadingIcon={<Plus size={18} />}>
+                Nuevo anuncio
+              </Button>
+            </div>
+          }
+        />
       </div>
 
       <section className="mt-5 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">

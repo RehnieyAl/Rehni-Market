@@ -1,5 +1,6 @@
 from app.services.email.EmailService import send_email
 from app.services.email.template.EmailBase import (
+    highlight,
     code_block,
     email_wrapper,
     heading_html,
@@ -11,12 +12,12 @@ from app.services.email.template.EmailBase import (
 
 def EmailRegisterUser(to_email: str, code: str, expiration_minutes: int):
 
-    subject = "¡Bienvenido a Rehni Market! Verifica tu correo electrónico"
+    subject = "Verifica tu correo electrónico | Rehni Market"
 
     content = (
-        heading_html("¡Bienvenido a Rehni Market!")
+        heading_html("Te damos la bienvenida a Rehni Market")
         + paragraph_html(
-            'Gracias por registrarte en <strong style="color:#6D0F2D;">Rehni Market</strong>. '
+            'Gracias por registrarte en ' + highlight("Rehni Market") + '. '
             "Tu cuenta fue creada correctamente."
         )
         + paragraph_html(

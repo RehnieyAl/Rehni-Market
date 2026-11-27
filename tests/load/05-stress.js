@@ -9,7 +9,7 @@
 // compartido con otros usuarios sin avisar antes.
 //
 // Uso:
-//   k6 run -e K6_BASE_URL=http://127.0.0.1:8000 \
+//   k6 run -e K6_BASE_URL=https://api.rehnimarket.duckdns.org \
 //          -e STRESS_MAX_VUS=400 tests/load/05-stress.js
 
 import { sleep } from 'k6';

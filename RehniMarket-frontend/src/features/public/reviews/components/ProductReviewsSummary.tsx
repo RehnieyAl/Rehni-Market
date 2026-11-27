@@ -34,7 +34,7 @@ export default function ProductReviewsSummary({
       ) : (
         <>
           <div className="mt-3 flex items-center gap-3">
-            <span className="text-4xl font-bold text-gray-900 dark:text-ink">
+            <span className="text-4xl font-semibold text-gray-900 dark:text-ink">
               {averageRating?.toFixed(1)}
             </span>
 
@@ -59,7 +59,7 @@ export default function ProductReviewsSummary({
 
                   <div className="h-2 flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
                     <div
-                      className="h-full rounded-full bg-primary dark:bg-brand-400"
+                      className="h-full rounded-full bg-secondary"
                       style={{ width: `${percentage}%` }}
                     />
                   </div>

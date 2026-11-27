@@ -1,8 +1,9 @@
+/** Sesión de la app: tokens, perfil resuelto con /auth/me, login, logout y cierre por sesión expirada. */
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { getProfile } from "@/features/public/auth/api/authService";
-import { clearTokens, clearAuthArtifacts } from "@/api/session";
+import { clearTokens, clearAuthArtifacts, SESSION_EXPIRED_EVENT } from "@/api/session";
 
 import { AuthContext } from "./AuthContext";
 
@@ -35,6 +36,8 @@ export function AuthProvider({ children }: Props) {
   const [status, setStatus] = useState<AuthStatus>(() =>
     localStorage.getItem("accessToken") ? "loading" : "unauthenticated"
   );
+
+  const [signedOutByUser, setSignedOutByUser] = useState(false);
 
   const sessionRef = useRef(0);
 
@@ -100,6 +103,7 @@ export function AuthProvider({ children }: Props) {
     setUser(null);
     setRole(data.role);
     setStatus("loading");
+    setSignedOutByUser(false);
 
     localStorage.setItem("accessToken", data.access_token);
     localStorage.setItem("refreshToken", data.refresh_token);
@@ -109,9 +113,10 @@ export function AuthProvider({ children }: Props) {
     setRefreshToken(data.refresh_token);
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback((options?: { byUser?: boolean }) => {
     sessionRef.current += 1;
 
+    setSignedOutByUser(Boolean(options?.byUser));
     setAccessToken(null);
     setRefreshToken(null);
     setRole(null);
@@ -122,6 +127,14 @@ export function AuthProvider({ children }: Props) {
     clearAuthArtifacts();
   }, []);
 
+  // El cliente HTTP ya borró los tokens: aquí se limpia el estado de React para que toda la app
+  // pase a modo visitante sin recargar la página.
+  useEffect(() => {
+    const expire = () => logout();
+    window.addEventListener(SESSION_EXPIRED_EVENT, expire);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, expire);
+  }, [logout]);
+
   const value: AuthContextType = {
     status,
     accessToken,
@@ -131,6 +144,7 @@ export function AuthProvider({ children }: Props) {
     login,
     logout,
     refreshProfile,
+    signedOutByUser,
   };
 
   return (

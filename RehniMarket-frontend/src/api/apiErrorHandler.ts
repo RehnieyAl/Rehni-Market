@@ -1,13 +1,20 @@
 import axios from "axios";
 
 import { showGlobalAlert } from "@/shared/components/alert/alertManager";
-import { getAccessToken, redirectToLoginWithMessage } from "@/api/session";
+import { expireSession, getAccessToken } from "@/api/session";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 
 const ACCOUNT_BLOCKED_CODES: string[] = [
   ErrorCode.USER_BLOCKED,
   ErrorCode.COMPANY_SUSPENDED,
 ];
+
+// Un 413 del proxy (cuerpo por encima del tope de Caddy) llega sin JSON: sin esto se vería un
+// mensaje genérico en lugar del motivo.
+const FALLBACK_STATUS_MESSAGES: Record<number, string> = {
+  413: "El archivo supera el máximo de 5 MB.",
+  415: "Formato de archivo no admitido.",
+};
 
 function buildSuspensionMessage(detail: {
   code?: string;
@@ -27,11 +34,11 @@ export function handleApiError(error: unknown) {
   }
 
   const detail = error.response?.data?.detail;
-  const message = detail?.message;
+  const message = detail?.message ?? FALLBACK_STATUS_MESSAGES[error.response?.status ?? 0];
 
   // Empresa REJECTED / certificado NEEDS_UPDATE: el login se interrumpe con estos
   // códigos y `Login.tsx` los muestra con un modal dedicado (no una alerta
-  // genérica). El middleware también los devuelve en rutas del panel para el caso
+  // genérica). El backend también los devuelve en rutas del panel para el caso
   // límite de un JWT emitido antes del cambio de estado; ahí tampoco molesta.
   // `COMPANY_PENDING` sí conserva su mensaje.
   if (
@@ -51,7 +58,7 @@ export function handleApiError(error: unknown) {
     ACCOUNT_BLOCKED_CODES.includes(detail.code) &&
     getAccessToken()
   ) {
-    redirectToLoginWithMessage(resolvedMessage || "Tu cuenta se encuentra bloqueada.");
+    expireSession(resolvedMessage || "Tu cuenta se encuentra bloqueada.");
     return;
   }
 

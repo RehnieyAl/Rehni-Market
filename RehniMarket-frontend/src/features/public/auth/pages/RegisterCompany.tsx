@@ -2,14 +2,11 @@ import { useState } from "react";
 import {
   Building2,
   Mail,
-  Lock,
   User,
   Phone,
   MapPin,
   FileText,
   Upload,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -18,18 +15,19 @@ import { registerCompany } from "@/features/public/auth/api/authService";
 import TermsModal from "@/features/public/auth/components/TermsModal";
 import CompanyTerms from "@/features/public/auth/components/terms/CompanyTerms";
 import AuthLayout from "@/features/public/auth/components/AuthLayout";
+import { lastPublicPath } from "@/features/public/auth/authNavigation";
+import PasswordInput from "@/features/public/auth/components/PasswordInput";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 import { Button, Input } from "@/shared/components/ui";
 import { registerCompanySchema, useFormValidation } from "@/shared/validation";
+import { FILE_ACCEPT, validateFile } from "@/shared/validation/files";
 
 export default function CompanyForm() {
   const navigate = useNavigate();
   const { showAlert } = useAlert();
 
   const [showTerms, setShowTerms] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
@@ -56,8 +54,17 @@ export default function CompanyForm() {
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => touch(e.target.name);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.length) return;
-    setCertificate(e.target.files[0]);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const error = validateFile(file, "pdf", "Certificado");
+    if (error) {
+      e.target.value = "";
+      showAlert("error", error);
+      return;
+    }
+
+    setCertificate(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,7 +82,7 @@ export default function CompanyForm() {
 
       const res = await registerCompany({ ...form, certificate });
 
-      navigate("/verify-email", {
+      void navigate("/verify-email", {
         state: {
           email: form.email,
           expiresIn: res?.expires_in,
@@ -104,27 +111,18 @@ export default function CompanyForm() {
     }
   };
 
-  const eyeButton = (shown: boolean, toggle: () => void) => (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label={shown ? "Ocultar contraseña" : "Mostrar contraseña"}
-      className="rounded p-0.5 text-gray-400 transition hover:text-primary"
-    >
-      {shown ? <EyeOff size={18} /> : <Eye size={18} />}
-    </button>
-  );
 
   return (
     <AuthLayout
       size="lg"
-      icon={<Building2 size={26} />}
+      icon={<Building2 size={28} />}
+      backFallback={lastPublicPath()}
       title="Registrar empresa"
       subtitle="Crea tu cuenta empresarial para vender productos en RehniMarket."
       belowCard={
         <p>
           ¿Ya tienes una cuenta?{" "}
-          <Link to="/login" className="font-semibold text-primary hover:underline">
+          <Link to="/login" className="font-semibold brand-link">
             Iniciar sesión
           </Link>
         </p>
@@ -132,7 +130,7 @@ export default function CompanyForm() {
     >
       <form onSubmit={handleSubmit} className="space-y-7">
         <fieldset className="space-y-4">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+          <legend className="text-xs font-semibold text-ink-muted">
             Representante
           </legend>
 
@@ -180,33 +178,28 @@ export default function CompanyForm() {
         </fieldset>
 
         <fieldset className="space-y-4">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+          <legend className="text-xs font-semibold text-ink-muted">
             Contraseña
           </legend>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Input
+            <PasswordInput
               label="Contraseña"
               name="password"
-              type={showPassword ? "text" : "password"}
               required
               autoComplete="new-password"
-              leadingIcon={<Lock size={18} />}
               placeholder="••••••••"
               value={form.password}
               onChange={handleChange}
               onBlur={handleBlur}
               error={errorFor("password")}
               hint="Mínimo 8 caracteres, con mayúscula, minúscula y número."
-              trailingSlot={eyeButton(showPassword, () => setShowPassword((v) => !v))}
             />
-            <Input
+            <PasswordInput
               label="Confirmar contraseña"
               name="confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
               required
               autoComplete="new-password"
-              leadingIcon={<Lock size={18} />}
               placeholder="••••••••"
               value={form.confirmPassword}
               onChange={handleChange}
@@ -216,15 +209,12 @@ export default function CompanyForm() {
                 errorFor("confirmPassword") ??
                 (form.confirmPassword ? errors.confirmPassword : undefined)
               }
-              trailingSlot={eyeButton(showConfirmPassword, () =>
-                setShowConfirmPassword((v) => !v),
-              )}
             />
           </div>
         </fieldset>
 
         <fieldset className="space-y-4">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+          <legend className="text-xs font-semibold text-ink-muted">
             Datos de la empresa
           </legend>
 
@@ -278,17 +268,17 @@ export default function CompanyForm() {
         </fieldset>
 
         <fieldset className="space-y-3">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+          <legend className="text-xs font-semibold text-ink-muted">
             Certificado de Cámara de Comercio
           </legend>
 
-          <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-card border-2 border-dashed border-gray-300 p-6 text-center transition hover:border-brand-400 hover:bg-brand-50/40">
-            <Upload size={26} className="text-primary" />
-            <p className="text-sm font-medium text-gray-900">
+          <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-card border-2 border-dashed border-white/15 p-6 text-center transition hover:border-secondary/60 hover:bg-secondary/5">
+            <Upload size={26} className="text-secondary" />
+            <p className="text-sm font-medium text-ink">
               {certificate ? certificate.name : "Seleccionar archivo PDF"}
             </p>
-            <p className="text-xs text-gray-500">Solo archivos PDF</p>
-            <input type="file" accept=".pdf" onChange={handleFile} hidden />
+            <p className="text-xs text-ink-muted">Solo archivos PDF</p>
+            <input type="file" accept={FILE_ACCEPT.pdf} onChange={handleFile} hidden />
           </label>
         </fieldset>
 
@@ -296,14 +286,14 @@ export default function CompanyForm() {
           <input
             type="checkbox"
             required
-            className="mt-0.5 h-4 w-4 accent-brand-600"
+            className="mt-0.5 h-4 w-4 accent-secondary"
           />
-          <span className="leading-relaxed text-gray-600">
+          <span className="leading-relaxed text-ink-muted">
             Acepto los{" "}
             <button
               type="button"
               onClick={() => setShowTerms(true)}
-              className="font-semibold text-primary hover:underline"
+              className="font-semibold brand-link"
             >
               términos y condiciones
             </button>

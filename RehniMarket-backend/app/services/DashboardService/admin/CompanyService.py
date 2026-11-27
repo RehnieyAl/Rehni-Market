@@ -23,7 +23,7 @@ from app.schemas.SchemaDashboard.admin.company import (
     UpdateCompanyStatusResponse,
 )
 
-from app.services.NasService import build_media_url
+from app.services.NasService import build_media_url, build_private_media_url
 
 
 def _media_url(object_name: str | None) -> str | None:
@@ -193,7 +193,7 @@ def get_all_companies_service(
             CompanyNITDV=company.CompanyNITDV,
             CompanyLogo=_media_url(company.CompanyLogo),
             CompanyBanner=_media_url(company.CompanyBanner),
-            CompanyCertificate=_media_url(company.CompanyCertificate),
+            CompanyCertificate=build_private_media_url(company.CompanyCertificate) if company.CompanyCertificate else None,
             CompanyCertificateStatus=company.CompanyCertificateStatus,
             CompanyStatus=company.CompanyStatus,
             suspensionReason=company.suspension_reason,
@@ -468,7 +468,7 @@ def update_company_status_service(
             CompanyNITDV=company.CompanyNITDV,
             CompanyLogo=_media_url(company.CompanyLogo),
             CompanyBanner=_media_url(company.CompanyBanner),
-            CompanyCertificate=_media_url(company.CompanyCertificate),
+            CompanyCertificate=build_private_media_url(company.CompanyCertificate) if company.CompanyCertificate else None,
             CompanyCertificateStatus=company.CompanyCertificateStatus,
             CompanyStatus=company.CompanyStatus,
             suspensionReason=company.suspension_reason,

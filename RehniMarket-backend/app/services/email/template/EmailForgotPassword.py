@@ -1,5 +1,6 @@
 from app.services.email.EmailService import send_email
 from app.services.email.template.EmailBase import (
+    highlight,
     code_block,
     email_wrapper,
     escape,
@@ -18,7 +19,7 @@ def EmailForgotPassword(to_email: str, code: str, expiration_minutes: int):
         heading_html("Recuperación de contraseña")
         + paragraph_html(
             "Hemos recibido una solicitud para restablecer la contraseña asociada a tu "
-            'cuenta de <strong style="color:#6D0F2D;">Rehni Market</strong>.'
+            'cuenta de ' + highlight("Rehni Market") + '.'
         )
         + paragraph_html(
             "Si realizaste esta solicitud, utiliza el siguiente código para verificar tu "

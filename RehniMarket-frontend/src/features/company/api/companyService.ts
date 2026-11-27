@@ -6,7 +6,7 @@ CompanyMediaUpload,
 import type {
 DashboardHomeResponse,
 ProductsSummaryResponse,
-CompanyProfileResponse,
+CompanyStoreSettingsResponse,
 } from "@/features/company/types/response";
 
 export async function getCompanyHero(): Promise<DashboardHomeResponse> {
@@ -21,7 +21,7 @@ const { data } = await api.get("/company/dashboard/products-summary");
 return data;
 }
 
-export async function getMyCompanyProfile(): Promise<CompanyProfileResponse> {
+export async function getMyCompanyProfile(): Promise<CompanyStoreSettingsResponse> {
 const { data } = await api.get("/company/dashboard/my-profile");
 
 return data;

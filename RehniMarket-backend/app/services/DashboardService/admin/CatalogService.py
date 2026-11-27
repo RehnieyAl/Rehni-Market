@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -14,6 +15,10 @@ from app.schemas.SchemaDashboard.SchemaCatalog import (
 
 from app.services.NasService import build_media_url
 from app.services.publicService.Products import _has_visible_stock
+from app.core.Exceptions import api_error
+from app.core.ErrorCodes import ErrorCodes
+
+logger = logging.getLogger(__name__)
 
 
 CATALOG_NAS_PATH = "catalogs/"
@@ -83,7 +88,7 @@ def create_catalog_service(
             if not upload_result.get("success"):
                 raise HTTPException(
                     status_code=500,
-                    detail=upload_result.get("message", "No se pudo subir la imagen de la categoría."),
+                    detail="No se pudo subir la imagen de la categoría.",
                 )
 
             image_path = upload_result["path"]
@@ -106,33 +111,19 @@ def create_catalog_service(
         database.rollback()
         raise
 
-    except Exception as e:
+    except Exception:
+        logger.exception("Error inesperado")
         database.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
-def update_catalog_service(
-    database: Session,
-    catalog_id: UUID,
-    data: UpdateCatalogRequest,
-    image,
-    nas,
-) -> CatalogResponse:
-
-    catalog = database.get(Catalog, catalog_id)
-
-    if not catalog:
-        raise HTTPException(
-            status_code=404,
-            detail="Catálogo no encontrado."
-        )
-
+def _apply_catalog_fields(database: Session, catalog: Catalog, data: UpdateCatalogRequest) -> None:
     if data.name is not None:
         exists = (
             database.query(Catalog)
             .filter(
                 Catalog.name.ilike(data.name),
-                Catalog.id != catalog_id
+                Catalog.id != catalog.id
             )
             .first()
         )
@@ -154,26 +145,48 @@ def update_catalog_service(
     if data.is_active is not None:
         catalog.is_active = data.is_active
 
+
+def _update_catalog_image(nas, catalog: Catalog, image, remove_image: bool) -> None:
+    if image:
+        previous_image = catalog.image_url
+        upload_result = nas.upload_file(image, CATALOG_NAS_PATH)
+
+        if not upload_result.get("success"):
+            raise HTTPException(
+                status_code=500,
+                detail="No se pudo actualizar la imagen de la categoría.",
+            )
+
+        catalog.image_url = upload_result["path"]
+
+        if previous_image:
+            nas.delete_file(previous_image.removeprefix("uploads/"))
+
+    elif remove_image and catalog.image_url:
+        nas.delete_file(catalog.image_url.removeprefix("uploads/"))
+        catalog.image_url = None
+
+
+def update_catalog_service(
+    database: Session,
+    catalog_id: UUID,
+    data: UpdateCatalogRequest,
+    image,
+    nas,
+) -> CatalogResponse:
+
+    catalog = database.get(Catalog, catalog_id)
+
+    if not catalog:
+        raise HTTPException(
+            status_code=404,
+            detail="Catálogo no encontrado."
+        )
+
+    _apply_catalog_fields(database, catalog, data)
+
     try:
-        if image:
-            previous_image = catalog.image_url
-
-            upload_result = nas.upload_file(image, CATALOG_NAS_PATH)
-
-            if not upload_result.get("success"):
-                raise HTTPException(
-                    status_code=500,
-                    detail=upload_result.get("message", "No se pudo actualizar la imagen de la categoría."),
-                )
-
-            catalog.image_url = upload_result["path"]
-
-            if previous_image:
-                nas.delete_file(previous_image.removeprefix("uploads/"))
-
-        elif data.remove_image and catalog.image_url:
-            nas.delete_file(catalog.image_url.removeprefix("uploads/"))
-            catalog.image_url = None
+        _update_catalog_image(nas, catalog, image, data.remove_image)
 
         database.commit()
         database.refresh(catalog)
@@ -186,9 +199,10 @@ def update_catalog_service(
         database.rollback()
         raise
 
-    except Exception as e:
+    except Exception:
+        logger.exception("Error inesperado")
         database.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
 def change_catalog_status_service(

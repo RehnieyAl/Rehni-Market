@@ -5,7 +5,6 @@ export interface RegisterUserRequest {
   tell: string;
 }
 
-
 export interface RegisterCompanyRequest {
   certificate: File;
 
@@ -20,28 +19,23 @@ export interface RegisterCompanyRequest {
   company_nit_dv: string;
 }
 
-
 export interface VerifyEmailRequest {
   email: string;
   code: string;
 }
-
 
 export interface ChangeEmailRequest {
   old_email: string;
   new_email: string;
 }
 
-
 export interface ResendVerificationCodeRequest {
   email: string;
 }
 
-
 export interface ForgotPasswordRequest {
   email: string;
 }
-
 
 export interface UpdateMeRequest {
   fullName?: string;
@@ -49,20 +43,13 @@ export interface UpdateMeRequest {
   tell?: string;
 }
 
-
 export interface ResetPasswordRequest {
   email: string;
   code: string;
   new_password: string;
 }
 
-
 export interface LoginRequest {
   email: string;
   password: string;
-}
-
-
-export interface RefreshTokenRequest {
-  old_refresh_token: string;
 }

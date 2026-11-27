@@ -9,6 +9,6 @@ export function controlClasses(invalid?: boolean): string {
     CONTROL_BASE,
     invalid
       ? "border-danger focus:border-danger focus:ring-danger/30"
-      : "border-gray-300 focus:border-brand-600 focus:ring-brand-600/25",
+      : "border-gray-300 focus:border-secondary focus:ring-secondary/25",
   );
 }

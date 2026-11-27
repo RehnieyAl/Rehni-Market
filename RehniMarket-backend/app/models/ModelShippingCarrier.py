@@ -1,9 +1,11 @@
+"""Modelo ORM de transportadoras para los envíos (tabla shipping_carriers)."""
+
 from sqlalchemy import String, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime, timezone
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 
 class ShippingCarrier(Base):

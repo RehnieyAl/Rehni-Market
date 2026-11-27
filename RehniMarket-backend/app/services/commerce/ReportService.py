@@ -1,4 +1,4 @@
-import traceback
+import logging
 from uuid import UUID
 
 from fastapi import HTTPException, UploadFile
@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.ErrorCodes import ErrorCodes
 from app.core.Exceptions import api_error
+from app.utils.FileValidator import IMAGE_EXTENSIONS, validate_uploads
 
 from app.models.ModelReport import Report, ReportEvidence, ReportTargetType
 from app.models.ModelProduct import Product
@@ -21,12 +22,9 @@ from app.schemas.SchemaCommerce.SchemaReport import (
     ReportResponse,
 )
 
+logger = logging.getLogger(__name__)
+
 MAX_EVIDENCE_IMAGES = 5
-MAX_EVIDENCE_FILE_SIZE_BYTES = 5 * 1024 * 1024
-ALLOWED_EVIDENCE_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
-ALLOWED_EVIDENCE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
-
-
 def _validate_evidence_files(evidences: list[UploadFile]) -> None:
     if len(evidences) > MAX_EVIDENCE_IMAGES:
         api_error(
@@ -35,33 +33,7 @@ def _validate_evidence_files(evidences: list[UploadFile]) -> None:
             f"Puedes adjuntar como máximo {MAX_EVIDENCE_IMAGES} imágenes.",
         )
 
-    for file in evidences:
-        extension = (
-            file.filename.rsplit(".", 1)[-1].lower()
-            if file.filename and "." in file.filename
-            else ""
-        )
-
-        if (
-            file.content_type not in ALLOWED_EVIDENCE_CONTENT_TYPES
-            or extension not in ALLOWED_EVIDENCE_EXTENSIONS
-        ):
-            api_error(
-                400,
-                ErrorCodes.INVALID_FILE,
-                "Solo se permiten imágenes en formato JPEG, PNG o WEBP.",
-            )
-
-        file.file.seek(0, 2)
-        size = file.file.tell()
-        file.file.seek(0)
-
-        if size > MAX_EVIDENCE_FILE_SIZE_BYTES:
-            api_error(
-                400,
-                ErrorCodes.INVALID_FILE,
-                "Cada imagen debe pesar como máximo 5 MB.",
-            )
+    validate_uploads(evidences, IMAGE_EXTENSIONS, "Evidencia")
 
 
 def create_report_service(
@@ -151,7 +123,7 @@ def create_report_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 

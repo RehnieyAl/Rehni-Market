@@ -135,7 +135,7 @@ export default function AddressForm({ onSaved, onCancel, hasExistingAddresses }:
             type="checkbox"
             checked={form.isDefault}
             onChange={(e) => handleChange("isDefault", e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 accent-primary"
+            className="h-4 w-4 rounded border-gray-300 accent-secondary"
           />
           Dirección principal
         </label>

@@ -1,7 +1,9 @@
+"""Modelo ORM de colores disponibles para variantes (tabla color_variants)."""
+
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 import uuid
 
 class ColorVariant(Base):

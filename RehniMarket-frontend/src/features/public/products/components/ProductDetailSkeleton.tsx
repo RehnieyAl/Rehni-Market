@@ -1,6 +1,6 @@
 export default function ProductDetailSkeleton() {
   return (
-    <div className="theme-dark mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] animate-pulse px-2 py-6 sm:px-4 sm:py-8 lg:px-8">
+    <div className="mx-auto w-full max-w-[clamp(1280px,90vw,1600px)] animate-pulse px-2 py-6 sm:px-4 sm:py-8 lg:px-8">
       <div className="h-4 w-32 rounded bg-white/10" />
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-hairline bg-surface-1">

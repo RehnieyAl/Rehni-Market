@@ -1,3 +1,5 @@
+"""Modelos ORM de atributos de variante por categoría y sus opciones (catalog_attributes y catalog_attribute_options)."""
+
 from __future__ import annotations
 
 import uuid
@@ -7,7 +9,7 @@ from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, UniqueCon
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 ATTRIBUTE_ROLES = ("product", "variant")
 ATTRIBUTE_INPUT_TYPES = ("select", "color", "text", "number")
