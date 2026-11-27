@@ -1,0 +1,85 @@
+name: Restore producción
+
+# Restauración manual de un respaldo por su ID. «listar» y «verificar-qa» no tocan los datos de producción
+# (verificar-qa restaura en contenedores desechables del servidor); «produccion» exige escribir el mismo ID como
+# confirmación, la aprobación del environment «produccion-restore» y una llave propia, distinta de la de backup.
+# Bloqueado hasta que el propietario cree la variable RESTORE_ENABLED=true (docs/devops/README.md).
+on:
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: Qué hacer
+        type: choice
+        options: [listar, verificar-qa, produccion]
+        default: listar
+      backup_id:
+        description: ID del respaldo (AAAAMMDDTHHMMSSZ_<sha12>); vacío para «listar»
+        required: false
+      confirmacion:
+        description: Para «produccion», escribe de nuevo el ID del respaldo
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rehnimarket-produccion
+  cancel-in-progress: false
+
+jobs:
+  restaurar:
+    name: restaurar
+    if: vars.RESTORE_ENABLED == 'true' && github.repository == 'RehnieyAl/Rehni-Market'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: produccion-restore
+    env:
+      MODO: ${{ inputs.modo }}
+      BACKUP_ID: ${{ inputs.backup_id }}
+      CONFIRMACION: ${{ inputs.confirmacion }}
+      RUN_ID: ${{ github.run_id }}
+      SSH_HOST: ${{ secrets.AZURE_SSH_HOST }}
+      SSH_PORT: ${{ secrets.AZURE_SSH_PORT }}
+    steps:
+      - name: Validar la solicitud
+        run: |
+          set -euo pipefail
+          if [ "${MODO}" != "listar" ] && ! [[ "${BACKUP_ID}" =~ ^[0-9]{8}T[0-9]{6}Z_[0-9a-f]{12}$ ]]; then
+            echo "::error::ID de respaldo no válido."
+            exit 1
+          fi
+          if [ "${MODO}" = "produccion" ] && [ "${CONFIRMACION}" != "${BACKUP_ID}" ]; then
+            echo "::error::La confirmación no coincide con el ID: restore de producción rechazado."
+            exit 1
+          fi
+          echo "Solicitud: ${MODO} ${BACKUP_ID:-} por ${GITHUB_ACTOR} (run ${RUN_ID})" >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Preparar SSH
+        env:
+          KNOWN_HOSTS: ${{ secrets.AZURE_SSH_KNOWN_HOSTS }}
+          RESTORE_KEY: ${{ secrets.AZURE_RESTORE_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          for v in SSH_HOST KNOWN_HOSTS RESTORE_KEY; do
+            [ -n "${!v}" ] || { echo "::error::Falta el secreto de ${v} en el environment produccion-restore."; exit 1; }
+          done
+          install -d -m 700 "${RUNNER_TEMP}/ssh"
+          printf '%s\n' "${KNOWN_HOSTS}" > "${RUNNER_TEMP}/ssh/known_hosts"
+          printf '%s\n' "${RESTORE_KEY}" > "${RUNNER_TEMP}/ssh/restore"
+          chmod 600 "${RUNNER_TEMP}"/ssh/*
+
+      - name: Ejecutar
+        run: |
+          set -euo pipefail
+          case "${MODO}" in
+            listar) orden="list" ;;
+            verificar-qa) orden="restore-verify ${BACKUP_ID}" ;;
+            produccion) orden="restore ${BACKUP_ID} ${CONFIRMACION} ${RUN_ID}" ;;
+          esac
+          ssh -i "${RUNNER_TEMP}/ssh/restore" -p "${SSH_PORT:-22}" -o BatchMode=yes -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes -o UserKnownHostsFile="${RUNNER_TEMP}/ssh/known_hosts" \
+            "backup-restore@${SSH_HOST}" "${orden}"
+
+      - name: Limpiar
+        if: always()
+        run: rm -rf "${RUNNER_TEMP}/ssh"

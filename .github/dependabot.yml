@@ -1,19 +1,26 @@
-# Actualizaciones semanales de dependencias (#45). Las versiones menores y los parches de cada
-# ecosistema llegan en un solo PR, y los arreglos de seguridad en otro, para no llenar la cola;
-# las versiones mayores quedan en PRs aparte porque pueden romper (se revisan a mano).
+# Actualizaciones semanales de dependencias. Las de versión van a develop (target-branch) y pasan el CI
+# obligatorio antes de llegar a main con el flujo normal develop → main. Menores y parches de cada ecosistema
+# llegan agrupados en un PR; las versiones mayores, una por PR, porque pueden romper y se revisan a mano.
+#
+# Las actualizaciones de SEGURIDAD que GitHub crea por una alerta van siempre a la rama predeterminada (main):
+# GitHub ignora target-branch para ellas. El job «rama-origen» del CI bloquea que se fusionen directo en main;
+# el procedimiento para pasarlas por develop está en docs/devops/dependabot-y-seguridad.md.
 version: 2
 
 updates:
   - package-ecosystem: uv
     directory: /RehniMarket-backend
+    target-branch: develop
     schedule:
       interval: weekly
       day: monday
       time: "07:00"
       timezone: America/Bogota
     open-pull-requests-limit: 5
+    labels: [dependencies, backend]
     commit-message:
       prefix: "chore(backend)"
+      include: scope
     groups:
       backend-seguridad:
         applies-to: security-updates
@@ -25,14 +32,17 @@ updates:
 
   - package-ecosystem: npm
     directory: /RehniMarket-frontend
+    target-branch: develop
     schedule:
       interval: weekly
       day: monday
       time: "07:00"
       timezone: America/Bogota
     open-pull-requests-limit: 5
+    labels: [dependencies, frontend]
     commit-message:
       prefix: "chore(web)"
+      include: scope
     groups:
       frontend-seguridad:
         applies-to: security-updates
@@ -44,14 +54,17 @@ updates:
 
   - package-ecosystem: npm
     directory: /RehniMarket-mobile
+    target-branch: develop
     schedule:
       interval: weekly
       day: monday
       time: "07:00"
       timezone: America/Bogota
     open-pull-requests-limit: 5
+    labels: [dependencies, mobile]
     commit-message:
       prefix: "chore(mobile)"
+      include: scope
     groups:
       mobile-seguridad:
         applies-to: security-updates
@@ -63,14 +76,35 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
+    target-branch: develop
     schedule:
       interval: weekly
       day: monday
       time: "07:00"
       timezone: America/Bogota
     open-pull-requests-limit: 5
+    labels: [dependencies, ci]
     commit-message:
       prefix: "ci"
     groups:
       acciones:
         patterns: ["*"]
+
+  # Imágenes base de los Dockerfile (python, node, caddy). Las del docker-compose.yml (postgres, minio,
+  # pgbouncer) se actualizan a mano: cambiarlas toca datos persistentes y exige un respaldo verificado.
+  - package-ecosystem: docker
+    directories: [/RehniMarket-backend, /RehniMarket-frontend]
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/Bogota
+    open-pull-requests-limit: 3
+    labels: [dependencies, ci]
+    commit-message:
+      prefix: "chore(docker)"
+    groups:
+      imagenes-menores:
+        patterns: ["*"]
+        update-types: [minor, patch]
