@@ -1,9 +1,10 @@
 name: Comprobación SSH producción
 
-# Prueba manual y no destructiva de la conexión desde GitHub Actions al servidor de Azure, con los mismos
-# environments, secretos y llaves que los workflows de deploy y restore. Cada llave envía una orden que la
-# compuerta ssh-gate.sh rechaza: el código 126 prueba red, clave de host, autenticación y rol a la vez, sin
-# ejecutar nada. Cualquier otro código (255 = red o llave) es un fallo. No respalda, despliega ni restaura.
+# Prueba manual y no destructiva de la conexión desde GitHub Actions al servidor de Azure por la tailnet, con
+# los mismos environments, secretos y llaves que deploy y restore. Cada llave envía una orden que la compuerta
+# ssh-gate.sh rechaza: el código 126 prueba red, clave de host, autenticación y rol a la vez, sin ejecutar nada.
+# Cualquier otro código (255 = red o llave) es un fallo. Además, los puertos que no son el 22 deben estar
+# filtrados por la política de Tailscale. No respalda, despliega ni restaura.
 on:
   workflow_dispatch:
 
@@ -22,10 +23,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: produccion
+    permissions:
+      contents: read
+      # Token OIDC que Tailscale cambia por un nodo efímero de la tailnet.
+      id-token: write
     env:
       SSH_HOST: ${{ secrets.AZURE_SSH_HOST }}
       SSH_PORT: ${{ secrets.AZURE_SSH_PORT }}
     steps:
+      # El NSG solo admite SSH desde la IP del propietario: el runner entra por la tailnet. La credencial OIDC
+      # de Tailscale solo acepta tokens de jobs del environment «produccion»; el nodo es efímero y sale al terminar.
+      - name: Conectar a la red privada (Tailscale)
+        uses: tailscale/github-action@064b10558093f38325e838ddea35486bdc6b1d5c # v4.4.0
+        with:
+          oauth-client-id: ${{ vars.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ vars.TS_AUDIENCE }}
+          tags: tag:ci-produccion
+          ping: ${{ secrets.AZURE_SSH_HOST }}
+
       - name: Preparar SSH (llaves solo en el runner efímero)
         env:
           KNOWN_HOSTS: ${{ secrets.AZURE_SSH_KNOWN_HOSTS }}
@@ -63,6 +78,23 @@ jobs:
           probar backup backup-restore backup || fallos=1
           exit "${fallos}"
 
+      # La política solo concede tcp:22. Un puerto filtrado no responde (tiempo agotado); uno que responda,
+      # aunque sea rechazando, indicaría que la política no se está aplicando.
+      - name: Puertos no autorizados filtrados
+        run: |
+          set -uo pipefail
+          fallos=0
+          for puerto in 80 443 8000 5433; do
+            if timeout 5 bash -c "exec 3<>/dev/tcp/${SSH_HOST}/${puerto}" 2>/dev/null; then
+              echo "::error::El puerto ${puerto} acepta conexiones desde CI."; fallos=1
+            elif [ "$?" -eq 124 ]; then
+              echo "OK puerto ${puerto}: filtrado" | tee -a "${GITHUB_STEP_SUMMARY}"
+            else
+              echo "::error::El puerto ${puerto} respondió (rechazo): la política de Tailscale no lo filtra."; fallos=1
+            fi
+          done
+          exit "${fallos}"
+
       - name: Limpiar
         if: always()
         run: rm -rf "${RUNNER_TEMP}/ssh" "${RUNNER_TEMP}/salida"
@@ -73,10 +105,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: produccion-restore
+    permissions:
+      contents: read
+      # Token OIDC que Tailscale cambia por un nodo efímero de la tailnet.
+      id-token: write
     env:
       SSH_HOST: ${{ secrets.AZURE_SSH_HOST }}
       SSH_PORT: ${{ secrets.AZURE_SSH_PORT }}
     steps:
+      # El NSG solo admite SSH desde la IP del propietario: el runner entra por la tailnet. La credencial OIDC
+      # de Tailscale solo acepta tokens de jobs del environment «produccion-restore»; el nodo es efímero y sale al terminar.
+      - name: Conectar a la red privada (Tailscale)
+        uses: tailscale/github-action@064b10558093f38325e838ddea35486bdc6b1d5c # v4.4.0
+        with:
+          oauth-client-id: ${{ vars.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ vars.TS_AUDIENCE }}
+          tags: tag:ci-restore
+          ping: ${{ secrets.AZURE_SSH_HOST }}
+
       - name: Preparar SSH
         env:
           KNOWN_HOSTS: ${{ secrets.AZURE_SSH_KNOWN_HOSTS }}
@@ -94,16 +140,34 @@ jobs:
       - name: Probar llave
         run: |
           set -uo pipefail
+          # GitHub ejecuta bash -e: sin capturar el código aquí, un fallo cortaba el paso antes de explicarlo.
+          codigo=0
           ssh -i "${RUNNER_TEMP}/ssh/restore" -p "${SSH_PORT:-22}" -o BatchMode=yes -o IdentitiesOnly=yes \
             -o ConnectTimeout=20 -o StrictHostKeyChecking=yes -o UserKnownHostsFile="${RUNNER_TEMP}/ssh/known_hosts" \
-            "backup-restore@${SSH_HOST}" "comprobar-conexion" 2> "${RUNNER_TEMP}/salida"
-          codigo=$?
+            "backup-restore@${SSH_HOST}" "comprobar-conexion" 2> "${RUNNER_TEMP}/salida" || codigo=$?
           if [ "${codigo}" -eq 126 ] && grep -q "rol 'restore'" "${RUNNER_TEMP}/salida"; then
             echo "OK restore: conecta, autentica y la compuerta aplica el rol restore" | tee -a "${GITHUB_STEP_SUMMARY}"
           else
             echo "::error::restore: código ${codigo} (126 esperado). $(tail -n 1 "${RUNNER_TEMP}/salida")"
             exit 1
           fi
+
+      # La política solo concede tcp:22. Un puerto filtrado no responde (tiempo agotado); uno que responda,
+      # aunque sea rechazando, indicaría que la política no se está aplicando.
+      - name: Puertos no autorizados filtrados
+        run: |
+          set -uo pipefail
+          fallos=0
+          for puerto in 80 443 8000 5433; do
+            if timeout 5 bash -c "exec 3<>/dev/tcp/${SSH_HOST}/${puerto}" 2>/dev/null; then
+              echo "::error::El puerto ${puerto} acepta conexiones desde CI."; fallos=1
+            elif [ "$?" -eq 124 ]; then
+              echo "OK puerto ${puerto}: filtrado" | tee -a "${GITHUB_STEP_SUMMARY}"
+            else
+              echo "::error::El puerto ${puerto} respondió (rechazo): la política de Tailscale no lo filtra."; fallos=1
+            fi
+          done
+          exit "${fallos}"
 
       - name: Limpiar
         if: always()

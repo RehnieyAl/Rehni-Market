@@ -33,6 +33,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment: produccion-restore
+    permissions:
+      contents: read
+      # Token OIDC que Tailscale cambia por un nodo efímero de la tailnet.
+      id-token: write
     env:
       MODO: ${{ inputs.modo }}
       BACKUP_ID: ${{ inputs.backup_id }}
@@ -53,6 +57,16 @@ jobs:
             exit 1
           fi
           echo "Solicitud: ${MODO} ${BACKUP_ID:-} por ${GITHUB_ACTOR} (run ${RUN_ID})" >> "${GITHUB_STEP_SUMMARY}"
+
+      # El NSG solo admite SSH desde la IP del propietario: el runner entra por la tailnet. La credencial OIDC
+      # de Tailscale solo acepta tokens de jobs del environment «produccion-restore»; el nodo es efímero y sale al terminar.
+      - name: Conectar a la red privada (Tailscale)
+        uses: tailscale/github-action@064b10558093f38325e838ddea35486bdc6b1d5c # v4.4.0
+        with:
+          oauth-client-id: ${{ vars.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ vars.TS_AUDIENCE }}
+          tags: tag:ci-restore
+          ping: ${{ secrets.AZURE_SSH_HOST }}
 
       - name: Preparar SSH
         env:
