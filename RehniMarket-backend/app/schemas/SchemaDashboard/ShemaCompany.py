@@ -57,7 +57,9 @@ class UpdateInformationCompanyRequest(BaseModel):
         if value is None:
             return value
         value = value.strip().lower()
-        if value and (len(value) > 254 or not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", value)):
+        # Mismo lenguaje que [^@\s]+@[^@\s]+\.[^@\s]+, sin el retroceso cuadrático de aquella (el punto
+        # podía consumirse de dos formas); el límite de 254 ya acota el costo antes de evaluar.
+        if value and (len(value) > 254 or not re.fullmatch(r"[^@\s]+@[^@\s][^@\s.]*\.[^@\s]+", value)):
             raise ValueError("Escribe un correo de contacto válido.")
         return value
 

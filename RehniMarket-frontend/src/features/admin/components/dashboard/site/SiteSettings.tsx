@@ -8,6 +8,7 @@ import DashboardPageHeader from "@/shared/components/dashboard/DashboardPageHead
 import DashboardSection from "@/shared/components/dashboard/DashboardSection";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { Button, ErrorState, Input, Skeleton } from "@/shared/components/ui";
+import { CONTACT_EMAIL_PATTERN } from "@/shared/utils/emailPattern";
 import {
   getPlatformContact,
   updatePlatformContact,
@@ -21,7 +22,6 @@ interface FormValues {
   phonePublic: boolean;
 }
 
-const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const PHONE_PATTERN = /^\+?[0-9]{7,15}$/;
 
 function toForm(contact: PlatformContact): FormValues {
@@ -38,7 +38,7 @@ function validate(values: FormValues): Partial<Record<"contactEmail" | "contactP
   const email = values.contactEmail.trim();
   const phone = values.contactPhone.replace(/[\s()-]/g, "");
 
-  if (email && !EMAIL_PATTERN.test(email)) errors.contactEmail = "Escribe un correo válido.";
+  if (email && !CONTACT_EMAIL_PATTERN.test(email)) errors.contactEmail = "Escribe un correo válido.";
   else if (values.emailPublic && !email) errors.contactEmail = "Para publicar el correo primero debes escribirlo.";
 
   if (phone && !PHONE_PATTERN.test(phone)) errors.contactPhone = "El teléfono debe tener entre 7 y 15 dígitos (puede empezar con +).";
