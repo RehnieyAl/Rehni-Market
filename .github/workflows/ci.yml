@@ -2,8 +2,8 @@ name: CI
 
 # Pruebas automáticas en cada push y PR (T7-9 · bc-testing-adso S9), incluidos los PR de Dependabot: corren
 # con el GITHUB_TOKEN de solo lectura y sin secretos (pull_request, nunca pull_request_target).
-# El análisis estático va aparte en sonarqube.yml. El despliegue (rehnimarket-deploy.yml) espera a que este
-# workflow termine bien sobre el commit final de main.
+# El análisis estático va aparte en sonarqube.yml. El despliegue es manual en el servidor
+# (docs/mantenimiento/backup-restore.md), después de que este workflow termine bien sobre main.
 on:
   push:
     branches: [main, develop]
@@ -252,7 +252,7 @@ jobs:
 
   rama-origen:
     # A main solo se llega desde develop (flujo normal) o desde hotfix/* (procedimiento excepcional de
-    # docs/devops/dependabot-y-seguridad.md). Así un PR de seguridad de Dependabot, que GitHub abre contra main,
+    # docs/mantenimiento/dependabot-y-seguridad.md). Así un PR de seguridad de Dependabot, que GitHub abre contra main,
     # no se fusiona sin pasar por develop. En PR hacia otras ramas el job pasa sin más.
     name: rama-origen
     if: github.event_name == 'pull_request'

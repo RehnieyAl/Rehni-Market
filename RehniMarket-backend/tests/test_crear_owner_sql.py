@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from app.models.ModelUser import Users
 from tests.conftest import TEST_DB_URL
 from tests.test_single_owner import CLAVE, _new_user, _owner_count
 
@@ -22,14 +23,16 @@ def psql():
     pytest.skip("psql no está disponible (defina PSQL_BIN)")
 
 
-def _run_sql(psql, **variables):
+def _run_sql(psql, env=None, **variables):
     values = {"correo": "Owner.Prueba@Example.COM", "nombre": "Owner de Prueba",
               "telefono": "3001234567", "clave": CLAVE, **variables}
     command = [psql, "-X", TEST_DB_URL]
     for name, value in values.items():
-        command += ["-v", f"{name}={value}"]
+        if value is not None:
+            command += ["-v", f"{name}={value}"]
     with SQL_SCRIPT.open() as script:
-        return subprocess.run(command, stdin=script, capture_output=True, text=True, timeout=60)
+        return subprocess.run(command, stdin=script, capture_output=True, text=True, timeout=60,
+                              env={**os.environ, **(env or {})})
 
 
 def _login(client, email, password):
@@ -58,6 +61,20 @@ class TestCrearOwnerSql:
         assert response.status_code == 200
         assert response.json()["role"] == "owner"
         assert wrong.status_code != 200
+
+    def test_password_from_environment_keeps_it_out_of_the_arguments(self, psql, client, db):
+        # Así lo usa scripts/database/inicializar.sh: la clave no aparece en la línea de órdenes de psql.
+        result = _run_sql(psql, env={"OWNER_CLAVE": CLAVE}, clave=None)
+
+        assert result.returncode == 0, result.stderr
+        assert _login(client, "owner.prueba@example.com", CLAVE).status_code == 200
+        assert db.query(Users.email).filter(Users.is_owner.is_(True)).scalar() == "owner.prueba@example.com"
+
+    def test_missing_password_is_rejected(self, psql, db):
+        result = _run_sql(psql, env={"OWNER_CLAVE": ""}, clave=None)
+
+        assert result.returncode != 0
+        assert _owner_count(db) == 0
 
     def test_output_never_shows_the_password_or_hash(self, psql, db):
         result = _run_sql(psql)

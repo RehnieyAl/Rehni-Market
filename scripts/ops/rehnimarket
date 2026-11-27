@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Comando administrativo del servidor (/usr/local/bin/rehnimarket): Compose de producción, respaldos, restore,
-# despliegue manual e inicialización de roles y owner. Siempre opera sobre APP_DIR, nunca sobre el directorio actual,
-# y delega en los scripts instalados en LIB_DIR. Uso: `sudo rehnimarket ayuda`.
+# Comando administrativo del servidor (/usr/local/bin/rehnimarket): Compose de producción, respaldos, restore y
+# despliegue manual. Siempre opera sobre APP_DIR, nunca sobre el directorio actual, y delega en los scripts
+# instalados en LIB_DIR. Roles y owner: scripts/database/inicializar.sh. Uso: `sudo rehnimarket ayuda`.
 set -Eeuo pipefail
 
 OPS_ENV="${OPS_ENV:-/etc/rehnimarket/ops.env}"
@@ -57,7 +57,7 @@ require_running() {
   for s in "$@"; do running "${s}" || die "el servicio ${s} no está en marcha (sudo rehnimarket start)"; done
 }
 
-require_tty() { [ -t 0 ] && [ -t 1 ] || die "esta operación pide confirmación: ejecútala en una terminal interactiva"; }
+require_tty() { [ -t 0 ] && [ -t 1 ] || die "restore pide confirmación: ejecútalo en una terminal interactiva"; }
 
 valid_backup_id() { [[ "${1:-}" =~ ${BACKUP_ID_RE} ]] || die "ID de respaldo no válido: '${1:-}' (AAAAMMDDTHHMMSSZ_<sha12>)"; }
 
@@ -72,15 +72,6 @@ check_space() {
   avail="$(free_mb "${BACKUP_DIR}")"
   info "espacio libre en ${BACKUP_DIR}: ${avail} MB (mínimo exigido ${need} MB; base ${db_mb} MB)"
   [ "${avail}" -ge "${need}" ] || die "espacio insuficiente para un respaldo seguro"
-}
-
-check_migrations() {
-  local db head
-  db="$(psql_tac 'SELECT string_agg(version_num, chr(44)) FROM alembic_version' 2>/dev/null | tr -d '[:space:]')" \
-    || die "la base no tiene tabla alembic_version: las migraciones no se aplicaron"
-  head="$(compose exec -T backend uv run --no-sync alembic heads 2>/dev/null | awk '{print $1}' | paste -sd, -)"
-  info "migraciones: base=${db:-ninguna} código=${head:-desconocido}"
-  [ -n "${db}" ] && [ "${db}" = "${head}" ] || die "la base no está en la última migración del código desplegado"
 }
 
 cmd_status() {
@@ -174,7 +165,7 @@ cmd_restore() {
   echo
   echo "ATENCIÓN: se REEMPLAZAN los datos de PostgreSQL y MinIO de producción por los del respaldo ${id}."
   echo "Servicios afectados: backend (se detiene), postgres y minio. Antes se crea un respaldo preventivo del"
-  echo "estado actual; si algo falla, se recupera con ese respaldo (docs/devops/backup-restore.md)."
+  echo "estado actual; si algo falla, se recupera con ese respaldo (docs/mantenimiento/backup-restore.md)."
   local answer
   read -r -p "Escribe el ID del respaldo para confirmar: " answer
   [ "${answer}" = "${id}" ] || die "confirmación distinta del ID: no se restauró nada"
@@ -198,43 +189,6 @@ cmd_deploy() {
   "${LIB_DIR}/deploy_rehnimarket.sh" "${sha}" "${id}" "manual-${SUDO_USER:-$(id -un)}"
 }
 
-cmd_init() {
-  case "${1:-}" in
-    roles)
-      require_running postgres backend
-      check_migrations
-      info "roles antes: $(psql_tac 'SELECT string_agg(name, chr(32) ORDER BY name) FROM roles')"
-      compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -q' < "${LIB_DIR}/crear-roles.sql"
-      ;;
-    base)
-      require_running postgres backend
-      check_migrations
-      bash "${LIB_DIR}/datos-base.sh"
-      ;;
-    owner)
-      require_tty
-      require_running postgres backend
-      [ "$(psql_tac "SELECT count(*) FROM roles WHERE name = 'owner'")" = "1" ] \
-        || die "no existe el rol owner: ejecuta antes sudo rehnimarket init roles"
-      [ "$(psql_tac "SELECT count(*) FROM users u JOIN roles r ON r.id = u.role_id WHERE r.name = 'owner'")" = "0" ] \
-        || die "ya existe un owner; no se crea otro ni se modifica el actual"
-      local nombre correo telefono clave clave2
-      read -r -p "Nombre del owner: " nombre
-      read -r -p "Correo: " correo
-      read -r -p "Teléfono (10 dígitos): " telefono
-      read -r -s -p "Clave: " clave; echo
-      read -r -s -p "Repite la clave: " clave2; echo
-      [ "${clave}" = "${clave2}" ] || die "las claves no coinciden"
-      jq -cn --arg nombre "${nombre}" --arg correo "${correo}" --arg telefono "${telefono}" --arg clave "${clave}" \
-        '{nombre: $nombre, correo: $correo, telefono: $telefono, clave: $clave}' \
-        | compose exec -T backend uv run --no-sync python -c "$(cat "${LIB_DIR}/crear_owner.py")"
-      unset clave clave2
-      psql_tac "SELECT u.email || ' -> ' || r.name FROM users u JOIN roles r ON r.id = u.role_id WHERE r.name = 'owner'"
-      ;;
-    *) die "uso: rehnimarket init <roles | base | owner>" ;;
-  esac
-}
-
 usage() {
   cat <<'EOF'
 Uso: sudo rehnimarket <orden>
@@ -254,9 +208,7 @@ Uso: sudo rehnimarket <orden>
   restore <ID> [--qa]            restore de producción con confirmación (--qa: en contenedores desechables)
   deploy <sha40|main>            respaldo obligatorio y despliegue de un commit de origin/main
 
-  init roles                     crea los roles que falten (user, company, admin, owner)
-  init base                      catálogo y transportadoras que falten (incluye roles)
-  init owner                     crea el único owner; pide los datos y la clave en la terminal
+Roles y owner: bash /opt/rehnimarket/scripts/database/inicializar.sh
 EOF
 }
 
@@ -277,6 +229,5 @@ case "${orden}" in
   backup) cmd_backup "$@" ;;
   restore) cmd_restore "$@" ;;
   deploy) cmd_deploy "$@" ;;
-  init) cmd_init "$@" ;;
   *) usage >&2; die "orden desconocida: ${orden}" ;;
 esac
