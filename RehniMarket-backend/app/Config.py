@@ -39,6 +39,8 @@ class config():
     OWNER_NAME = os.getenv("USER_NAME_OWNER")
     OWNER_DEFAULT = os.getenv("OWNER_DEFAULT")
     OWNER_PASSWORD_DEFAULT = os.getenv("OWNER_PASSWORD_DEFAULT")
+    # Contraseña de las cuentas de empresas demo; sin ella (o si es débil) no se crean.
+    SEED_DEMO_PASSWORD = os.getenv("SEED_DEMO_PASSWORD")
     RUN_SEED = os.getenv("RUN_SEED", "false").lower() == "true"
     URL_BACKEND = os.getenv("URL_BACKEND")
     RATE_LIMIT_ENABLED = os.getenv("RATE_LIMIT_ENABLED", "false").lower() == "true"

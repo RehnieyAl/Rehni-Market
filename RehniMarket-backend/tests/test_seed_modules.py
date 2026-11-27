@@ -45,6 +45,7 @@ def owner_env(monkeypatch):
 def small_demo(monkeypatch):
     """Una empresa demo con un producto, sin subir imágenes a MinIO."""
     company = {**COMPANIES[0], "products": COMPANIES[0]["products"][:1]}
+    monkeypatch.setattr(seed_demo.config, "SEED_DEMO_PASSWORD", "DemoPrueba2026")
     monkeypatch.setattr(seed_demo, "_demo_companies", lambda: [company])
     monkeypatch.setattr(seed_demo, "_ensure_media_object", lambda name, rgb: f"uploads/{name}")
     return company

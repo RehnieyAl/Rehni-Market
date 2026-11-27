@@ -382,6 +382,9 @@ bash scripts/datos-base.sh
 Seeds: `roles`, `categorias`, `especificaciones`, `atributos`, `colores`, `transportadoras`, `owner`,
 `empresas-demo`, `productos-demo`.
 
+`empresas-demo` solo crea cuentas si `SEED_DEMO_PASSWORD` tiene una clave válida (8+ caracteres, mayúscula,
+minúscula y número); vacía, no crea ninguna. En producción se deja vacía, igual que `RUN_SEED=false`.
+
 ### Backend
 
 ```bash

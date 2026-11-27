@@ -1,13 +1,15 @@
 """Seeds de demostración: empresas aprobadas (con su cuenta) y sus productos con variantes e imágenes.
-Solo se ejecutan a mano o con RUN_SEED=true; requieren roles, categorías y atributos."""
+Solo se ejecutan a mano o con RUN_SEED=true, y las cuentas solo si SEED_DEMO_PASSWORD está definida."""
 
 import io
+import logging
 import struct
 import unicodedata
 import zlib
 
 from sqlalchemy.orm import Session
 
+from app.Config import config
 from app.models.ModelCatalogAttribute import CatalogAttribute, CatalogAttributeOption
 from app.models.ModelCompany import Company, CompanyCertificateEnum
 from app.models.ModelProduct import Product, ProductImage
@@ -17,17 +19,17 @@ from app.models.ModelVariant import ProductVariant
 from app.models.ModelVariantImage import ProductVariantImage
 from app.models.ModelVariantOption import VariantOption
 from app.models.ModelAttributeValue import ProductAttributeValue
+from app.schemas.schemaAuth.SchemaRegister import check_password_strength
 from app.services.variants.combo_key import build_combo_key
 from app.utils.Security import hash_password
 from app.utils.seed_catalog_data import get_seed_catalog
 
+logger = logging.getLogger(__name__)
 
-SEED_COMPANY_PASSWORD = "RehniSeed2026*"
 # .example (RFC 2606) está reservado y nunca entrega correo, pero el validador de login lo acepta;
 # .test, usado antes, es "special-use" y el login rechazaba a todas las empresas demo.
 SEED_EMAIL_DOMAIN = "rehnimarket.example"
 LEGACY_SEED_EMAIL_DOMAIN = "rehnimarket.test"
-_SEED_PWD_HASH: str | None = None
 
 _PALETTE = {
     "Negro": (34, 34, 38), "Blanco": (238, 238, 242), "Gris": (140, 140, 148),
@@ -38,11 +40,20 @@ _PALETTE = {
 _DEFAULT_RGB = (108, 122, 137)
 
 
-def _seed_password_hash() -> str:
-    global _SEED_PWD_HASH
-    if _SEED_PWD_HASH is None:
-        _SEED_PWD_HASH = hash_password(SEED_COMPANY_PASSWORD)
-    return _SEED_PWD_HASH
+def _seed_password_hash() -> str | None:
+    """Hash de SEED_DEMO_PASSWORD, o None si falta o no cumple la política de contraseñas de la app."""
+    password = config.SEED_DEMO_PASSWORD
+
+    if not password:
+        return None
+
+    try:
+        check_password_strength(password)
+    except ValueError as error:
+        logger.warning("SEED_DEMO_PASSWORD no cumple la política de contraseñas (%s).", error)
+        return None
+
+    return hash_password(password)
 
 
 def _slug(text: str) -> str:
@@ -392,7 +403,13 @@ def seed_demo_companies(db: Session):
     if not company_role:
         return
 
+    # Una clave fija en el código daría a cualquiera acceso a las empresas demo de una base
+    # sembrada por error: sin una clave configurada fuera del repositorio no se crea ninguna.
     password_hash = _seed_password_hash()
+
+    if password_hash is None:
+        logger.warning("SEED_DEMO_PASSWORD sin definir o débil: no se crean empresas demo.")
+        return
 
     for company_data in _demo_companies():
         _ensure_demo_company(db, company_data, company_role, password_hash)
