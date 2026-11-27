@@ -1,14 +1,16 @@
 """Un único owner (#54): garantía en la base de datos (índice y triggers) y 403 en la API."""
+import importlib.util
 import threading
 import time
+from pathlib import Path
 
 import pytest
 from sqlalchemy import func, text
 from sqlalchemy.exc import DBAPIError, IntegrityError
 
-from app.database.single_owner import OWNER_INDEX_NAME
+from app.models import ModelUser
 from app.models.ModelRole import Role
-from app.models.ModelUser import Users
+from app.models.ModelUser import OWNER_INDEX_NAME, Users
 from app.utils.Security import hash_password
 from tests.conftest import auth
 
@@ -52,6 +54,15 @@ class TestDatabaseGuarantee:
 
         assert OWNER_INDEX_NAME in str(error.value)
         assert _owner_count(db) == 1
+
+    @pytest.mark.parametrize("role", ["admin", "company", "user"])
+    def test_other_roles_can_repeat(self, db, role):
+        _new_user(db, f"{role}1@rehni.co", role)
+        _new_user(db, f"{role}2@rehni.co", role)
+
+        db.expire_all()
+        count = db.query(func.count(Users.id)).join(Role).filter(Role.name == role).scalar()
+        assert count == 2
 
     def test_promoting_a_user_with_sql_is_rejected(self, db):
         _new_user(db, "owner1@rehni.co", "owner")
@@ -190,3 +201,15 @@ class TestApiNeverAssignsOwner:
 
         assert response.status_code == 200
         assert response.json()["role"] == "admin"
+
+
+def test_model_and_migration_share_the_same_owner_sql():
+    spec = importlib.util.spec_from_file_location(
+        "single_owner_migration",
+        Path(__file__).resolve().parents[1] / "alembic/versions/d7e3f1a9c5b2_single_owner.py",
+    )
+    migration = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(migration)
+
+    assert migration.OWNER_INDEX_NAME == ModelUser.OWNER_INDEX_NAME
+    assert migration.TRIGGER_STATEMENTS == ModelUser.TRIGGER_STATEMENTS

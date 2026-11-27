@@ -1,3 +1,6 @@
+"""Acceso a datos de la billetera RehniCoin: billeteras, bloqueo de saldo y movimientos."""
+
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 from uuid import UUID
 
@@ -6,6 +9,29 @@ from app.models.ModelWallet import Wallet, WalletTransaction, WalletTransactionT
 
 def get_wallet_by_user_id(database: Session, user_id: UUID) -> Wallet | None:
     return database.query(Wallet).filter(Wallet.user_id == user_id).first()
+
+
+def lock_wallet_by_user_id(database: Session, user_id: UUID) -> Wallet:
+    """Crea la billetera si falta (sin commit) y bloquea su fila hasta el fin de la transacción.
+
+    Todo cambio de saldo pasa por aquí: sin el FOR UPDATE, dos operaciones simultáneas
+    leen el mismo saldo y la última en escribir borra la otra. ON CONFLICT cubre la
+    creación concurrente de la misma billetera.
+    """
+
+    database.execute(
+        insert(Wallet)
+        .values(user_id=user_id, balance=0)
+        .on_conflict_do_nothing(index_elements=[Wallet.user_id])
+    )
+
+    return (
+        database.query(Wallet)
+        .filter(Wallet.user_id == user_id)
+        .with_for_update()
+        .populate_existing()
+        .one()
+    )
 
 
 def create_wallet(database: Session, user_id: UUID) -> Wallet:

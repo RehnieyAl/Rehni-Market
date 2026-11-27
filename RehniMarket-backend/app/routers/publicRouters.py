@@ -1,5 +1,7 @@
+"""Rutas públicas sin token: catálogos, colores, publicidad, productos, reseñas y perfil de empresa."""
+
 from fastapi import APIRouter,Query
-from app.database.Connection import read_session
+from app.core.dbconexion import read_session
 from app.services.publicService.Products import (
     get_catalogs_service,
     get_specifications_by_catalog_service,
@@ -18,6 +20,8 @@ from app.services.publicService.Company import (
     get_company_rating_service,
 )
 from app.services.commerce.ReviewService import list_product_reviews_service
+from app.services.commerce.CompanyFollowService import get_company_followers_service
+from app.schemas.SchemaCommerce.SchemaCompanyFollow import CompanyFollowersResponse
 from decimal import Decimal
 
 from app.schemas.SchemaPublic import (
@@ -168,3 +172,10 @@ def get_public_company_products(
 def get_public_company_rating(company_id: UUID):
     with read_session() as database:
         return get_company_rating_service(database, company_id)
+
+
+@router.get("/company/{company_id}/followers", response_model=CompanyFollowersResponse)
+def get_public_company_followers(company_id: UUID):
+    """Número de seguidores de la empresa; no expone quiénes la siguen."""
+    with read_session() as database:
+        return get_company_followers_service(database, company_id)

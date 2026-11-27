@@ -1,5 +1,6 @@
-import traceback
+"""Servicio de la propia cuenta (/auth/me): perfil, edición de nombre, correo y teléfono, y foto."""
 
+import logging
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
@@ -9,6 +10,8 @@ from app.core.Exceptions import api_error
 from app.core.ErrorCodes import ErrorCodes
 from app.services.NasService import build_media_url
 from uuid import UUID
+
+logger = logging.getLogger(__name__)
 
 
 def _to_me_profile_response(user) -> MeProfileResponse:
@@ -40,7 +43,7 @@ def get_me_profile_service(user_id: UUID, database: Session) -> MeProfileRespons
         raise
 
     except Exception:
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
@@ -59,7 +62,8 @@ def update_me_profile_service(
         if data.email is not None and data.email != user.email:
             existing = get_by_email(database, data.email)
 
-            if existing:
+            # Una cuenta antigua guardada con mayúsculas se encuentra a sí misma: no es otro dueño.
+            if existing and existing.id != user.id:
                 api_error(
                     409,
                     ErrorCodes.EMAIL_ALREADY_EXISTS,
@@ -85,7 +89,7 @@ def update_me_profile_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
@@ -120,5 +124,5 @@ def update_me_photo_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")

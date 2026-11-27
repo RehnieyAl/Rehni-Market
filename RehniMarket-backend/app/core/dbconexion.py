@@ -1,3 +1,6 @@
+"""Conexión a PostgreSQL: engine y pool únicos de SQLAlchemy, sesiones (get_db, read_session) y Base
+de los modelos. Lo usan la app, Alembic (alembic/env.py), las pruebas y los scripts de datos."""
+
 import logging
 from contextlib import contextmanager
 
@@ -7,11 +10,8 @@ from app.Config import config
 
 logger = logging.getLogger("rehni.db")
 
-# Único engine (y único pool) de la aplicación: endpoints vía get_db,
-# auth_middleware, healthcheck y seed lo comparten. Cada proceso uvicorn
-# (UVICORN_WORKERS) crea el suyo, así que el máximo de conexiones del backend
-# hacia PgBouncer es (DB_POOL_SIZE + DB_MAX_OVERFLOW) × UVICORN_WORKERS.
-# Los valores se validan en Config.py; ver docs/rendimiento-capacidad.md.
+# Único engine y pool del proceso. Conexiones máximas hacia PgBouncer:
+# (DB_POOL_SIZE + DB_MAX_OVERFLOW) × UVICORN_WORKERS; ver docs/rendimiento-capacidad.md.
 engine = create_engine(
     config.URL_DATABASE_POOLED,
     pool_size=config.DB_POOL_SIZE,
@@ -49,19 +49,9 @@ def get_db():
         database.close()
 
 
-# Sesiones de SOLO LECTURA (rutas /public). FastAPI cierra una dependencia con
-# scope="function" DESPUÉS de serializar la respuesta, y en endpoints síncronos
-# esa serialización espera un hilo del threadpool. Mientras tanto la sesión
-# retiene su conexión: bajo carga, todas las conexiones (del pool de SQLAlchemy
-# y, con transacción abierta, las reales de PgBouncer) quedan retenidas por
-# respuestas que esperan hilo, mientras todos los hilos esperan una conexión,
-# y solo los timeouts rompen el ciclo.
-# Por eso read_session() se usa DENTRO del endpoint (mismo hilo, conexión
-# devuelta antes de serializar) y en AUTOCOMMIT (cada SELECT termina su
-# transacción y PgBouncer libera la conexión real al instante).
-# Comparte el pool de `engine`. NUNCA usar para escrituras: no hay atomicidad
-# entre sentencias. Los servicios deben devolver datos ya cargados (schemas o
-# columnas), no relaciones perezosas: tras cerrar la sesión no se pueden cargar.
+# Solo lectura (rutas /public), DENTRO del endpoint y en AUTOCOMMIT: get_db retiene la conexión
+# hasta serializar la respuesta y, bajo carga, eso bloqueaba el pool. Nunca para escrituras, y los
+# servicios deben devolver datos ya cargados (sin relaciones perezosas).
 ReadSessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
@@ -78,18 +68,6 @@ def read_session():
     finally:
         database.close()
 
-
-def pool_stats() -> dict:
-    """Estado del pool de ESTE proceso (cada worker tiene el suyo)."""
-    pool = engine.pool
-    return {
-        "size": pool.size(),
-        "checked_out": pool.checkedout(),
-        "checked_in": pool.checkedin(),
-        "overflow": pool.overflow(),
-        "max_overflow": config.DB_MAX_OVERFLOW,
-        "timeout_seconds": config.DB_POOL_TIMEOUT,
-    }
 
 class Base(DeclarativeBase):
     pass

@@ -1,3 +1,5 @@
+"""Entorno de Alembic: toma URL_DATABASE de Config y los modelos de app.models para las migraciones."""
+
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -5,7 +7,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 from app.models import *
 from app.Config import config as settings
 config = context.config
@@ -16,6 +18,15 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
+
+# Índices de expresión creados con SQL en su migración (a1b2c3d4e5f6, búsqueda difusa con
+# pg_trgm): no existen en los modelos, así que autogenerate/`alembic check` propondría borrarlos.
+EXPRESSION_INDEXES = {"ix_products_name_search_trgm"}
+
+
+def include_object(_obj, name, type_, reflected, compare_to):
+    return not (type_ == "index" and reflected and compare_to is None and name in EXPRESSION_INDEXES)
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -33,6 +44,7 @@ def run_migrations_offline() -> None:
     context.configure(
         url=url,
         target_metadata=target_metadata,
+        include_object=include_object,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
@@ -56,7 +68,9 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata,
+            include_object=include_object,
         )
 
         with context.begin_transaction():

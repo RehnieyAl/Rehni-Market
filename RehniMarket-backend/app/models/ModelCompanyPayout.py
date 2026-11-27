@@ -1,3 +1,5 @@
+"""Modelo ORM de liquidaciones a empresas por periodo (tabla company_payouts)."""
+
 from sqlalchemy import Numeric, ForeignKey, DateTime, Date, Enum, UniqueConstraint
 from decimal import Decimal
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -6,7 +8,7 @@ import uuid
 from datetime import datetime, date, timezone
 from enum import Enum as PyEnum
 
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 
 class PayoutStatusEnum(str, PyEnum):
@@ -34,6 +36,12 @@ class CompanyPayout(Base):
     period_end: Mapped[date] = mapped_column(Date, nullable=False)
 
     gross_sales: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+
+    # Reembolsos de devoluciones descontados en esta liquidación (del periodo o compensados de
+    # periodos ya liquidados). gross_sales ya es neto de este valor: ventas del periodo - reembolsos.
+    refunds_amount: Mapped[Decimal] = mapped_column(
+        Numeric(14, 2), nullable=False, default=Decimal("0"), server_default="0"
+    )
 
     commission_percentage: Mapped[Decimal] = mapped_column(Numeric(5, 4), nullable=False)
     commission_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)

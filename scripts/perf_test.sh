@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-API="${API:-https://api.rehnimarket}"
+API="${API:-https://apirehnimarket}"
 N="${1:-200}"
 CONC="${2:-10}"
 

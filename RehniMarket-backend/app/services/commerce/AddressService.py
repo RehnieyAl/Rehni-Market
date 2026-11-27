@@ -1,4 +1,4 @@
-import traceback
+import logging
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -16,6 +16,8 @@ from app.schemas.SchemaCommerce.SchemaAddress import (
     UpdateAddressRequest,
     AddressResponse,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _require_buyer(role: str):
@@ -92,8 +94,22 @@ def create_address_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
+
+
+# Campo del schema (camelCase) -> columna del modelo.
+_UPDATABLE_FIELDS = {
+    "label": "label",
+    "fullName": "full_name",
+    "country": "country",
+    "department": "department",
+    "city": "city",
+    "address": "address",
+    "postalCode": "postal_code",
+    "phone": "phone",
+    "additionalInstructions": "additional_instructions",
+}
 
 
 def update_address_service(
@@ -111,32 +127,10 @@ def update_address_service(
         if not address:
             api_error(404, ErrorCodes.ADDRESS_NOT_FOUND, "Dirección no encontrada.")
 
-        if data.label is not None:
-            address.label = data.label
-
-        if data.fullName is not None:
-            address.full_name = data.fullName
-
-        if data.country is not None:
-            address.country = data.country
-
-        if data.department is not None:
-            address.department = data.department
-
-        if data.city is not None:
-            address.city = data.city
-
-        if data.address is not None:
-            address.address = data.address
-
-        if data.postalCode is not None:
-            address.postal_code = data.postalCode
-
-        if data.phone is not None:
-            address.phone = data.phone
-
-        if data.additionalInstructions is not None:
-            address.additional_instructions = data.additionalInstructions
+        for field, column in _UPDATABLE_FIELDS.items():
+            value = getattr(data, field)
+            if value is not None:
+                setattr(address, column, value)
 
         database.commit()
         database.refresh(address)
@@ -149,7 +143,7 @@ def update_address_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
@@ -185,7 +179,7 @@ def delete_address_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
@@ -214,5 +208,5 @@ def set_default_address_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")

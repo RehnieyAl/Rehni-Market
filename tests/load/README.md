@@ -134,7 +134,7 @@ aceptable para producción.
   pueden tener RPS muy distinto.
 - **Conexiones simultáneas a PostgreSQL:** gobernadas por el pool de
   SQLAlchemy del backend (`pool_size`/`max_overflow` en
-  `RehniMarket-backend/app/database/Connection.py`) multiplicado por el
+  `RehniMarket-backend/app/core/dbconexion.py`) multiplicado por el
   número de workers, y acotadas después por `DEFAULT_POOL_SIZE`/
   `MAX_CLIENT_CONN` de PgBouncer y por `max_connections` de Postgres. Ver
   el informe de auditoría para el cálculo completo.

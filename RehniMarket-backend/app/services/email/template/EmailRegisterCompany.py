@@ -1,5 +1,6 @@
 from app.services.email.EmailService import send_email
 from app.services.email.template.EmailBase import (
+    highlight,
     bullet_list_html,
     code_block,
     email_wrapper,
@@ -21,11 +22,12 @@ def EmailRegisterCompany(
     subject = "Registro empresarial recibido - Verifica tu correo | Rehni Market"
 
     content = (
-        heading_html("¡Empresa registrada!")
+        heading_html("Recibimos el registro de tu empresa")
         + greeting_html(company_name)
         + paragraph_html(
-            'Tu empresa fue registrada correctamente en '
-            '<strong style="color:#6D0F2D;">Rehni Market</strong>. Para continuar con el '
+            "Tu empresa fue registrada correctamente en "
+            + highlight("Rehni Market")
+            + ". Para continuar con el "
             "proceso empresarial debes verificar el correo electrónico asociado a tu cuenta."
         )
         + paragraph_html("Ingresa el siguiente código de verificación en la aplicación:")

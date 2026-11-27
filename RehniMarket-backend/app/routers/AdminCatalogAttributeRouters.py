@@ -1,9 +1,12 @@
+"""Rutas del panel admin para atributos de catálogo y sus opciones (admin y owner)."""
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.database.Connection import get_db
+from app.core.dbconexion import get_db
+from app.core.AuthDependencies import require_role
 from app.schemas.SchemaDashboard.SchemaCatalogAttribute import (
     CatalogAttributeResponse,
     CatalogAttributeStatusRequest,
@@ -34,6 +37,7 @@ router = APIRouter(
 @router.get(
     "/catalogs/{catalog_id}/catalog-attributes",
     response_model=list[CatalogAttributeResponse],
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def list_catalog_attributes(
     catalog_id: UUID,
@@ -47,6 +51,7 @@ def list_catalog_attributes(
     "/catalogs/{catalog_id}/catalog-attributes",
     response_model=CatalogAttributeResponse,
     status_code=201,
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def create_catalog_attribute(
     catalog_id: UUID,
@@ -59,6 +64,7 @@ def create_catalog_attribute(
 @router.get(
     "/catalog-attributes/{attribute_id}",
     response_model=CatalogAttributeResponse,
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def get_catalog_attribute(
     attribute_id: UUID,
@@ -70,6 +76,7 @@ def get_catalog_attribute(
 @router.patch(
     "/catalog-attributes/{attribute_id}",
     response_model=CatalogAttributeResponse,
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def update_catalog_attribute(
     attribute_id: UUID,
@@ -82,6 +89,7 @@ def update_catalog_attribute(
 @router.patch(
     "/catalog-attributes/{attribute_id}/status",
     response_model=CatalogAttributeResponse,
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def set_catalog_attribute_status(
     attribute_id: UUID,
@@ -91,7 +99,10 @@ def set_catalog_attribute_status(
     return set_catalog_attribute_status_service(database, attribute_id, data.is_active)
 
 
-@router.delete("/catalog-attributes/{attribute_id}")
+@router.delete(
+    "/catalog-attributes/{attribute_id}",
+    dependencies=[Depends(require_role("admin", "owner"))],
+)
 def delete_catalog_attribute(
     attribute_id: UUID,
     database: Session = Depends(get_db, scope="function"),
@@ -103,6 +114,7 @@ def delete_catalog_attribute(
     "/catalog-attributes/{attribute_id}/options",
     response_model=CatalogAttributeOptionResponse,
     status_code=201,
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def create_attribute_option(
     attribute_id: UUID,
@@ -115,6 +127,7 @@ def create_attribute_option(
 @router.patch(
     "/catalog-attribute-options/{option_id}",
     response_model=CatalogAttributeOptionResponse,
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def update_attribute_option(
     option_id: UUID,
@@ -124,7 +137,10 @@ def update_attribute_option(
     return update_attribute_option_service(database, option_id, data)
 
 
-@router.delete("/catalog-attribute-options/{option_id}")
+@router.delete(
+    "/catalog-attribute-options/{option_id}",
+    dependencies=[Depends(require_role("admin", "owner"))],
+)
 def delete_attribute_option(
     option_id: UUID,
     database: Session = Depends(get_db, scope="function"),

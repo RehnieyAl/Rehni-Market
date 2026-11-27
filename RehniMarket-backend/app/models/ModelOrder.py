@@ -1,3 +1,5 @@
+"""Modelos ORM de pedidos por empresa y sus ítems (tablas orders y order_items)."""
+
 from sqlalchemy import String, Numeric, Integer, ForeignKey, DateTime, Enum, Identity
 from decimal import Decimal
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -5,7 +7,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 import uuid
 from datetime import datetime, timezone
 from enum import Enum as PyEnum
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 
 class OrderStatusEnum(str, PyEnum):
@@ -73,6 +75,12 @@ class Order(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
+    # Liquidación que pagó la venta (NULL = sin liquidar). El enlace, y no la ventana de fechas de
+    # cada liquidación, decide qué ya se pagó: así una venta no se paga dos veces ni se queda fuera.
+    payout_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("company_payouts.id", ondelete="RESTRICT"), nullable=True, index=True
+    )
+
     user = relationship("Users", back_populates="orders")
     company = relationship("Company")
     address = relationship("Address")
@@ -115,6 +123,10 @@ class OrderItem(Base):
 
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     subtotal: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+
+    # IVA cobrado por esta línea en el checkout (la suma de las líneas es Order.tax). NULL solo en
+    # pedidos anteriores cuyo reparto no se pudo reconstruir sin inventar montos.
+    tax_amount: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
 
     order = relationship("Order", back_populates="items")
     product = relationship("Product")

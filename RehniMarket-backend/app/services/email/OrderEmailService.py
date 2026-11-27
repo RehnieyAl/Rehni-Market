@@ -8,8 +8,6 @@ from app.Config import config
 
 from app.models.ModelOrder import Order, OrderStatusEnum
 
-from app.services.NasService import build_media_url
-
 from app.services.email.template.EmailOrder import (
     EmailOrderCreated,
     EmailOrderProcessing,
@@ -52,19 +50,10 @@ def _build_address(order: Order) -> dict | None:
 def _build_items(order: Order) -> list[dict]:
     items = []
 
+    # Solo los datos históricos de la línea: los correos no llevan fotografías de productos.
     for item in order.items:
-        image_url = None
-        product = item.product
-
-        if product:
-            main_image = next((img for img in product.images if img.is_main), None)
-
-            if main_image:
-                image_url = build_media_url(main_image.url)
-
         items.append(
             {
-                "image_url": image_url,
                 "name": item.product_name,
                 "variant_name": item.variant_name,
                 "quantity": item.quantity,

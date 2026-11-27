@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from app.schemas.schemaAuth.SchemaRegister import CreateCompanyRequest, CreateUserRequest
 from app.utils.NitValidator import calculate_nit_dv, validate_nit_dv
+from tests.factories import valid_pdf
 
 # NIT publicados por cada entidad junto con su DV.
 PUBLISHED_NITS = [
@@ -116,7 +117,7 @@ def register_company(client, **overrides):
     return client.post(
         "/auth/register-company",
         data=data,
-        files={"certificate": ("camara.pdf", b"%PDF-1.4", "application/pdf")},
+        files={"certificate": ("camara.pdf", valid_pdf(), "application/pdf")},
     )
 
 

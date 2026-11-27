@@ -1,9 +1,14 @@
+"""Rutas de la arquitectura de productos de la empresa: especificaciones, descuentos y variantes generadas."""
+
+from typing import Annotated
+
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.database.Connection import get_db
+from app.core.dbconexion import get_db
+from app.core.AuthDependencies import AuthContext, require_role
 from app.schemas.SchemaDashboard.SchemaProductArchitecture import (
     ProductAttributeValueResponse,
     ProductAvailableAttributesResponse,
@@ -31,12 +36,12 @@ router = APIRouter(prefix="/company", tags=["company - product architecture"])
     response_model=ProductAvailableAttributesResponse,
 )
 def get_available_attributes(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     database: Session = Depends(get_db, scope="function"),
 ):
     return get_available_attributes_service(
-        database, request.state.user_id, product_id
+        database, current.user_id, product_id
     )
 
 
@@ -45,12 +50,12 @@ def get_available_attributes(
     response_model=list[ProductAttributeValueResponse],
 )
 def get_product_attributes(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     database: Session = Depends(get_db, scope="function"),
 ):
     return get_product_attributes_service(
-        database, request.state.user_id, product_id
+        database, current.user_id, product_id
     )
 
 
@@ -59,35 +64,35 @@ def get_product_attributes(
     response_model=list[ProductAttributeValueResponse],
 )
 def set_product_attributes(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     data: SetProductAttributesRequest,
     database: Session = Depends(get_db, scope="function"),
 ):
     return set_product_attributes_service(
-        database, request.state.user_id, product_id, data
+        database, current.user_id, product_id, data
     )
 
 
 @router.put("/dashboard/products/{product_id}/discount")
 def set_product_discount(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     data: ProductDiscountRequest,
     database: Session = Depends(get_db, scope="function"),
 ):
     return set_product_discount_service(
-        database, request.state.user_id, product_id, data
+        database, current.user_id, product_id, data
     )
 
 
 @router.post("/dashboard/products/{product_id}/variants/generate")
 def generate_variant_combinations(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     data: GenerateCombinationsRequest,
     database: Session = Depends(get_db, scope="function"),
 ):
     return generate_combinations_service(
-        database, request.state.user_id, product_id, data.attribute_ids
+        database, current.user_id, product_id, data.attribute_ids
     )

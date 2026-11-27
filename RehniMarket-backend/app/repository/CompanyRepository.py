@@ -1,3 +1,5 @@
+"""Acceso a datos de empresas: búsqueda por NIT, id o usuario, alta y bloqueo de la fila al liquidar."""
+
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -14,6 +16,12 @@ def get_company_by_nit(database: Session,nit: str) -> Company | None:
 def get_company_by_id(database: Session, company_id: UUID) -> Company | None:
 
     return (database.query(Company).filter(Company.id == company_id).first())
+
+
+def lock_company(database: Session, company_id: UUID) -> Company | None:
+    """Bloquea la empresa: serializa la generación de sus liquidaciones."""
+
+    return database.query(Company).filter(Company.id == company_id).with_for_update().first()
 
 
 def get_company_by_user_id(database: Session, user_id: UUID) -> Company | None:

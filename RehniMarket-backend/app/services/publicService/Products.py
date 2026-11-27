@@ -1,9 +1,10 @@
+"""Catálogo público: categorías, listados (filtros, orden y paginación por el precio de la tarjeta), ofertas, novedades y detalle."""
 import unicodedata
 from datetime import datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import and_, case, func, or_
+from sqlalchemy import Numeric, and_, case, cast, func, literal, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.ErrorCodes import ErrorCodes
@@ -34,7 +35,7 @@ from app.schemas.SchemaPublic import (
 
 from app.core.TaxConfig import TAX_RATE, compute_tax
 from app.services.NasService import build_media_url
-from app.services.pricing import resolve_price, resolve_product_card_price
+from app.services.pricing import DISCOUNT_FIXED, resolve_price, resolve_product_card_price
 from app.services.variants import attributes as attrs
 from app.services.variants.images import product_display_image_url
 
@@ -171,6 +172,81 @@ def _discount_window_open(entity_start, entity_end, now):
         or_(entity_start.is_(None), entity_start <= now),
         or_(entity_end.is_(None), entity_end >= now),
     )
+
+
+def _discount_active_sql(entity, now):
+    """Espejo SQL de pricing.discount_is_active."""
+
+    return and_(
+        entity.discount_enable.is_(True),
+        entity.discount_value > 0,
+        _discount_window_open(entity.discount_starts_at, entity.discount_ends_at, now),
+    )
+
+
+def _discounted_sql(base_price, discount_type, discount_value):
+    """Espejo SQL de pricing._apply_discount: porcentaje (por defecto) o monto fijo, nunca negativo,
+    redondeado a centavos."""
+
+    discounted = case(
+        (
+            func.coalesce(discount_type, "percent") == DISCOUNT_FIXED,
+            base_price - discount_value,
+        ),
+        else_=base_price - (base_price * discount_value / 100),
+    )
+    return func.round(cast(func.greatest(discounted, 0), Numeric(12, 2)), 2)
+
+
+def card_price_sql(now: datetime | None = None):
+    """Precio de la tarjeta en SQL (final, base y % de descuento), con las mismas reglas que
+    pricing.resolve_product_card_price: la variante viva con menor precio final efectivo
+    (descuento de variante, si no el del producto) y, sin variantes vivas, el precio del
+    producto. Así el listado filtra, ordena y pagina por el precio que se muestra."""
+
+    now = now or datetime.utcnow()
+    now_param = literal(now)
+
+    variant_final = case(
+        (
+            _discount_active_sql(ProductVariant, now_param),
+            _discounted_sql(
+                ProductVariant.price, ProductVariant.discount_type, ProductVariant.discount_value
+            ),
+        ),
+        (
+            _discount_active_sql(Product, now_param),
+            _discounted_sql(ProductVariant.price, Product.discount_type, Product.discount_value),
+        ),
+        else_=ProductVariant.price,
+    )
+
+    def cheapest_live(column):
+        # Desempate por id: el resultado no depende del orden físico de las filas.
+        return (
+            select(column)
+            .where(ProductVariant.product_id == Product.id, ProductVariant.deleted_at.is_(None))
+            .order_by(variant_final.asc(), ProductVariant.id.asc())
+            .limit(1)
+            .correlate(Product)
+            .scalar_subquery()
+        )
+
+    product_final = case(
+        (
+            _discount_active_sql(Product, now_param),
+            _discounted_sql(Product.price, Product.discount_type, Product.discount_value),
+        ),
+        else_=Product.price,
+    )
+
+    final_price = func.coalesce(cheapest_live(variant_final), product_final)
+    base_price = func.coalesce(cheapest_live(ProductVariant.price), Product.price)
+    discount_percentage = case(
+        (base_price > 0, func.round((base_price - final_price) / base_price * 100)),
+        else_=0,
+    )
+    return final_price, base_price, discount_percentage
 
 
 def _variant_offer_active():
@@ -310,6 +386,82 @@ def _normalize_search_term(raw: str) -> str:
     return " ".join(without_accents.lower().split())
 
 
+def _apply_search(query, search_term: str, name_norm):
+    """Filtra por coincidencia parcial, similitud trigram o todas las palabras; devuelve también
+    la condición de palabras, que se reutiliza para ordenar por relevancia."""
+    token_matches = and_(*(name_norm.like(f"%{token}%") for token in search_term.split()))
+    match_conditions = [
+        name_norm.like(f"%{search_term}%"),
+        func.word_similarity(search_term, name_norm) >= SEARCH_SIMILARITY_THRESHOLD,
+        func.similarity(search_term, name_norm) >= SEARCH_SIMILARITY_THRESHOLD,
+        token_matches,
+    ]
+    return query.filter(or_(*match_conditions)), token_matches
+
+
+def _apply_catalog_filters(
+    query, final_price_expr, discount_percentage_expr, *, catalog_id, min_price, max_price,
+    discount, in_stock, min_discount, max_stock, days,
+):
+    conditions = []
+
+    if catalog_id:
+        conditions.append(Product.catalog_id == catalog_id)
+
+    if min_price is not None:
+        conditions.append(final_price_expr >= min_price)
+
+    if max_price is not None:
+        conditions.append(final_price_expr <= max_price)
+
+    if discount:
+        conditions.append(_has_active_offer())
+
+    if in_stock:
+        conditions.append(_has_visible_stock())
+
+    if min_discount is not None:
+        # Mismo porcentaje que la tarjeta: el discount_value del padre puede ser un monto en pesos.
+        conditions += [discount_percentage_expr > 0, discount_percentage_expr >= min_discount]
+
+    if max_stock is not None:
+        conditions.append(Product.stock <= max_stock)
+
+    if days is not None:
+        conditions.append(Product.created_at >= datetime.utcnow() - timedelta(days=days))
+
+    return query.filter(*conditions) if conditions else query
+
+
+def _catalog_order(sort, final_price_expr, discount_percentage_expr, search_term, name_norm, token_matches):
+    # Product.id cierra cada orden: con empates, las páginas no repiten ni saltan productos.
+    if sort == SORT_PRICE_ASC:
+        return final_price_expr.asc(), Product.created_at.desc(), Product.id
+
+    if sort == SORT_PRICE_DESC:
+        return final_price_expr.desc(), Product.created_at.desc(), Product.id
+
+    if sort == SORT_DISCOUNT:
+        return discount_percentage_expr.desc(), Product.created_at.desc(), Product.id
+
+    if search_term:
+        relevance = case(
+            (name_norm == search_term, 0),
+            (name_norm.like(f"{search_term}%"), 1),
+            (name_norm.like(f"%{search_term}%"), 2),
+            (token_matches, 3),
+            else_=4,
+        )
+        return (
+            relevance.asc(),
+            func.word_similarity(search_term, name_norm).desc(),
+            Product.created_at.desc(),
+            Product.id,
+        )
+
+    return Product.created_at.desc(), Product.id
+
+
 def list_public_products_service(
     database: Session,
     search: str | None = None,
@@ -330,13 +482,7 @@ def list_public_products_service(
     por precio se evalúan sobre el precio final vía SQL. min_discount/max_stock/days
     alimentan los anuncios dinámicos por reglas, todo resuelto en SQL."""
 
-    final_price_expr = case(
-        (
-            and_(Product.discount_enable.is_(True), Product.discount_value > 0),
-            Product.price - (Product.price * Product.discount_value / 100),
-        ),
-        else_=Product.price,
-    )
+    final_price_expr, _, discount_percentage_expr = card_price_sql()
 
     query = (
         database.query(Product)
@@ -346,72 +492,29 @@ def list_public_products_service(
     )
 
     search_term = _normalize_search_term(search) if search else ""
-    search_tokens = search_term.split()
     name_norm = func.rehni_search_norm(Product.name)
-    token_matches = (
-        and_(*(name_norm.like(f"%{token}%") for token in search_tokens))
-        if search_tokens
-        else None
-    )
+    token_matches = None
 
     if search_term:
-        match_conditions = [
-            name_norm.like(f"%{search_term}%"),
-            func.word_similarity(search_term, name_norm) >= SEARCH_SIMILARITY_THRESHOLD,
-            func.similarity(search_term, name_norm) >= SEARCH_SIMILARITY_THRESHOLD,
-        ]
-        if token_matches is not None:
-            match_conditions.append(token_matches)
-        query = query.filter(or_(*match_conditions))
+        query, token_matches = _apply_search(query, search_term, name_norm)
 
-    if catalog_id:
-        query = query.filter(Product.catalog_id == catalog_id)
+    query = _apply_catalog_filters(
+        query,
+        final_price_expr,
+        discount_percentage_expr,
+        catalog_id=catalog_id,
+        min_price=min_price,
+        max_price=max_price,
+        discount=discount,
+        in_stock=in_stock,
+        min_discount=min_discount,
+        max_stock=max_stock,
+        days=days,
+    )
 
-    if min_price is not None:
-        query = query.filter(final_price_expr >= min_price)
-
-    if max_price is not None:
-        query = query.filter(final_price_expr <= max_price)
-
-    if discount:
-        query = query.filter(_has_active_offer())
-
-    if in_stock:
-        query = query.filter(_has_visible_stock())
-
-    if min_discount is not None:
-        query = query.filter(
-            Product.discount_enable.is_(True), Product.discount_value >= min_discount
-        )
-
-    if max_stock is not None:
-        query = query.filter(Product.stock <= max_stock)
-
-    if days is not None:
-        cutoff = datetime.utcnow() - timedelta(days=days)
-        query = query.filter(Product.created_at >= cutoff)
-
-    if sort == SORT_PRICE_ASC:
-        query = query.order_by(final_price_expr.asc())
-    elif sort == SORT_PRICE_DESC:
-        query = query.order_by(final_price_expr.desc())
-    elif sort == SORT_DISCOUNT:
-        query = query.order_by(Product.discount_value.desc(), Product.created_at.desc())
-    elif search_term:
-        relevance = case(
-            (name_norm == search_term, 0),
-            (name_norm.like(f"{search_term}%"), 1),
-            (name_norm.like(f"%{search_term}%"), 2),
-            (token_matches, 3),
-            else_=4,
-        )
-        query = query.order_by(
-            relevance.asc(),
-            func.word_similarity(search_term, name_norm).desc(),
-            Product.created_at.desc(),
-        )
-    else:
-        query = query.order_by(Product.created_at.desc())
+    query = query.order_by(
+        *_catalog_order(sort, final_price_expr, discount_percentage_expr, search_term, name_norm, token_matches)
+    )
 
     total = query.count()
     offset = (page - 1) * limit

@@ -24,13 +24,8 @@ def _int_env(name: str, default: int, minimum: int, maximum: int) -> int:
 
 class config():
     URL_DATABASE = os.getenv("URL_DATABASE")
-    # Cadena de conexión que usa la app para tráfico normal: pasa por PgBouncer
-    # (pool en modo transaction) cuando está configurada. Si no está definida
-    # (p.ej. con el backend fuera de docker-compose.yml, sin PgBouncer), cae a
-    # URL_DATABASE y el backend se conecta directo a Postgres, igual que antes.
-    # Alembic (alembic/env.py) sigue usando URL_DATABASE a propósito: las
-    # migraciones deben ir directo a Postgres, no a través del pool de
-    # transacción de PgBouncer.
+    # La app pasa por PgBouncer si está definida (si no, va directo a Postgres). Alembic usa
+    # URL_DATABASE a propósito: las migraciones no deben ir por el pool en modo transaction.
     URL_DATABASE_POOLED = os.getenv("URL_DATABASE_POOLED") or URL_DATABASE
     SECRET_KEY = os.getenv("SECRET_KEY")
     ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
@@ -41,9 +36,6 @@ class config():
     MINIO_URL = os.getenv("MINIO_URL")
     MINIO_ROOT_USER = os.getenv("MINIO_ROOT_USER")
     MINIO_ROOT_PASSWORD = os.getenv("MINIO_ROOT_PASSWORD")
-    ADMIN_NAME = os.getenv("USER_NAME_ADMIN")
-    ADMIN_DEFAULT = os.getenv("ADMIN_DEFAULT")
-    PASSWORD_DEFAULT = os.getenv("PASSWORD_DEFAULT")
     OWNER_NAME = os.getenv("USER_NAME_OWNER")
     OWNER_DEFAULT = os.getenv("OWNER_DEFAULT")
     OWNER_PASSWORD_DEFAULT = os.getenv("OWNER_PASSWORD_DEFAULT")
@@ -62,20 +54,17 @@ class config():
     REQUEST_LIMIT = int(os.getenv("REQUEST_LIMIT", "100"))
     TIME_WINDOW = int(os.getenv("TIME_WINDOW", "60"))
 
-    # Presupuesto de concurrencia y conexiones (ver «Ajustes de rendimiento» en RehniMarket-backend/.env.example).
-    # Los endpoints son síncronos: corren en el threadpool de anyio
-    # (THREADPOOL_SIZE hilos por proceso). Una petición puede seguir
-    # reteniendo su conexión después de liberar el hilo (serialización y cierre
-    # de get_db), por eso el pool debe ser MAYOR que el threadpool.
+    # Una petición puede retener su conexión después de liberar el hilo (serialización y cierre de
+    # get_db), por eso el pool debe ser MAYOR que el threadpool (THREADPOOL_SIZE hilos por proceso).
     UVICORN_WORKERS = _int_env("UVICORN_WORKERS", 1, 1, 16)
     THREADPOOL_SIZE = _int_env("THREADPOOL_SIZE", 40, 4, 200)
     DB_POOL_SIZE = _int_env("DB_POOL_SIZE", 20, 1, 100)
     DB_MAX_OVERFLOW = _int_env("DB_MAX_OVERFLOW", 30, 0, 100)
     DB_POOL_TIMEOUT = _int_env("DB_POOL_TIMEOUT", 5, 1, 30)
     DB_POOL_RECYCLE = _int_env("DB_POOL_RECYCLE", 1800, 60, 86400)
-    # Máximo de clientes que PgBouncer acepta (MAX_CLIENT_CONN en compose).
+    # Máximo de clientes que PgBouncer acepta (MAX_CLIENT_CONN en compose, mismo valor por defecto).
     # Se repite aquí solo para validar el presupuesto al arrancar.
-    PGBOUNCER_MAX_CLIENT_CONN = _int_env("PGBOUNCER_MAX_CLIENT_CONN", 200, 1, 100000)
+    PGBOUNCER_MAX_CLIENT_CONN = _int_env("PGBOUNCER_MAX_CLIENT_CONN", 1200, 1, 100000)
     DB_MAX_BACKEND_CONNECTIONS = (DB_POOL_SIZE + DB_MAX_OVERFLOW) * UVICORN_WORKERS
 
     if DB_POOL_SIZE + DB_MAX_OVERFLOW < THREADPOOL_SIZE:
@@ -112,5 +101,10 @@ class config():
     # Remitente visible. Hace falta cuando el usuario SMTP no es una dirección de
     # correo (Brevo, SendGrid, OCI Email Delivery); por defecto, SMTP_USERNAME.
     EMAIL_FROM = os.getenv("EMAIL_FROM") or SMTP_USERNAME
+    # Nombre visible del remitente ("Rehni Market <cuenta@…>"). Vacío: solo la dirección, como antes.
+    EMAIL_FROM_NAME = (os.getenv("EMAIL_FROM_NAME") or "").strip()
+    # Reply-To con el correo público de contacto (configurado por el owner). Solo se activa si el
+    # proveedor SMTP lo permite para la cuenta remitente; por defecto, desactivado.
+    EMAIL_REPLY_TO_CONTACT = os.getenv("EMAIL_REPLY_TO_CONTACT", "false").lower() == "true"
 
 config = config()

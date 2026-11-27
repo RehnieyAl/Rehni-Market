@@ -1,10 +1,12 @@
+"""Modelos ORM de productos (identidad del artículo) y sus imágenes (tablas products y product_images)."""
+
 from sqlalchemy import String,Numeric,Boolean,Text,ForeignKey,Integer,DateTime
 from decimal import Decimal
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 class Product(Base):
 

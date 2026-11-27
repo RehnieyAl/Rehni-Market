@@ -1,6 +1,8 @@
+"""Acceso a datos de las cuentas bancarias de una empresa: consulta propia, predeterminada y bloqueo."""
 from sqlalchemy.orm import Session
 from uuid import UUID
 
+from app.models.ModelCompany import Company
 from app.models.ModelCompanyBankAccount import CompanyBankAccount
 
 
@@ -62,3 +64,9 @@ def is_bank_account_referenced_by_payout(database: Session, bank_account_id: UUI
         .first()
         is not None
     )
+
+
+def lock_company_accounts(database: Session, company_id: UUID) -> None:
+    """SELECT ... FOR UPDATE sobre la empresa: serializa los cambios de cuenta principal de una misma
+    empresa, para que dos peticiones simultáneas no choquen con el índice único de la predeterminada."""
+    database.query(Company.id).filter(Company.id == company_id).with_for_update().one()

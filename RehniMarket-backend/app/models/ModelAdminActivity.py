@@ -1,3 +1,5 @@
+"""Modelo ORM de la actividad registrada en el panel admin (tabla admin_activities)."""
+
 from datetime import datetime, timezone
 from enum import Enum as PyEnum
 import uuid
@@ -6,7 +8,7 @@ from sqlalchemy import DateTime, Enum, ForeignKey, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 
 class AdminActivityAction(str, PyEnum):

@@ -26,6 +26,23 @@ from app.services.DashboardService.admin.AdvertisementTargeting import (
 ADVERTISEMENT_NAS_PATH = "advertisements/"
 
 
+# Targets que apuntan a un registro: modelo, mensaje si falta el id y error si no existe.
+_REFERENCE_TARGETS = {
+    AdvertisementTargetType.PRODUCT: (
+        Product, "Selecciona un producto para este anuncio.",
+        ErrorCodes.PRODUCT_NOT_FOUND, "El producto seleccionado no existe.",
+    ),
+    AdvertisementTargetType.CATEGORY: (
+        Catalog, "Selecciona una categoría para este anuncio.",
+        ErrorCodes.CATALOG_NOT_FOUND, "La categoría seleccionada no existe.",
+    ),
+    AdvertisementTargetType.COMPANY: (
+        Company, "Selecciona una empresa para este anuncio.",
+        ErrorCodes.COMPANY_NOT_FOUND, "La empresa seleccionada no existe.",
+    ),
+}
+
+
 def _validate_target_reference(
     database: Session,
     target_type,
@@ -34,40 +51,23 @@ def _validate_target_reference(
     target_company_id: UUID | None,
 ) -> None:
     """Confirma que el producto/categoría/empresa del target realmente existan."""
+    reference = _REFERENCE_TARGETS.get(target_type)
 
-    if target_type == AdvertisementTargetType.PRODUCT:
-        if not target_product_id:
-            api_error(400, ErrorCodes.VALIDATION_ERROR, "Selecciona un producto para este anuncio.")
+    if not reference:
+        return
 
-        if not database.query(Product.id).filter(Product.id == target_product_id).first():
-            api_error(404, ErrorCodes.PRODUCT_NOT_FOUND, "El producto seleccionado no existe.")
+    model, missing_message, not_found_code, not_found_message = reference
+    target_id = {
+        AdvertisementTargetType.PRODUCT: target_product_id,
+        AdvertisementTargetType.CATEGORY: target_catalog_id,
+        AdvertisementTargetType.COMPANY: target_company_id,
+    }[target_type]
 
-    elif target_type == AdvertisementTargetType.CATEGORY:
-        if not target_catalog_id:
-            api_error(400, ErrorCodes.VALIDATION_ERROR, "Selecciona una categoría para este anuncio.")
+    if not target_id:
+        api_error(400, ErrorCodes.VALIDATION_ERROR, missing_message)
 
-        if not database.query(Catalog.id).filter(Catalog.id == target_catalog_id).first():
-            api_error(404, ErrorCodes.CATALOG_NOT_FOUND, "La categoría seleccionada no existe.")
-
-    elif target_type == AdvertisementTargetType.COMPANY:
-        if not target_company_id:
-            api_error(400, ErrorCodes.VALIDATION_ERROR, "Selecciona una empresa para este anuncio.")
-
-        if not database.query(Company.id).filter(Company.id == target_company_id).first():
-            api_error(404, ErrorCodes.COMPANY_NOT_FOUND, "La empresa seleccionada no existe.")
-
-    elif target_type in (
-        AdvertisementTargetType.PROMOTION,
-        AdvertisementTargetType.BLACK_FRIDAY,
-        AdvertisementTargetType.CYBER_DAYS,
-    ):
-        pass
-
-    elif target_type == AdvertisementTargetType.LIQUIDATION:
-        pass
-
-    elif target_type == AdvertisementTargetType.NEW_RELEASE:
-        pass
+    if not database.query(model.id).filter(model.id == target_id).first():
+        api_error(404, not_found_code, not_found_message)
 
 
 def _resolve_and_require_destination(data) -> str | None:
@@ -207,10 +207,7 @@ def create_advertisement_service(
             api_error(
                 500,
                 ErrorCodes.INTERNAL_SERVER_ERROR,
-                desktop_result.get(
-                    "message",
-                    "No se pudo subir la imagen del anuncio.",
-                ),
+                "No se pudo subir la imagen del anuncio.",
             )
 
 
@@ -227,10 +224,7 @@ def create_advertisement_service(
                 api_error(
                     500,
                     ErrorCodes.INTERNAL_SERVER_ERROR,
-                    mobile_result.get(
-                        "message",
-                        "No se pudo subir la imagen móvil del anuncio.",
-                    ),
+                    "No se pudo subir la imagen móvil del anuncio.",
                 )
 
             mobile_path = mobile_result["path"]
@@ -294,6 +288,76 @@ def create_advertisement_service(
         )
 
 
+_TARGET_FIELDS = (
+    "target_type",
+    "target_product_id",
+    "target_catalog_id",
+    "target_company_id",
+    "minimum_discount",
+    "maximum_stock",
+    "max_age_days",
+)
+
+
+def _apply_target_update(database: Session, advertisement: Advertisement, data) -> None:
+    if data.clear_target:
+        for field in _TARGET_FIELDS:
+            setattr(advertisement, field, None)
+        return
+
+    if data.target_type is None:
+        return
+
+    _validate_target_reference(
+        database,
+        data.target_type,
+        data.target_product_id,
+        data.target_catalog_id,
+        data.target_company_id,
+    )
+    for field in _TARGET_FIELDS:
+        setattr(advertisement, field, getattr(data, field))
+
+
+def _apply_button_link_update(advertisement: Advertisement, data) -> None:
+    """Con target, el enlace se calcula; sin target, se respeta el button_link enviado."""
+    if advertisement.target_type is not None:
+        resolved_link = resolve_advertisement_destination(
+            **{field: getattr(advertisement, field) for field in _TARGET_FIELDS}
+        )
+
+        if resolved_link is None:
+            api_error(
+                400,
+                ErrorCodes.VALIDATION_ERROR,
+                "Completa la configuración requerida para este tipo de anuncio.",
+            )
+
+        advertisement.button_link = resolved_link
+
+    elif data.button_link is not None:
+        advertisement.button_link = data.button_link.strip() or None
+
+
+def _replace_image(nas, advertisement: Advertisement, attribute: str, upload, folder: str, error: str) -> None:
+    previous = getattr(advertisement, attribute)
+    result = nas.upload_file(upload, f"{ADVERTISEMENT_NAS_PATH}{folder}/")
+
+    if not result.get("success"):
+        api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, error)
+
+    setattr(advertisement, attribute, result["path"])
+
+    if previous:
+        nas.delete_file(previous.removeprefix("uploads/"))
+
+
+def _remove_mobile_image(nas, advertisement: Advertisement) -> None:
+    if advertisement.mobile_image_url:
+        nas.delete_file(advertisement.mobile_image_url.removeprefix("uploads/"))
+        advertisement.mobile_image_url = None
+
+
 def update_advertisement_service(
     database: Session,
     advertisement_id: UUID,
@@ -302,65 +366,11 @@ def update_advertisement_service(
     mobile_image,
     nas,
 ) -> AdvertisementResponse:
-
     try:
+        advertisement = _get_advertisement_or_404(database, advertisement_id)
 
-        advertisement = _get_advertisement_or_404(
-            database,
-            advertisement_id,
-        )
-
-        if data.clear_target:
-            advertisement.target_type = None
-            advertisement.target_product_id = None
-            advertisement.target_catalog_id = None
-            advertisement.target_company_id = None
-            advertisement.minimum_discount = None
-            advertisement.maximum_stock = None
-            advertisement.max_age_days = None
-
-        elif data.target_type is not None:
-            _validate_target_reference(
-                database,
-                data.target_type,
-                data.target_product_id,
-                data.target_catalog_id,
-                data.target_company_id,
-            )
-
-            advertisement.target_type = data.target_type
-            advertisement.target_product_id = data.target_product_id
-            advertisement.target_catalog_id = data.target_catalog_id
-            advertisement.target_company_id = data.target_company_id
-            advertisement.minimum_discount = data.minimum_discount
-            advertisement.maximum_stock = data.maximum_stock
-            advertisement.max_age_days = data.max_age_days
-
-        if advertisement.target_type is not None:
-            resolved_link = resolve_advertisement_destination(
-                target_type=advertisement.target_type,
-                target_product_id=advertisement.target_product_id,
-                target_catalog_id=advertisement.target_catalog_id,
-                target_company_id=advertisement.target_company_id,
-                minimum_discount=advertisement.minimum_discount,
-                maximum_stock=advertisement.maximum_stock,
-                max_age_days=advertisement.max_age_days,
-            )
-
-            if resolved_link is None:
-                api_error(
-                    400,
-                    ErrorCodes.VALIDATION_ERROR,
-                    "Completa la configuración requerida para este tipo de anuncio.",
-                )
-
-            advertisement.button_link = resolved_link
-
-        elif data.button_link is not None:
-            advertisement.button_link = (
-                data.button_link.strip()
-                or None
-            )
+        _apply_target_update(database, advertisement, data)
+        _apply_button_link_update(advertisement, data)
 
         if data.order is not None:
             advertisement.order = data.order
@@ -369,86 +379,14 @@ def update_advertisement_service(
             advertisement.is_active = data.is_active
 
         if image:
-
-            previous_image = advertisement.image_url
-
-            desktop_result = nas.upload_file(
-                image,
-                f"{ADVERTISEMENT_NAS_PATH}desktop/",
-            )
-
-            if not desktop_result.get("success"):
-                api_error(
-                    500,
-                    ErrorCodes.INTERNAL_SERVER_ERROR,
-                    desktop_result.get(
-                        "message",
-                        "No se pudo actualizar la imagen desktop.",
-                    ),
-                )
-
-            advertisement.image_url = (
-                desktop_result["path"]
-            )
-
-            if previous_image:
-
-                nas.delete_file(
-                    previous_image.removeprefix(
-                        "uploads/"
-                    )
-                )
-
+            _replace_image(nas, advertisement, "image_url", image, "desktop",
+                           "No se pudo actualizar la imagen desktop.")
 
         if mobile_image:
-
-            previous_mobile_image = (
-                advertisement.mobile_image_url
-            )
-
-            mobile_result = nas.upload_file(
-                mobile_image,
-                f"{ADVERTISEMENT_NAS_PATH}mobile/",
-            )
-
-            if not mobile_result.get("success"):
-                api_error(
-                    500,
-                    ErrorCodes.INTERNAL_SERVER_ERROR,
-                    mobile_result.get(
-                        "message",
-                        "No se pudo actualizar la imagen móvil.",
-                    ),
-                )
-
-            advertisement.mobile_image_url = (
-                mobile_result["path"]
-            )
-
-            if previous_mobile_image:
-
-                nas.delete_file(
-                    previous_mobile_image.removeprefix(
-                        "uploads/"
-                    )
-                )
-
+            _replace_image(nas, advertisement, "mobile_image_url", mobile_image, "mobile",
+                           "No se pudo actualizar la imagen móvil.")
         elif data.remove_mobile_image:
-
-            previous_mobile_image = (
-                advertisement.mobile_image_url
-            )
-
-            if previous_mobile_image:
-
-                nas.delete_file(
-                    previous_mobile_image.removeprefix(
-                        "uploads/"
-                    )
-                )
-
-                advertisement.mobile_image_url = None
-
+            _remove_mobile_image(nas, advertisement)
 
         database.commit()
 

@@ -1,7 +1,9 @@
+"""Acceso a datos del panel admin de usuarios: búsqueda por correo (sin distinguir mayúsculas) y listado paginado."""
 
 from sqlalchemy.orm import Session, selectinload
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, func, or_
 from app.models.ModelUser import Users
+from app.schemas.SchemaEmail import normalize_email
 from uuid import UUID
 
 
@@ -11,7 +13,7 @@ def get_user_by_email_repository(
 ):
     return (
         database.query(Users)
-        .filter(Users.email == email)
+        .filter(func.lower(Users.email) == normalize_email(email))
         .first()
     )
 

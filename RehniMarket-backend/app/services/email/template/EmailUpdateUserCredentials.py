@@ -1,5 +1,6 @@
 from app.services.email.EmailService import send_email
 from app.services.email.template.EmailBase import (
+    highlight,
     email_wrapper,
     escape,
     heading_html,
@@ -19,7 +20,7 @@ def EmailUpdateUserCredentials(
     content = (
         heading_html("Tus credenciales fueron actualizadas")
         + paragraph_html(
-            'Un administrador de <strong style="color:#6D0F2D;">Rehni Market</strong> ha '
+            'Un administrador de ' + highlight("Rehni Market") + ' ha '
             "actualizado la información de acceso asociada a tu cuenta."
         )
         + info_box(

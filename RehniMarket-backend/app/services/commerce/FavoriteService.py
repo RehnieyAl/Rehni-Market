@@ -1,4 +1,4 @@
-import traceback
+import logging
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -18,6 +18,8 @@ from app.schemas.SchemaCommerce.SchemaFavorite import (
 
 from app.services.pricing import resolve_product_card_price
 from app.services.variants.images import product_display_image_url
+
+logger = logging.getLogger(__name__)
 
 
 def _require_buyer(role: str):
@@ -96,7 +98,7 @@ def add_favorite_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
@@ -123,5 +125,5 @@ def remove_favorite_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")

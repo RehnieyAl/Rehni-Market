@@ -65,7 +65,7 @@ def EmailPayoutProcessed(
     )
 
     content = (
-        heading_html("¡Tu liquidación mensual fue realizada!")
+        heading_html("Tu liquidación mensual fue pagada")
         + greeting_html(company_name)
         + paragraph_html(
             "Ya procesamos la liquidación de tus ventas del periodo indicado y "

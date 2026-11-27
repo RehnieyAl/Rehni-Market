@@ -1,4 +1,4 @@
-import traceback
+import logging
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -21,6 +21,8 @@ from app.schemas.SchemaCommerce.SchemaReport import (
     ReportsPaginatedResponse,
     UpdateReportStatusRequest,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def list_reports_service(
@@ -197,5 +199,5 @@ def update_report_status_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")

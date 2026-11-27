@@ -1,27 +1,24 @@
+"""Códigos de un solo uso (verificación de correo y recuperación de contraseña): emisión, reenvío con
+cooldown y topes de frecuencia, validación con límite de intentos y envío del correo tras el commit."""
+
+import math
+import secrets
+import uuid
 from datetime import datetime, timedelta
 from enum import Enum
-import math
-import random
-import uuid
 
+from sqlalchemy import event
 from sqlalchemy.orm import Session
 
 from app.core.ErrorCodes import ErrorCodes
 from app.core.Exceptions import api_error
-
+from app.middleware.RateLimitMiddleware import retry_after_if_limited
 from app.models.ModelCode import TypeCode
-
-from app.repository.CodeRepository import (
-    create_code,
-    get_code,
-    delete_code,
-    delete_user_codes
-)
-
+from app.models.ModelUser import Users
+from app.repository.CodeRepository import create_code, delete_code, delete_user_codes, get_code
 from app.services.email.template.EmailForgotPassword import EmailForgotPassword
-from app.services.email.template.EmailRegisterUser import EmailRegisterUser
 from app.services.email.template.EmailRegisterCompany import EmailRegisterCompany
-
+from app.services.email.template.EmailRegisterUser import EmailRegisterUser
 
 CODE_LENGTH = 6
 
@@ -34,13 +31,23 @@ CODE_EXPIRATION_MINUTES = {
     TypeCode.CHANGE_EMAIL: RESET_PASSWORD_EXPIRATION_MINUTES,
 }
 
+# Fuente única del cooldown: el frontend solo muestra el `resend_available_in` que recibe.
 RESEND_COOLDOWN_SECONDS = 60
+# Intentos fallidos por código: con 6 dígitos y este tope, adivinar uno es inviable.
+MAX_FAILED_ATTEMPTS = 5
+# Topes por ventana para que nadie use la plataforma para inundar un buzón.
+SEND_LIMIT_PER_ADDRESS = 5
+SEND_LIMIT_PER_IP = 20
+SEND_LIMIT_WINDOW_SECONDS = 3600
+
+_PENDING_SENDS = "pending_code_emails"
 
 
 class VerifyCodeStatus(str, Enum):
     VALID = "VALID"
     INVALID = "INVALID"
     EXPIRED = "EXPIRED"
+    LOCKED = "LOCKED"
 
 
 def _expiration_minutes(code_type: TypeCode) -> int:
@@ -48,16 +55,12 @@ def _expiration_minutes(code_type: TypeCode) -> int:
 
 
 def generate_code(length: int = CODE_LENGTH) -> str:
-
-    return "".join(random.choices("0123456789", k=length))
+    return "".join(secrets.choice("0123456789") for _ in range(length))
 
 
 def verification_state(code_entry, now: datetime | None = None) -> dict:
-    """Segundos que le quedan al codigo antes de expirar y segundos que
-    faltan para poder pedir un reenvio. Ambos se calculan en el backend a
-    partir de created_at / expires_at reales - el contador del frontend es
-    solo informativo. Se redondea hacia arriba para que el contador
-    arranque exactamente en 05:00 / 01:00."""
+    """Segundos de vida del código y segundos para poder reenviarlo, calculados en el backend con los
+    datos guardados; se redondea hacia arriba para que los contadores arranquen en 05:00 / 01:00."""
 
     now = now or datetime.utcnow()
 
@@ -72,8 +75,27 @@ def verification_state(code_entry, now: datetime | None = None) -> dict:
     }
 
 
-def send_code(email: str, code: str, code_type: TypeCode, role: str = None, company_name: str = None) -> None:
+@event.listens_for(Session, "after_commit")
+def _send_pending_codes(session: Session) -> None:
+    for send in session.info.pop(_PENDING_SENDS, []):
+        send()
 
+
+@event.listens_for(Session, "after_rollback")
+def _discard_pending_codes(session: Session) -> None:
+    session.info.pop(_PENDING_SENDS, None)
+
+
+def _send_after_commit(database: Session, email: str, code: str, code_type: TypeCode, role, company_name) -> None:
+    """El correo sale solo si la transacción que guarda el código se confirma: si falla, el código
+    anterior sigue vigente y el usuario no recibe uno que nunca existió."""
+
+    database.info.setdefault(_PENDING_SENDS, []).append(
+        lambda: send_code(email, code, code_type, role, company_name)
+    )
+
+
+def send_code(email: str, code: str, code_type: TypeCode, role: str = None, company_name: str = None) -> None:
     expiration_minutes = _expiration_minutes(code_type)
 
     if code_type == TypeCode.RESET_PASSWORD:
@@ -86,54 +108,70 @@ def send_code(email: str, code: str, code_type: TypeCode, role: str = None, comp
             EmailRegisterUser(email, code, expiration_minutes)
 
 
-def create_code_service(database: Session, user_id: uuid.UUID, code_type: TypeCode, now: datetime | None = None):
-    """Invalida cualquier codigo previo de ese usuario+tipo y crea uno
-    nuevo. Garantiza la regla "como maximo UN codigo activo por cuenta".
+def lock_account(database: Session, user_id: uuid.UUID) -> None:
+    """Serializa las emisiones de código de una cuenta: dos reenvíos simultáneos no generan dos
+    códigos ni dos correos."""
 
-    `now` fija el instante de referencia para created_at y expires_at, de
-    modo que los contadores derivados (verification_state) arranquen
-    exactamente en 05:00 / 01:00 y no en 05:01 por el desfase de milis
-    entre una llamada a utcnow() y la siguiente."""
+    database.query(Users.id).filter(Users.id == user_id).with_for_update().first()
+
+
+def enforce_send_limits(purpose: str, address: str, client_ip: str | None) -> None:
+    """Topes por dirección y por IP en la ventana; responde 429 con Retry-After al superarlos."""
+
+    checks = [(f"code:{purpose}:{address}", SEND_LIMIT_PER_ADDRESS)]
+    if client_ip:
+        checks.append((f"code-ip:{client_ip}", SEND_LIMIT_PER_IP))
+
+    for key, limit in checks:
+        retry_after = retry_after_if_limited(key, limit, SEND_LIMIT_WINDOW_SECONDS)
+        if retry_after is not None:
+            api_error(
+                429,
+                ErrorCodes.CODE_SEND_LIMIT_EXCEEDED,
+                "Solicitaste demasiados códigos. Intenta de nuevo más tarde.",
+                extra={"retry_after": retry_after},
+            )
+
+
+def cooldown_remaining(existing, now: datetime) -> int:
+    if existing is None:
+        return 0
+    return max(0, math.ceil(RESEND_COOLDOWN_SECONDS - (now - existing.created_at).total_seconds()))
+
+
+def reject_if_cooling_down(remaining: int) -> None:
+    if remaining > 0:
+        api_error(
+            429,
+            ErrorCodes.RESEND_COOLDOWN_ACTIVE,
+            "Debes esperar antes de solicitar un nuevo código.",
+            extra={"retry_after": remaining},
+        )
+
+
+def create_code_service(database: Session, user_id: uuid.UUID, code_type: TypeCode, now: datetime | None = None):
+    """Invalida los códigos previos de la cuenta y tipo y crea uno nuevo: como máximo uno vigente.
+    `now` fija created_at y expires_at para que los contadores derivados arranquen exactos."""
 
     now = now or datetime.utcnow()
 
     delete_user_codes(database, user_id, code_type)
 
-    code = generate_code()
-
-    new_code = create_code(
+    return create_code(
         database,
         user_id,
-        code,
+        generate_code(),
         code_type,
         now + timedelta(minutes=_expiration_minutes(code_type)),
         created_at=now,
     )
 
-    return new_code
-
-
-def create_code_and_send_service(database: Session, user_id: uuid.UUID, email: str, code_type: TypeCode, role: str = None, company_name: str = None):
-    """Genera un codigo nuevo y lo envia SIN aplicar cooldown. Se usa para
-    los codigos de recuperacion de contrasena (RESET_PASSWORD), cuyo flujo
-    no expone un boton de reenvio con cooldown."""
-
-    new_code = create_code_service(database, user_id, code_type)
-
-    send_code(email, new_code.code, code_type, role, company_name)
-
-    return {
-        "message": "Código enviado correctamente."
-    }
-
 
 def issue_verification_code(database: Session, user_id: uuid.UUID, email: str, role: str = None, company_name: str = None) -> dict:
-    """Garantiza que exista un codigo de verificacion ACTIVO para la
-    cuenta. Solo genera y envia uno nuevo si no hay codigo o el actual ya
-    expiro. NO aplica cooldown porque no es una solicitud explicita de
-    reenvio (la disparan el registro y el login). Devuelve el estado de
-    los dos contadores (expiracion del codigo y cooldown de reenvio)."""
+    """Garantiza un código de verificación vigente (registro y login): solo emite uno nuevo si no hay
+    código o el actual expiró, así reintentar el login no envía más correos."""
 
+    lock_account(database, user_id)
     now = datetime.utcnow()
 
     existing = get_code(database, user_id, TypeCode.VERIFY_EMAIL)
@@ -142,66 +180,63 @@ def issue_verification_code(database: Session, user_id: uuid.UUID, email: str, r
         return verification_state(existing, now)
 
     new_code = create_code_service(database, user_id, TypeCode.VERIFY_EMAIL, now=now)
-
-    send_code(email, new_code.code, TypeCode.VERIFY_EMAIL, role, company_name)
+    _send_after_commit(database, email, new_code.code, TypeCode.VERIFY_EMAIL, role, company_name)
 
     return verification_state(new_code, now)
 
 
-def resend_verification_code(database: Session, user_id: uuid.UUID, email: str, role: str = None, company_name: str = None) -> dict:
-    """Reenvio EXPLICITO (boton "Reenviar codigo"):
+def resend_verification_code(
+    database: Session,
+    user_id: uuid.UUID,
+    email: str,
+    role: str = None,
+    company_name: str = None,
+    client_ip: str | None = None,
+) -> dict:
+    """Reenvío explícito ("Reenviar código"): cooldown de 60 s, topes por cuenta e IP, invalida el
+    código anterior y emite uno nuevo de 5 minutos."""
 
-    1. Aplica el cooldown de 60 s contra el codigo activo (rechaza con
-       429 si aun no paso).
-    2. Invalida el codigo anterior y genera uno nuevo.
-    3. Establece una expiracion nueva de 5 min.
-    4. Envia el nuevo codigo al correo.
-    5. Devuelve el estado de ambos contadores reiniciados (05:00 / 01:00).
-    """
-
+    lock_account(database, user_id)
     now = datetime.utcnow()
 
-    existing = get_code(database, user_id, TypeCode.VERIFY_EMAIL)
-
-    if existing:
-        elapsed = (now - existing.created_at).total_seconds()
-
-        if elapsed < RESEND_COOLDOWN_SECONDS:
-            retry_after = math.ceil(RESEND_COOLDOWN_SECONDS - elapsed)
-
-            api_error(
-                429,
-                ErrorCodes.RESEND_COOLDOWN_ACTIVE,
-                "Debes esperar antes de solicitar un nuevo código de verificación.",
-                extra={"retry_after": retry_after},
-            )
+    reject_if_cooling_down(cooldown_remaining(get_code(database, user_id, TypeCode.VERIFY_EMAIL), now))
+    enforce_send_limits("verify", str(user_id), client_ip)
 
     new_code = create_code_service(database, user_id, TypeCode.VERIFY_EMAIL, now=now)
-
-    send_code(email, new_code.code, TypeCode.VERIFY_EMAIL, role, company_name)
+    _send_after_commit(database, email, new_code.code, TypeCode.VERIFY_EMAIL, role, company_name)
 
     return verification_state(new_code, now)
+
+
+def issue_reset_code(database: Session, user_id: uuid.UUID, email: str, now: datetime) -> None:
+    """Código de recuperación nuevo (la solicitud inicial y cada reenvío). El cooldown y los topes los
+    aplica el llamador antes, sin revelar si la cuenta existe."""
+
+    new_code = create_code_service(database, user_id, TypeCode.RESET_PASSWORD, now=now)
+    _send_after_commit(database, email, new_code.code, TypeCode.RESET_PASSWORD, None, None)
 
 
 def verify_code_service(database: Session, user_id: uuid.UUID, code: str, code_type: TypeCode) -> VerifyCodeStatus:
-    """Valida el codigo contra la cuenta:
+    """Valida el código vigente de la cuenta. Un acierto lo consume; un fallo suma un intento y al
+    llegar a MAX_FAILED_ATTEMPTS el código se invalida. El llamador debe confirmar la transacción
+    también en los fallos, para que el contador de intentos persista."""
 
-    - codigo activo para esa cuenta+tipo,
-    - codigo correcto (comparacion de string exacta, sin normalizar),
-    - codigo no expirado (se compara expires_at real contra utcnow).
-    """
-
-    code_entry = get_code(database, user_id, code_type)
+    code_entry = get_code(database, user_id, code_type, lock=True)
 
     if not code_entry:
-        return VerifyCodeStatus.INVALID
-    if code_entry.code != code:
         return VerifyCodeStatus.INVALID
 
     if code_entry.expires_at <= datetime.utcnow():
         delete_code(database, code_entry)
-
         return VerifyCodeStatus.EXPIRED
+
+    if not secrets.compare_digest(code_entry.code.encode(), (code or "").encode()):
+        code_entry.failed_attempts += 1
+        if code_entry.failed_attempts >= MAX_FAILED_ATTEMPTS:
+            delete_code(database, code_entry)
+            return VerifyCodeStatus.LOCKED
+        database.flush()
+        return VerifyCodeStatus.INVALID
 
     delete_code(database, code_entry)
 

@@ -140,15 +140,22 @@ en el primer acceso a cada dominio.
 
 ## 7. Datos base y cuenta owner
 
-El backend crea los datos base en cada arranque, aunque `RUN_SEED=false` (`app/utils/base_data.py`, #53):
+El backend **no siembra nada al arrancar** con `RUN_SEED=false` (predeterminado). En una base nueva,
+después del primer arranque, se crean los datos base a mano (`app/utils/base_data.py`):
+
+```bash
+bash scripts/datos-base.sh        # idempotente: no duplica ni modifica lo que ya existe
+```
 
 | Datos | Cuándo se crean | Detalle |
 |---|---|---|
-| Roles `user`, `company`, `admin`, `owner` | **Siempre**, en cada arranque si faltan | Sin el rol `user` el registro falla |
-| Categorías (120), sus especificaciones, atributos de variante y opciones | **Siempre**, solo si la tabla de categorías está vacía | Después las administra el panel; volver a sembrarlas desharía sus cambios |
-| Transportadoras (4) | **Siempre**, solo si no hay ninguna | Las usan los envíos de los pedidos |
+| Roles `user`, `company`, `admin`, `owner` | Con `scripts/datos-base.sh` o al arrancar con `RUN_SEED=true`, si faltan | Sin el rol `user` el registro falla |
+| Categorías (120), sus especificaciones, atributos de variante y opciones | Igual, solo si la tabla de categorías está vacía | Después las administra el panel; volver a sembrarlas desharía sus cambios |
+| Transportadoras (4) | Igual, solo si no hay ninguna | Las usan los envíos de los pedidos |
 | Cuenta owner del seed (`USER_NAME_OWNER`, `OWNER_DEFAULT`, `OWNER_PASSWORD_DEFAULT`) | Solo con `RUN_SEED=true` y las tres variables con valor | En producción quedan vacías |
 | Empresas y productos de demostración | Solo con `RUN_SEED=true` | Desarrollo |
+
+Cada conjunto también se puede sembrar por separado y a mano: `docker compose exec backend uv run --no-sync python -m app.utils.seed --list` (detalle en `RehniMarket-backend/README.md`).
 
 Comprobación, sin modificar nada:
 
@@ -190,6 +197,10 @@ ID="$(/usr/local/lib/rehnimarket/backup_rehnimarket.sh | sed -n 's/^BACKUP_ID=//
 ```
 
 Revisar antes si la versión trae migraciones no compatibles hacia atrás (plan §5.2, «Clasificación de migraciones»).
+
+El backend ya no monta el volumen `backend_venv` (su entorno sale de la imagen). En un servidor
+que lo tenía, el volumen queda sin uso y sin datos de negocio; se puede quitar cuando se quiera con
+`docker volume rm rehni-market_backend_venv` (solo ese volumen, nunca `docker volume prune`).
 
 ## 10. Rollback
 
@@ -238,6 +249,11 @@ docker compose ps
 - **Un solo `.env`** con todos los secretos: `chmod 600`, fuera del repositorio. Las plantillas no llevan secretos reales.
 - **Caddy solo recibe sus 5 variables** (`SITE_ADDRESS`, `API_ADDRESS`, `HTTP_PORT`, `HTTPS_PORT`,
   `CADDY_LOCAL_CERTS`): el contenedor expuesto a Internet no tiene contraseñas ni la firma de los JWT.
+- **Cada servicio de datos recibe solo sus credenciales**: `postgres` y `pgbouncer` las de
+  PostgreSQL y `minio` las de MinIO (obligatorias con `${VAR:?}`: si faltan, compose no arranca).
+  Solo el `backend` carga el `.env` completo.
+- **El build del frontend solo recibe `VITE_API_URL`**: todo `VITE_*` queda en el bundle público.
+  El número de WhatsApp de recargas no va en el `.env`: lo publica el owner desde el panel.
 - **Swagger apagado** (`DOCS_ENABLED=false`).
 - **CORS restringido** a `https://rehnimarket.duckdns.org` (`CORS_EXTRA_ORIGINS`).
 - **Rate limit** activo (`RATE_LIMIT_ENABLED=true`), con la IP real del cliente: el backend solo

@@ -1,49 +1,20 @@
+"""Servicios del panel de empresa: cabecera, "Mi tienda", imágenes, productos propios, resumen y certificado."""
+import logging
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, UploadFile
 
 from app.models.ModelUser import Users
 from app.models.ModelProduct import Product
 from app.models.ModelCompany import CompanyCertificateEnum
-from app.schemas.SchemaDashboard.ShemaCompany import UpdateInformationCompanyRequest
-from app.services.NasService import NasService, build_media_url
+from app.repository.CompanyRepository import get_company_by_user_id
+from app.schemas.SchemaDashboard.ShemaCompany import CompanyStoreSettingsResponse, UpdateInformationCompanyRequest
+from app.services.NasService import NasService, build_media_url, build_private_media_url, require_stored
 from app.services.variants.images import product_display_image_url
 from app.core.ErrorCodes import ErrorCodes
 from app.core.Exceptions import api_error
+from app.utils.FileValidator import PDF_EXTENSIONS, validate_upload
 
-MAX_CERTIFICATE_FILE_SIZE_BYTES = 5 * 1024 * 1024
-ALLOWED_CERTIFICATE_CONTENT_TYPES = {"application/pdf"}
-ALLOWED_CERTIFICATE_EXTENSIONS = {"pdf"}
-
-
-def _validate_certificate_file(file: UploadFile) -> None:
-    extension = (
-        file.filename.rsplit(".", 1)[-1].lower()
-        if file.filename and "." in file.filename
-        else ""
-    )
-
-    if (
-        file.content_type not in ALLOWED_CERTIFICATE_CONTENT_TYPES
-        or extension not in ALLOWED_CERTIFICATE_EXTENSIONS
-    ):
-        api_error(
-            400,
-            ErrorCodes.INVALID_FILE,
-            "El certificado debe ser un archivo PDF.",
-        )
-
-    file.file.seek(0, 2)
-    size = file.file.tell()
-    file.file.seek(0)
-
-    if size > MAX_CERTIFICATE_FILE_SIZE_BYTES:
-        api_error(
-            400,
-            ErrorCodes.INVALID_FILE,
-            "El certificado debe pesar como máximo 5 MB.",
-        )
-
-
+logger = logging.getLogger(__name__)
 
 def company_dashboard_me_service(user_id,database: Session):
     user = database.query(Users).filter(Users.id == user_id).first()
@@ -78,40 +49,32 @@ def company_dashboard_me_service(user_id,database: Session):
     }
 
 
-def company_dashboard_my_profile_service(user_id: str, database: Session):
-    user = database.query(Users).filter(Users.id == user_id).first()
+def company_dashboard_my_profile_service(user_id: str, database: Session) -> CompanyStoreSettingsResponse:
+    """Configuración de "Mi tienda" de la empresa del usuario autenticado. Consulta solo la empresa:
+    la cuenta del representante no se carga ni se devuelve."""
+    company = get_company_by_user_id(database, user_id)
 
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if not company:
+        api_error(404, ErrorCodes.COMPANY_NOT_FOUND, "Empresa no encontrada.")
 
-    company = user.company
-
-    logo = (build_media_url(f"uploads/{company.CompanyLogo}")
-            if company.CompanyLogo
-            else
-            None
-            )
-    banner = (build_media_url(f"uploads/{company.CompanyBanner}")
-            if company.CompanyBanner
-            else
-            None
-            )
-
-    return {
-        "id": company.id,
-        "nameCompany": company.nameCompany,
-        "addressCompany": company.addressCompany,
-        "description": company.description,
-        "CompanyNIT": company.CompanyNIT,
-        "CompanyNITDV": company.CompanyNITDV,
-        "CompanyStatus": company.CompanyStatus,
-        "suspensionReason": company.suspension_reason,
-        "certificateStatus": company.CompanyCertificateStatus,
-        "rejectionReason": company.rejection_reason,
-        "memberAT": user.created_at,
-        "logo": logo,
-        "banner": banner,
-    }
+    return CompanyStoreSettingsResponse(
+        id=company.id,
+        nameCompany=company.nameCompany,
+        addressCompany=company.addressCompany,
+        description=company.description,
+        CompanyNIT=company.CompanyNIT,
+        CompanyNITDV=company.CompanyNITDV,
+        CompanyStatus=company.CompanyStatus,
+        suspensionReason=company.suspension_reason,
+        certificateStatus=company.CompanyCertificateStatus,
+        rejectionReason=company.rejection_reason,
+        memberAT=company.created_at,
+        logo=build_media_url(f"uploads/{company.CompanyLogo}") if company.CompanyLogo else None,
+        banner=build_media_url(f"uploads/{company.CompanyBanner}") if company.CompanyBanner else None,
+        contactEmail=company.contact_email,
+        contactPhone=company.contact_phone,
+        contactPublic=company.contact_public,
+    )
 
 def company_dashboard_upgrade_my_profile_service(user_id: str, CompanyRequest:UpdateInformationCompanyRequest,database: Session):
     user = database.query(Users).filter(Users.id == user_id).first()
@@ -131,6 +94,15 @@ def company_dashboard_upgrade_my_profile_service(user_id: str, CompanyRequest:Up
 
         if CompanyRequest.description is not None:
             company.description = CompanyRequest.description
+
+        if CompanyRequest.contactEmail is not None:
+            company.contact_email = CompanyRequest.contactEmail or None
+
+        if CompanyRequest.contactPhone is not None:
+            company.contact_phone = CompanyRequest.contactPhone or None
+
+        if CompanyRequest.contactPublic is not None:
+            company.contact_public = CompanyRequest.contactPublic
 
         database.commit()
         database.refresh(company)
@@ -167,11 +139,11 @@ def company_dasboard_upgrade_my_photo_and_banner_profile(
     
     if photo_profile:
         new_logo = nas.upload_file(photo_profile, f"companies/{company.CompanyNIT}/logo/")
-        company.CompanyLogo = new_logo["object_name"]
+        company.CompanyLogo = require_stored(new_logo, "object_name")
     
     if banner_profile:
         new_banner = nas.upload_file(banner_profile, f"companies/{company.CompanyNIT}/banner/")
-        company.CompanyBanner = new_banner["object_name"]
+        company.CompanyBanner = require_stored(new_banner, "object_name")
 
     database.commit()
     database.refresh(company)
@@ -243,8 +215,9 @@ def company_dashboard_get_my_products(user_id,search,page,limit,database: Sessio
         "products": result
         }
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        logger.exception("Error inesperado")
+        api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
 def company_dashboard_products_summary_service(user_id, database: Session):
@@ -306,7 +279,7 @@ def apply_certificate_replacement(
                 "contacta con un administrador.",
             )
 
-        _validate_certificate_file(certificate)
+        validate_upload(certificate, PDF_EXTENSIONS, "Certificado")
 
         old_certificate = company.CompanyCertificate
 
@@ -336,7 +309,7 @@ def apply_certificate_replacement(
                 "Certificado actualizado correctamente. Tu empresa vuelve a quedar "
                 "pendiente de revisión."
             ),
-            "certificate_url": build_media_url(f"uploads/{company.CompanyCertificate}"),
+            "certificate_url": build_private_media_url(company.CompanyCertificate),
             "certificate_status": company.CompanyCertificateStatus,
         }
 

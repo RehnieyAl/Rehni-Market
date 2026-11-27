@@ -28,16 +28,16 @@ class TestAuthorization:
         assert response.status_code == 401
         assert response.json()["detail"]["code"] == "UNAUTHORIZED"
 
-    def test_company_role_is_forbidden_by_middleware(self, client, tokens):
+    def test_company_role_is_forbidden(self, client, tokens):
         response = client.get("/addresses", headers=auth(tokens["company"]))
         assert response.status_code == 403
         assert response.json()["detail"]["code"] == "FORBIDDEN"
 
     @pytest.mark.parametrize("role", ["admin", "owner"])
-    def test_staff_passes_middleware_but_is_not_a_buyer(self, client, tokens, role):
+    def test_staff_is_not_a_buyer(self, client, tokens, role):
         response = create(client, tokens[role])
         assert response.status_code == 403
-        assert response.json()["detail"]["code"] == "PURCHASE_NOT_ALLOWED"
+        assert response.json()["detail"]["code"] == "FORBIDDEN"
 
 
 class TestCreateAndList:

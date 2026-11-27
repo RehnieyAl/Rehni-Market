@@ -1,10 +1,12 @@
+"""Modelo ORM de variantes de producto, la unidad vendible con precio y stock (tabla product_variants)."""
+
 from sqlalchemy import String, Numeric, Boolean, ForeignKey, Integer, DateTime, Index
 from decimal import Decimal
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 
 class ProductVariant(Base):

@@ -13,7 +13,7 @@ repositorio.
 
 | Capa | Qué impide | Dónde |
 |---|---|---|
-| Base de datos | Un segundo owner, aunque se inserte o actualice a mano o con dos transacciones simultáneas. Borrar o renombrar el rol `owner` | Columna `users.is_owner` calculada por trigger a partir de `roles.name`, índice único parcial `uq_users_single_owner` y trigger `roles_protect_owner` (`RehniMarket-backend/app/database/single_owner.py`, migración `d7e3f1a9c5b2`) |
+| Base de datos | Un segundo owner, aunque se inserte o actualice a mano o con dos transacciones simultáneas. Borrar o renombrar el rol `owner` | Columna `users.is_owner` calculada por trigger a partir de `roles.name`, índice único parcial `uq_users_single_owner` y trigger `roles_protect_owner` (`RehniMarket-backend/app/models/ModelUser.py`, migración `d7e3f1a9c5b2`) |
 | Backend | Asignar o quitar el rol owner, editar o bloquear la cuenta owner: responde **403** | `RehniMarket-backend/app/services/DashboardService/admin/UserService.py` |
 | Frontend | El panel no ofrece el rol «Propietario» ni deja editar o bloquear la cuenta owner | `RehniMarket-frontend/src/features/admin/components/dashboard/user/` |
 

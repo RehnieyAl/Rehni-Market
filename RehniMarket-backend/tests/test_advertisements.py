@@ -8,6 +8,7 @@ import pytest
 from app.models.ModelProduct import Product
 from app.services.NasService import get_nas_service
 from tests.conftest import auth
+from tests.factories import valid_png
 
 _TEXT_FIELDS = {"title", "description", "button_text"}
 
@@ -38,7 +39,7 @@ def nas(client):
 
 
 def _png():
-    return ("banner.png", b"\x89PNG\r\n\x1a\n", "image/png")
+    return ("banner.png", valid_png(), "image/png")
 
 
 def _create(client, tokens, data=None, *, with_mobile=False):

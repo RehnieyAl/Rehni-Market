@@ -1,3 +1,4 @@
+"""Reglas de precio: descuento vigente de variante o producto y precio representativo de la tarjeta."""
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import ROUND_HALF_UP, Decimal
@@ -116,7 +117,13 @@ def resolve_product_card_price(product, *, now: datetime | None = None) -> Price
     if not live:
         return resolve_entity_price(product, now=now)
 
+    # Desempate por id, igual que publicService.Products.card_price_sql: con dos variantes al
+    # mismo precio final, la tarjeta y el orden del listado eligen la misma (y su descuento).
     cheapest = min(
-        live, key=lambda variant: resolve_price(product, variant, now=now).final_price
+        live,
+        key=lambda variant: (
+            resolve_price(product, variant, now=now).final_price,
+            str(variant.id),
+        ),
     )
     return resolve_price(product, cheapest, now=now)

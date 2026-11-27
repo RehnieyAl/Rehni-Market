@@ -8,7 +8,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from app.Config import config
-from app.database.Connection import Base, get_db
+from app.core.dbconexion import Base, get_db
 import app.models  # noqa: F401  registra todos los modelos en Base.metadata para create_all
 from app.models.ModelCatalog import Catalog
 from app.models.ModelCatalogAttribute import CatalogAttribute, CatalogAttributeOption
@@ -37,21 +37,50 @@ ROLE_NAMES = ("user", "company", "admin", "owner")
 def outbox(monkeypatch):
     """Sustituye la entrega SMTP: ninguna prueba envía correo real.
 
-    `send_email` sigue construyendo el mensaje y usando su cola; solo cambia
-    `_deliver`, que en lugar de conectar a smtp.gmail.com guarda el correo aquí.
+    `send_email` y `send_email_now` siguen construyendo el mensaje; solo cambia `_transmit`,
+    que en lugar de conectar al servidor SMTP guarda el correo aquí. Con `outbox.fail = True`
+    simula que el servidor rechaza el envío.
     """
     from app.services.email import EmailService
 
-    sent = []
+    class Outbox(list):
+        fail = False
 
-    def fake_deliver(msg, to_email):
-        try:
-            sent.append({"to": to_email, "subject": msg["Subject"]})
-        finally:
-            EmailService._pending.release()
+    sent = Outbox()
 
-    monkeypatch.setattr(EmailService, "_deliver", fake_deliver)
+    def fake_transmit(msg):
+        if sent.fail:
+            raise ConnectionError("SMTP no disponible (simulado)")
+        sent.append({"to": msg["To"], "subject": msg["Subject"]})
+
+    monkeypatch.setattr(EmailService, "_transmit", fake_transmit)
     return sent
+
+
+@pytest.fixture(autouse=True)
+def return_notifications_inline(monkeypatch, engine):
+    """Los correos de devoluciones se envían en el mismo hilo y con sesiones de la base de pruebas,
+    para que cada prueba vea su estado final sin esperar a los hilos de correo."""
+    from app.services.commerce import ReturnNotificationService
+
+    monkeypatch.setattr(
+        ReturnNotificationService, "_session_factory", sessionmaker(bind=engine, autoflush=False, autocommit=False)
+    )
+    monkeypatch.setattr(
+        ReturnNotificationService, "schedule_dispatch", ReturnNotificationService.dispatch_notifications
+    )
+
+
+@pytest.fixture(autouse=True)
+def platform_contact_on_test_db(monkeypatch, engine):
+    """El pie de los correos lee el contacto institucional con su propia sesión: se apunta a la base
+    de pruebas y se vacía la caché para que cada prueba vea sus propios datos."""
+    from app.services import PlatformSettingsService
+
+    monkeypatch.setattr(
+        PlatformSettingsService, "_session_factory", sessionmaker(bind=engine, autoflush=False, autocommit=False)
+    )
+    PlatformSettingsService.invalidate_cache()
 
 
 @pytest.fixture(scope="session")
@@ -135,10 +164,10 @@ def tokens(users):
 @pytest.fixture()
 def client(db, engine, monkeypatch):
     Session = sessionmaker(bind=engine, autoflush=False, autocommit=False)
-    monkeypatch.setattr("app.middleware.AuthMiddleware.SessionLocal", Session)
+    monkeypatch.setattr("app.core.AuthDependencies.SessionLocal", Session)
     # Rutas /public: read_session() abre sus propias sesiones en AUTOCOMMIT.
     monkeypatch.setattr(
-        "app.database.Connection.ReadSessionLocal",
+        "app.core.dbconexion.ReadSessionLocal",
         sessionmaker(
             bind=engine.execution_options(isolation_level="AUTOCOMMIT"),
             autoflush=False,
