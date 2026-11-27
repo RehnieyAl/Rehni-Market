@@ -38,7 +38,7 @@ dependencies = [
     "pip>=26.2",
     "psycopg2-binary==2.9.11",
     "pycparser==3.0",
-    "pycryptodome==3.23.0",
+    "pycryptodome==4.6.0",
     "pydantic==2.12.5",
     "pydantic-core==2.41.5",
     "pydantic-extra-types==2.11.0",
