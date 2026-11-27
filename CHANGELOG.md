@@ -8,6 +8,106 @@ implantación). El detalle histórico del backend sigue en
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- Seguir tiendas: botón "Seguir tienda"/"Siguiendo" y contador real de seguidores en el perfil público
+  (solo compradores; el visitante va al login). Endpoints y migración en el CHANGELOG del backend.
+- Ofertas con búsqueda, filtro por categoría, orden (mayor descuento, recientes, precio) y 8/12/24 por
+  página, sobre `/public/products` con `discount` e `in_stock` (sin endpoints nuevos).
+- Catálogo de bancos administrable (pestaña "Bancos" dentro de Catálogo en el panel de administración):
+  registro con logo y vista previa, edición y activación. Las empresas eligen el banco del catálogo al
+  registrar sus cuentas. Detalle en el CHANGELOG del backend.
+- Reclamaciones de devolución de punta a punta: el comprador sigue sus reclamaciones en "Mis
+  devoluciones" y pide una revisión (una vez) de un rechazo; la empresa aprueba o rechaza con asunto,
+  explicación y confirmación explícita; el administrador/owner lista, toma el caso, contacta a la
+  empresa por correo, registra llamadas y decide. Historial por reclamación (`return_request_events`) y
+  correos con registro transaccional (`return_notifications`, reintento sin duplicados). Contacto
+  empresarial (correo y teléfono) en "Mi tienda". Migración `e9a1b3c5d7f2`.
+- Contacto institucional (correo y teléfono) de Rehni Market en PostgreSQL (`platform_settings`), editable
+  solo por el owner en el nuevo apartado "Configuración de la página web"; lo publicado aparece en el pie
+  de la web y de los correos. Migración `f1c3e5a7b9d2`.
+- Reenvío del código de recuperación de contraseña y componente común "¿No recibiste el código?" para
+  verificación de comprador, de empresa y recuperación (contador del backend, 429 con `Retry-After`).
+- Paneles de administración/propietario y comprador según `RehniMarket-frontend/design/dashboard-administrador-propietario/`
+  y el lenguaje del panel de empresa: cabeceras con icono, métricas con icono y tono, filtros en píldoras,
+  secciones con descripción y pie de paginación. El comprador tiene un inicio nuevo (cuenta, métricas reales,
+  accesos rápidos, pedidos recientes) y pedidos, devoluciones, favoritos, RehniCoin y direcciones rediseñados.
+- RehniCoin del comprador: "Solicitar recarga por WhatsApp" con el teléfono público institucional
+  (`/public/platform-contact`), solo en formato internacional y con un mensaje fijo sin datos de la cuenta.
+  Reemplaza el modal anterior que usaba `VITE_REHNIMARKET_WHATSAPP` y enviaba nombre y correo en la URL.
+
+### Fixed
+
+- Seguridad de los códigos: la recuperación de contraseña ya no revela si una cuenta existe; códigos con
+  `secrets`; máximo 5 intentos por código; cooldown de 60 s y topes por correo, cuenta e IP; reenvíos
+  simultáneos generan un solo código y el correo sale solo después del commit.
+- Correos: diseño oscuro tonal común, una columna fluida (sin desborde de 320 a 1440 px), sin fotografías de
+  productos, parte `text/plain`, `Date` y `Message-ID` propios. Diagnóstico en
+  `docs/runbooks/entregabilidad-correo.md`.
+- Devoluciones: un solo reembolso en RehniCoin por reclamación aunque lleguen aprobaciones simultáneas
+  de empresa y administración (fila bloqueada + `wallet_transactions.return_request_id` con índice
+  único); se reembolsa el IVA cobrado en el pedido (`order_items.tax_amount`) y no el del producto
+  actual; una solicitud duplicada simultánea responde 409 en lugar de 500.
+- Liquidaciones: los reembolsos de devoluciones se descuentan de las ventas (y de la comisión) en la
+  liquidación siguiente, una sola vez y sin modificar las liquidaciones ya generadas (H-08, #37).
+
+### Changed
+
+- Configuración de Docker: el backend arranca con `uv run --no-sync` y sin el volumen `backend_venv`
+  (antes instalaba el grupo `dev` y descargaba de PyPI en cada arranque); PgBouncer y uv fijados por
+  versión; el build del frontend exige el lockfile; se quitan del `environment` del backend
+  `DOCS_ENABLED` y `CORS_EXTRA_ORIGINS`, que ya llegan por `env_file` con el mismo valor por defecto.
+- Rediseño según `RehniMarket-frontend/design/`: perfil público de empresa, detalle de producto
+  (galería con `scrollend`, "Guardar" en favoritos, relacionados deslizables en móvil), Explorar
+  categorías y Ofertas. Tarjeta de producto con un solo enlace al detalle (sin botones dentro del `<a>`).
+- Inicio del panel de empresa según `design/Panel Empresa RehniMarket en modo oscuro.png`: cabecera
+  compacta con el banner de fondo, métricas reales, acciones rápidas ("Crear producto" abre el alta con
+  `?tab=products&new=1`), pedidos y productos recientes. Sin gráfico de ventas: no hay endpoint con la
+  serie diaria. Navegación lateral con la sección activa en rojo; `StatCard` oscura para todos los paneles.
+- Perfil público según `design/perfil de empresa.png`: banner en franja compacta, tarjetas de producto
+  oscuras y compactas (sin el nombre de la tienda, carrito como icono) y tarjeta lateral con calificación.
+  Las fotos de producto ya no llevan placa blanca. Piezas compartidas: `CompanyAvatar`,
+  `CompanyVerificationBadge`, `CompanyBanner` (franja o fondo) y `DashboardSection`.
+- "Mi tienda" pasa a ser un modal (desde "Editar perfil" y "Configurar mi tienda") con tres secciones:
+  imagen, información y certificado de la empresa. Sale del menú lateral y se elimina la sección
+  "Información del representante" (sus datos se gestionan solo en Configuración de cuenta). Avisa antes
+  de cerrar con cambios sin guardar.
+- Plantillas nuevas de banner (1600 × 420 y 1080 × 540 para móvil) y logo (600 × 600) de empresa.
+- `AlertProvider` con `showAlert` estable: se corrigieron los 11 avisos `react-hooks/exhaustive-deps`
+  y `lint:ci` pasa a `--max-warnings 0`.
+
+- Dependabot restaurado (`.github/dependabot.yml`): semanal para uv, npm (web y móvil), github-actions y,
+  como novedad, las imágenes de los `Dockerfile` y de `docker-compose.yml`. Menores y parches agrupados,
+  mayores en PR aparte, máximo 5 PR abiertos por ecosistema, sin auto-merge. Se ignoran los saltos de
+  versión de Python (fijada igual en Dockerfile, CI y `pyproject.toml`) y las versiones mayores de
+  PostgreSQL (requieren migrar el volumen de datos).
+- CI: job `mobile` en `ci.yml` (typecheck, `expo lint` y jest), para que los PR de la app móvil, incluidos
+  los de Dependabot, también se prueben. El escaneo de SonarCloud se omite en los PR de Dependabot, que
+  no reciben `SONAR_TOKEN`; sus pruebas siguen corriendo.
+
+- Panel de empresa según `RehniMarket-frontend/design/dashboard-empresa/`: Productos, Pedidos,
+  Devoluciones (con "Limpiar filtros"), Finanzas (resumen con liquidaciones recientes y cuentas
+  bancarias, tabla de liquidaciones desplazable por teclado) y Configuración de cuenta (Perfil, Cuenta y
+  Seguridad; el selector de foto es accesible por teclado). Cabecera, filtros y paginador compartidos en
+  `shared/components/dashboard/`. Las cuentas bancarias muestran logo, `•••• últimos 4` y cuenta
+  principal/secundaria; al editar no se expone el número completo.
+
+### Fixed
+
+- `ReportModal` liberaba solo las vistas previas del primer render: las URL `blob:` de las evidencias
+  agregadas después quedaban sin liberar.
+- Navbar de escritorio sin `aria-current="page"` en el enlace de la sección actual.
+
+### Removed
+
+- Frontend: `CategoriesBenefits.tsx` y `CategoriesHero.tsx` (sin uso / franja decorativa reemplazada),
+  `example-banner.jpg` y `example-logo.webp` (copias de las plantillas anteriores), la copia local de
+  los nombres de meses en `GeneratePayoutModal` (usa `payouts/utils/period.ts`) y las dependencias sin
+  uso `react-device-detect` y `@types/react-router-dom`.
+
+
 ## [1.0.1] - 2026-11-16
 
 Parche de seguridad: auditoría de dependencias (#45). Informe completo en

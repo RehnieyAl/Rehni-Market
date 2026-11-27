@@ -27,6 +27,7 @@ Conecta **empresas vendedoras** con **compradores** en una sola plataforma: cat�
 - [Estructura del repositorio](#estructura-del-repositorio)
 - [Puesta en marcha](#puesta-en-marcha)
 - [Pruebas](#pruebas)
+- [Comandos](#comandos)
 - [Scripts de operación](#scripts-de-operación)
 - [Plan de implantación](#plan-de-implantación)
 - [Autor](#autor)
@@ -241,8 +242,8 @@ cp .env.example .env
 
 Toda la configuración está en **un solo `.env`** en la raíz, y `.env.example` es su única
 plantilla. Trae valores de desarrollo que funcionan entre sí (BD, MinIO, JWT y una cuenta owner
-de prueba, `owner.dev@example.com`); `minio`, `postgres`, `pgbouncer` y `backend` cargan el
-`.env` completo y Caddy solo sus variables. Son credenciales ficticias solo para el equipo
+de prueba, `owner.dev@example.com`); solo el `backend` carga el `.env` completo: `minio`,
+`postgres`, `pgbouncer` y Caddy reciben únicamente sus propias variables. Son credenciales ficticias solo para el equipo
 local. Sin SMTP configurado el sistema arranca, pero no salen los correos de verificación.
 El backend fuera de Docker (`uv run`, pytest) lee el mismo `.env` de la raíz.
 
@@ -353,6 +354,93 @@ k6 run -e K6_BASE_URL=http://127.0.0.1:8000 tests/load/01-smoke.js
 
 ---
 
+## Comandos
+
+Todos se ejecutan desde la raíz del repositorio salvo que el bloque indique otra carpeta.
+
+### Seeds (manuales: ninguno corre solo)
+
+Con `RUN_SEED=false` (predeterminado) el backend no siembra nada al arrancar. Cada conjunto de datos
+se ejecuta por nombre y en orden de dependencias; es idempotente y nunca crea un segundo `owner`.
+
+```bash
+# Ver los seeds y grupos disponibles
+docker compose exec backend uv run --no-sync python -m app.utils.seed --list
+
+# Uno o varios, por nombre
+docker compose exec backend uv run --no-sync python -m app.utils.seed colores
+docker compose exec backend uv run --no-sync python -m app.utils.seed categorias especificaciones atributos
+
+# Grupos
+docker compose exec backend uv run --no-sync python -m app.utils.seed base   # roles, categorías, especificaciones, atributos, transportadoras
+docker compose exec backend uv run --no-sync python -m app.utils.seed demo   # owner del .env, empresas y productos demo (solo desarrollo)
+
+# Datos base y owner en una instalación nueva (servidor)
+bash scripts/datos-base.sh
+```
+
+Seeds: `roles`, `categorias`, `especificaciones`, `atributos`, `colores`, `transportadoras`, `owner`,
+`empresas-demo`, `productos-demo`.
+
+### Backend
+
+```bash
+docker compose --profile test up -d --wait postgres-test     # Postgres de pruebas (tmpfs)
+cd RehniMarket-backend
+uv sync --group dev
+uv run ruff check .                                         # lint
+uv run alembic upgrade head                                 # migraciones
+uv run alembic current                                      # revisión aplicada
+RUN_SEED=false TEST_DATABASE_URL=postgresql://rehni_test:rehni_test@127.0.0.1:55433/rehnimarket_test \
+  uv run pytest --cov=app --cov-report=xml --cov-report=term-missing   # pruebas + cobertura (mínimo 64 %)
+uv run ruff check app --select C901                         # complejidad ciclomática > 10
+```
+
+Las pruebas de `deploy/sql/crear-owner.sql` necesitan `psql` (o `PSQL_BIN` con su ruta).
+
+### Frontend web
+
+```bash
+cd RehniMarket-frontend
+pnpm install --frozen-lockfile
+pnpm lint                  # ESLint
+pnpm lint:ci               # ESLint con el tope de avisos del CI
+pnpm typecheck             # TypeScript (app, node y pruebas)
+pnpm test                  # Vitest
+pnpm test:coverage         # Vitest con cobertura (coverage/lcov.info)
+pnpm build                 # build de producción
+```
+
+### Mobile
+
+```bash
+cd RehniMarket-mobile
+pnpm install
+pnpm typecheck             # TypeScript
+pnpm test                  # Jest (unitarias)
+pnpm lint                  # expo lint
+
+# Integración contra un backend aislado (BD y MinIO desechables, correo apagado)
+bash ../scripts/qa-movil-backend.sh start
+EXPO_PUBLIC_API_URL=http://127.0.0.1:58000 pnpm test:integration
+bash ../scripts/qa-movil-backend.sh stop
+```
+
+### Archivos subidos
+
+Imágenes (JPEG, PNG, WEBP) y certificados (PDF) de máximo 5 MB, validados en el backend
+(`app/utils/FileValidator.py`) y en la web (`src/shared/validation/files.ts`): `413` si superan el
+tamaño, `415` si el formato no se admite y `400` si están vacíos o dañados. Los certificados solo se
+abren con la URL firmada que entrega el panel (`/media/private`); `/media/proxy` no los sirve.
+
+### CI
+
+`.github/workflows/ci.yml` (checks `backend`, `frontend`, `mobile` y `auditoria`) y `.github/workflows/sonarqube.yml`
+(ruff, migraciones, pytest y Vitest con cobertura, build web y análisis de SonarCloud) se ejecutan en
+cada push a `main`/`develop` y en cada pull request.
+
+---
+
 ## Scripts de operación
 
 | Script | Descripción |
@@ -365,6 +453,8 @@ k6 run -e K6_BASE_URL=http://127.0.0.1:8000 tests/load/01-smoke.js
 | `scripts/perf_test.sh` | Pruebas de rendimiento |
 | `scripts/verificar-requisitos.sh` | Verificación de requisitos del entorno |
 | `scripts/verificar-redes.sh` | Segmentación de redes de Docker: caminos permitidos, aislamiento y resiliencia |
+| `scripts/datos-base.sh` | Crea los datos base (roles, categorías, transportadoras) y el owner del `.env` en una instalación nueva; idempotente |
+| `scripts/qa-movil-backend.sh` | Backend aislado (BD y MinIO desechables) para probar la app móvil: `start` / `stop` |
 
 ---
 

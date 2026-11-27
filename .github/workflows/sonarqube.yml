@@ -1,5 +1,6 @@
 name: SonarCloud Analysis
 
+# Pruebas con cobertura (backend y web) y análisis de SonarCloud con esos reportes.
 on:
   push:
     branches: [main, develop]
@@ -15,12 +16,95 @@ jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: rehni_test
+          POSTGRES_PASSWORD: rehni_test
+          POSTGRES_DB: rehnimarket_migrations
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U rehni_test -d rehnimarket_migrations"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 15
+
+    # Mismos valores de solo-CI que ci.yml (no son secretos: SMTP y MinIO se sustituyen en las pruebas).
+    env:
+      URL_DATABASE: postgresql://rehni_test:rehni_test@localhost:5432/rehnimarket_migrations
+      TEST_DATABASE_URL: postgresql://rehni_test:rehni_test@localhost:5432/rehnimarket_test
+      SECRET_KEY: ci-only-not-a-secret
+      ACCESS_TOKEN_EXPIRE_MINUTES: "15"
+      REFRESH_TOKEN_DAYS: "7"
+      URL_FRONTEND: http://localhost:5173
+      URL_BACKEND: http://localhost:8001
+      MINIO_URL: 127.0.0.1:1
+      MINIO_ROOT_USER: ci
+      MINIO_ROOT_PASSWORD: ci-password
+      RUN_SEED: "false"
+      RATE_LIMIT_ENABLED: "false"
+
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0 # Historial completo: Sonar lo necesita para detectar el código nuevo
 
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: RehniMarket-backend/uv.lock
+
+      - name: Backend · dependencias
+        working-directory: RehniMarket-backend
+        run: uv sync --group dev --frozen --no-build
+
+      - name: Backend · ruff
+        working-directory: RehniMarket-backend
+        run: uv run --no-sync ruff check .
+
+      - name: Backend · migraciones
+        working-directory: RehniMarket-backend
+        run: uv run --no-sync alembic upgrade head
+
+      - name: Backend · pytest con cobertura
+        working-directory: RehniMarket-backend
+        run: uv run --no-sync pytest --cov=app --cov-report=xml --cov-report=term-missing
+
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6
+        with:
+          version: 11.15.0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: RehniMarket-frontend/pnpm-lock.yaml
+
+      - name: Web · dependencias
+        working-directory: RehniMarket-frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Web · lint
+        working-directory: RehniMarket-frontend
+        run: pnpm lint:ci
+
+      - name: Web · Vitest con cobertura
+        working-directory: RehniMarket-frontend
+        run: pnpm test:coverage
+
+      - name: Web · build
+        working-directory: RehniMarket-frontend
+        run: pnpm build
+
+      # Los PR de Dependabot no reciben los secretos del repositorio (SONAR_TOKEN): sin este filtro el
+      # escaneo fallaría siempre. Sus pruebas sí corren aquí y en ci.yml.
       - name: SonarCloud Scan
+        if: github.actor != 'dependabot[bot]'
         uses: SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65 # v8.4.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

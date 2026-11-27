@@ -373,7 +373,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       },
       "patch": {
         "tags": [
@@ -410,7 +415,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/auth/me/photo": {
@@ -449,7 +459,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/health/database": {
@@ -506,7 +521,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/company/dashboard/my-profile": {
@@ -515,17 +535,28 @@
           "company"
         ],
         "summary": "Get Info Company",
+        "description": "Datos de \"Mi tienda\" de la empresa autenticada (sin datos personales del representante).",
         "operationId": "get_info_company_company_dashboard_my_profile_get",
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyStoreSettingsResponse"
+                }
               }
             }
+          },
+          "404": {
+            "description": "La cuenta no tiene empresa (COMPANY_NOT_FOUND)."
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/company/dashboard/upgrade-my-profile": {
@@ -564,7 +595,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/company/dashboard/patch-media-logo-banner": {
@@ -602,7 +638,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/company/certificate": {
@@ -641,7 +682,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/company/certificate/update": {
@@ -721,7 +767,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/company/dashboard/get-my-products": {
@@ -731,6 +782,11 @@
         ],
         "summary": "Get My Product",
         "operationId": "get_my_product_company_dashboard_get_my_products_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "search",
@@ -801,7 +857,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/company/dashboard/get-my-product/{product_id}": {
@@ -811,6 +872,11 @@
         ],
         "summary": "Get My Product Detail",
         "operationId": "get_my_product_detail_company_dashboard_get_my_product__product_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -854,6 +920,11 @@
         ],
         "summary": "Upgrade My Product",
         "operationId": "upgrade_my_product_company_dashboard_update_my_product__idProduct__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "idProduct",
@@ -904,6 +975,11 @@
         ],
         "summary": "Change Status My Product",
         "operationId": "change_status_my_product_company_dashboard_change_status_my_product__product_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -955,6 +1031,11 @@
         ],
         "summary": "Delete My Product",
         "operationId": "delete_my_product_company_dashboard_delete_my_product__product_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -996,6 +1077,11 @@
         ],
         "summary": "Create Variant",
         "operationId": "create_variant_company_dashboard_products__product_id__variants_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -1047,6 +1133,11 @@
         ],
         "summary": "List Variants",
         "operationId": "list_variants_company_dashboard_products__product_id__variants_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -1104,6 +1195,11 @@
         ],
         "summary": "Get Variant Detail",
         "operationId": "get_variant_detail_company_dashboard_products__product_id__variants__variant_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -1155,6 +1251,11 @@
         ],
         "summary": "Update Variant",
         "operationId": "update_variant_company_dashboard_products__product_id__variants__variant_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -1216,6 +1317,11 @@
         ],
         "summary": "Delete Variant",
         "operationId": "delete_variant_company_dashboard_products__product_id__variants__variant_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -1267,6 +1373,11 @@
         ],
         "summary": "List Variant Images",
         "operationId": "list_variant_images_company_dashboard_products__product_id__variants__variant_id__images_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -1322,6 +1433,11 @@
         ],
         "summary": "Upload Variant Images",
         "operationId": "upload_variant_images_company_dashboard_products__product_id__variants__variant_id__images_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -1385,6 +1501,11 @@
         ],
         "summary": "Delete Variant Image",
         "operationId": "delete_variant_image_company_dashboard_products__product_id__variants__variant_id__images__image_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -1448,6 +1569,11 @@
         ],
         "summary": "Set Main Variant Image",
         "operationId": "set_main_variant_image_company_dashboard_products__product_id__variants__variant_id__images__image_id__main_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -1511,6 +1637,11 @@
         ],
         "summary": "List Variant Attribute Values",
         "operationId": "list_variant_attribute_values_company_dashboard_products__product_id__variants__variant_id__attribute_values_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -1566,6 +1697,11 @@
         ],
         "summary": "Set Variant Attribute Values",
         "operationId": "set_variant_attribute_values_company_dashboard_products__product_id__variants__variant_id__attribute_values_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -1633,6 +1769,11 @@
         ],
         "summary": "Get Company Orders",
         "operationId": "get_company_orders_company_dashboard_orders_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "page",
@@ -1735,7 +1876,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/company/dashboard/orders/{order_id}": {
@@ -1745,6 +1891,11 @@
         ],
         "summary": "Get Company Order Detail",
         "operationId": "get_company_order_detail_company_dashboard_orders__order_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "order_id",
@@ -1788,6 +1939,11 @@
         ],
         "summary": "Update Company Order Status",
         "operationId": "update_company_order_status_company_dashboard_orders__order_id__status_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "order_id",
@@ -1856,7 +2012,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/company/dashboard/returns": {
@@ -1866,6 +2027,11 @@
         ],
         "summary": "Get Company Returns",
         "operationId": "get_company_returns_company_dashboard_returns_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "page",
@@ -1954,6 +2120,11 @@
         ],
         "summary": "Get Company Return Detail",
         "operationId": "get_company_return_detail_company_dashboard_returns__return_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "return_id",
@@ -1995,6 +2166,11 @@
         ],
         "summary": "Decide Company Return",
         "operationId": "decide_company_return_company_dashboard_returns__return_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "return_id",
@@ -2048,6 +2224,11 @@
         ],
         "summary": "Set Company Order Shipping",
         "operationId": "set_company_order_shipping_company_dashboard_orders__order_id__shipping_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "order_id",
@@ -2101,6 +2282,11 @@
         ],
         "summary": "Get Available Attributes",
         "operationId": "get_available_attributes_company_dashboard_products__product_id__available_attributes_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -2144,6 +2330,11 @@
         ],
         "summary": "Get Product Attributes",
         "operationId": "get_product_attributes_company_dashboard_products__product_id__product_attributes_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -2189,6 +2380,11 @@
         ],
         "summary": "Set Product Attributes",
         "operationId": "set_product_attributes_company_dashboard_products__product_id__product_attributes_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -2246,6 +2442,11 @@
         ],
         "summary": "Set Product Discount",
         "operationId": "set_product_discount_company_dashboard_products__product_id__discount_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -2297,6 +2498,11 @@
         ],
         "summary": "Generate Variant Combinations",
         "operationId": "generate_variant_combinations_company_dashboard_products__product_id__variants_generate_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -2353,6 +2559,61 @@
             "schema": {
               "type": "string",
               "title": "Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/media/private": {
+      "get": {
+        "summary": "Private File",
+        "operationId": "private_file_media_private_get",
+        "parameters": [
+          {
+            "name": "path",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Path"
+            }
+          },
+          {
+            "name": "expires",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Expires"
+            }
+          },
+          {
+            "name": "signature",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Signature"
             }
           }
         ],
@@ -3196,6 +3457,50 @@
         }
       }
     },
+    "/public/company/{company_id}/followers": {
+      "get": {
+        "tags": [
+          "public"
+        ],
+        "summary": "Get Public Company Followers",
+        "description": "Número de seguidores de la empresa; no expone quiénes la siguen.",
+        "operationId": "get_public_company_followers_public_company__company_id__followers_get",
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Company Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyFollowersResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/dashboard/statistics": {
       "get": {
         "tags": [
@@ -3212,7 +3517,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/admin/dashboard/recent-activities": {
@@ -3231,7 +3541,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/admin/dashboard/recent-users": {
@@ -3250,7 +3565,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/admin/dashboard/catalogs/{catalog_id}/catalog-attributes": {
@@ -3260,6 +3580,11 @@
         ],
         "summary": "List Catalog Attributes",
         "operationId": "list_catalog_attributes_admin_dashboard_catalogs__catalog_id__catalog_attributes_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "catalog_id",
@@ -3322,6 +3647,11 @@
         ],
         "summary": "Create Catalog Attribute",
         "operationId": "create_catalog_attribute_admin_dashboard_catalogs__catalog_id__catalog_attributes_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "catalog_id",
@@ -3375,6 +3705,11 @@
         ],
         "summary": "Get Catalog Attribute",
         "operationId": "get_catalog_attribute_admin_dashboard_catalog_attributes__attribute_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "attribute_id",
@@ -3416,6 +3751,11 @@
         ],
         "summary": "Update Catalog Attribute",
         "operationId": "update_catalog_attribute_admin_dashboard_catalog_attributes__attribute_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "attribute_id",
@@ -3467,6 +3807,11 @@
         ],
         "summary": "Delete Catalog Attribute",
         "operationId": "delete_catalog_attribute_admin_dashboard_catalog_attributes__attribute_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "attribute_id",
@@ -3508,6 +3853,11 @@
         ],
         "summary": "Set Catalog Attribute Status",
         "operationId": "set_catalog_attribute_status_admin_dashboard_catalog_attributes__attribute_id__status_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "attribute_id",
@@ -3561,6 +3911,11 @@
         ],
         "summary": "Create Attribute Option",
         "operationId": "create_attribute_option_admin_dashboard_catalog_attributes__attribute_id__options_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "attribute_id",
@@ -3614,6 +3969,11 @@
         ],
         "summary": "Update Attribute Option",
         "operationId": "update_attribute_option_admin_dashboard_catalog_attribute_options__option_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "option_id",
@@ -3665,6 +4025,11 @@
         ],
         "summary": "Delete Attribute Option",
         "operationId": "delete_attribute_option_admin_dashboard_catalog_attribute_options__option_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "option_id",
@@ -3706,6 +4071,11 @@
         ],
         "summary": "Get Company",
         "operationId": "get_company_admin_dashboard_get_companies_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "search",
@@ -3799,6 +4169,11 @@
         ],
         "summary": "Get Admin Company",
         "operationId": "get_admin_company_admin_dashboard_get_company__company_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "company_id",
@@ -3840,6 +4215,11 @@
         ],
         "summary": "Update Certificate Status",
         "operationId": "update_certificate_status_admin_dashboard_companies_certificate_status__company_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "company_id",
@@ -3891,6 +4271,11 @@
         ],
         "summary": "Update Company Status",
         "operationId": "update_company_status_admin_dashboard_company_status__company_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "company_id",
@@ -3953,7 +4338,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/admin/dashboard/create-color": {
@@ -3992,7 +4382,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/admin/dashboard/update-color/{color_id}": {
@@ -4002,6 +4397,11 @@
         ],
         "summary": "Update Color",
         "operationId": "update_color_admin_dashboard_update_color__color_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "color_id",
@@ -4053,6 +4453,11 @@
         ],
         "summary": "Delete Color",
         "operationId": "delete_color_admin_dashboard_delete_color__color_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "color_id",
@@ -4109,7 +4514,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/admin/dashboard/created-catalogs": {
@@ -4150,7 +4560,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/admin/dashboard/update-catalogs/{catalog_id}": {
@@ -4160,6 +4575,11 @@
         ],
         "summary": "Update Catalog",
         "operationId": "update_catalog_admin_dashboard_update_catalogs__catalog_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "catalog_id",
@@ -4212,6 +4632,11 @@
         ],
         "summary": "Change Catalog Status",
         "operationId": "change_catalog_status_admin_dashboard_change_status_catalog__catalog_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "catalog_id",
@@ -4265,6 +4690,11 @@
         ],
         "summary": "Delete Catalog",
         "operationId": "delete_catalog_admin_dashboard_delete_catalogs__catalog_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "catalog_id",
@@ -4306,6 +4736,11 @@
         ],
         "summary": "Get Specifications",
         "operationId": "get_specifications_admin_dashboard_get_specifications__catalog_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "catalog_id",
@@ -4353,6 +4788,11 @@
         ],
         "summary": "Create Specification",
         "operationId": "create_specification_admin_dashboard_created_specifications__catalog_id__post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "catalog_id",
@@ -4406,6 +4846,11 @@
         ],
         "summary": "Update Specification",
         "operationId": "update_specification_admin_dashboard_update_specifications__specification_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "specification_id",
@@ -4459,6 +4904,11 @@
         ],
         "summary": "Delete Specification",
         "operationId": "delete_specification_admin_dashboard_delete_specifications__specification_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "specification_id",
@@ -4515,7 +4965,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/admin/dashboard/get-advertisement/{advertisement_id}": {
@@ -4525,6 +4980,11 @@
         ],
         "summary": "Get Advertisement",
         "operationId": "get_advertisement_admin_dashboard_get_advertisement__advertisement_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "advertisement_id",
@@ -4599,7 +5059,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/admin/dashboard/update-advertisement/{advertisement_id}": {
@@ -4609,6 +5074,11 @@
         ],
         "summary": "Update Advertisement",
         "operationId": "update_advertisement_admin_dashboard_update_advertisement__advertisement_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "advertisement_id",
@@ -4661,6 +5131,11 @@
         ],
         "summary": "Change Advertisement Status",
         "operationId": "change_advertisement_status_admin_dashboard_change_status_advertisement__advertisement_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "advertisement_id",
@@ -4714,6 +5189,11 @@
         ],
         "summary": "Delete Advertisement",
         "operationId": "delete_advertisement_admin_dashboard_delete_advertisement__advertisement_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "advertisement_id",
@@ -4755,6 +5235,11 @@
         ],
         "summary": "Get All Users",
         "operationId": "get_all_users_admin_dashboard_get_users_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "limit",
@@ -4848,6 +5333,11 @@
         ],
         "summary": "Get User By Id",
         "operationId": "get_user_by_id_admin_dashboard_get_user__user_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "user_id",
@@ -4889,6 +5379,11 @@
         ],
         "summary": "Update Admin User",
         "operationId": "update_admin_user_admin_dashboard_user_update_information__user_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "user_id",
@@ -4940,6 +5435,11 @@
         ],
         "summary": "Toggle Admin User Status",
         "operationId": "toggle_admin_user_status_admin_dashboard_user_update_information_status__user_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "user_id",
@@ -5013,7 +5513,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/admin/wallet/history": {
@@ -5024,6 +5529,11 @@
         ],
         "summary": "Get Recharge History",
         "operationId": "get_recharge_history_admin_wallet_history_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "page",
@@ -5081,6 +5591,11 @@
         ],
         "summary": "Correct Recharge",
         "operationId": "correct_recharge_admin_wallet_recharge__transaction_id__correction_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "transaction_id",
@@ -5166,7 +5681,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/admin/payouts": {
@@ -5177,6 +5697,11 @@
         ],
         "summary": "Get Payouts",
         "operationId": "get_payouts_admin_payouts_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "page",
@@ -5250,6 +5775,11 @@
         ],
         "summary": "Get Available Periods",
         "operationId": "get_available_periods_admin_payouts_available_periods_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "company_id",
@@ -5298,6 +5828,11 @@
         ],
         "summary": "Get Payout Preview",
         "operationId": "get_payout_preview_admin_payouts_preview_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "company_id",
@@ -5362,6 +5897,11 @@
         ],
         "summary": "Get Payout Detail",
         "operationId": "get_payout_detail_admin_payouts__payout_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "payout_id",
@@ -5406,6 +5946,11 @@
         ],
         "summary": "Pay Payout",
         "operationId": "pay_payout_admin_payouts__payout_id__pay_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "payout_id",
@@ -5450,6 +5995,11 @@
         ],
         "summary": "Get Reports",
         "operationId": "get_reports_admin_reports_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "page",
@@ -5555,6 +6105,11 @@
         ],
         "summary": "Get Report",
         "operationId": "get_report_admin_reports__report_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "report_id",
@@ -5599,6 +6154,11 @@
         ],
         "summary": "Update Report Status",
         "operationId": "update_report_status_admin_reports__report_id__status_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "report_id",
@@ -5668,7 +6228,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -5708,7 +6273,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/admin/dashboard/shipping-carriers/{carrier_id}": {
@@ -5719,6 +6289,11 @@
         ],
         "summary": "Update Shipping Carrier",
         "operationId": "update_shipping_carrier_admin_dashboard_shipping_carriers__carrier_id__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "carrier_id",
@@ -5773,6 +6348,11 @@
         ],
         "summary": "Change Shipping Carrier Status",
         "operationId": "change_shipping_carrier_status_admin_dashboard_shipping_carriers__carrier_id__status_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "carrier_id",
@@ -5837,7 +6417,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/cart/add": {
@@ -5878,7 +6463,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/cart/item/{item_id}": {
@@ -5888,6 +6478,11 @@
         ],
         "summary": "Update Cart Item",
         "operationId": "update_cart_item_cart_item__item_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "item_id",
@@ -5939,6 +6534,11 @@
         ],
         "summary": "Delete Cart Item",
         "operationId": "delete_cart_item_cart_item__item_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "item_id",
@@ -5993,7 +6593,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/checkout": {
@@ -6034,7 +6639,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/orders": {
@@ -6044,6 +6654,11 @@
         ],
         "summary": "Get My Orders",
         "operationId": "get_my_orders_orders_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "page",
@@ -6100,6 +6715,11 @@
         ],
         "summary": "Get My Order Detail",
         "operationId": "get_my_order_detail_orders__order_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "order_id",
@@ -6143,6 +6763,11 @@
         ],
         "summary": "Cancel My Order",
         "operationId": "cancel_my_order_orders__order_id__cancel_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "order_id",
@@ -6187,6 +6812,11 @@
         "summary": "Get Order Returns",
         "description": "Solicitudes de devolución del comprador para uno de sus pedidos.",
         "operationId": "get_order_returns_orders__order_id__returns_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "order_id",
@@ -6233,6 +6863,11 @@
         "summary": "Create Order Return",
         "description": "El comprador solicita la devolución de un ítem de un pedido ENTREGADO. El estado\ninicial es PENDING; la empresa dueña del pedido la evalúa después.",
         "operationId": "create_order_return_orders__order_id__returns_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "order_id",
@@ -6301,7 +6936,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -6338,7 +6978,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/favorites/{product_id}": {
@@ -6348,6 +6993,11 @@
         ],
         "summary": "Remove Favorite",
         "operationId": "remove_favorite_favorites__product_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -6368,6 +7018,176 @@
                 "schema": {}
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/company-follows/{company_id}": {
+      "get": {
+        "tags": [
+          "company-follows"
+        ],
+        "summary": "Get Follow Status",
+        "description": "Indica si el comprador sigue la empresa y cuántos seguidores tiene.",
+        "operationId": "get_follow_status_company_follows__company_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Company Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyFollowStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente, inválido o expirado."
+          },
+          "403": {
+            "description": "Cuenta bloqueada (USER_BLOCKED) o rol distinto de comprador (FORBIDDEN)."
+          },
+          "404": {
+            "description": "Empresa inexistente o suspendida (COMPANY_NOT_FOUND)."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "company-follows"
+        ],
+        "summary": "Follow Company",
+        "description": "Sigue la empresa. Idempotente: si ya la seguía, responde el mismo estado sin duplicar.",
+        "operationId": "follow_company_company_follows__company_id__post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Company Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyFollowStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente, inválido o expirado."
+          },
+          "403": {
+            "description": "Cuenta bloqueada (USER_BLOCKED) o rol distinto de comprador (FORBIDDEN)."
+          },
+          "404": {
+            "description": "Empresa inexistente o suspendida (COMPANY_NOT_FOUND)."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "company-follows"
+        ],
+        "summary": "Unfollow Company",
+        "description": "Deja de seguir la empresa. Idempotente: si no la seguía, responde el estado actual.",
+        "operationId": "unfollow_company_company_follows__company_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "company_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Company Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyFollowStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente, inválido o expirado."
+          },
+          "403": {
+            "description": "Cuenta bloqueada (USER_BLOCKED) o rol distinto de comprador (FORBIDDEN)."
+          },
+          "404": {
+            "description": "Empresa inexistente o suspendida (COMPANY_NOT_FOUND)."
           },
           "422": {
             "description": "Validation Error",
@@ -6404,7 +7224,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -6443,7 +7268,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/addresses/{address_id}": {
@@ -6453,6 +7283,11 @@
         ],
         "summary": "Update Address",
         "operationId": "update_address_addresses__address_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "address_id",
@@ -6504,6 +7339,11 @@
         ],
         "summary": "Delete Address",
         "operationId": "delete_address_addresses__address_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "address_id",
@@ -6545,6 +7385,11 @@
         ],
         "summary": "Set Default Address",
         "operationId": "set_default_address_addresses__address_id__set_default_patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "address_id",
@@ -6599,7 +7444,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/wallet/transactions": {
@@ -6609,6 +7459,11 @@
         ],
         "summary": "Get My Transactions",
         "operationId": "get_my_transactions_wallet_transactions_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "page",
@@ -6696,7 +7551,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/reviews/eligibility/{product_id}": {
@@ -6706,6 +7566,11 @@
         ],
         "summary": "Get Review Eligibility",
         "operationId": "get_review_eligibility_reviews_eligibility__product_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_id",
@@ -6780,7 +7645,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/reviews/{review_id}": {
@@ -6790,6 +7660,11 @@
         ],
         "summary": "Update My Review",
         "operationId": "update_my_review_reviews__review_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "review_id",
@@ -6841,6 +7716,11 @@
         ],
         "summary": "Delete My Review",
         "operationId": "delete_my_review_reviews__review_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "review_id",
@@ -6913,7 +7793,44 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/company/bank-accounts/banks": {
+      "get": {
+        "tags": [
+          "company",
+          "bank-accounts"
+        ],
+        "summary": "Get Available Banks",
+        "description": "Bancos activos del catálogo para elegir al registrar o editar una cuenta.",
+        "operationId": "get_available_banks_company_bank_accounts_banks_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BankOptionResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get Available Banks Company Bank Accounts Banks Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/company/bank-accounts": {
@@ -6939,7 +7856,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -6979,7 +7901,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     },
     "/company/bank-accounts/{bank_account_id}": {
@@ -6990,6 +7917,11 @@
         ],
         "summary": "Update Bank Account",
         "operationId": "update_bank_account_company_bank_accounts__bank_account_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "bank_account_id",
@@ -7042,6 +7974,11 @@
         ],
         "summary": "Delete Bank Account",
         "operationId": "delete_bank_account_company_bank_accounts__bank_account_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "bank_account_id",
@@ -7076,6 +8013,170 @@
         }
       }
     },
+    "/admin/dashboard/banks": {
+      "get": {
+        "tags": [
+          "admin",
+          "banks"
+        ],
+        "summary": "List Banks",
+        "description": "Catálogo completo (activos e inactivos) con el número de cuentas de empresa enlazadas.",
+        "operationId": "list_banks_admin_dashboard_banks_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AdminBankResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Banks Admin Dashboard Banks Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente, inválido o expirado."
+          },
+          "403": {
+            "description": "Rol distinto de admin u owner (FORBIDDEN)."
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "admin",
+          "banks"
+        ],
+        "summary": "Create Bank",
+        "description": "Registra un banco (logo opcional: PNG, JPEG o WebP, máximo 5 MB). Enlaza las cuentas registradas\nantes del catálogo cuyo nombre de banco coincide.",
+        "operationId": "create_bank_admin_dashboard_banks_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_bank_admin_dashboard_banks_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBankResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente, inválido o expirado."
+          },
+          "403": {
+            "description": "Rol distinto de admin u owner (FORBIDDEN)."
+          },
+          "409": {
+            "description": "Ya existe un banco con ese nombre (BANK_ALREADY_EXISTS)."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/admin/dashboard/banks/{bank_id}": {
+      "patch": {
+        "tags": [
+          "admin",
+          "banks"
+        ],
+        "summary": "Update Bank",
+        "description": "Cambia nombre, estado o logo. No hay borrado: un banco en desuso se desactiva.",
+        "operationId": "update_bank_admin_dashboard_banks__bank_id__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "bank_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Bank Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_update_bank_admin_dashboard_banks__bank_id__patch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminBankResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente, inválido o expirado."
+          },
+          "403": {
+            "description": "Rol distinto de admin u owner (FORBIDDEN)."
+          },
+          "404": {
+            "description": "Banco inexistente (BANK_NOT_FOUND)."
+          },
+          "409": {
+            "description": "Ya existe un banco con ese nombre (BANK_ALREADY_EXISTS)."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/company/payouts": {
       "get": {
         "tags": [
@@ -7084,6 +8185,11 @@
         ],
         "summary": "Get My Payouts",
         "operationId": "get_my_payouts_company_payouts_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "page",
@@ -7141,6 +8247,11 @@
         ],
         "summary": "Get My Payout Detail",
         "operationId": "get_my_payout_detail_company_payouts__payout_id__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "payout_id",
@@ -7196,7 +8307,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
       }
     }
   },
@@ -7345,6 +8461,66 @@
           "createdAt"
         ],
         "title": "AddressResponse"
+      },
+      "AdminBankResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "logoUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logourl"
+          },
+          "isActive": {
+            "type": "boolean",
+            "title": "Isactive"
+          },
+          "accountsCount": {
+            "type": "integer",
+            "title": "Accountscount"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat"
+          },
+          "updatedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updatedat"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "logoUrl",
+          "isActive",
+          "accountsCount",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "AdminBankResponse"
       },
       "AdminCompaniesPaginatedResponse": {
         "properties": {
@@ -7681,17 +8857,40 @@
             "type": "string",
             "title": "Documentnumber"
           },
+          "bankId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bankid"
+          },
           "bankName": {
             "type": "string",
             "title": "Bankname"
+          },
+          "bankLogoUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Banklogourl"
           },
           "accountType": {
             "type": "string",
             "title": "Accounttype"
           },
-          "accountNumber": {
+          "lastFourDigits": {
             "type": "string",
-            "title": "Accountnumber"
+            "title": "Lastfourdigits"
           },
           "isDefault": {
             "type": "boolean",
@@ -7720,13 +8919,47 @@
           "id",
           "accountHolder",
           "documentNumber",
+          "bankId",
           "bankName",
+          "bankLogoUrl",
           "accountType",
-          "accountNumber",
+          "lastFourDigits",
           "isDefault",
           "createdAt"
         ],
         "title": "BankAccountResponse"
+      },
+      "BankOptionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "logoUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logourl"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "logoUrl"
+        ],
+        "title": "BankOptionResponse",
+        "description": "Banco activo que una empresa puede elegir para su cuenta."
       },
       "Body_create_advertisement_admin_dashboard_create_advertisement_post": {
         "properties": {
@@ -7853,6 +9086,36 @@
           "image"
         ],
         "title": "Body_create_advertisement_admin_dashboard_create_advertisement_post"
+      },
+      "Body_create_bank_admin_dashboard_banks_post": {
+        "properties": {
+          "logo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "Body_create_bank_admin_dashboard_banks_post"
       },
       "Body_create_catalog_admin_dashboard_created_catalogs_post": {
         "properties": {
@@ -8241,6 +9504,46 @@
         },
         "type": "object",
         "title": "Body_update_advertisement_admin_dashboard_update_advertisement__advertisement_id__patch"
+      },
+      "Body_update_bank_admin_dashboard_banks__bank_id__patch": {
+        "properties": {
+          "logo": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "Body_update_bank_admin_dashboard_banks__bank_id__patch"
       },
       "Body_update_catalog_admin_dashboard_update_catalogs__catalog_id__put": {
         "properties": {
@@ -9083,7 +10386,17 @@
           "nextPayoutDate"
         ],
         "title": "CompanyBalanceResponse",
-        "description": "- grossSalesAccumulated / commissionAccumulated: suma histórica de todas las liquidaciones.\n- netBalance: suma de netAmount de las liquidaciones aún no PAID.\n- nextPayoutDate: proyección informativa (último día del mes), no hay job automático."
+        "description": "- grossSalesAccumulated / commissionAccumulated: liquidaciones + ventas entregadas aún sin liquidar.\n- netBalance: netAmount de las liquidaciones aún no PAID + neto de las ventas aún sin liquidar.\n- nextPayoutDate: proyección informativa (último día del mes), no hay job automático."
+      },
+      "CompanyCertificateEnum": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "approved",
+          "rejected",
+          "needs_update"
+        ],
+        "title": "CompanyCertificateEnum"
       },
       "CompanyCertificateUpdateResponse": {
         "properties": {
@@ -9103,6 +10416,49 @@
         ],
         "title": "CompanyCertificateUpdateResponse",
         "description": "Respuesta de `POST /company/certificate/update` (actualización por credenciales,\nsin JWT). No devuelve tokens, hash ni datos sensibles."
+      },
+      "CompanyFollowStatusResponse": {
+        "properties": {
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "followers_count": {
+            "type": "integer",
+            "title": "Followers Count"
+          },
+          "is_following": {
+            "type": "boolean",
+            "title": "Is Following"
+          }
+        },
+        "type": "object",
+        "required": [
+          "company_id",
+          "followers_count",
+          "is_following"
+        ],
+        "title": "CompanyFollowStatusResponse"
+      },
+      "CompanyFollowersResponse": {
+        "properties": {
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "followers_count": {
+            "type": "integer",
+            "title": "Followers Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "company_id",
+          "followers_count"
+        ],
+        "title": "CompanyFollowersResponse"
       },
       "CompanyPayoutResponse": {
         "properties": {
@@ -9269,6 +10625,116 @@
         ],
         "title": "CompanyRatingResponse",
         "description": "Reputación agregada de las reseñas activas de los productos de la empresa.\naverage_rating es None (no 0) cuando total_reviews es 0."
+      },
+      "CompanyStoreSettingsResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "nameCompany": {
+            "type": "string",
+            "title": "Namecompany"
+          },
+          "addressCompany": {
+            "type": "string",
+            "title": "Addresscompany"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "CompanyNIT": {
+            "type": "string",
+            "title": "Companynit"
+          },
+          "CompanyNITDV": {
+            "type": "string",
+            "title": "Companynitdv"
+          },
+          "CompanyStatus": {
+            "type": "boolean",
+            "title": "Companystatus"
+          },
+          "suspensionReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suspensionreason"
+          },
+          "certificateStatus": {
+            "$ref": "#/components/schemas/CompanyCertificateEnum"
+          },
+          "rejectionReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rejectionreason"
+          },
+          "memberAT": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Memberat"
+          },
+          "logo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo"
+          },
+          "banner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Banner"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "nameCompany",
+          "addressCompany",
+          "description",
+          "CompanyNIT",
+          "CompanyNITDV",
+          "CompanyStatus",
+          "suspensionReason",
+          "certificateStatus",
+          "rejectionReason",
+          "memberAT",
+          "logo",
+          "banner"
+        ],
+        "title": "CompanyStoreSettingsResponse",
+        "description": "Respuesta de `GET /company/dashboard/my-profile` (\"Mi tienda\"): solo datos de la empresa.\nLos datos personales del representante (nombre, correo, teléfono) se consultan en /auth/me."
       },
       "CorrectRechargeRequest": {
         "properties": {
@@ -9482,11 +10948,10 @@
             "minLength": 4,
             "title": "Documentnumber"
           },
-          "bankName": {
+          "bankId": {
             "type": "string",
-            "maxLength": 100,
-            "minLength": 2,
-            "title": "Bankname"
+            "format": "uuid",
+            "title": "Bankid"
           },
           "accountType": {
             "type": "string",
@@ -9514,7 +10979,7 @@
         "required": [
           "accountHolder",
           "documentNumber",
-          "bankName",
+          "bankId",
           "accountType",
           "accountNumber"
         ],
@@ -12912,18 +14377,17 @@
             ],
             "title": "Documentnumber"
           },
-          "bankName": {
+          "bankId": {
             "anyOf": [
               {
                 "type": "string",
-                "maxLength": 100,
-                "minLength": 2
+                "format": "uuid"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Bankname"
+            "title": "Bankid"
           },
           "accountType": {
             "anyOf": [
@@ -12968,7 +14432,8 @@
           }
         },
         "type": "object",
-        "title": "UpdateBankAccountRequest"
+        "title": "UpdateBankAccountRequest",
+        "description": "Campos omitidos o nulos no cambian: el número solo se reemplaza si se envía uno nuevo."
       },
       "UpdateCartItemRequest": {
         "properties": {
@@ -14516,6 +15981,13 @@
           "required"
         ],
         "title": "SpecificationResponse"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   }

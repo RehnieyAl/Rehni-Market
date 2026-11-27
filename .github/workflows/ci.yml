@@ -81,6 +81,10 @@ jobs:
       - name: Migraciones (alembic upgrade head)
         run: uv run --no-sync alembic upgrade head
 
+      # Deriva modelo ↔ migraciones: falla si los modelos piden un cambio que ninguna migración hace.
+      - name: Migraciones (alembic check)
+        run: uv run --no-sync alembic check
+
       # El umbral (fail_under) vive en [tool.coverage.report] de pyproject.toml,
       # así local y CI aplican el mismo gate.
       - name: Pruebas con cobertura
@@ -130,7 +134,7 @@ jobs:
       - name: Instalar dependencias
         run: pnpm install --frozen-lockfile
 
-      # --max-warnings 11: ratchet sobre los warnings actuales (todos react-hooks/exhaustive-deps).
+      # --max-warnings 0: cualquier aviso nuevo de ESLint hace fallar el CI.
       - name: Lint (eslint)
         run: pnpm lint:ci
 

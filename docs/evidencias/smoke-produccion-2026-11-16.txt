@@ -1,0 +1,20 @@
+# Prueba de humo — RehniMarket
+# 2026-11-17 19:52:12 UTC
+# BASE_URL=https://apirehnimarket.duckdns.org   FRONTEND_URL=https://rehnimarket.duckdns.org   SMOKE_EMAIL=(definido)
+------------------------------------------------------------
+1. Salud de la API y de la base de datos
+  [PASA]  GET /health/database -> 200 (Base de datos: OK)
+2. Catálogo público sin sesión
+  [PASA]  GET /public/products?limit=1 -> 200 (total=0)
+3. Ruta protegida sin token
+  [PASA]  GET /cart sin token -> 401
+4. Login con credenciales incorrectas (correo inexistente @example.com)
+  [PASA]  POST /auth/login-user -> 400 INVALID_CREDENTIALS
+5. Login con la cuenta de prueba
+  [FALLA] SMOKE_EMAIL y SMOKE_PASSWORD son obligatorias (no se probó el login)
+6. Perfil con el token
+  [FALLA] GET /auth/me no se ejecutó (sin token)
+7. Frontend
+  [PASA]  GET https://rehnimarket.duckdns.org/ -> 200
+------------------------------------------------------------
+RESULTADO: 5 pasan, 2 fallan

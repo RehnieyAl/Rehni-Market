@@ -9,15 +9,16 @@ brechas: [`REGISTRO.md`](REGISTRO.md).
 
 | Tipo | Herramienta | Ubicación | Cantidad | Comando | Cuándo |
 |---|---|---|---|---|---|
-| Backend: unitarias e integración contra PostgreSQL | pytest + pytest-cov | `RehniMarket-backend/tests/` | 376 en 21 archivos (6 `xfail`) | `uv run pytest` | Cada cambio del backend; el CI en cada PR |
+| Backend: unitarias e integración contra PostgreSQL | pytest + pytest-cov | `RehniMarket-backend/tests/` | 395 aprobadas, 14 omitidas y 6 `xfail` en 26 archivos (23/11/2026) | `uv run pytest` | Cada cambio del backend; el CI en cada PR |
 | Frontend: unitarias y de componentes | Vitest + Testing Library | `RehniMarket-frontend/src/**/*.test.ts(x)` | 184 en 17 archivos (+1 `todo`) | `pnpm test` | Cada cambio del frontend; el CI en cada PR |
-| Móvil | — | `RehniMarket-mobile` | 0 (deuda, §5) | — | — |
+| Móvil: unitarias | Jest (jest-expo) | `RehniMarket-mobile/src/**/__tests__/` | 76 en 8 archivos (23/11/2026) | `pnpm test` | Cada cambio de la app |
+| Móvil: integración del comprador | Jest + backend QA aislado | `RehniMarket-mobile/src/__integration__/` | 49 (23/11/2026) | `pnpm test:integration` (§5) | Tras cambiar la app o el backend; **nunca** contra producción |
 | Redes de Docker | bash | `scripts/verificar-redes.sh` | 44 en local (positivas, negativas y resiliencia) | `bash scripts/verificar-redes.sh` | Tras cambiar `docker-compose.yml` o `caddy/Caddyfile`, y en cada despliegue |
 | Humo por HTTP | bash + curl | `scripts/smoke-test.sh` | 7 pasos | `bash scripts/smoke-test.sh` | Tras cada despliegue |
 | Aceptación (muestra técnica) | bash + curl + psql | `scripts/acceptance_smoke.sh` | 28 verificaciones en 18 casos AC-* | `bash scripts/acceptance_smoke.sh` | Antes de una entrega, **solo en local** |
 | Carga | k6 | `tests/load/` | 6 escenarios | `k6 run tests/load/01-smoke.js` | Antes de una versión y tras cambios de rendimiento |
 | Rendimiento básico | bash + curl | `scripts/perf_test.sh` | N peticiones por ruta | `bash scripts/perf_test.sh` | Comparaciones rápidas |
-| Auditoría de dependencias | pip-audit, pnpm audit | job `auditoria` del CI | `uv.lock` y frontend de producción | §8 | CI en cada PR; Dependabot semanal |
+| Auditoría de dependencias | pip-audit, pnpm audit | job `auditoria` del CI | `uv.lock` y frontend de producción | §8 | CI en cada PR |
 | Calidad estática | ruff, ESLint, tsc, SonarCloud | CI y `sonarqube.yml` | — | §9 | Antes de cada push |
 
 Duración medida: backend completo ~4 min 40 s; frontend 5 s (7,5 s con cobertura); ESLint 7 s;
@@ -198,8 +199,8 @@ pnpm exec vitest
 pnpm lint:ci
 ```
 
-`--max-warnings 11`: hay 11 avisos `react-hooks/exhaustive-deps` aceptados (incidencia #41); uno más
-hace fallar el CI. `pnpm lint` muestra lo mismo sin límite.
+`--max-warnings 0`: cualquier aviso de ESLint hace fallar el CI (los 11 `react-hooks/exhaustive-deps`
+de la incidencia #41 se corrigieron). `pnpm lint` muestra lo mismo sin límite.
 
 ```bash
 pnpm typecheck
@@ -218,10 +219,31 @@ pnpm build
 
 ## 5. Móvil
 
-`RehniMarket-mobile` **no tiene pruebas automáticas**. `package.json` declara `"test": "jest --watchAll"`,
-pero no hay ningún archivo de prueba. Es deuda declarada en `docs/estrategia-pruebas.md` §3: la app
-móvil quedó fuera del alcance de la entrega. Si se agregan, usar `jest --ci` (nunca `--watchAll`
-en el CI). Su auditoría de dependencias está en `docs/calidad/auditoria-dependencias-2026-11-16.md` §6.
+`RehniMarket-mobile` (solo Android/iOS; `expo-secure-store` no funciona en navegador):
+
+```bash
+cd RehniMarket-mobile
+pnpm typecheck && pnpm lint && pnpm test          # tipos, ESLint y 76 unitarias
+npx expo export --platform android                # empaqueta el JS; no compila código nativo
+```
+
+**Integración del comprador** (49 pruebas): usa los servicios reales de la app (sesión, renovación de
+token, rechazo de roles) contra un backend aislado. Crea cuentas, pedidos y denuncias, así que la
+suite **se niega a correr** si `EXPO_PUBLIC_API_URL` no es `http://127.0.0.1:<puerto>`, y solo prepara
+datos en una base `*_test`.
+
+```bash
+bash scripts/qa-movil-backend.sh start            # postgres-test + MinIO desechable + seed, :58000
+cd RehniMarket-mobile && EXPO_PUBLIC_API_URL=http://127.0.0.1:58000 pnpm test:integration
+bash scripts/qa-movil-backend.sh stop
+```
+
+El script fija todas las variables del backend (BD de pruebas, correo apagado) porque `Config.py`
+completa lo que falte con el `.env` raíz, que apunta a PgBouncer y a Gmail reales.
+
+Lo que estas pruebas **no** cubren (pantallas, navegación, galería del teléfono, envío multipart
+nativo): recorridos manuales en [`movil-recorridos.md`](movil-recorridos.md). Su auditoría de
+dependencias está en `docs/calidad/auditoria-dependencias-2026-11-16.md` §6.
 
 ## 6. Pruebas de infraestructura
 
@@ -403,14 +425,15 @@ curl -s "https://sonarcloud.io/api/qualitygates/project_status?projectKey=Rehnie
 
 | Workflow | Job | Cuándo | Qué corre |
 |---|---|---|---|
-| `ci.yml` | `backend` | Cada PR y push a `main`/`develop` | ruff, `alembic upgrade head`, pytest con cobertura (con `psql`) |
-| `ci.yml` | `frontend` | Igual | `pnpm lint:ci`, `pnpm typecheck`, `pnpm test:coverage` |
+| `ci.yml` | `backend` | Cada PR (también los de Dependabot) y push a `main`/`develop` | ruff, `alembic upgrade head`, `alembic check`, pytest con cobertura (con `psql`) |
+| `ci.yml` | `frontend` | Igual | `pnpm lint:ci`, `pnpm typecheck`, `pnpm test:coverage`, `pnpm build` |
+| `ci.yml` | `mobile` | Igual | `pnpm typecheck`, `pnpm lint` (expo lint), `jest --ci` (sin las de integración) |
 | `ci.yml` | `auditoria` | Igual | pip-audit sobre `uv.lock` y `pnpm audit --prod --audit-level=high` |
-| `sonarqube.yml` | `SonarCloud` | Cada PR y push a `main`/`develop` | Análisis y Quality Gate |
+| `sonarqube.yml` | `SonarCloud` | Cada PR y push a `main`/`develop` | Pruebas con cobertura, análisis y Quality Gate (el escaneo se omite en PR de Dependabot: no reciben `SONAR_TOKEN`) |
 
-**Qué bloquea el merge:** el ruleset de `main` declara `backend` y `frontend` como checks obligatorios,
-pero el 17/11/2026 está **desactivado**: hoy ningún check bloquea el merge y la regla del proyecto es
-no mergear sin todo en verde. Al reactivarlo conviene sumar `auditoria`.
+**Qué bloquea el merge:** el ruleset `CODEOWNER` (activo en `main` y `develop` al 25/11/2026) exige PR y
+los checks `backend`, `frontend` y `auditoria`; el auto-merge del repositorio está desactivado. Los PR de
+Dependabot pasan por los mismos checks. Conviene sumar `mobile` a los obligatorios.
 
 Ver los checks de un PR y esperar a que terminen:
 
