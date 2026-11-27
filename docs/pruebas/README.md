@@ -266,7 +266,7 @@ bash scripts/verificar-redes.sh
 Resultado: 44 pasan, 0 fallan
 ```
 
-En producción, en la VM (`cd ~/Rehni-Market`): el mismo comando. Con la base recién instalada, sin
+En producción, en la VM (`cd /opt/rehnimarket`): el mismo comando. Con la base recién instalada, sin
 productos, la prueba de imágenes aparece como `⏭ omitida`. **Reinicia el backend una vez**: no correrlo
 con tráfico real. Evidencia: `docs/evidencias/verificacion-redes-produccion-2026-11-17.txt`.
 

@@ -1,0 +1,282 @@
+#!/usr/bin/env bash
+# Comando administrativo del servidor (/usr/local/bin/rehnimarket): Compose de producción, respaldos, restore,
+# despliegue manual e inicialización de roles y owner. Siempre opera sobre APP_DIR, nunca sobre el directorio actual,
+# y delega en los scripts instalados en LIB_DIR. Uso: `sudo rehnimarket ayuda`.
+set -Eeuo pipefail
+
+OPS_ENV="${OPS_ENV:-/etc/rehnimarket/ops.env}"
+# shellcheck source=/dev/null
+[ -r "${OPS_ENV}" ] && . "${OPS_ENV}"
+
+OPS_USER="${OPS_USER:-rehnimarket}"
+APP_DIR="${APP_DIR:-/opt/rehnimarket}"
+BACKUP_DIR="${BACKUP_DIR:-/home/rehnimarket/backups/rehnimarket}"
+LOG_DIR="${LOG_DIR:-/var/log/rehnimarket}"
+LIB_DIR="${LIB_DIR:-/usr/local/lib/rehnimarket}"
+HEALTH_URLS="${HEALTH_URLS:-http://127.0.0.1:8000/health/database}"
+# El clon de consulta tiene el mismo nombre de carpeta: fijar el proyecto evita que Compose los confunda.
+PROJECT="${COMPOSE_PROJECT:-rehnimarket}"
+MIN_FREE_MB="${MIN_FREE_MB:-1024}"
+BACKUP_ID_RE='^[0-9]{8}T[0-9]{6}Z_[0-9a-f]{12}$'
+
+# Con sudo se vuelve a ejecutar como el dueño de producción: git rechaza un repositorio de otro usuario y los
+# archivos creados (respaldos, logs, caché de Docker) no deben quedar a nombre de root.
+if [ "$(id -u)" -eq 0 ]; then
+  exec runuser -u "${OPS_USER}" -- env HOME="$(getent passwd "${OPS_USER}" | cut -d: -f6)" \
+    SUDO_USER="${SUDO_USER:-root}" OPS_ENV="${OPS_ENV}" "$(readlink -f "${BASH_SOURCE[0]}")" "$@"
+fi
+
+die() { echo "ERROR: $*" >&2; exit 1; }
+info() { echo "==> $*"; }
+
+[ "$(id -un)" = "${OPS_USER}" ] || die "ejecuta este comando como ${OPS_USER} o con sudo"
+logger -t rehnimarket "usuario=${SUDO_USER:-$(id -un)} orden=$*" 2>/dev/null || true
+
+compose() { docker compose -p "${PROJECT}" --project-directory "${APP_DIR}" -f "${APP_DIR}/docker-compose.yml" "$@"; }
+
+preflight() {
+  command -v docker >/dev/null || die "Docker no está instalado"
+  docker info >/dev/null 2>&1 || die "no hay acceso al demonio de Docker (¿${OPS_USER} está en el grupo docker?)"
+  [ -f "${APP_DIR}/docker-compose.yml" ] || die "no existe ${APP_DIR}/docker-compose.yml"
+  [ -r "${APP_DIR}/.env" ] || die "no se puede leer ${APP_DIR}/.env"
+}
+
+services() { compose config --services; }
+
+check_services() {
+  local s
+  for s in "$@"; do
+    services | grep -qx -- "${s}" || die "servicio desconocido: ${s} (disponibles: $(services | tr '\n' ' '))"
+  done
+}
+
+running() { [ -n "$(compose ps --status running -q "$1" 2>/dev/null)" ]; }
+
+require_running() {
+  local s
+  for s in "$@"; do running "${s}" || die "el servicio ${s} no está en marcha (sudo rehnimarket start)"; done
+}
+
+require_tty() { [ -t 0 ] && [ -t 1 ] || die "esta operación pide confirmación: ejecútala en una terminal interactiva"; }
+
+valid_backup_id() { [[ "${1:-}" =~ ${BACKUP_ID_RE} ]] || die "ID de respaldo no válido: '${1:-}' (AAAAMMDDTHHMMSSZ_<sha12>)"; }
+
+psql_tac() { compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 -tAc "$1"' _ "$1"; }
+
+free_mb() { df -Pm "$1" | awk 'NR==2 {print $4}'; }
+
+check_space() {
+  local db_mb need avail
+  db_mb="$(psql_tac 'SELECT pg_database_size(current_database()) / 1048576' 2>/dev/null || echo 0)"
+  need=$(( db_mb * 2 + MIN_FREE_MB ))
+  avail="$(free_mb "${BACKUP_DIR}")"
+  info "espacio libre en ${BACKUP_DIR}: ${avail} MB (mínimo exigido ${need} MB; base ${db_mb} MB)"
+  [ "${avail}" -ge "${need}" ] || die "espacio insuficiente para un respaldo seguro"
+}
+
+check_migrations() {
+  local db head
+  db="$(psql_tac 'SELECT string_agg(version_num, chr(44)) FROM alembic_version' 2>/dev/null | tr -d '[:space:]')" \
+    || die "la base no tiene tabla alembic_version: las migraciones no se aplicaron"
+  head="$(compose exec -T backend uv run --no-sync alembic heads 2>/dev/null | awk '{print $1}' | paste -sd, -)"
+  info "migraciones: base=${db:-ninguna} código=${head:-desconocido}"
+  [ -n "${db}" ] && [ "${db}" = "${head}" ] || die "la base no está en la última migración del código desplegado"
+}
+
+cmd_status() {
+  info "versión desplegada: $(git -C "${APP_DIR}" describe --tags --always HEAD) ($(git -C "${APP_DIR}" rev-parse --short=12 HEAD))"
+  compose ps
+  local url
+  for url in ${HEALTH_URLS}; do
+    if curl -fsS --max-time 5 -o /dev/null "${url}"; then info "salud OK: ${url}"; else info "salud FALLA: ${url}"; fi
+  done
+  [ -d "${BACKUP_DIR}" ] || { info "aún no existe ${BACKUP_DIR}"; return 0; }
+  local last
+  last="$(find "${BACKUP_DIR}" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort | tail -n 1)"
+  info "último respaldo: ${last:-ninguno}"
+  info "espacio libre para respaldos: $(free_mb "${BACKUP_DIR}") MB"
+}
+
+cmd_logs() {
+  local args=(--tail 100) svcs=()
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -f|--follow) args+=(-f) ;;
+      --tail) [[ "${2:-}" =~ ^[0-9]+$ ]] || die "--tail necesita un número"; args=(--tail "$2" "${args[@]:2}"); shift ;;
+      -*) die "opción no válida para logs: $1" ;;
+      *) svcs+=("$1") ;;
+    esac
+    shift
+  done
+  check_services "${svcs[@]}"
+  compose logs "${args[@]}" "${svcs[@]}"
+}
+
+cmd_start() {
+  local build=()
+  case "${1:-}" in
+    "") ;;
+    --build) build=(--build) ;;
+    *) die "uso: rehnimarket start [--build]" ;;
+  esac
+  compose up -d --wait --wait-timeout 600 "${build[@]}"
+  compose ps
+}
+
+cmd_exec() {
+  [ $# -ge 1 ] || die "uso: rehnimarket exec <servicio> [comando...]"
+  local svc="$1"; shift
+  check_services "${svc}"
+  require_running "${svc}"
+  [ $# -gt 0 ] || set -- sh
+  if [ -t 0 ] && [ -t 1 ]; then compose exec "${svc}" "$@"; else compose exec -T "${svc}" "$@"; fi
+}
+
+cmd_backup() {
+  case "${1:-}" in
+    "")
+      require_running postgres minio backend
+      install -d -m 700 "${BACKUP_DIR}"
+      check_space
+      BACKUP_DIR="${BACKUP_DIR}" LOG_DIR="${LOG_DIR}" APP_DIR="${APP_DIR}" "${LIB_DIR}/backup_rehnimarket.sh"
+      ;;
+    list|listar) "${LIB_DIR}/restore_rehnimarket.sh" --list ;;
+    info)
+      valid_backup_id "${2:-}"
+      local dir="${BACKUP_DIR}/$2"
+      [ -f "${dir}/manifest.json" ] || die "no existe el respaldo $2"
+      (cd "${dir}" && sha256sum --quiet -c manifest.json.sha256) || die "manifest.json de $2 está alterado"
+      [ "$(jq -r .id "${dir}/manifest.json")" = "$2" ] || die "el manifiesto de $2 pertenece a otro respaldo"
+      jq '{id, estado, detalle, fecha_inicio_utc, fecha_fin_utc, version, postgres, minio, github_run_id}' "${dir}/manifest.json"
+      du -sh "${dir}" | awk '{print "tamaño en disco: " $1}'
+      ;;
+    verify|verificar)
+      valid_backup_id "${2:-}"
+      "${LIB_DIR}/restore_rehnimarket.sh" "$2" --dry-run
+      ;;
+    *) die "uso: rehnimarket backup [list | info <ID> | verify <ID>]" ;;
+  esac
+}
+
+cmd_restore() {
+  local id="${1:-}" mode="${2:-}"
+  valid_backup_id "${id}"
+  if [ "${mode}" = "--qa" ]; then
+    "${LIB_DIR}/restore_rehnimarket.sh" "${id}" --verify-only
+    return
+  fi
+  [ -z "${mode}" ] || die "uso: rehnimarket restore <ID> [--qa]"
+  require_tty
+  require_running postgres minio backend
+  cmd_backup info "${id}"
+  "${LIB_DIR}/restore_rehnimarket.sh" "${id}" --dry-run
+  check_space
+  echo
+  echo "ATENCIÓN: se REEMPLAZAN los datos de PostgreSQL y MinIO de producción por los del respaldo ${id}."
+  echo "Servicios afectados: backend (se detiene), postgres y minio. Antes se crea un respaldo preventivo del"
+  echo "estado actual; si algo falla, se recupera con ese respaldo (docs/devops/backup-restore.md)."
+  local answer
+  read -r -p "Escribe el ID del respaldo para confirmar: " answer
+  [ "${answer}" = "${id}" ] || die "confirmación distinta del ID: no se restauró nada"
+  "${LIB_DIR}/restore_rehnimarket.sh" "${id}" "--confirm=${id}"
+}
+
+cmd_deploy() {
+  [ $# -eq 1 ] || die "uso: rehnimarket deploy <sha40|main>"
+  require_running postgres minio backend
+  git -C "${APP_DIR}" fetch --quiet --tags origin main
+  local sha="$1"
+  [ "${sha}" = "main" ] && sha="$(git -C "${APP_DIR}" rev-parse origin/main)"
+  [[ "${sha}" =~ ^[0-9a-f]{40}$ ]] || die "indica el SHA completo (40 caracteres) o main"
+  info "se desplegará ${sha} (actual $(git -C "${APP_DIR}" rev-parse HEAD)); primero, respaldo obligatorio"
+  install -d -m 700 "${BACKUP_DIR}"
+  check_space
+  local out id
+  out="$(BACKUP_DIR="${BACKUP_DIR}" LOG_DIR="${LOG_DIR}" APP_DIR="${APP_DIR}" "${LIB_DIR}/backup_rehnimarket.sh" | tee /dev/stderr)"
+  id="$(sed -n 's/^BACKUP_ID=//p' <<< "${out}" | tail -n 1)"
+  [ -n "${id}" ] || die "el respaldo previo no quedó verificado: despliegue cancelado"
+  "${LIB_DIR}/deploy_rehnimarket.sh" "${sha}" "${id}" "manual-${SUDO_USER:-$(id -un)}"
+}
+
+cmd_init() {
+  case "${1:-}" in
+    roles)
+      require_running postgres backend
+      check_migrations
+      info "roles antes: $(psql_tac 'SELECT string_agg(name, chr(32) ORDER BY name) FROM roles')"
+      compose exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -q' < "${LIB_DIR}/crear-roles.sql"
+      ;;
+    base)
+      require_running postgres backend
+      check_migrations
+      bash "${LIB_DIR}/datos-base.sh"
+      ;;
+    owner)
+      require_tty
+      require_running postgres backend
+      [ "$(psql_tac "SELECT count(*) FROM roles WHERE name = 'owner'")" = "1" ] \
+        || die "no existe el rol owner: ejecuta antes sudo rehnimarket init roles"
+      [ "$(psql_tac "SELECT count(*) FROM users u JOIN roles r ON r.id = u.role_id WHERE r.name = 'owner'")" = "0" ] \
+        || die "ya existe un owner; no se crea otro ni se modifica el actual"
+      local nombre correo telefono clave clave2
+      read -r -p "Nombre del owner: " nombre
+      read -r -p "Correo: " correo
+      read -r -p "Teléfono (10 dígitos): " telefono
+      read -r -s -p "Clave: " clave; echo
+      read -r -s -p "Repite la clave: " clave2; echo
+      [ "${clave}" = "${clave2}" ] || die "las claves no coinciden"
+      jq -cn --arg nombre "${nombre}" --arg correo "${correo}" --arg telefono "${telefono}" --arg clave "${clave}" \
+        '{nombre: $nombre, correo: $correo, telefono: $telefono, clave: $clave}' \
+        | compose exec -T backend uv run --no-sync python -c "$(cat "${LIB_DIR}/crear_owner.py")"
+      unset clave clave2
+      psql_tac "SELECT u.email || ' -> ' || r.name FROM users u JOIN roles r ON r.id = u.role_id WHERE r.name = 'owner'"
+      ;;
+    *) die "uso: rehnimarket init <roles | base | owner>" ;;
+  esac
+}
+
+usage() {
+  cat <<'EOF'
+Uso: sudo rehnimarket <orden>
+
+  status                         versión, contenedores, salud y último respaldo
+  ps                             contenedores del proyecto
+  logs [-f] [--tail N] [serv...] logs (por defecto las 100 últimas líneas)
+  start [--build]                levanta los servicios y espera a que estén sanos
+  stop [serv...]                 detiene servicios (no borra contenedores, volúmenes ni datos)
+  restart [serv...]              reinicia servicios
+  exec <servicio> [cmd...]       comando dentro de un servicio (por defecto sh)
+
+  backup                         respaldo verificado de PostgreSQL y MinIO
+  backup list                    respaldos con fecha, versión, tamaño, Alembic y estado
+  backup info <ID>               metadatos del manifiesto
+  backup verify <ID>             comprueba checksums y legibilidad sin restaurar
+  restore <ID> [--qa]            restore de producción con confirmación (--qa: en contenedores desechables)
+  deploy <sha40|main>            respaldo obligatorio y despliegue de un commit de origin/main
+
+  init roles                     crea los roles que falten (user, company, admin, owner)
+  init base                      catálogo y transportadoras que falten (incluye roles)
+  init owner                     crea el único owner; pide los datos y la clave en la terminal
+EOF
+}
+
+orden="${1:-ayuda}"
+[ $# -gt 0 ] && shift
+case "${orden}" in
+  ayuda|help|-h|--help) usage; exit 0 ;;
+esac
+preflight
+case "${orden}" in
+  status) cmd_status ;;
+  ps) compose ps ;;
+  logs) cmd_logs "$@" ;;
+  start) cmd_start "$@" ;;
+  stop) check_services "$@"; compose stop "$@" ;;
+  restart) check_services "$@"; compose restart "$@" ;;
+  exec) cmd_exec "$@" ;;
+  backup) cmd_backup "$@" ;;
+  restore) cmd_restore "$@" ;;
+  deploy) cmd_deploy "$@" ;;
+  init) cmd_init "$@" ;;
+  *) usage >&2; die "orden desconocida: ${orden}" ;;
+esac

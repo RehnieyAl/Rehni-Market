@@ -108,8 +108,8 @@ cp deploy/env.prod.example .env && chmod 600 .env
 nano .env   # reemplazar cada CAMBIAR_*
 
 # B · copiar un .env de producción ya preparado en el equipo del administrador
-scp .env.produccion <usuario>@<ip-de-la-vm>:~/Rehni-Market/.env
-ssh <usuario>@<ip-de-la-vm> "chmod 600 ~/Rehni-Market/.env"
+scp .env.produccion rehnimarket@<ip-de-la-vm>:/opt/rehnimarket/.env
+ssh rehnimarket@<ip-de-la-vm> "chmod 600 /opt/rehnimarket/.env"
 ```
 
 Qué cambiar respecto de la plantilla:
@@ -126,30 +126,36 @@ El `.env` nunca se sube a Git.
 
 ## 6. Primer despliegue
 
+En el servidor de Azure el repositorio está en `/opt/rehnimarket` (cuenta `rehnimarket`, único `.env` ahí mismo) y
+se administra con el comando `rehnimarket` ([docs/devops/servidor-azure.md](../docs/devops/servidor-azure.md)):
+
 ```bash
-git clone https://github.com/RehnieyAl/Rehni-Market.git ~/Rehni-Market && cd ~/Rehni-Market
-# .env según la sección 5
-docker compose build backend      # de una en una: en 2 vCPU / 4 GiB las dos a la vez
-docker compose build frontend     # pueden quedarse sin memoria
-docker compose up -d --wait
-docker compose ps                 # los cinco servicios en healthy
+sudo rehnimarket start --build    # construye desde el código y espera a que los cinco servicios estén sanos
+sudo rehnimarket ps
 ```
 
-El backend aplica `alembic upgrade head` al arrancar. Caddy pide los certificados a Let's Encrypt
-en el primer acceso a cada dominio.
+En 2 vCPU y 4 GiB, si la compilación se queda sin memoria, construir una imagen cada vez
+(`docker compose build backend` y luego `frontend`). El backend aplica `alembic upgrade head` al arrancar. Caddy pide
+los certificados a Let's Encrypt en el primer acceso a cada dominio.
 
 ## 7. Datos base y cuenta owner
 
 El backend **no siembra nada al arrancar** con `RUN_SEED=false` (predeterminado). En una base nueva,
-después del primer arranque, se crean los datos base a mano (`app/utils/base_data.py`):
+después del primer arranque, se crean los datos base a mano y en este orden
+([docs/devops/inicializacion-roles-owner.md](../docs/devops/inicializacion-roles-owner.md)):
 
 ```bash
-bash scripts/datos-base.sh        # idempotente: no duplica ni modifica lo que ya existe
+sudo rehnimarket init roles       # user, company, admin, owner (deploy/sql/crear-roles.sql)
+sudo rehnimarket init base        # catálogo y transportadoras (scripts/datos-base.sh)
+sudo rehnimarket init owner       # pide los datos y la clave en la terminal
 ```
+
+En desarrollo, el equivalente de los dos primeros es `bash scripts/datos-base.sh`. Todos son idempotentes: no
+duplican ni modifican lo que ya existe.
 
 | Datos | Cuándo se crean | Detalle |
 |---|---|---|
-| Roles `user`, `company`, `admin`, `owner` | Con `scripts/datos-base.sh` o al arrancar con `RUN_SEED=true`, si faltan | Sin el rol `user` el registro falla |
+| Roles `user`, `company`, `admin`, `owner` | Con `init roles`, `scripts/datos-base.sh` o al arrancar con `RUN_SEED=true`, si faltan | Sin el rol `user` el registro falla |
 | Categorías (120), sus especificaciones, atributos de variante y opciones | Igual, solo si la tabla de categorías está vacía | Después las administra el panel; volver a sembrarlas desharía sus cambios |
 | Transportadoras (4) | Igual, solo si no hay ninguna | Las usan los envíos de los pedidos |
 | Cuenta owner del seed (`USER_NAME_OWNER`, `OWNER_DEFAULT`, `OWNER_PASSWORD_DEFAULT`) | Solo con `RUN_SEED=true` y las tres variables con valor | En producción quedan vacías |
@@ -164,8 +170,9 @@ docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -
 # 4|120|4
 ```
 
-**Cuenta owner:** hay una sola y se crea directamente en PostgreSQL con
-[`deploy/sql/crear-owner.sql`](sql/crear-owner.sql), nunca por la web. Procedimiento completo
+**Cuenta owner:** hay una sola y nunca se crea por la web. En el servidor se crea con `sudo rehnimarket init owner`,
+que usa el hash de contraseñas del backend. La alternativa en SQL es [`deploy/sql/crear-owner.sql`](sql/crear-owner.sql),
+que además convierte una cuenta ya registrada. Procedimiento completo
 (crear, convertir una cuenta registrada, comprobar, restablecer la clave, transferir y errores
 frecuentes) en **[`deploy/OWNER.md`](OWNER.md)**. La base de datos, el backend y el frontend impiden
 un segundo owner (§13).
@@ -185,64 +192,52 @@ Desde otro equipo, `nc -zv <ip-de-la-vm> 5433` y `nc -zv <ip-de-la-vm> 9001` deb
 
 ## 9. Actualizar
 
-Camino normal: merge `develop → main` con el CI en verde. El workflow «Deploy producción» respalda la versión
-desplegada, verifica el respaldo, publica el commit de `main` por SSH y comprueba la salud
-([docs/devops/README.md](../docs/devops/README.md)). Está bloqueado hasta que el propietario lo active.
-
-A mano en el servidor (mismas comprobaciones, como `rehniops`):
+Merge `develop → main` con el CI en verde y, en el servidor:
 
 ```bash
-ID="$(/usr/local/lib/rehnimarket/backup_rehnimarket.sh | sed -n 's/^BACKUP_ID=//p')"
-/usr/local/lib/rehnimarket/deploy_rehnimarket.sh "$(git -C /opt/rehnimarket rev-parse origin/main)" "${ID}" manual
+sudo rehnimarket deploy main      # respaldo obligatorio de lo desplegado → despliegue → health checks → registro
 ```
 
-Revisar antes si la versión trae migraciones no compatibles hacia atrás (plan §5.2, «Clasificación de migraciones»).
-
-El backend ya no monta el volumen `backend_venv` (su entorno sale de la imagen). En un servidor
-que lo tenía, el volumen queda sin uso y sin datos de negocio; se puede quitar cuando se quiera con
-`docker volume rm rehni-market_backend_venv` (solo ese volumen, nunca `docker volume prune`).
+Revisar antes si la versión trae migraciones no compatibles hacia atrás (plan §5.2, «Clasificación de
+migraciones»). Detalle y códigos de salida: [docs/devops/backup-restore.md](../docs/devops/backup-restore.md) §4.
 
 ## 10. Rollback
 
-Si los health checks fallan y la versión nueva no trae migraciones, `deploy_rehnimarket.sh` vuelve solo al código
-anterior. Si trae migraciones, no hay rollback automático: el código anterior no conoce el esquema nuevo y hay que
-decidir un restore (sección 11). Volver a una versión anterior a mano usa el mismo ejecutor, que lo rechaza si hay
-migraciones de por medio:
-
-```bash
-/usr/local/lib/rehnimarket/deploy_rehnimarket.sh <sha-anterior> <backup_id-de-lo-desplegado> manual
-```
-
-No se usa `alembic downgrade`. Los datos nunca se restauran automáticamente por un despliegue fallido.
+Si los health checks fallan y la versión nueva no trae migraciones, el despliegue vuelve solo al código anterior. Si
+trae migraciones, no hay rollback automático: el código anterior no conoce el esquema nuevo y hay que decidir un
+restore (sección 11). Volver a mano a un commit anterior: `sudo rehnimarket deploy <sha-anterior>`, que se cancela si
+hay migraciones de por medio. No se usa `alembic downgrade`, y los datos nunca se restauran automáticamente por un
+despliegue fallido.
 
 ## 11. Respaldo y restauración
 
 | Qué | Cómo |
 |---|---|
-| Respaldar | `scripts/backup_rehnimarket.sh` (o `scripts/respaldar.sh`): PostgreSQL, MinIO, `manifest.json` con tag y SHA de lo desplegado, `SHA256SUMS` |
-| Dónde quedan | `/var/backups/rehnimarket/<AAAAMMDDTHHMMSSZ>_<sha12>/`; logs en `/var/log/rehnimarket/` |
-| Retención | No se borra ningún respaldo automáticamente; vigilar el disco y limpiar a mano |
-| Buscar | `restore_rehnimarket.sh --list` o `--find=<tag|sha>` |
-| Probar sin tocar producción | `restore_rehnimarket.sh <ID> --dry-run` (integridad) o `--verify-only` (restaura en contenedores desechables) |
-| Restaurar | `restore_rehnimarket.sh <ID> --confirm=<ID>`: hace antes un respaldo preventivo |
+| Respaldar | `sudo rehnimarket backup`: PostgreSQL, MinIO, `manifest.json` con tag, SHA y Alembic de lo desplegado, y `SHA256SUMS` |
+| Dónde quedan | `/home/rehnimarket/backups/rehnimarket/<AAAAMMDDTHHMMSSZ>_<sha12>/`; logs en `/var/log/rehnimarket/` |
+| Retención | No se borra ningún respaldo automáticamente; vigilar el disco con `sudo rehnimarket status` |
+| Consultar | `sudo rehnimarket backup list` y `backup info <ID>` |
+| Probar sin tocar producción | `sudo rehnimarket backup verify <ID>` (integridad) o `restore <ID> --qa` (contenedores desechables) |
+| Restaurar | `ssh -t rehni-prod sudo rehnimarket restore <ID>`: pide confirmar el ID y antes hace un respaldo preventivo |
 
-Copias fuera del servidor y cifrado: plan de implantación §3.3.
+Copias fuera del servidor y cifrado: plan de implantación §3.3. En desarrollo se siguen usando los scripts
+directamente (`bash scripts/respaldar.sh`, `bash scripts/restore_rehnimarket.sh --list`).
 
 ## 12. Logs y problemas frecuentes
 
 ```bash
-docker compose logs -f --tail=100 frontend   # Caddy
-docker compose logs -f --tail=100 backend
-docker compose ps
+sudo rehnimarket logs -f --tail 100 frontend   # Caddy
+sudo rehnimarket logs -f --tail 100 backend
+sudo rehnimarket status
 ```
 
 | Síntoma | Causa probable | Qué revisar |
 |---|---|---|
-| Caddy no obtiene el certificado | El DNS no apunta a la VM o el puerto 80 está cerrado | `nslookup` de los dos dominios, reglas de entrada 80/443, `CADDY_LOCAL_CERTS` vacía; `docker compose logs frontend` |
-| El backend no arranca o no conecta a la base | Contraseña distinta en `POSTGRES_PASSWORD` y en `URL_DATABASE*`, o un `CAMBIAR_*` sin reemplazar | `docker compose logs backend`; la base guarda la contraseña con la que se creó el volumen |
+| Caddy no obtiene el certificado | El DNS no apunta a la VM o el puerto 80 está cerrado | `nslookup` de los dos dominios, reglas de entrada 80/443, `CADDY_LOCAL_CERTS` vacía; `sudo rehnimarket logs frontend` |
+| El backend no arranca o no conecta a la base | Contraseña distinta en `POSTGRES_PASSWORD` y en `URL_DATABASE*`, o un `CAMBIAR_*` sin reemplazar | `sudo rehnimarket logs backend`; la base guarda la contraseña con la que se creó el volumen |
 | No llegan los correos | Puerto SMTP bloqueado o contraseña de aplicación inválida | Azure bloquea el 25: usar 587 (por defecto), 465 o 2525 |
-| Un contenedor se reinicia o la compilación se corta | Falta de memoria | `docker compose ps`, `free -h`, `dmesg \| grep -i oom`; agregar swap (sección 3) y compilar de una imagen a la vez |
-| La web carga pero no llega a la API | `VITE_API_URL` o CORS | `VITE_API_URL` se graba al compilar (`--build`); `CORS_EXTRA_ORIGINS` y `URL_FRONTEND` |
+| Un contenedor se reinicia o la compilación se corta | Falta de memoria | `sudo rehnimarket ps`, `free -h`, `dmesg \| grep -i oom`; agregar swap (sección 3) y compilar de una imagen a la vez |
+| La web carga pero no llega a la API | `VITE_API_URL` o CORS | `VITE_API_URL` se graba al compilar (`start --build`); `CORS_EXTRA_ORIGINS` y `URL_FRONTEND` |
 
 ## 13. Seguridad
 

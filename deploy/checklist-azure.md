@@ -1,8 +1,9 @@
 # Checklist de despliegue en Azure con DuckDNS — RehniMarket
 
 Resumen operativo de [`docs/implantacion/entregable-s04-procedimiento-despliegue.md`](../docs/implantacion/entregable-s04-procedimiento-despliegue.md) §5.2 («Instalación inicial») y del manual técnico
-§6.8, con DuckDNS como DNS. Producción **sin datos de demo** (`RUN_SEED=false`): el backend crea solo los datos base al arrancar
-(#53) y el owner se crea en PostgreSQL con `deploy/sql/crear-owner.sql` ([`OWNER.md`](OWNER.md)).
+§6.8, con DuckDNS como DNS. Producción **sin datos de demo** (`RUN_SEED=false`): el backend no siembra nada al arrancar; los datos base y el
+owner se crean a mano con `sudo rehnimarket init roles | base | owner`
+([`docs/devops/inicializacion-roles-owner.md`](../docs/devops/inicializacion-roles-owner.md)).
 
 Nombres de producción: `rehnimarket.duckdns.org` (frontend) y `apirehnimarket.duckdns.org` (API).
 `<correo-owner>` es el correo del responsable. No dejar ningún `[PENDIENTE]` sin llenar en el acta.
@@ -40,7 +41,8 @@ Nombres de producción: `rehnimarket.duckdns.org` (frontend) y `apirehnimarket.d
 - [ ] `docker run hello-world` sin `sudo` y `docker compose version` ≥ 2.24.
 - [ ] Clonar:
       ```bash
-      git clone https://github.com/RehnieyAl/Rehni-Market.git ~/Rehni-Market && cd ~/Rehni-Market
+      sudo install -d -o rehnimarket -g rehnimarket -m 750 /opt/rehnimarket
+      git clone https://github.com/RehnieyAl/Rehni-Market.git /opt/rehnimarket && cd /opt/rehnimarket
       git checkout v1.0.1
       PORTS="80 443" bash scripts/verificar-requisitos.sh   # todo CUMPLE, código 0
       ```
@@ -57,8 +59,8 @@ Toda la configuración es **un solo `.env`** en la raíz. Su plantilla de produc
         cada `CAMBIAR_*`. Contraseñas y `SECRET_KEY` con `openssl rand -base64 24 | tr '+/' '-_'`;
         la de PostgreSQL va **igual** en `POSTGRES_PASSWORD`, `URL_DATABASE` y `URL_DATABASE_POOLED`.
         `GMAIL_APP_PASSWORD` la emite Google (Azure bloquea el puerto 25: 587, 465 o 2525).
-      - **Ya preparado:** `scp .env rehni-prod:Rehni-Market/.env` desde el equipo del
-        administrador y, en la VM, `chmod 600 ~/Rehni-Market/.env`.
+      - **Ya preparado:** `scp .env.produccion rehni-prod:/opt/rehnimarket/.env` desde el equipo del
+        administrador y, en la VM, `chmod 600 /opt/rehnimarket/.env`.
 - [ ] `grep -nE '^[A-Z_]+=.*CAMBIAR' .env` no muestra nada.
 - [ ] `git status` no muestra el `.env`.
 
@@ -76,8 +78,8 @@ Toda la configuración es **un solo `.env`** en la raíz. Su plantilla de produc
 
 ## 6. Datos base y owner, sin datos de demo (§5.2, paso 8.1)
 
-- [ ] Datos base creados por el arranque: `docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT (SELECT count(*) FROM roles), (SELECT count(*) FROM catalog), (SELECT count(*) FROM shipping_carriers);"'` → `4|120|4`.
-- [ ] Crear el owner con `deploy/sql/crear-owner.sql` según [`OWNER.md`](OWNER.md) §3 (clave con `read -rsp`) → `INSERT 0 1`.
+- [ ] Datos base: `sudo rehnimarket init roles` y luego `sudo rehnimarket init base`; comprobar con `docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -tAc "SELECT (SELECT count(*) FROM roles), (SELECT count(*) FROM catalog), (SELECT count(*) FROM shipping_carriers);"'` → `4|120|4`.
+- [ ] Crear el owner: `ssh -t rehni-prod sudo rehnimarket init owner` → `owner creado: <correo>` (alternativa en SQL: [`OWNER.md`](OWNER.md) §3).
 - [ ] Comprobar con la consulta de `OWNER.md` §4 (una fila, `is_owner = t`) e iniciar sesión en la web: **Panel Propietario**.
 
 ## 7. Prueba de humo y respaldo (§5.2, pasos 9-10)
@@ -89,7 +91,7 @@ Toda la configuración es **un solo `.env`** en la raíz. Su plantilla de produc
       SMOKE_EMAIL=<correo-de-prueba> BASE_URL=https://apirehnimarket.duckdns.org FRONTEND_URL=https://rehnimarket.duckdns.org \
         bash scripts/smoke-test.sh   # RESULTADO: 7 pasan, 0 fallan
       ```
-- [ ] Primer respaldo: `bash scripts/respaldar.sh` → `=== FIN backup <TS> — OK ===`.
+- [ ] Primer respaldo: `sudo rehnimarket backup` → `BACKUP_ID=<ID>`; comprobar con `sudo rehnimarket backup verify <ID>`.
 
 ## 8. Evidencia para el plan y el acta
 
