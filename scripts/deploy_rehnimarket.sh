@@ -12,7 +12,7 @@ OPS_ENV="${OPS_ENV:-/etc/rehnimarket/ops.env}"
 [ -r "${OPS_ENV}" ] && . "${OPS_ENV}"
 
 APP_DIR="${APP_DIR:-/opt/rehnimarket}"
-BACKUP_DIR="${BACKUP_DIR:-/var/backups/rehnimarket}"
+BACKUP_DIR="${BACKUP_DIR:-/home/rehnimarket/backups/rehnimarket}"
 LOG_DIR="${LOG_DIR:-/var/log/rehnimarket}"
 LOCK_FILE="${LOCK_FILE:-${LOG_DIR}/operacion.lock}"
 DEPLOY_BRANCH="${DEPLOY_BRANCH:-main}"

@@ -12,7 +12,7 @@
 | Versión del software | 1.0.1 ([`CHANGELOG.md`](../CHANGELOG.md); releases [v1.0.0](https://github.com/RehnieyAl/Rehni-Market/releases/tag/v1.0.0) y [v1.0.1](https://github.com/RehnieyAl/Rehni-Market/releases/tag/v1.0.1)) |
 | Fecha | 2026-11-18 |
 | Alcance funcional | SRS: 31 RF y 28 RNF ([`docs/requisitos/requisitos.md`](requisitos/requisitos.md)); avance y deuda: [`docs/backlog-final.md`](backlog-final.md) |
-| Servidor de producción | VM Ubuntu Server 24.04.5 LTS en Microsoft Azure (Azure for Students), proyecto en `~/Rehni-Market` |
+| Servidor de producción | VM Ubuntu Server 24.04.5 LTS en Microsoft Azure (Azure for Students), proyecto en `/opt/rehnimarket` (cuenta `rehnimarket`, ver `docs/devops/servidor-azure.md`) |
 
 ## Índice de entregables (semanas 1 a 7)
 

@@ -5,7 +5,7 @@ puede cambiar el rol de otras cuentas (usuario ↔ administrador) y que ve todo 
 administración. Hay **uno solo** y se crea **directamente en PostgreSQL**, nunca por la API ni
 por el registro de la web.
 
-Todos los comandos se ejecutan en la VM, dentro de la carpeta del proyecto (`cd ~/Rehni-Market`),
+Todos los comandos se ejecutan en la VM, dentro de la carpeta del proyecto (`cd /opt/rehnimarket`),
 con el stack arriba. Los valores entre `<…>` son marcadores: nunca escribas datos reales en el
 repositorio.
 
@@ -35,12 +35,18 @@ Debe mostrar `4|120|4`. Si da `0|0|0`, el backend no arrancó con la versión ac
 
 ## 3. Crear el owner
 
+En el servidor, la vía normal es `ssh -t rehni-prod sudo rehnimarket init owner`. Pide los datos y la clave sin
+mostrarla, usa el hash del backend y se niega si ya hay un owner
+([docs/devops/inicializacion-roles-owner.md](../docs/devops/inicializacion-roles-owner.md)). El procedimiento en SQL
+que sigue es la alternativa, y el único que convierte en owner una cuenta ya registrada. Antes deben existir los
+roles (`sudo rehnimarket init roles` o `deploy/sql/crear-roles.sql`).
+
 La clave se escribe sin que se vea (`read -rsp`) y llega a `psql` por una variable de entorno,
 así que no queda en el historial de la terminal. Las demás variables tampoco son secretas, pero
 van igual por el entorno para no tener problemas con espacios o tildes.
 
 ```bash
-cd ~/Rehni-Market
+cd /opt/rehnimarket
 read -rsp 'Clave del owner: ' OWNER_CLAVE; echo
 export OWNER_CLAVE
 export OWNER_CORREO='<correo-del-owner>' OWNER_NOMBRE='<nombre completo>' OWNER_TELEFONO='<10 dígitos>'

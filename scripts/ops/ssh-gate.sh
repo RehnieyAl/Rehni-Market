@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Comando forzado de las llaves SSH de automatización (authorized_keys: command="ssh-gate.sh <rol>"). Cada llave
 # solo puede pedir las órdenes de su rol, con argumentos validados, y nunca obtiene un shell. Se instala como
-# root en /usr/local/lib/rehnimarket junto a los scripts que lanza (ver docs/devops/servidor-ssh.md).
+# root en /usr/local/lib/rehnimarket junto a los scripts que lanza (en retirada: docs/devops/scripts-operativos.md).
 #   rol deploy          deploy <sha40> <backup_id> <run_id>
 #   rol backup          backup <run_id> | verify-backup <backup_id>
 #   rol restore         list | restore-verify <backup_id> | restore <backup_id> <confirmacion> <run_id>

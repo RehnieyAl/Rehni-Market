@@ -13,7 +13,7 @@ OPS_ENV="${OPS_ENV:-/etc/rehnimarket/ops.env}"
 [ -r "${OPS_ENV}" ] && . "${OPS_ENV}"
 
 PROJECT_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-BACKUP_DIR="${BACKUP_DIR:-/var/backups/rehnimarket}"
+BACKUP_DIR="${BACKUP_DIR:-/home/rehnimarket/backups/rehnimarket}"
 LOG_DIR="${LOG_DIR:-/var/log/rehnimarket}"
 LOCK_FILE="${LOCK_FILE:-${LOG_DIR}/operacion.lock}"
 PG_CONTAINER="${PG_CONTAINER:-rehni-postgres}"
@@ -47,18 +47,19 @@ line() { printf -- '------------------------------------------------------------
 
 if [ "${MODE}" = "list" ]; then
   command -v jq >/dev/null || { echo "ERROR: falta jq" >&2; exit 1; }
-  printf '%-32s %-21s %-14s %-12s %s\n' "BACKUP_ID" "FECHA_UTC" "TAG" "ESTADO" "COMMIT_SHA"
+  printf '%-32s %-21s %-14s %-12s %-42s %-8s %s\n' "BACKUP_ID" "FECHA_UTC" "TAG" "ESTADO" "COMMIT_SHA" "TAMAÑO" "ALEMBIC"
   # El ID es el nombre del directorio: un manifiesto copiado o editado no puede hacerse pasar por otro respaldo.
   for manifest in "${BACKUP_DIR}"/*/manifest.json; do
     [ -f "${manifest}" ] || continue
     dir="$(dirname "${manifest}")"; id="$(basename "${dir}")"
     integro=1
     (cd "${dir}" && sha256sum --quiet -c manifest.json.sha256 >/dev/null 2>&1) || integro=0
-    jq -r --arg id "${id}" --argjson integro "${integro}" \
+    jq -r --arg id "${id}" --argjson integro "${integro}" --arg size "$(du -sh "${dir}" | cut -f1)" \
       '[$id, .fecha_inicio_utc, (.version.git_tag | if . == "" then "-" else . end),
-        (if $integro == 0 or .id != $id then "alterado" else .estado end), .version.commit_sha] | @tsv' "${manifest}"
+        (if $integro == 0 or .id != $id then "alterado" else .estado end), .version.commit_sha, $size,
+        (.version.alembic_revision | if . == "" then "-" else . end)] | @tsv' "${manifest}"
   done | sort | awk -F'\t' -v q="${FIND}" '
-    q == "" || $3 == q || index($5, q) == 1 { n++; printf "%-32s %-21s %-14s %-12s %s\n", $1, $2, $3, $4, $5 }
+    q == "" || $3 == q || index($5, q) == 1 { n++; printf "%-32s %-21s %-14s %-12s %-42s %-8s %s\n", $1, $2, $3, $4, $5, $6, $7 }
     END { exit (q != "" && n == 0) }' || { echo "Sin respaldos para «${FIND}»" >&2; exit 1; }
   exit 0
 fi

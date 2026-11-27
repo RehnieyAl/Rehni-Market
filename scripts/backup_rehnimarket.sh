@@ -4,7 +4,7 @@
 # Nunca borra respaldos anteriores. Salida final: BACKUP_ID=<id> (la lee el ejecutor de despliegue).
 #
 #   bash scripts/backup_rehnimarket.sh [--no-stop]
-#   BACKUP_DIR=... LOG_DIR=... APP_DIR=...   (por defecto /var/backups/rehnimarket, /var/log/rehnimarket y el repo)
+#   BACKUP_DIR=... LOG_DIR=... APP_DIR=...   (por defecto /home/rehnimarket/backups/rehnimarket, /var/log/rehnimarket y el repo)
 set -Eeuo pipefail
 
 # Configuración del servidor (APP_DIR, rutas, URLs de salud); propiedad de root. En QA: OPS_ENV=/dev/null.
@@ -13,7 +13,7 @@ OPS_ENV="${OPS_ENV:-/etc/rehnimarket/ops.env}"
 [ -r "${OPS_ENV}" ] && . "${OPS_ENV}"
 
 APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-BACKUP_DIR="${BACKUP_DIR:-/var/backups/rehnimarket}"
+BACKUP_DIR="${BACKUP_DIR:-/home/rehnimarket/backups/rehnimarket}"
 LOG_DIR="${LOG_DIR:-/var/log/rehnimarket}"
 LOCK_FILE="${LOCK_FILE:-${LOG_DIR}/operacion.lock}"
 PG_CONTAINER="${PG_CONTAINER:-rehni-postgres}"
