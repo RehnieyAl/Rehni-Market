@@ -744,9 +744,15 @@ class TestBusinessContact:
         assert client.patch("/company/dashboard/upgrade-my-profile", json={"contactPhone": "12"},
                             headers=auth(tokens["company"])).status_code == 422
 
-    def test_business_contact_is_not_public(self, client, company):
+    def test_business_contact_is_not_public(self, client, tokens, company):
+        # El perfil público tiene campos de contacto, pero solo se llenan si la empresa activa el
+        # permiso (test_company_public_contact.py): sin él, el contacto registrado no sale.
+        client.patch("/company/dashboard/upgrade-my-profile",
+                     json={"contactEmail": "soporte@testco.local", "contactPhone": "6015551234"},
+                     headers=auth(tokens["company"]))
         public = client.get(f"/public/company/{company.id}")
-        assert "contactEmail" not in public.text and "contact_email" not in public.text
+        assert public.status_code == 200
+        assert "soporte@testco.local" not in public.text and "6015551234" not in public.text
 
 
 def test_events_are_append_only_history(client, tokens, db, rejected_claim):

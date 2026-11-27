@@ -86,7 +86,8 @@ class TestStoreSettingsContract:
         assert body["memberAT"].startswith("2020-")
 
     def test_openapi_documents_the_store_settings_schema(self, client):
-        schema = client.get("/openapi.json").json()
+        # app.openapi() y no GET /openapi.json: esa ruta solo existe con DOCS_ENABLED=true.
+        schema = client.app.openapi()
         response = schema["paths"][URL]["get"]["responses"]["200"]["content"]["application/json"]["schema"]
 
         assert response["$ref"].endswith("/CompanyStoreSettingsResponse")
