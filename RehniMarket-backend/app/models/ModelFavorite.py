@@ -1,9 +1,11 @@
+"""Modelo ORM de productos favoritos del comprador (tabla favorites)."""
+
 from sqlalchemy import ForeignKey, DateTime, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime, timezone
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 
 class Favorite(Base):

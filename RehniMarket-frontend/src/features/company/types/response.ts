@@ -24,7 +24,8 @@ export interface ProductsSummaryResponse {
   out_of_stock: number;
 }
 
-export interface CompanyProfileResponse {
+/** GET /company/dashboard/my-profile ("Mi tienda"): solo datos de la empresa, sin el representante. */
+export interface CompanyStoreSettingsResponse {
   id: string;
   nameCompany: string;
   addressCompany: string;
@@ -36,8 +37,12 @@ export interface CompanyProfileResponse {
   certificateStatus: CompanyCertificateStatus;
   rejectionReason: string | null;
   memberAT: string;
-  logo?: string;
-  banner?: string;
+  logo: string | null;
+  banner: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  /** Permiso de la empresa para mostrar su contacto en el perfil público. */
+  contactPublic: boolean;
 }
 
 export interface CatalogResponse {
@@ -55,14 +60,6 @@ export interface MyProductResponse {
   image: string | null;
   is_active: boolean;
   deleted_at: string | null;
-}
-
-export interface MyProductsPaginationResponse {
-  page: number;
-  limit: number;
-  total: number;
-  total_pages: number;
-  products: MyProductResponse[];
 }
 
 export interface ProductAttributePair {

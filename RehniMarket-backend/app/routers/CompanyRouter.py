@@ -1,6 +1,12 @@
-from fastapi import APIRouter, Request,Depends, UploadFile, File, Form, Body, Query
+"""Rutas del panel de empresa: perfil, certificado, productos, variantes, pedidos y devoluciones."""
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, UploadFile, File, Form, Query
 from sqlalchemy.orm import Session
-from app.database.Connection import get_db
+from app.core.dbconexion import get_db
+from app.core.AuthDependencies import AuthContext, require_role
+from app.utils.FileValidator import IMAGE_EXTENSIONS, validate_uploads
 from uuid import UUID
 
 from app.services.DashboardService.company.Products import (
@@ -42,6 +48,7 @@ from app.services.authentication.CertificateUpdateService import (
 from app.schemas.SchemaDashboard.ShemaCompany import (
     UpdateInformationCompanyRequest,
     CompanyCertificateUpdateResponse,
+    CompanyStoreSettingsResponse,
 )
 from app.schemas.SchemaDashboard.SchemaProduct import (
     ProductStatusRequest,
@@ -76,7 +83,7 @@ from app.services.commerce.ReturnService import (
 )
 from app.schemas.SchemaCommerce.SchemaReturn import (
     ReturnDecisionRequest,
-    ReturnRequestResponse,
+    ReturnDetailResponse,
     ReturnsPaginatedResponse,
 )
 from app.schemas.SchemaCommerce.SchemaOrder import (
@@ -95,35 +102,58 @@ router = APIRouter(
 
 
 @router.get("/dashboard/me")
-def dashboard(request: Request,database: Session = Depends(get_db, scope="function")):
+def dashboard(
+    current: Annotated[
+        AuthContext,
+        Depends(require_role("company", allow_unapproved_company=True)),
+    ],
+    database: Session = Depends(get_db, scope="function"),
+):
 
-    user_id = request.state.user_id
+    user_id = current.user_id
     
     return company_dashboard_me_service(
         user_id= user_id,
         database=database
     )
 
-@router.get("/dashboard/my-profile")
-def get_info_company(request:Request, database: Session =Depends(get_db, scope="function")):
-    user_id = request.state.user_id
+@router.get(
+    "/dashboard/my-profile",
+    response_model=CompanyStoreSettingsResponse,
+    responses={404: {"description": "La cuenta no tiene empresa (COMPANY_NOT_FOUND)."}},
+)
+def get_info_company(
+    current: Annotated[
+        AuthContext,
+        Depends(require_role("company", allow_unapproved_company=True)),
+    ],
+    database: Session =Depends(get_db, scope="function"),
+):
+    """Datos de "Mi tienda" de la empresa autenticada (sin datos personales del representante)."""
+    user_id = current.user_id
     return company_dashboard_my_profile_service(user_id, database)
 
 @router.patch("/dashboard/upgrade-my-profile")
-def upgrade_info_company_profile(request: Request, upgrade_profile: UpdateInformationCompanyRequest,database: Session = Depends(get_db, scope="function")):
-    user_id = request.state.user_id
+def upgrade_info_company_profile(
+    current: Annotated[AuthContext, Depends(require_role("company"))],
+    upgrade_profile: UpdateInformationCompanyRequest,
+    database: Session = Depends(get_db, scope="function"),
+):
+    user_id = current.user_id
     return company_dashboard_upgrade_my_profile_service(user_id, upgrade_profile, database)
 
 @router.patch("/dashboard/patch-media-logo-banner")
 def patch_media(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     photo_profile: UploadFile = File(None),
     banner_profile: UploadFile = File(None),
     nas: NasService = Depends(get_nas_service),
     database: Session = Depends(get_db, scope="function")
 ):
+    validate_uploads([photo_profile], IMAGE_EXTENSIONS, "Logo")
+    validate_uploads([banner_profile], IMAGE_EXTENSIONS, "Banner")
 
-    user_id = request.state.user_id
+    user_id = current.user_id
 
     return company_dasboard_upgrade_my_photo_and_banner_profile(
         user_id=user_id,
@@ -135,13 +165,16 @@ def patch_media(
 
 @router.put("/certificate")
 def replace_certificate(
-    request: Request,
+    current: Annotated[
+        AuthContext,
+        Depends(require_role("company", allow_unapproved_company=True)),
+    ],
     certificate: UploadFile = File(...),
     nas: NasService = Depends(get_nas_service),
     database: Session = Depends(get_db, scope="function"),
 ):
 
-    user_id = request.state.user_id
+    user_id = current.user_id
 
     return replace_company_certificate_service(
         user_id=user_id,
@@ -176,7 +209,7 @@ def update_certificate_with_credentials(
 
 @router.post("/dashboard/create-product")
 def create_product(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     nameProduct: str = Form(...),
     catalogId: str = Form(...),
     priceProduct: float = Form(..., ge=0),
@@ -190,7 +223,8 @@ def create_product(
     database: Session = Depends(get_db, scope="function")
 
 ):
-    user_id = request.state.user_id
+    validate_uploads(imagesProduct, IMAGE_EXTENSIONS, "Imagen del producto")
+    user_id = current.user_id
 
     return create_product_service(
         user_id=user_id,
@@ -209,13 +243,13 @@ def create_product(
 
 @router.get("/dashboard/get-my-products")
 def get_my_product( 
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     search: str = "", 
     page: int =  1, 
     limit: int = 5,
     database: Session = Depends(get_db, scope="function")
 ):
-    user_id = request.state.user_id
+    user_id = current.user_id
 
     return company_dashboard_get_my_products(
         user_id,
@@ -226,9 +260,12 @@ def get_my_product(
     )
 
 @router.get("/dashboard/products-summary")
-def get_products_summary(request: Request, database: Session = Depends(get_db, scope="function")):
+def get_products_summary(
+    current: Annotated[AuthContext, Depends(require_role("company"))],
+    database: Session = Depends(get_db, scope="function"),
+):
 
-    user_id = request.state.user_id
+    user_id = current.user_id
 
     return company_dashboard_products_summary_service(
         user_id=user_id,
@@ -238,12 +275,12 @@ def get_products_summary(request: Request, database: Session = Depends(get_db, s
 
 @router.get("/dashboard/get-my-product/{product_id}", response_model=ProductDetailResponse)
 def get_my_product_detail(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     database: Session = Depends(get_db, scope="function"),
 ):
 
-    user_id = request.state.user_id
+    user_id = current.user_id
 
     return get_product_detail_service(
         user_id=user_id,
@@ -254,7 +291,7 @@ def get_my_product_detail(
 
 @router.patch("/dashboard/update-my-product/{idProduct}")
 def upgrade_my_product(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     idProduct: UUID,
     data: UpdateProductRequest = Depends(UpdateProductRequest.as_form),
     imagesProduct: list[UploadFile] = File(None),
@@ -262,8 +299,9 @@ def upgrade_my_product(
     nas: NasService = Depends(get_nas_service),
     database: Session = Depends(get_db, scope="function"),
 ):
+    validate_uploads(imagesProduct, IMAGE_EXTENSIONS, "Imagen del producto")
 
-    user_id = request.state.user_id
+    user_id = current.user_id
 
     return update_product_service(
         user_id=user_id,
@@ -278,12 +316,12 @@ def upgrade_my_product(
 
 @router.patch("/dashboard/change-status-my-product/{product_id}")
 def change_status_my_product(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     data: ProductStatusRequest, 
     database: Session = Depends(get_db, scope="function")):
 
-    user_id = request.state.user_id
+    user_id = current.user_id
 
     return change_product_status_service(
         user_id=user_id,
@@ -293,9 +331,13 @@ def change_status_my_product(
     )
 
 @router.delete("/dashboard/delete-my-product/{product_id}")
-def delete_my_product(request: Request,product_id: UUID, database: Session = Depends(get_db, scope="function")):
+def delete_my_product(
+    current: Annotated[AuthContext, Depends(require_role("company"))],
+    product_id: UUID,
+    database: Session = Depends(get_db, scope="function"),
+):
 
-    user_id = request.state.user_id
+    user_id = current.user_id
     return delete_product_service(
         user_id=user_id,
         product_id=product_id,
@@ -305,12 +347,12 @@ def delete_my_product(request: Request,product_id: UUID, database: Session = Dep
 
 @router.post("/dashboard/products/{product_id}/variants", response_model=VariantDetailResponse)
 def create_variant(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     data: CreateVariantRequest,
     database: Session = Depends(get_db, scope="function"),
 ):
-    user_id = request.state.user_id
+    user_id = current.user_id
 
     return create_variant_service(
         user_id=user_id,
@@ -322,12 +364,12 @@ def create_variant(
 
 @router.get("/dashboard/products/{product_id}/variants", response_model=list[VariantResponse])
 def list_variants(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     include_deleted: bool = Query(default=False),
     database: Session = Depends(get_db, scope="function"),
 ):
-    user_id = request.state.user_id
+    user_id = current.user_id
 
     return list_variants_service(
         user_id=user_id,
@@ -339,12 +381,12 @@ def list_variants(
 
 @router.get("/dashboard/products/{product_id}/variants/{variant_id}", response_model=VariantDetailResponse)
 def get_variant_detail(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     variant_id: UUID,
     database: Session = Depends(get_db, scope="function"),
 ):
-    user_id = request.state.user_id
+    user_id = current.user_id
 
     return get_variant_detail_service(
         user_id=user_id,
@@ -356,13 +398,13 @@ def get_variant_detail(
 
 @router.patch("/dashboard/products/{product_id}/variants/{variant_id}", response_model=VariantDetailResponse)
 def update_variant(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     variant_id: UUID,
     data: UpdateVariantRequest,
     database: Session = Depends(get_db, scope="function"),
 ):
-    user_id = request.state.user_id
+    user_id = current.user_id
 
     return update_variant_service(
         user_id=user_id,
@@ -375,12 +417,12 @@ def update_variant(
 
 @router.delete("/dashboard/products/{product_id}/variants/{variant_id}")
 def delete_variant(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     variant_id: UUID,
     database: Session = Depends(get_db, scope="function"),
 ):
-    user_id = request.state.user_id
+    user_id = current.user_id
 
     return delete_variant_service(
         user_id=user_id,
@@ -395,12 +437,12 @@ def delete_variant(
     response_model=list[VariantImageResponse],
 )
 def list_variant_images(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     variant_id: UUID,
     database: Session = Depends(get_db, scope="function"),
 ):
-    user_id = request.state.user_id
+    user_id = current.user_id
 
     return list_variant_images_service(
         user_id=user_id,
@@ -415,14 +457,15 @@ def list_variant_images(
     response_model=VariantDetailResponse,
 )
 def upload_variant_images(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     variant_id: UUID,
     imagesVariant: list[UploadFile] = File(...),
     nas: NasService = Depends(get_nas_service),
     database: Session = Depends(get_db, scope="function"),
 ):
-    user_id = request.state.user_id
+    validate_uploads(imagesVariant, IMAGE_EXTENSIONS, "Imagen de la variante")
+    user_id = current.user_id
 
     return upload_variant_images_service(
         user_id=user_id,
@@ -439,14 +482,14 @@ def upload_variant_images(
     response_model=VariantDetailResponse,
 )
 def delete_variant_image(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     variant_id: UUID,
     image_id: UUID,
     nas: NasService = Depends(get_nas_service),
     database: Session = Depends(get_db, scope="function"),
 ):
-    user_id = request.state.user_id
+    user_id = current.user_id
 
     return delete_variant_image_service(
         user_id=user_id,
@@ -463,13 +506,13 @@ def delete_variant_image(
     response_model=VariantDetailResponse,
 )
 def set_main_variant_image(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     variant_id: UUID,
     image_id: UUID,
     database: Session = Depends(get_db, scope="function"),
 ):
-    user_id = request.state.user_id
+    user_id = current.user_id
 
     return set_main_variant_image_service(
         user_id=user_id,
@@ -485,12 +528,12 @@ def set_main_variant_image(
     response_model=list[VariantAttributeValuePair],
 )
 def list_variant_attribute_values(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     variant_id: UUID,
     database: Session = Depends(get_db, scope="function"),
 ):
-    user_id = request.state.user_id
+    user_id = current.user_id
 
     return list_variant_attribute_values_service(
         user_id=user_id,
@@ -505,13 +548,13 @@ def list_variant_attribute_values(
     response_model=VariantDetailResponse,
 )
 def set_variant_attribute_values(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     product_id: UUID,
     variant_id: UUID,
     data: list[VariantAttributeValueItem],
     database: Session = Depends(get_db, scope="function"),
 ):
-    user_id = request.state.user_id
+    user_id = current.user_id
 
     return set_variant_attribute_values_service(
         user_id=user_id,
@@ -524,7 +567,7 @@ def set_variant_attribute_values(
 
 @router.get("/dashboard/orders", response_model=OrdersPaginatedResponse)
 def get_company_orders(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=50),
     status: list[str] | None = Query(None),
@@ -532,7 +575,7 @@ def get_company_orders(
     database: Session = Depends(get_db, scope="function"),
 ):
     return list_company_orders_service(
-        user_id=request.state.user_id,
+        user_id=current.user_id,
         database=database,
         page=page,
         limit=limit,
@@ -542,19 +585,24 @@ def get_company_orders(
 
 
 @router.get("/dashboard/orders/status-counts", response_model=OrderStatusCountsResponse)
-def get_company_orders_status_counts(request: Request, database: Session = Depends(get_db, scope="function")):
+def get_company_orders_status_counts(
+    current: Annotated[AuthContext, Depends(require_role("company"))],
+    database: Session = Depends(get_db, scope="function"),
+):
     return get_company_order_status_counts_service(
-        user_id=request.state.user_id,
+        user_id=current.user_id,
         database=database,
     )
 
 
 @router.get("/dashboard/orders/{order_id}", response_model=OrderResponse)
 def get_company_order_detail(
-    request: Request, order_id: UUID, database: Session = Depends(get_db, scope="function")
+    current: Annotated[AuthContext, Depends(require_role("company"))],
+    order_id: UUID,
+    database: Session = Depends(get_db, scope="function"),
 ):
     return get_company_order_detail_service(
-        user_id=request.state.user_id,
+        user_id=current.user_id,
         order_id=order_id,
         database=database,
     )
@@ -562,37 +610,41 @@ def get_company_order_detail(
 
 @router.patch("/dashboard/orders/{order_id}/status", response_model=OrderResponse)
 def update_company_order_status(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     order_id: UUID,
     data: UpdateOrderStatusRequest,
     database: Session = Depends(get_db, scope="function"),
 ):
     return update_company_order_status_service(
-        user_id=request.state.user_id,
+        user_id=current.user_id,
         order_id=order_id,
         new_status=data.status,
         database=database,
     )
 
 
-@router.get("/dashboard/shipping-carriers", response_model=list[ShippingCarrierResponse])
-def get_company_shipping_carriers(request: Request, database: Session = Depends(get_db, scope="function")):
+@router.get(
+    "/dashboard/shipping-carriers",
+    response_model=list[ShippingCarrierResponse],
+    dependencies=[Depends(require_role("company"))],
+)
+def get_company_shipping_carriers(database: Session = Depends(get_db, scope="function")):
     return get_active_shipping_carriers_service(database)
 
 
 @router.get("/dashboard/returns", response_model=ReturnsPaginatedResponse)
 def get_company_returns(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=50),
     status: str | None = Query(None),
     search: str | None = Query(None),
     database: Session = Depends(get_db, scope="function"),
 ):
-    
+    """Reclamaciones de devolución de los pedidos de la empresa (estado y búsqueda opcionales)."""
 
     return list_company_returns_service(
-        user_id=request.state.user_id,
+        user_id=current.user_id,
         database=database,
         page=page,
         limit=limit,
@@ -601,27 +653,33 @@ def get_company_returns(
     )
 
 
-@router.get("/dashboard/returns/{return_id}", response_model=ReturnRequestResponse)
+@router.get("/dashboard/returns/{return_id}", response_model=ReturnDetailResponse)
 def get_company_return_detail(
-    request: Request, return_id: UUID, database: Session = Depends(get_db, scope="function")
+    current: Annotated[AuthContext, Depends(require_role("company"))],
+    return_id: UUID,
+    database: Session = Depends(get_db, scope="function"),
 ):
+    """Detalle de una reclamación propia con su historial (sin las llamadas internas del administrador)."""
     return get_company_return_detail_service(
-        user_id=request.state.user_id,
+        user_id=current.user_id,
         return_id=return_id,
         database=database,
     )
 
 
-@router.patch("/dashboard/returns/{return_id}", response_model=ReturnRequestResponse)
+@router.patch("/dashboard/returns/{return_id}", response_model=ReturnDetailResponse)
 def decide_company_return(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     return_id: UUID,
     data: ReturnDecisionRequest,
     database: Session = Depends(get_db, scope="function"),
 ):
+    """Aprueba (reembolso inmediato en RehniCoin del monto pagado) o rechaza con motivo obligatorio.
+    Una decisión simultánea o repetida responde 409; el correo al comprador se registra y se envía
+    después de confirmar la transacción."""
 
     return decide_return_service(
-        user_id=request.state.user_id,
+        user_id=current.user_id,
         return_id=return_id,
         data=data,
         database=database,
@@ -630,13 +688,13 @@ def decide_company_return(
 
 @router.patch("/dashboard/orders/{order_id}/shipping", response_model=OrderResponse)
 def set_company_order_shipping(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("company"))],
     order_id: UUID,
     data: SetOrderShippingRequest,
     database: Session = Depends(get_db, scope="function"),
 ):
     return set_company_order_shipping_service(
-        user_id=request.state.user_id,
+        user_id=current.user_id,
         order_id=order_id,
         data=data,
         database=database,

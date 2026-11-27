@@ -106,4 +106,21 @@ describe("RegisterCompany: validación en el cliente", () => {
     });
     expect(await screen.findByText("VERIFICAR CORREO")).toBeTruthy();
   });
+
+  it("un certificado que no es PDF se rechaza al elegirlo y bloquea el envío", async () => {
+    const user = userEvent.setup({ applyAccept: false });
+    render(
+      <MemoryRouter initialEntries={["/register-company"]}>
+        <Routes>
+          <Route path="/register-company" element={<RegisterCompany />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    await user.upload(field(/Seleccionar archivo PDF/), new File(["x"], "camara.png", { type: "image/png" }));
+
+    expect(showAlert).toHaveBeenCalledWith("error", "Certificado: solo se admite PDF.");
+    await user.click(screen.getByRole("button", { name: /crear cuenta empresarial/i }));
+    expect(registerCompany).not.toHaveBeenCalled();
+  });
 });

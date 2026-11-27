@@ -1,8 +1,11 @@
+"""Schemas del panel admin de usuarios: listado, edición de correo o rol y respuesta."""
+
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import Literal
+from app.schemas.SchemaEmail import NormalizedEmail
 
 
 class AdminUserResponse(BaseModel):
@@ -25,11 +28,5 @@ class AdminUsersPaginatedResponse(BaseModel):
 
 
 class UpdateAdminUserRequest(BaseModel):
-    email: EmailStr | None = None
+    email: NormalizedEmail | None = None
     role: Literal["user", "admin", "owner"] | None = None
-
-
-class AdminUserUpdateResponse(BaseModel):
-    id: UUID
-    email: EmailStr
-    role: str

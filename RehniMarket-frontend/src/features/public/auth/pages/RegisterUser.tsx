@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff, Lock, Mail, Phone, User } from "lucide-react";
+import { Mail, Phone, User, UserPlus } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -7,6 +7,8 @@ import { registerUser } from "@/features/public/auth/api/authService";
 import TermsModal from "@/features/public/auth/components/TermsModal";
 import UserTerms from "@/features/public/auth/components/terms/UserTerms";
 import AuthLayout from "@/features/public/auth/components/AuthLayout";
+import { lastPublicPath } from "@/features/public/auth/authNavigation";
+import PasswordInput from "@/features/public/auth/components/PasswordInput";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 import { Button, Input } from "@/shared/components/ui";
@@ -18,8 +20,6 @@ export default function UserForm() {
 
   const [showTerms, setShowTerms] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [form, setForm] = useState({
@@ -50,7 +50,7 @@ export default function UserForm() {
     try {
       const res = await registerUser(form);
 
-      navigate("/verify-email", {
+      void navigate("/verify-email", {
         state: {
           email: form.email,
           expiresIn: res?.expires_in,
@@ -78,25 +78,17 @@ export default function UserForm() {
     }
   };
 
-  const eyeButton = (shown: boolean, toggle: () => void) => (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label={shown ? "Ocultar contraseña" : "Mostrar contraseña"}
-      className="rounded p-0.5 text-gray-400 transition hover:text-primary"
-    >
-      {shown ? <EyeOff size={18} /> : <Eye size={18} />}
-    </button>
-  );
 
   return (
     <AuthLayout
+      icon={<UserPlus size={28} />}
+      backFallback={lastPublicPath()}
       title="Crear una cuenta"
       subtitle="Únete a RehniMarket para comprar y guardar tus favoritos."
       belowCard={
         <p>
           ¿Ya tienes una cuenta?{" "}
-          <Link to="/login" className="font-semibold text-primary hover:underline">
+          <Link to="/login" className="font-semibold brand-link">
             Iniciar sesión
           </Link>
         </p>
@@ -104,7 +96,7 @@ export default function UserForm() {
     >
       <form onSubmit={handleSubmit} autoComplete="off" className="space-y-5">
         <fieldset className="space-y-4">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+          <legend className="text-xs font-semibold text-ink-muted">
             Datos personales
           </legend>
 
@@ -137,7 +129,7 @@ export default function UserForm() {
         </fieldset>
 
         <fieldset className="space-y-4">
-          <legend className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+          <legend className="text-xs font-semibold text-ink-muted">
             Datos de acceso
           </legend>
 
@@ -155,38 +147,30 @@ export default function UserForm() {
             error={errorFor("email")}
           />
 
-          <Input
+          <PasswordInput
             label="Contraseña"
             name="password"
-            type={showPassword ? "text" : "password"}
             required
             autoComplete="new-password"
-            leadingIcon={<Lock size={18} />}
             placeholder="••••••••"
             value={form.password}
             onChange={handleChange}
             onBlur={handleBlur}
             error={errorFor("password")}
             hint="Mínimo 8 caracteres, con mayúscula, minúscula y número."
-            trailingSlot={eyeButton(showPassword, () => setShowPassword((v) => !v))}
           />
 
-          <Input
+          <PasswordInput
             label="Confirmar contraseña"
             name="confirmPassword"
-            type={showConfirmPassword ? "text" : "password"}
             required
             autoComplete="new-password"
-            leadingIcon={<Lock size={18} />}
             placeholder="••••••••"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             onBlur={handleBlur}
             // La no coincidencia se avisa mientras se escribe, como antes.
             error={errorFor("confirmPassword") ?? (confirmPassword ? errors.confirmPassword : undefined)}
-            trailingSlot={eyeButton(showConfirmPassword, () =>
-              setShowConfirmPassword((v) => !v),
-            )}
           />
         </fieldset>
 
@@ -194,14 +178,14 @@ export default function UserForm() {
           <input
             type="checkbox"
             required
-            className="mt-0.5 h-4 w-4 accent-brand-600"
+            className="mt-0.5 h-4 w-4 accent-secondary"
           />
-          <span className="leading-relaxed text-gray-600">
+          <span className="leading-relaxed text-ink-muted">
             Acepto los{" "}
             <button
               type="button"
               onClick={() => setShowTerms(true)}
-              className="font-semibold text-primary hover:underline"
+              className="font-semibold brand-link"
             >
               términos y condiciones
             </button>

@@ -1,12 +1,7 @@
+/** API del comprador para sus reclamaciones de devolución: abrir, seguir y pedir revisión. */
 import { api } from "@/api/Client";
 
-import type { OrderItemReturn, ReturnRequest } from "../types/response";
-
-/** Devoluciones del comprador para uno de sus pedidos. */
-export async function getOrderReturns(orderId: string): Promise<ReturnRequest[]> {
-  const { data } = await api.get<ReturnRequest[]>(`/orders/${orderId}/returns`);
-  return data;
-}
+import type { ReturnDetail, ReturnRequest, ReturnsPaginated } from "../types/response";
 
 /** El comprador solicita la devolución de un ítem de un pedido entregado. */
 export async function requestReturn(
@@ -17,4 +12,17 @@ export async function requestReturn(
   return data;
 }
 
-export type { OrderItemReturn };
+export async function getMyReturns(page = 1, limit = 10): Promise<ReturnsPaginated> {
+  const { data } = await api.get<ReturnsPaginated>("/returns", { params: { page, limit } });
+  return data;
+}
+
+export async function getMyReturnDetail(returnId: string): Promise<ReturnDetail> {
+  const { data } = await api.get<ReturnDetail>(`/returns/${returnId}`);
+  return data;
+}
+
+export async function requestReturnReview(returnId: string, reason: string): Promise<ReturnDetail> {
+  const { data } = await api.post<ReturnDetail>(`/returns/${returnId}/review`, { reason });
+  return data;
+}

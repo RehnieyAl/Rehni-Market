@@ -1,28 +1,50 @@
-import { useState } from "react";
-import { Eye, EyeOff, Lock, ShieldCheck } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+/** Nueva contraseña con el código de recuperación, con reenvío del código sin repetir la solicitud. */
+import { useEffect, useState } from "react";
+import { ShieldCheck } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-import { resetPassword } from "@/features/public/auth/api/authService";
+import { forgotPassword, resetPassword } from "@/features/public/auth/api/authService";
 import { useAlert } from "@/shared/components/alert/useAlert";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 import AuthLayout from "@/features/public/auth/components/AuthLayout";
+import PasswordInput from "@/features/public/auth/components/PasswordInput";
 import OtpInput from "@/features/public/auth/components/OtpInput";
-import { Button, Input } from "@/shared/components/ui";
+import ResendCode from "@/features/public/auth/components/ResendCode";
+import { Button } from "@/shared/components/ui";
+
+const EMAIL_KEY = "resetPassword.email";
+
+function rememberedEmail(): string {
+  try {
+    return sessionStorage.getItem(EMAIL_KEY) ?? "";
+  } catch {
+    return "";
+  }
+}
 
 export default function ResetPassword() {
   const navigate = useNavigate();
   const location = useLocation();
   const { showAlert } = useAlert();
 
-  const email = location.state?.email ?? "";
+  const navState = (location.state ?? {}) as { email?: string; resendAvailableIn?: number };
+  const email = navState.email ?? rememberedEmail();
 
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [code, setCode] = useState(["", "", "", "", "", ""]);
+  const [focusKey, setFocusKey] = useState(0);
+
+  useEffect(() => {
+    if (!email) return;
+    try {
+      sessionStorage.setItem(EMAIL_KEY, email);
+    } catch {
+      // Sin sessionStorage solo se pierde el correo al recargar.
+    }
+  }, [email]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +69,7 @@ export default function ResetPassword() {
       });
 
       showAlert("success", "Contraseña actualizada correctamente.");
-      navigate("/login", { state: { email } });
+      void navigate("/login", { state: { email } });
     } catch (err) {
       console.error(err);
 
@@ -57,9 +79,10 @@ export default function ResetPassword() {
         switch (error?.code) {
           case ErrorCode.CODE_EXPIRED:
           case ErrorCode.INVALID_CODE:
-          case ErrorCode.CODE_ALREADY_USED:
-          case ErrorCode.USER_NOT_FOUND:
+          case ErrorCode.CODE_ATTEMPTS_EXCEEDED:
             showAlert("error", error.message);
+            setCode(["", "", "", "", "", ""]);
+            setFocusKey((key) => key + 1);
             break;
 
           default:
@@ -74,73 +97,53 @@ export default function ResetPassword() {
     }
   };
 
-  const eyeButton = (shown: boolean, toggle: () => void) => (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-label={shown ? "Ocultar contraseña" : "Mostrar contraseña"}
-      className="rounded p-0.5 text-gray-400 transition hover:text-primary"
-    >
-      {shown ? <EyeOff size={18} /> : <Eye size={18} />}
-    </button>
-  );
 
   return (
     <AuthLayout
-      icon={<ShieldCheck size={24} />}
+      icon={<ShieldCheck size={28} />}
       title="Nueva contraseña"
       subtitle={
         <>
-          Ingresa el código enviado a{" "}
-          <span className="font-medium text-gray-700">{email}</span> y crea una
+          Ingresa el código de verificación que enviamos a{" "}
+          <span className="font-medium text-ink [overflow-wrap:anywhere]">{email || "tu correo"}</span> y crea una
           contraseña nueva.
         </>
       }
-      belowCard={
-        <Link
-          to="/login"
-          state={{ email }}
-          className="font-semibold text-primary hover:underline"
-        >
-          Volver al inicio de sesión
-        </Link>
-      }
+      backFallback="/forgot-password"
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <p className="mb-2 text-sm font-medium text-gray-700">Código de 6 dígitos</p>
-          <OtpInput value={code} onChange={setCode} ariaLabel="Código de recuperación" />
+          <p className="mb-2 text-sm font-medium text-ink">Código de 6 dígitos</p>
+          <OtpInput value={code} onChange={setCode} autoFocusKey={focusKey} ariaLabel="Código de recuperación" />
         </div>
 
-        <Input
+        <PasswordInput
           label="Nueva contraseña"
-          type={showPassword ? "text" : "password"}
           required
           autoComplete="new-password"
-          leadingIcon={<Lock size={18} />}
           placeholder="••••••••"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          trailingSlot={eyeButton(showPassword, () => setShowPassword((v) => !v))}
         />
 
-        <Input
+        <PasswordInput
           label="Confirmar contraseña"
-          type={showConfirmPassword ? "text" : "password"}
           required
           autoComplete="new-password"
-          leadingIcon={<Lock size={18} />}
           placeholder="••••••••"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          error={
-            confirmPassword && password !== confirmPassword
-              ? "Las contraseñas no coinciden."
-              : undefined
-          }
-          trailingSlot={eyeButton(showConfirmPassword, () =>
-            setShowConfirmPassword((v) => !v),
-          )}
+          error={confirmPassword && password !== confirmPassword ? "Las contraseñas no coinciden." : undefined}
+        />
+
+        <ResendCode
+          email={email}
+          availableIn={navState.resendAvailableIn}
+          onResend={() => forgotPassword({ email })}
+          onResent={() => {
+            setCode(["", "", "", "", "", ""]);
+            setFocusKey((key) => key + 1);
+          }}
         />
 
         <Button type="submit" fullWidth size="lg" loading={loading}>

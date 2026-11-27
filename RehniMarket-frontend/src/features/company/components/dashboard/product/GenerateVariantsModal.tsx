@@ -68,7 +68,7 @@ export default function GenerateVariantsModal({
       }
     };
 
-    load();
+    void load();
     return () => {
       cancelled = true;
     };
@@ -199,7 +199,7 @@ export default function GenerateVariantsModal({
                       onClick={() => toggleAxis(axis.id)}
                       className={`rounded-lg border px-3 py-1.5 text-sm transition ${
                         active
-                          ? "border-primary bg-primary text-primary-fg"
+                          ? "border-secondary bg-primary text-primary-fg"
                           : "border-gray-300 text-gray-700 hover:border-gray-400"
                       }`}
                     >
@@ -280,7 +280,7 @@ export default function GenerateVariantsModal({
                     inputMode="numeric"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-brand-600"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-secondary"
                   />
                 </div>
                 <div>
@@ -290,7 +290,7 @@ export default function GenerateVariantsModal({
                     inputMode="numeric"
                     value={stock}
                     onChange={(e) => setStock(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-brand-600"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-secondary"
                   />
                 </div>
               </div>
@@ -315,7 +315,7 @@ export default function GenerateVariantsModal({
           <button
             onClick={handleCreate}
             disabled={creating || !combinations || newCount === 0}
-            className="rounded-lg bg-primary px-5 py-2 text-white hover:bg-primary-hover disabled:opacity-50"
+            className="rounded-lg bg-primary px-5 py-2 text-white fill-hover disabled:opacity-50"
           >
             {creating ? "Creando..." : "Crear seleccionadas"}
           </button>

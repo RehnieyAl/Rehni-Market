@@ -1,3 +1,4 @@
+/** Detalle de un pedido del comprador: ítems, envío, cancelación y solicitud de devoluciones. */
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Mail, MapPin, Phone, Store } from "lucide-react";
@@ -10,6 +11,7 @@ import { Badge, Modal, Button, Spinner } from "@/shared/components/ui";
 import { RotateCcw } from "lucide-react";
 import RequestReturnModal from "@/features/returns/components/RequestReturnModal";
 import ReturnStatusCard from "@/features/returns/components/ReturnStatusCard";
+import RequestReviewModal from "@/features/returns/components/RequestReviewModal";
 import { canRequestItemReturn } from "@/features/returns/utils/returnStatus";
 import { getMyOrderDetail, cancelMyOrder } from "@/features/orders/api/orderService";
 import { ORDER_STATUS_LABEL, ORDER_STATUS_TONE } from "@/features/orders/utils/orderStatus";
@@ -45,6 +47,8 @@ export default function OrderDetailModal({
     { id: string; productName: string; variantName: string | null } | null
   >(null);
 
+  const [reviewReturnId, setReviewReturnId] = useState<string | null>(null);
+
   const reloadOrder = async () => {
     if (!orderId) return;
     try {
@@ -79,12 +83,12 @@ export default function OrderDetailModal({
       }
     };
 
-    load();
+    void load();
 
     return () => {
       cancelled = true;
     };
-  }, [isOpen, orderId]);
+  }, [isOpen, orderId, showAlert]);
 
   const handleCancel = async () => {
     if (!order) return;
@@ -158,7 +162,7 @@ export default function OrderDetailModal({
 
               <section className="rounded-card bg-gray-50 p-4">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-lg font-bold text-white">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-lg font-semibold text-white">
                     {order.buyerPhoto ? (
                       <img
                         src={order.buyerPhoto}
@@ -209,7 +213,7 @@ export default function OrderDetailModal({
 
                   <Link
                     to={`/company/${order.companyId}`}
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-2 hover:underline"
+                    className="inline-flex items-center gap-1.5 text-sm font-medium brand-link"
                     aria-label={`Ver la tienda de ${order.companyName}`}
                   >
                     <Store size={14} />
@@ -253,7 +257,7 @@ export default function OrderDetailModal({
                       </div>
 
                       {itemReturn ? (
-                        <ReturnStatusCard data={itemReturn} />
+                        <ReturnStatusCard data={itemReturn} onRequestReview={() => setReviewReturnId(itemReturn.id)} />
                       ) : (
                         canRequestItemReturn(order.status, item.id, order.returns) && (
                           <button
@@ -265,7 +269,7 @@ export default function OrderDetailModal({
                                 variantName: item.variantName,
                               })
                             }
-                            className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                            className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium brand-link"
                           >
                             <RotateCcw size={13} />
                             Solicitar devolución
@@ -325,6 +329,17 @@ export default function OrderDetailModal({
         onClose={() => setConfirmCancelOpen(false)}
       />
 
+      <RequestReviewModal
+        key={reviewReturnId ?? "no-review"}
+        returnId={reviewReturnId}
+        isOpen={reviewReturnId !== null}
+        onClose={() => setReviewReturnId(null)}
+        onRequested={() => {
+          void reloadOrder();
+          onCancelled?.();
+        }}
+      />
+
       <RequestReturnModal
         key={returnItem?.id ?? "none"}
         orderId={order?.id ?? ""}
@@ -332,7 +347,7 @@ export default function OrderDetailModal({
         isOpen={returnItem !== null}
         onClose={() => setReturnItem(null)}
         onSubmitted={() => {
-          reloadOrder();
+          void reloadOrder();
           onCancelled?.();
         }}
       />

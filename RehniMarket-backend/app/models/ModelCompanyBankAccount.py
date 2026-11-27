@@ -1,3 +1,5 @@
+"""Modelo ORM de cuentas bancarias de la empresa para liquidaciones (tabla company_bank_accounts)."""
+
 from sqlalchemy import String, Boolean, ForeignKey, DateTime, Enum, Index, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -5,7 +7,7 @@ import uuid
 from datetime import datetime, timezone
 from enum import Enum as PyEnum
 
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 
 class BankAccountTypeEnum(str, PyEnum):
@@ -31,6 +33,12 @@ class CompanyBankAccount(Base):
 
     account_holder: Mapped[str] = mapped_column(String(150), nullable=False)
     document_number: Mapped[str] = mapped_column(String(30), nullable=False)
+    # Banco del catálogo. Nulo solo en cuentas registradas antes del catálogo cuyo nombre aún no coincide
+    # con un banco registrado; bank_name conserva el nombre mostrado y el que leen las liquidaciones.
+    bank_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("banks.id", ondelete="RESTRICT"), nullable=True, index=True
+    )
+
     bank_name: Mapped[str] = mapped_column(String(100), nullable=False)
 
     account_type: Mapped[BankAccountTypeEnum] = mapped_column(
@@ -52,6 +60,8 @@ class CompanyBankAccount(Base):
     )
 
     company = relationship("Company", back_populates="bank_accounts")
+
+    bank = relationship("Bank", lazy="joined")
 
     payouts = relationship("CompanyPayout", back_populates="bank_account")
 

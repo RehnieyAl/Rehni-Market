@@ -99,9 +99,9 @@ URL_FRONTEND="https://rehnimarket"
 # URL_BACKEND="http://<IP-LAN>:8000"   ← se deja así: la usa la app móvil
 ```
 
-- **`URL_FRONTEND`**: enlaces de los correos y `Access-Control-Allow-Origin` de las respuestas
-  de error (`app/utils/Response.py`). Si no coincide con el dominio del frontend, los errores
-  de la API llegan al navegador como fallos de CORS.
+- **`URL_FRONTEND`**: enlaces de los correos y origen permitido por CORS
+  (`app/middleware/CorsMiddleware.py`). Si no coincide con el dominio del frontend, las
+  respuestas de la API llegan al navegador como fallos de CORS.
 - **`URL_BACKEND`**: base de las URL de imágenes cuando no se entra por Caddy (app móvil al
   `:8000`). Por Caddy, el backend usa el `X-Forwarded-Host` (`PublicBaseUrlMiddleware`) y arma
   `https://api.rehnimarket/media/proxy?path=…`.

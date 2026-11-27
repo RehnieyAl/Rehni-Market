@@ -1,7 +1,10 @@
-from fastapi import APIRouter, Depends, Request
+"""Rutas del panel admin con estadísticas, actividad y usuarios recientes (admin y owner)."""
+
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.database.Connection import get_db
+from app.core.dbconexion import get_db
+from app.core.AuthDependencies import require_role
 
 from app.services.DashboardService.admin.DashboarService import (
     get_admin_dashboard_statistics_service,
@@ -15,14 +18,14 @@ router = APIRouter(
 )
 
 
-@router.get("/dashboard/statistics")
+@router.get("/dashboard/statistics", dependencies=[Depends(require_role("admin", "owner"))])
 def get_admin_dashboard_statistics(database: Session = Depends(get_db, scope="function")):
     
     return get_admin_dashboard_statistics_service(database)
 
 
 
-@router.get("/dashboard/recent-activities")
+@router.get("/dashboard/recent-activities", dependencies=[Depends(require_role("admin", "owner"))])
 def get_recent_activities(
     database: Session = Depends(get_db, scope="function"),
 ):
@@ -33,7 +36,7 @@ def get_recent_activities(
 
 
 
-@router.get("/dashboard/recent-users")
+@router.get("/dashboard/recent-users", dependencies=[Depends(require_role("admin", "owner"))])
 def get_recent_users(
     database: Session = Depends(get_db, scope="function"),
 ):

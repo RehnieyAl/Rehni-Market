@@ -1,4 +1,5 @@
-import { Search, Eye } from "lucide-react";
+/** Reportes de productos y empresas (admin/owner): búsqueda, filtros por tipo y estado, paginación y detalle para resolverlos. */
+import { Search, Eye, BarChart3 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import {
@@ -12,6 +13,7 @@ import type { BadgeTone } from "@/shared/components/ui";
 import ReportDetailModal from "./ReportDetailModal";
 
 import type { ReportListItem } from "@/features/reports/types/response";
+import DashboardPageHeader from "@/shared/components/dashboard/DashboardPageHeader";
 
 export default function Reports() {
   const [reports, setReports] = useState<ReportListItem[]>([]);
@@ -78,46 +80,47 @@ export default function Reports() {
       }
     };
 
-    loadInitialReports();
+    void loadInitialReports();
   }, []);
 
   const handleSearch = (value: string) => {
     setSearch(value);
     setPage(1);
-    loadReports(1, value, typeFilter, statusFilter);
+    void loadReports(1, value, typeFilter, statusFilter);
   };
 
   const handleTypeFilter = (value: ReportTypeFilter) => {
     setTypeFilter(value);
     setPage(1);
-    loadReports(1, search, value, statusFilter);
+    void loadReports(1, search, value, statusFilter);
   };
 
   const handleStatusFilter = (value: ReportStatusFilter) => {
     setStatusFilter(value);
     setPage(1);
-    loadReports(1, search, typeFilter, value);
+    void loadReports(1, search, typeFilter, value);
   };
 
   const handlePageChange = (nextPage: number) => {
     if (nextPage < 1 || nextPage > totalPages || loading) return;
 
     setPage(nextPage);
-    loadReports(nextPage, search, typeFilter, statusFilter);
+    void loadReports(nextPage, search, typeFilter, statusFilter);
   };
 
   const handleReportResolved = () => {
-    loadReports(page, search, typeFilter, statusFilter);
+    void loadReports(page, search, typeFilter, statusFilter);
   };
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
 
       <div className="shrink-0">
-        <h1 className="text-2xl font-bold text-gray-900">Reportes</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Reportes de productos y empresas enviados por los usuarios.
-        </p>
+        <DashboardPageHeader
+          icon={<BarChart3 size={26} />}
+          title="Reportes"
+          description="Reportes de productos y empresas enviados por los usuarios."
+        />
       </div>
 
       <section className="mt-6 shrink-0 rounded-card border border-gray-200 bg-surface-1 p-5 shadow-card">
@@ -170,10 +173,10 @@ export default function Reports() {
           </div>
         </div>
 
-        <div className="h-[420px] overflow-y-auto overflow-x-auto">
+        <div className="overflow-x-auto">
           <table className="w-full min-w-[900px]">
-            <thead className="sticky top-0 z-10 bg-surface-1">
-              <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-400">
+            <thead className="bg-surface-1">
+              <tr className="border-b border-gray-200 text-left text-xs text-ink-muted">
                 <th className="px-5 py-3 font-medium">Tipo</th>
                 <th className="px-5 py-3 font-medium">Objetivo</th>
                 <th className="px-5 py-3 font-medium">Empresa</th>
@@ -283,7 +286,7 @@ export default function Reports() {
               onClick={() => handlePageChange(page - 1)}
               disabled={page <= 1 || loading}
             >
-              Atrás
+              Anterior
             </Button>
 
             <Button

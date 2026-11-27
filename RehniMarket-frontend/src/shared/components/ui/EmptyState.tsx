@@ -1,3 +1,4 @@
+/** Estado vacío: icono, título, descripción y acción opcional. `card` va suelto en la página; `plain`, dentro de una sección. */
 import type { ReactNode } from "react";
 
 import { cn } from "@/shared/utils/cn";
@@ -22,7 +23,9 @@ export default function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center px-6 py-12 text-center",
+        "flex flex-col items-center justify-center px-6 text-center",
+        // Dentro de una sección ya hay encabezado y márgenes: menos aire vertical que suelto en la página.
+        variant === "plain" ? "py-8" : "py-12",
         variant === "card" &&
           "rounded-card border border-gray-200 bg-surface-1 shadow-card dark:border-hairline dark:bg-surface-1 dark:shadow-none",
         className,

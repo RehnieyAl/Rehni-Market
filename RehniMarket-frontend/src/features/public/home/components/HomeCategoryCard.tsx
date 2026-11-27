@@ -11,7 +11,7 @@ export default function HomeCategoryCard({ category }: HomeCategoryCardProps) {
   return (
     <Link
       to={`/products?catalog=${category.id}`}
-      className="group flex flex-col overflow-hidden rounded-card border border-gray-200 bg-surface-1 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg dark:border-hairline dark:bg-surface-1 dark:hover:border-white/15 dark:hover:shadow-none"
+      className="group flex flex-col overflow-hidden rounded-card border border-gray-200 bg-surface-1 transition-colors duration-150 ease-out hover:-translate-y-1 hover:shadow-lg dark:border-hairline dark:bg-surface-1 dark:hover:border-white/15 dark:hover:shadow-none"
     >
       <div className="flex aspect-[4/3] w-full items-center justify-center bg-gray-50 p-2.5 dark:bg-surface-0">
         {category.image_url ? (
@@ -19,7 +19,7 @@ export default function HomeCategoryCard({ category }: HomeCategoryCardProps) {
             src={category.image_url}
             alt={category.name}
             loading="lazy"
-            className="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-105"
+            className="h-full w-full object-contain"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-gray-300 dark:text-ink-muted/40">

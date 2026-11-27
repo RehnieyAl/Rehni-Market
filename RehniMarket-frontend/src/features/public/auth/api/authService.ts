@@ -75,8 +75,11 @@ export const loginUser = async (data: LoginRequest): Promise<TokenResponse> => {
   return res.data;
 };
 
-export const forgotPassword = async (data: ForgotPasswordRequest) => {
-  const res = await api.post("/auth/forgot-password-user",data);
+/** También es el reenvío del código de recuperación: responde igual exista o no la cuenta. */
+export const forgotPassword = async (
+  data: ForgotPasswordRequest,
+): Promise<VerificationCodeState & { message: string }> => {
+  const res = await api.post("/auth/forgot-password-user", data);
   return res.data;
 };
 

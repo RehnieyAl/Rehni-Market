@@ -1,8 +1,11 @@
+"""Schemas de la billetera RehniCoin: saldo, movimientos, recargas y correcciones."""
+
 from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
+from app.schemas.SchemaEmail import NormalizedEmail
 
 
 class RechargeWalletRequest(BaseModel):
@@ -14,7 +17,7 @@ class RechargeWalletRequest(BaseModel):
 class RechargeWalletByEmailRequest(BaseModel):
     """Body de POST /admin/wallet/recharge; identifica al usuario por email."""
 
-    email: EmailStr
+    email: NormalizedEmail
     amount: Decimal = Field(gt=0)
     description: str | None = Field(default=None, max_length=255)
 

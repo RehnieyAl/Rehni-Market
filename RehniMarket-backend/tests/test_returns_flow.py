@@ -27,10 +27,6 @@ def _silence_emails(monkeypatch):
     ):
         monkeypatch.setattr(target, lambda *a, **k: None)
 
-    for name in ("EmailReturnRequested", "EmailReturnApproved", "EmailReturnRejected"):
-        monkeypatch.setattr(
-            f"app.services.commerce.ReturnService.{name}", lambda *a, **k: None
-        )
 
 
 def _wallet(db, user_id):

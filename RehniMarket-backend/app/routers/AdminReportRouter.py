@@ -1,8 +1,13 @@
-from fastapi import APIRouter, Request, Depends, Query
+"""Rutas del panel admin para revisar reportes de productos (admin y owner)."""
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from uuid import UUID
 
-from app.database.Connection import get_db
+from app.core.dbconexion import get_db
+from app.core.AuthDependencies import AuthContext, require_role
 
 from app.schemas.SchemaCommerce.SchemaReport import (
     ReportResponse,
@@ -19,7 +24,11 @@ from app.services.DashboardService.admin.ReportService import (
 router = APIRouter(prefix="/admin/reports", tags=["admin", "reports"])
 
 
-@router.get("", response_model=ReportsPaginatedResponse)
+@router.get(
+    "",
+    response_model=ReportsPaginatedResponse,
+    dependencies=[Depends(require_role("admin", "owner"))],
+)
 def get_reports(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=10, ge=1, le=100),
@@ -38,19 +47,23 @@ def get_reports(
     )
 
 
-@router.get("/{report_id}", response_model=ReportResponse)
+@router.get(
+    "/{report_id}",
+    response_model=ReportResponse,
+    dependencies=[Depends(require_role("admin", "owner"))],
+)
 def get_report(report_id: UUID, database: Session = Depends(get_db, scope="function")):
     return get_report_detail_service(database, report_id)
 
 
 @router.patch("/{report_id}/status", response_model=ReportResponse)
 def update_report_status(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("admin", "owner"))],
     report_id: UUID,
     data: UpdateReportStatusRequest,
     database: Session = Depends(get_db, scope="function"),
 ):
-    admin_id = request.state.user_id
+    admin_id = current.user_id
 
     return update_report_status_service(
         database=database,

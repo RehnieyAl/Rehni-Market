@@ -1,3 +1,5 @@
+"""Modelos ORM de la billetera RehniCoin y sus movimientos (tablas wallets y wallet_transactions)."""
+
 from sqlalchemy import Numeric, String, ForeignKey, DateTime, Enum, Index
 from decimal import Decimal
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -5,7 +7,7 @@ from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime, timezone
 from enum import Enum as PyEnum
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 
 class WalletTransactionType(str, PyEnum):
@@ -67,6 +69,13 @@ class WalletTransaction(Base):
             unique=True,
             postgresql_where="corrects_transaction_id IS NOT NULL",
         ),
+        # Un solo reembolso por reclamación de devolución, la decida la empresa o el administrador.
+        Index(
+            "uq_wallet_transaction_refund_per_return",
+            "return_request_id",
+            unique=True,
+            postgresql_where="return_request_id IS NOT NULL",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -101,6 +110,10 @@ class WalletTransaction(Base):
         UUID(as_uuid=True),
         ForeignKey("wallet_transactions.id", ondelete="SET NULL"),
         nullable=True,
+    )
+
+    return_request_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("return_requests.id"), nullable=True
     )
 
     created_at: Mapped[datetime] = mapped_column(

@@ -9,8 +9,7 @@ CLAUDE.md
 *.gpg
 .env
 .env.*
-# .env de producción preparado en el equipo antes de copiarlo al servidor por scp
-.env.produccion
+# .env.* incluye .env.produccion, el .env de producción preparado en el equipo antes del scp
 !.env*.example
 *.csv
 .csv
@@ -23,8 +22,6 @@ docs/Manuales/**/.~lock.*
 docs/Manuales/.~lock.*
 docs/Manuales/_generados-descartados/
 docs/Manuales/_piloto/
-.claude/
-CLAUDE.md
 
 
 # Guías del taller SENA (material de terceros, no se versiona); el informe .md sí,
@@ -34,3 +31,7 @@ docs/sena/*
 
 # Repositorios git antiguos anidados (respaldo local, no se versionan)
 *.git.old/
+
+skills-lock.json
+
+pendiente.txt

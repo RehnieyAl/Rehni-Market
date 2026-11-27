@@ -3,7 +3,7 @@
 | Recurso | Dónde |
 |---|---|
 | Swagger UI interactivo | `https://api.<dominio>/docs` (o `https://api.localhost/docs` en local) con `DOCS_ENABLED=true` en el `.env`. En producción está apagado por defecto |
-| Especificación OpenAPI 3 (135 rutas, API 2.6.0) | [`openapi.json`](openapi.json), exportada el 2026-11-16 desde `app.main:app` |
+| Especificación OpenAPI 3 (141 rutas, API 2.6.0) | [`openapi.json`](openapi.json), exportada el 2026-11-25 desde `app.main:app` |
 | Colección para Postman o Insomnia | Importar `openapi.json` (Postman: *Import → File*; genera una carpeta por etiqueta) |
 | Descripción de cada endpoint y errores | Manual técnico (`docs/Manuales/Manual Tecnico.pdf`) |
 

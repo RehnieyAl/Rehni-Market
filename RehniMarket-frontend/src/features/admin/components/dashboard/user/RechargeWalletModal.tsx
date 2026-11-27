@@ -76,7 +76,7 @@ export default function RechargeWalletModal({
       <div className="w-full max-w-md rounded-card bg-surface-1 shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-5">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <Coins size={20} className="text-primary" />
+            <Coins size={20} className="text-secondary" />
             Recargar RehniCoin
           </h2>
 
@@ -108,7 +108,7 @@ export default function RechargeWalletModal({
               placeholder="0"
               aria-invalid={overLimit || undefined}
               className={`w-full rounded-xl border px-4 py-2.5 outline-none ${
-                overLimit ? "border-danger focus:border-danger" : "border-gray-300 focus:border-brand-600"
+                overLimit ? "border-danger focus:border-danger" : "border-gray-300 focus:border-secondary"
               }`}
             />
 
@@ -134,7 +134,7 @@ export default function RechargeWalletModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Ej. Recarga promocional"
-              className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-brand-600"
+              className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:border-secondary"
             />
           </div>
         </div>

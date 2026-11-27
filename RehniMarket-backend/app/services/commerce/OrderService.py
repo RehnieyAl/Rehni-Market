@@ -1,4 +1,5 @@
-import traceback
+"""Pedidos: consulta del comprador y la empresa, cambios de estado, cancelación con reembolso y restitución de stock."""
+import logging
 from decimal import Decimal
 from uuid import UUID
 
@@ -31,6 +32,9 @@ from app.schemas.SchemaCommerce.SchemaOrder import (
 from app.services.NasService import build_media_url
 from app.services.commerce.WalletService import refund_wallet
 from app.services.email.OrderEmailService import send_order_status_email
+from app.services.variants.stock import restore_stock, sync_parent_stock
+
+logger = logging.getLogger(__name__)
 
 
 ALLOWED_TRANSITIONS: dict[OrderStatusEnum, set[OrderStatusEnum]] = {
@@ -54,23 +58,13 @@ REFUNDABLE_ON_SUSPENSION_STATUSES = {
 def _restore_stock_for_order(database: Session, order: Order) -> None:
     for item in order.items:
         if item.variant_id:
-            variant = (
-                database.query(ProductVariant)
-                .filter(ProductVariant.id == item.variant_id)
-                .first()
-            )
-
-            if variant:
-                variant.stock += item.quantity
+            restore_stock(database, ProductVariant, item.variant_id, item.quantity)
         else:
-            product = (
-                database.query(Product)
-                .filter(Product.id == item.product_id)
-                .first()
-            )
+            restore_stock(database, Product, item.product_id, item.quantity)
 
-            if product:
-                product.stock += item.quantity
+    sync_parent_stock(
+        database, (item.product_id for item in order.items if item.variant_id is not None)
+    )
 
 
 def _to_order_response(order: Order, returns: list | None = None) -> OrderResponse:
@@ -242,7 +236,7 @@ def cancel_my_order_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
@@ -368,7 +362,7 @@ def update_company_order_status_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
@@ -419,7 +413,7 @@ def set_company_order_shipping_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 

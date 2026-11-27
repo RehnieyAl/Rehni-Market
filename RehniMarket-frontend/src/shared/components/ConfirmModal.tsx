@@ -28,7 +28,7 @@ const TONE: Record<
     confirm: "primary",
   },
   brand: {
-    iconWrap: "bg-brand-50 text-primary",
+    iconWrap: "bg-primary/15 text-secondary",
     icon: <Info size={22} />,
     confirm: "primary",
   },

@@ -1,11 +1,7 @@
-import { useState } from "react";
+/** Preguntas frecuentes de la plataforma en el detalle de producto (pago, envío, devoluciones). */
 import { ChevronDown } from "lucide-react";
 
-/**
- * Preguntas frecuentes a nivel de plataforma. RehniMarket no tiene un sistema de
- * preguntas y respuestas por producto, así que este bloque solo explica cómo
- * funciona la plataforma (pago, envío, devoluciones). Contenido estático y veraz.
- */
+// RehniMarket no tiene preguntas y respuestas por producto: este bloque solo explica la plataforma.
 const FAQ: { question: string; answer: string }[] = [
   {
     question: "¿Cómo pago mi compra?",
@@ -30,37 +26,27 @@ const FAQ: { question: string; answer: string }[] = [
 ];
 
 export default function ProductFaq() {
-  const [open, setOpen] = useState<number | null>(0);
-
   return (
-    <section className="theme-dark mt-10">
-      <h2 className="text-xl font-bold text-ink">Preguntas frecuentes</h2>
+    <section className="mt-8" aria-labelledby="product-faq-title">
+      <h2 id="product-faq-title" className="text-lg font-semibold text-ink sm:text-xl">
+        Preguntas frecuentes
+      </h2>
 
-      <div className="mt-4 divide-y divide-hairline overflow-hidden rounded-card border border-hairline bg-surface-1">
-        {FAQ.map((item, index) => {
-          const isOpen = open === index;
+      <div className="mt-3 divide-y divide-hairline overflow-hidden rounded-card border border-hairline bg-surface-1">
+        {FAQ.map((item) => (
+          <details key={item.question} className="disclosure group">
+            <summary className="flex cursor-pointer items-center justify-between gap-4 px-4 py-3 text-sm font-medium text-ink transition hover:bg-white/5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-secondary sm:px-5">
+              {item.question}
+              <ChevronDown
+                size={18}
+                aria-hidden="true"
+                className="shrink-0 text-ink-muted transition group-open:rotate-180 motion-reduce:transition-none"
+              />
+            </summary>
 
-          return (
-            <div key={item.question}>
-              <button
-                type="button"
-                onClick={() => setOpen(isOpen ? null : index)}
-                aria-expanded={isOpen}
-                className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-sm font-medium text-ink transition hover:bg-white/5"
-              >
-                {item.question}
-                <ChevronDown
-                  size={18}
-                  className={`shrink-0 text-ink-muted transition ${isOpen ? "rotate-180" : ""}`}
-                />
-              </button>
-
-              {isOpen && (
-                <p className="px-5 pb-5 text-sm leading-6 text-ink-muted">{item.answer}</p>
-              )}
-            </div>
-          );
-        })}
+            <p className="px-4 pb-4 text-sm leading-6 text-ink-muted sm:px-5">{item.answer}</p>
+          </details>
+        ))}
       </div>
     </section>
   );

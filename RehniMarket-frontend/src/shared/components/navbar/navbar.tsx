@@ -1,14 +1,14 @@
-import { Heart, ImageOff, Menu, Search, ShoppingCart, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import {
-  Link,
-  useLocation,
-  useNavigate,
-  type Location,
-} from "react-router-dom";
+/** Barra de la tienda: navegación y búsqueda de escritorio; en móvil, búsqueda bajo la barra y menú lateral. */
+import { Menu, Search } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/public/auth/context/useAuth";
-import { useCart } from "@/features/cart/context/useCart";
+import { useLoginModal } from "@/features/public/auth/context/LoginModalContext";
+import CartDropdown from "./CartDropdown";
+import FavoritesDropdown from "./FavoritesDropdown";
 import ProfileDropdown from "./ProfileDropdown";
+import ProductThumbnail from "@/shared/components/ProductThumbnail";
+import MobileMenu, { type StoreNavItem } from "./MobileMenu";
 import logo from "@/assets/logo.png";
 
 import { getDailyProducts } from "@/features/public/home/api/homeService";
@@ -19,51 +19,25 @@ import type { PublicProductCard } from "@/features/public/home/types/response";
 const SEARCH_DEBOUNCE_MS = 300;
 const SEARCH_RESULTS_LIMIT = 5;
 
-const NAV_ITEMS: {
-  label: string;
-  to: string;
-  isActive: (location: Location) => boolean;
-}[] = [
-  {
-    label: "Inicio",
-    to: "/",
-    isActive: (location) => location.pathname === "/",
-  },
-  {
-    label: "Categorías",
-    to: "/categories",
-    isActive: (location) => location.pathname === "/categories",
-  },
-  {
-    label: "Productos",
-    to: "/products",
-    isActive: (location) => location.pathname === "/products",
-  },
-  {
-    label: "Ofertas",
-    to: "/offers",
-    isActive: (location) => location.pathname === "/offers",
-  },
-  {
-    label: "Novedades",
-    to: "/new",
-    isActive: (location) => location.pathname === "/new",
-  },
+const NAV_ITEMS: StoreNavItem[] = [
+  { label: "Inicio", to: "/", isActive: (pathname) => pathname === "/" },
+  { label: "Categorías", to: "/categories", isActive: (pathname) => pathname === "/categories" },
+  { label: "Productos", to: "/products", isActive: (pathname) => pathname === "/products" },
+  { label: "Ofertas", to: "/offers", isActive: (pathname) => pathname === "/offers" },
+  { label: "Novedades", to: "/new", isActive: (pathname) => pathname === "/new" },
 ];
 
 const desktopLinkClass = (active: boolean) =>
-  `relative py-1 transition hover:text-primary dark:hover:text-accent ${
+  `relative py-1 transition-colors hover:text-secondary ${
     active
-      ? "text-primary after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:bg-primary dark:text-accent dark:after:bg-accent"
+      ? "text-ink after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:w-full after:bg-secondary"
       : "text-gray-700 dark:text-ink-muted"
   }`;
 
-const mobileLinkClass = (active: boolean) =>
-  `rounded-control px-4 py-3.5 text-sm font-medium transition ${
-    active
-      ? "bg-brand-50 text-primary dark:bg-accent/15 dark:text-accent"
-      : "text-gray-800 hover:bg-gray-50 dark:text-ink dark:hover:bg-white/5"
-  }`;
+type NavMenu = "favorites" | "cart" | "profile";
+
+const ICON_BUTTON_CLASS =
+  "relative rounded-control p-2 text-ink-muted transition-colors hover:bg-white/5 hover:text-secondary aria-expanded:bg-white/5 aria-expanded:text-ink";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
@@ -72,11 +46,18 @@ export default function Navbar() {
   const [searchResults, setSearchResults] = useState<PublicProductCard[]>([]);
   const [searching, setSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [activeSearch, setActiveSearch] = useState<"desktop" | "mobile">("desktop");
 
   const { role } = useAuth();
-  const { cart } = useCart();
+  // Un solo desplegable abierto a la vez entre favoritos, carrito y perfil.
+  const [openMenu, setOpenMenu] = useState<NavMenu | null>(null);
+  const menuProps = (menu: NavMenu) => ({
+    open: openMenu === menu,
+    onOpenChange: (next: boolean) => setOpenMenu(next ? menu : null),
+  });
   const navigate = useNavigate();
   const location = useLocation();
+  const loginModal = useLoginModal();
   const isBuyer = role === "user";
 
   const desktopSearchRef = useRef<HTMLDivElement>(null);
@@ -100,22 +81,12 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    if (!open) return;
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [open]);
+  const closeMenu = useCallback(() => {
+    setOpen(false);
+    menuButtonRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     const query = search.trim().toLowerCase();
@@ -174,13 +145,13 @@ export default function Navbar() {
 
     if (!query) return;
 
-    navigate(`/products?search=${encodeURIComponent(query)}`);
+    void navigate(`/products?search=${encodeURIComponent(query)}`);
     setOpen(false);
     setShowDropdown(false);
   };
 
   const handleSelectResult = (productId: string) => {
-    navigate(`/products/${productId}`);
+    void navigate(`/products/${productId}`);
     setOpen(false);
     setShowDropdown(false);
   };
@@ -202,17 +173,7 @@ export default function Navbar() {
               onClick={() => handleSelectResult(product.id)}
               className="flex w-full items-center gap-3 border-b border-gray-100 p-3 text-left transition last:border-b-0 hover:bg-gray-50 dark:border-hairline dark:hover:bg-white/5"
             >
-              {product.image ? (
-                <img
-                  src={product.image}
-                  alt=""
-                  className="h-12 w-12 shrink-0 rounded-lg object-cover"
-                />
-              ) : (
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-300 dark:bg-surface-2 dark:text-ink-muted">
-                  <ImageOff size={18} />
-                </div>
-              )}
+              <ProductThumbnail src={product.image} />
 
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-gray-900 dark:text-ink">
@@ -224,7 +185,7 @@ export default function Navbar() {
                 </p>
               </div>
 
-              <span className="shrink-0 text-sm font-semibold text-primary dark:text-accent">
+              <span className="shrink-0 text-sm font-semibold tabular-nums text-ink">
                 {formatPrice(product.discount_enabled ? product.final_price : product.price)}
               </span>
             </button>
@@ -234,8 +195,55 @@ export default function Navbar() {
     );
   };
 
+  const renderSearchBox = (
+    containerRef: RefObject<HTMLDivElement | null>,
+    variant: "desktop" | "mobile",
+  ) => (
+    <div ref={containerRef} className="relative">
+      <input
+        type="search"
+        value={search}
+        onChange={(e) => {
+          setActiveSearch(variant);
+          handleSearchChange(e.target.value);
+        }}
+        onFocus={() => {
+          setActiveSearch(variant);
+          if (search.trim()) setShowDropdown(true);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") handleSearch();
+        }}
+        aria-label="Buscar productos"
+        placeholder={
+          variant === "desktop" ? "Buscar productos, marcas o categorías…" : "Buscar productos…"
+        }
+        className={
+          variant === "desktop"
+            ? "w-full rounded-full bg-gray-100 py-2.5 pl-5 pr-12 text-sm text-gray-700 outline-none transition focus:bg-surface-1 focus:ring-2 focus:ring-secondary/30 dark:bg-surface-2 dark:text-ink dark:placeholder:text-ink-muted dark:focus:bg-surface-2 dark:focus:ring-secondary/40"
+            : "h-12 w-full rounded-full border border-hairline bg-surface-2 pl-12 pr-4 text-[15px] text-ink outline-none transition placeholder:text-ink-muted focus:border-secondary/60 focus:ring-2 focus:ring-secondary/30 [&::-webkit-search-cancel-button]:hidden"
+        }
+      />
+
+      <button
+        type="button"
+        onClick={handleSearch}
+        aria-label="Buscar"
+        className={
+          variant === "desktop"
+            ? "absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-primary text-white transition-shadow fill-hover"
+            : "absolute left-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-ink-muted transition hover:text-ink"
+        }
+      >
+        <Search size={variant === "desktop" ? 17 : 20} />
+      </button>
+
+      {activeSearch === variant && renderSearchDropdown()}
+    </div>
+  );
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-surface-1 dark:border-hairline dark:bg-surface-1/95 dark:backdrop-blur">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-surface-1 dark:border-hairline dark:bg-surface-1">
       <div className="mx-auto flex h-16 max-w-[clamp(1280px,90vw,1600px)] items-center gap-3 px-3 sm:h-20 sm:gap-4 sm:px-4 lg:px-8">
 
         <div className="flex shrink-0 items-center gap-6 xl:gap-10">
@@ -247,12 +255,13 @@ export default function Navbar() {
             />
           </Link>
 
-          <nav className="hidden items-center gap-5 font-medium lg:flex xl:gap-7">
+          <nav aria-label="Tienda" className="hidden items-center gap-5 font-medium lg:flex xl:gap-7">
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.label}
                 to={item.to}
-                className={desktopLinkClass(item.isActive(location))}
+                aria-current={item.isActive(location.pathname) ? "page" : undefined}
+                className={desktopLinkClass(item.isActive(location.pathname))}
               >
                 {item.label}
               </Link>
@@ -260,203 +269,64 @@ export default function Navbar() {
           </nav>
         </div>
 
-        <div
-          ref={desktopSearchRef}
-          className="relative mx-auto hidden w-full min-w-0 max-w-sm lg:block"
-        >
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            onFocus={() => {
-              if (search.trim()) setShowDropdown(true);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleSearch();
-              }
-            }}
-            placeholder="Buscar productos, marcas o categorías…"
-            className="w-full rounded-full bg-gray-100 py-2.5 pl-5 pr-12 text-sm text-gray-700 outline-none transition focus:bg-surface-1 focus:ring-2 focus:ring-brand-600/30 dark:bg-surface-2 dark:text-ink dark:placeholder:text-ink-muted dark:focus:bg-surface-2 dark:focus:ring-accent/40"
-          />
-
-          <button
-            type="button"
-            onClick={handleSearch}
-            aria-label="Buscar"
-            className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition hover:text-primary dark:bg-accent dark:text-white dark:hover:bg-accent-hover"
-          >
-            <Search size={17} />
-          </button>
-
-          {renderSearchDropdown()}
+        <div className="relative mx-auto hidden w-full min-w-0 max-w-sm lg:block">
+          {renderSearchBox(desktopSearchRef, "desktop")}
         </div>
 
         <div className="hidden shrink-0 items-center gap-4 lg:flex">
           {isBuyer && (
-            <Link
-              to="/user/dashboard?tab=favorites"
-              className="rounded-control p-2 text-gray-600 transition hover:bg-gray-100 hover:text-primary dark:text-ink-muted dark:hover:bg-white/5 dark:hover:text-accent"
-              aria-label="Mis favoritos"
-            >
-              <Heart size={22} />
-            </Link>
-          )}
-
-          {isBuyer && (
-            <Link
-              to="/cart"
-              className="relative rounded-control p-2 text-gray-600 transition hover:bg-gray-100 hover:text-primary dark:text-ink-muted dark:hover:bg-white/5 dark:hover:text-accent"
-              aria-label="Mi carrito"
-            >
-              <ShoppingCart size={22} />
-
-              {!!cart?.totalItems && (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-danger text-[10px] font-bold text-white dark:bg-accent">
-                  {cart.totalItems}
-                </span>
-              )}
-            </Link>
+            <>
+              <FavoritesDropdown {...menuProps("favorites")} triggerClassName={ICON_BUTTON_CLASS} />
+              <CartDropdown {...menuProps("cart")} triggerClassName={ICON_BUTTON_CLASS} />
+            </>
           )}
 
           {role == null ? (
             <>
-              <Link to="/login" className="font-medium dark:text-ink dark:hover:text-accent">
+              <Link
+                to="/login"
+                aria-haspopup="dialog"
+                onClick={(event) => {
+                  if (loginModal) {
+                    event.preventDefault();
+                    loginModal.openLogin();
+                  }
+                }}
+                className="font-medium dark:text-ink dark:hover:text-secondary"
+              >
                 Iniciar sesión
               </Link>
 
               <Link
                 to="/register-user"
-                className="rounded-control bg-primary px-6 py-3 text-primary-fg transition hover:bg-primary-hover dark:bg-accent dark:hover:bg-accent-hover"
+                className="rounded-control bg-primary px-6 py-3 text-primary-fg transition-shadow fill-hover"
               >
                 Registrarse
               </Link>
             </>
           ) : (
-            <ProfileDropdown />
+            <ProfileDropdown {...menuProps("profile")} />
           )}
         </div>
 
         <button
-          onClick={() => setOpen(!open)}
-          aria-label={open ? "Cerrar menú" : "Abrir menú"}
+          ref={menuButtonRef}
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Abrir menú"
           aria-expanded={open}
           aria-controls="mobile-menu"
-          className="-mr-1 ml-auto rounded-control p-2 text-gray-700 transition hover:bg-gray-100 dark:text-ink dark:hover:bg-white/5 lg:hidden"
+          className="-mr-1 ml-auto flex h-11 w-11 items-center justify-center rounded-control text-gray-700 transition hover:bg-gray-100 dark:text-ink dark:hover:bg-white/5 lg:hidden"
         >
-          {open ? <X size={24} /> : <Menu size={24} />}
+          <Menu size={26} />
         </button>
-
       </div>
 
-      {open && (
-        <div
-          id="mobile-menu"
-          className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-gray-200 bg-surface-1 dark:border-hairline dark:bg-surface-1 lg:hidden"
-        >
-          <div className="p-5">
+      <div className="mx-auto max-w-[clamp(1280px,90vw,1600px)] px-3 pb-3 sm:px-4 lg:hidden">
+        <div className="relative">{renderSearchBox(mobileSearchRef, "mobile")}</div>
+      </div>
 
-            <div ref={mobileSearchRef} className="relative mb-5">
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onFocus={() => {
-                  if (search.trim()) setShowDropdown(true);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleSearch();
-                  }
-                }}
-                placeholder="Buscar productos, marcas o categorías…"
-                className="w-full rounded-control border border-gray-200 bg-gray-50 py-3 pl-4 pr-11 text-sm outline-none transition focus:border-brand-600 focus:bg-surface-1 dark:border-hairline dark:bg-surface-2 dark:text-ink dark:placeholder:text-ink-muted dark:focus:border-accent"
-              />
-
-              <Search
-                size={18}
-                onClick={handleSearch}
-                className="absolute right-4 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 dark:text-accent"
-              />
-
-              {renderSearchDropdown()}
-            </div>
-
-            <nav className="flex flex-col gap-1">
-              {NAV_ITEMS.map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.to}
-                  onClick={() => setOpen(false)}
-                  className={mobileLinkClass(item.isActive(location))}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-
-            <div className="my-4 border-t border-gray-200 dark:border-hairline" />
-
-            {isBuyer && (
-              <div className="mb-4 flex flex-col gap-2">
-                <Link
-                  to="/user/dashboard?tab=favorites"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 dark:border-hairline dark:text-ink"
-                >
-                  <Heart size={18} />
-                  Mis favoritos
-                </Link>
-
-                <Link
-                  to="/cart"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 dark:border-hairline dark:text-ink"
-                >
-                  <span className="flex items-center gap-2">
-                    <ShoppingCart size={18} />
-                    Mi carrito
-                  </span>
-
-                  {!!cart?.totalItems && (
-                    <span className="rounded-full bg-danger px-2 py-0.5 text-xs font-bold text-white dark:bg-accent">
-                      {cart.totalItems}
-                    </span>
-                  )}
-                </Link>
-              </div>
-            )}
-
-            {role == null ? (
-              <div className="flex flex-col gap-3">
-                <Link
-                  to="/login"
-                  onClick={() => setOpen(false)}
-                  className="rounded-xl border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-hairline dark:text-ink dark:hover:bg-white/5"
-                >
-                  Iniciar sesión
-                </Link>
-
-                <Link
-                  to="/register-user"
-                  onClick={() => setOpen(false)}
-                  className="rounded-control bg-primary px-4 py-3 text-center text-sm font-medium text-primary-fg transition hover:bg-primary-hover dark:bg-accent dark:hover:bg-accent-hover"
-                >
-                  Registrarse
-                </Link>
-              </div>
-            ) : (
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 dark:border-hairline dark:bg-surface-2">
-                <p className="mb-2 px-1 text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-ink-muted">
-                  Mi cuenta
-                </p>
-
-                <ProfileDropdown />
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <MobileMenu open={open} items={NAV_ITEMS} onClose={closeMenu} />
     </header>
   );
 }

@@ -1,12 +1,15 @@
+"""Rutas del panel admin para recargar y corregir saldo de RehniCoin por correo (admin y owner)."""
+
+from typing import Annotated
+
 from uuid import UUID
 
-from fastapi import APIRouter, Request, Depends, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.database.Connection import get_db
+from app.core.dbconexion import get_db
+from app.core.AuthDependencies import AuthContext, require_role
 
-from app.core.ErrorCodes import ErrorCodes
-from app.core.Exceptions import api_error
 
 from app.schemas.SchemaCommerce.SchemaWallet import (
     RechargeWalletByEmailRequest,
@@ -25,37 +28,28 @@ from app.services.commerce.WalletService import (
 router = APIRouter(prefix="/admin/wallet", tags=["admin", "wallet"])
 
 
-def _require_admin_or_owner(request: Request):
-    if request.state.role not in ("admin", "owner"):
-        api_error(
-            403,
-            ErrorCodes.FORBIDDEN,
-            "Solo un administrador puede recargar saldo de RehniCoin.",
-        )
-
 
 @router.post("/recharge", response_model=RechargeWalletByEmailResponse)
 def recharge_wallet_by_email(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("admin", "owner"))],
     data: RechargeWalletByEmailRequest,
     database: Session = Depends(get_db, scope="function"),
 ):
-    _require_admin_or_owner(request)
-
     return recharge_wallet_by_email_service(
-        data, created_by=request.state.user_id, database=database
+        data, created_by=current.user_id, database=database
     )
 
 
-@router.get("/history", response_model=WalletRechargeHistoryPaginatedResponse)
+@router.get(
+    "/history",
+    response_model=WalletRechargeHistoryPaginatedResponse,
+    dependencies=[Depends(require_role("admin", "owner"))],
+)
 def get_recharge_history(
-    request: Request,
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=50),
     database: Session = Depends(get_db, scope="function"),
 ):
-    _require_admin_or_owner(request)
-
     return list_recharge_history_service(database, page=page, limit=limit)
 
 
@@ -64,16 +58,14 @@ def get_recharge_history(
     response_model=CorrectRechargeResponse,
 )
 def correct_recharge(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("admin", "owner"))],
     transaction_id: UUID,
     data: CorrectRechargeRequest,
     database: Session = Depends(get_db, scope="function"),
 ):
-    _require_admin_or_owner(request)
-
     return correct_recharge_service(
         transaction_id=transaction_id,
         data=data,
-        corrected_by=request.state.user_id,
+        corrected_by=current.user_id,
         database=database,
     )

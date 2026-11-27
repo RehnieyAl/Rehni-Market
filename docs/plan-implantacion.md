@@ -66,7 +66,7 @@ Fuente: API de <https://endoflife.date>, consultada el 2026-11-16.
 | Parche de seguridad solo de build/desarrollo | 30 días | Igual, agrupado |
 | Versión menor/mayor de framework | Por trimestre | Rama propia, CI y prueba de humo |
 
-`.github/dependabot.yml` (v1.0.1, #45): semanal para uv, npm (frontend y móvil) y github-actions, agrupado; el job `auditoria` del CI falla con vulnerabilidades conocidas (excepciones con fecha en `.github/auditoria-excepciones.txt`). Informe completo: [`docs/calidad/auditoria-dependencias-2026-11-16.md`](calidad/auditoria-dependencias-2026-11-16.md).
+`.github/dependabot.yml` (v1.0.1, #45; restaurado el 2026-11-25): semanal para uv, npm (frontend y móvil), github-actions, docker y docker-compose, menores y parches agrupados, mayores en PR aparte y sin auto-merge; el job `auditoria` del CI falla con vulnerabilidades conocidas (excepciones con fecha en `.github/auditoria-excepciones.txt`). Informe completo: [`docs/calidad/auditoria-dependencias-2026-11-16.md`](calidad/auditoria-dependencias-2026-11-16.md).
 
 Resultado de la auditoría (2026-11-16):
 

@@ -1,7 +1,12 @@
+/** Pedidos del panel de empresa: pestañas por estado con contadores, búsqueda, paginación y detalle. */
 import { useCallback, useEffect, useState } from "react";
-import { Eye, Search, ShoppingBag } from "lucide-react";
+import { CalendarDays, ClipboardList, Eye, List, Search, ShoppingBag, Truck } from "lucide-react";
 
 import { Badge, Button, EmptyState, Input, Skeleton } from "@/shared/components/ui";
+import DashboardFilterTabs from "@/shared/components/dashboard/DashboardFilterTabs";
+import DashboardPageHeader from "@/shared/components/dashboard/DashboardPageHeader";
+import DashboardPager from "@/shared/components/dashboard/DashboardPager";
+import DashboardSection from "@/shared/components/dashboard/DashboardSection";
 import OrderDetailModal from "./order/OrderDetailModal";
 
 import {
@@ -46,9 +51,9 @@ export default function Orders() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
-  const activeStatuses = STATUS_TABS.find((tab) => tab.id === activeTab)?.statuses;
-
   const loadOrders = useCallback(async () => {
+    const activeStatuses = STATUS_TABS.find((tab) => tab.id === activeTab)?.statuses;
+
     try {
       setLoading(true);
       const response = await getCompanyOrders(page, 10, activeStatuses, search || undefined);
@@ -99,41 +104,34 @@ export default function Orders() {
   };
 
   const handleStatusChanged = () => {
-    loadOrders();
-    loadCounts();
+    void loadOrders();
+    void loadCounts();
   };
 
   const countFor = (tab: TabId) =>
     countsLoading ? "…" : String(counts[tab === "all" ? "all" : tab]);
 
+  const filtering = Boolean(search) || activeTab !== "all";
+
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Pedidos</h1>
+      <DashboardPageHeader
+        icon={<Truck size={26} />}
+        title="Pedidos"
+        description="Gestiona los pedidos recibidos: filtra por estado, busca por referencia o comprador y actualiza su estado desde el detalle."
+      />
 
-      <p className="mt-1 text-sm text-gray-500">
-        Gestiona los pedidos recibidos: filtra por estado, busca por referencia o comprador y
-        actualiza su estado desde el detalle.
-      </p>
-
-      <div className="mt-6 flex flex-wrap gap-2">
-        {STATUS_TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => handleTabChange(tab.id)}
-            aria-pressed={activeTab === tab.id}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-              activeTab === tab.id
-                ? "bg-primary text-primary-fg"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            {tab.label} ({countFor(tab.id)})
-          </button>
-        ))}
+      <div className="mt-6">
+        <DashboardFilterTabs
+          label="Filtrar pedidos por estado"
+          options={STATUS_TABS.map((tab) => ({ id: tab.id, label: tab.label, count: countFor(tab.id) }))}
+          value={activeTab}
+          onChange={handleTabChange}
+        />
       </div>
 
       <Input
-        className="mt-6"
+        className="mt-5"
         type="search"
         value={search}
         onChange={(event) => handleSearch(event.target.value)}
@@ -142,100 +140,34 @@ export default function Orders() {
         leadingIcon={<Search size={16} />}
       />
 
-      {loading ? (
-        <div className="mt-8 space-y-3">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <Skeleton key={index} className="h-32 rounded-card" />
-          ))}
-        </div>
-      ) : orders.length === 0 ? (
-        <EmptyState
-          className="mt-8"
-          icon={<ShoppingBag size={22} />}
-          title={search || activeTab !== "all" ? "Sin resultados" : "Aún no has recibido pedidos"}
-          description={
-            search || activeTab !== "all"
-              ? "Ningún pedido coincide con este filtro y esta búsqueda."
-              : "Cuando un comprador te haga un pedido, aparecerá aquí."
-          }
-        />
-      ) : (
-        <>
-          <div className="mt-8 space-y-3">
-            {orders.map((order) => (
-              <div
-                key={order.id}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-card border border-gray-200 bg-surface-1 p-5 shadow-card transition hover:shadow-pop"
-              >
-                <div className="flex min-w-0 items-center gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-bold text-white">
-                    {order.buyerPhoto ? (
-                      <img
-                        src={order.buyerPhoto}
-                        alt={order.buyerName}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      order.buyerName.charAt(0).toUpperCase()
-                    )}
-                  </div>
-
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold text-gray-900">{order.buyerName}</p>
-                    <p className="truncate text-sm text-gray-500">{order.buyerEmail}</p>
-
-                    <p className="mt-1 text-xs text-gray-400">
-                      {order.reference} ·{" "}
-                      {new Date(order.createdAt).toLocaleDateString("es-CO")}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-                  <span className="text-sm font-semibold text-gray-900">
-                    {formatPrice(order.total)}
-                  </span>
-
-                  <Badge tone={ORDER_STATUS_TONE[order.status]}>{ORDER_STATUS_LABEL[order.status]}</Badge>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    leadingIcon={<Eye size={16} />}
-                    onClick={() => handleOpenDetail(order.id)}
-                  >
-                    Ver detalle
-                  </Button>
-                </div>
-              </div>
+      <DashboardSection title="Lista de pedidos" icon={<List size={20} />} className="mt-5">
+        {loading ? (
+          <div className="space-y-3" aria-busy="true">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Skeleton key={index} className="h-20 rounded-card dark:bg-surface-2" />
             ))}
           </div>
+        ) : orders.length === 0 ? (
+          <EmptyState
+            variant="plain"
+            icon={<ShoppingBag size={22} />}
+            title={filtering ? "Sin resultados" : "Aún no has recibido pedidos"}
+            description={
+              filtering
+                ? "Ningún pedido coincide con este filtro y esta búsqueda."
+                : "Cuando un comprador te haga un pedido, aparecerá aquí."
+            }
+          />
+        ) : (
+          <ul className="space-y-3">
+            {orders.map((order) => (
+              <OrderRow key={order.id} order={order} onOpen={() => handleOpenDetail(order.id)} />
+            ))}
+          </ul>
+        )}
 
-          <div className="mt-8 flex items-center justify-center gap-5">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === 1}
-              onClick={() => setPage((prev) => prev - 1)}
-            >
-              Anterior
-            </Button>
-
-            <span className="text-sm text-gray-600">
-              Página {page} de {totalPages}
-            </span>
-
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page === totalPages}
-              onClick={() => setPage((prev) => prev + 1)}
-            >
-              Siguiente
-            </Button>
-          </div>
-        </>
-      )}
+        <DashboardPager page={page} totalPages={totalPages} onPageChange={setPage} />
+      </DashboardSection>
 
       <OrderDetailModal
         orderId={selectedOrderId}
@@ -244,5 +176,67 @@ export default function Orders() {
         onStatusChanged={handleStatusChanged}
       />
     </div>
+  );
+}
+
+function OrderRow({ order, onOpen }: { order: Order; onOpen: () => void }) {
+  return (
+    <li className="grid grid-cols-[3rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 rounded-card border border-hairline bg-surface-2/40 p-3 sm:p-4 lg:grid-cols-[3rem_minmax(0,1.4fr)_minmax(0,2fr)_auto]">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-semibold text-white">
+        {order.buyerPhoto ? (
+          <img src={order.buyerPhoto} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <span aria-hidden="true">{order.buyerName.charAt(0).toUpperCase()}</span>
+        )}
+      </div>
+
+      <div className="min-w-0">
+        <p className="truncate font-semibold text-ink">{order.buyerName}</p>
+        <p className="truncate text-sm text-ink-muted">{order.buyerEmail}</p>
+      </div>
+
+      <dl className="col-span-2 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4 lg:col-span-1">
+        <div className="flex items-start gap-2">
+          <ClipboardList size={18} aria-hidden="true" className="mt-0.5 shrink-0 text-ink-muted" />
+          <div className="min-w-0">
+            <dt className="text-xs text-ink-muted">Pedido</dt>
+            <dd className="truncate font-semibold text-ink">{order.reference}</dd>
+          </div>
+        </div>
+        <div className="flex items-start gap-2">
+          <CalendarDays size={18} aria-hidden="true" className="mt-0.5 shrink-0 text-ink-muted" />
+          <div>
+            <dt className="text-xs text-ink-muted">Fecha</dt>
+            <dd className="font-semibold text-ink">
+              <time dateTime={order.createdAt}>{new Date(order.createdAt).toLocaleDateString("es-CO")}</time>
+            </dd>
+          </div>
+        </div>
+        <div>
+          <dt className="text-xs text-ink-muted">Total</dt>
+          <dd className="font-semibold tabular-nums text-ink">{formatPrice(order.total)}</dd>
+        </div>
+        <div>
+          <dt className="text-xs text-ink-muted">Estado</dt>
+          <dd>
+            <Badge tone={ORDER_STATUS_TONE[order.status]} dot>
+              {ORDER_STATUS_LABEL[order.status]}
+            </Badge>
+          </dd>
+        </div>
+      </dl>
+
+      <div className="col-span-2 flex justify-end lg:col-span-1">
+        <Button
+          variant="outline"
+          size="sm"
+          leadingIcon={<Eye size={16} />}
+          onClick={onOpen}
+          aria-label={`Ver detalle del pedido ${order.reference}`}
+        >
+          Ver detalle
+        </Button>
+      </div>
+    </li>
   );
 }

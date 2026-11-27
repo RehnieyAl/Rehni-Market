@@ -1,4 +1,3 @@
-export type AttributeRole = "product" | "variant";
 export type AttributeInputType = "select" | "color" | "text" | "number";
 
 export interface CatalogAttributeOption {

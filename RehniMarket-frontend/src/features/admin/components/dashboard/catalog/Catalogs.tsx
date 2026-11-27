@@ -1,3 +1,4 @@
+/** Pestaña Categorías del catálogo: tabla con imagen, productos, orden y estado; alta, edición, activación, atributos y baja. */
 import { useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, SlidersHorizontal, ImageOff, Power } from "lucide-react";
 
@@ -53,7 +54,7 @@ export default function Catalogs() {
       }
     };
 
-    loadCatalogs();
+    void loadCatalogs();
   }, []);
 
   const handleOpenCreate = () => {
@@ -171,10 +172,10 @@ export default function Catalogs() {
       </div>
 
       <section className="mt-5 flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-gray-200 bg-surface-1 shadow-card">
-        <div className="h-[420px] overflow-y-auto overflow-x-auto">
+        <div className="overflow-x-auto">
           <table className="w-full min-w-[640px]">
-            <thead className="sticky top-0 z-10 bg-surface-1">
-              <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-400">
+            <thead className="bg-surface-1">
+              <tr className="border-b border-gray-200 text-left text-xs text-ink-muted">
                 <th className="px-5 py-3 font-medium">Imagen</th>
                 <th className="px-5 py-3 font-medium">Nombre</th>
                 <th className="px-5 py-3 text-center font-medium">Productos</th>

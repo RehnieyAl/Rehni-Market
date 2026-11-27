@@ -35,7 +35,7 @@ export default function CartView() {
   return (
     <section className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
       <header>
-        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Mi carrito</h1>
+        <h1 className="text-2xl font-semibold text-gray-900 sm:text-3xl">Mi carrito</h1>
         <p className="mt-1 text-sm text-gray-500">
           Revisa tus productos antes de continuar al pago.
         </p>
@@ -90,12 +90,12 @@ export default function CartView() {
                             {item.name}
                           </h3>
                           {outOfStock ? (
-                            <span className="mt-1 inline-flex items-center rounded-full bg-danger-bg px-2 py-0.5 text-xs font-bold text-danger">
+                            <span className="mt-1 inline-flex items-center rounded-full bg-danger-bg px-2 py-0.5 text-xs font-semibold text-danger">
                               Agotado
                             </span>
                           ) : (
                             exceedsStock && (
-                              <span className="mt-1 inline-flex items-center rounded-full bg-danger-bg px-2 py-0.5 text-xs font-bold text-danger">
+                              <span className="mt-1 inline-flex items-center rounded-full bg-danger-bg px-2 py-0.5 text-xs font-semibold text-danger">
                                 Sin stock suficiente
                               </span>
                             )
@@ -126,7 +126,7 @@ export default function CartView() {
                       )}
 
                       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <span className="font-bold text-primary">
+                        <span className="font-semibold tabular-nums text-ink">
                           {formatPrice(item.unitPrice)}
                         </span>
 
@@ -135,7 +135,7 @@ export default function CartView() {
                             <span className="text-sm text-gray-400 line-through">
                               {formatPrice(item.basePrice)}
                             </span>
-                            <span className="rounded-full bg-danger px-2 py-0.5 text-xs font-bold text-white">
+                            <span className="rounded-full bg-danger px-2 py-0.5 text-xs font-semibold text-white">
                               -{item.discountPercentage}%
                             </span>
                           </>
@@ -250,7 +250,7 @@ export default function CartView() {
                 <dd>{tax > 0 ? formatPrice(cart?.tax ?? "0") : "No aplica"}</dd>
               </div>
 
-              <div className="flex items-center justify-between border-t border-gray-100 pt-3 text-base font-bold text-gray-900">
+              <div className="flex items-center justify-between border-t border-gray-100 pt-3 text-base font-semibold text-gray-900">
                 <dt>Total</dt>
                 <dd>{formatPrice(cart?.total ?? "0")}</dd>
               </div>

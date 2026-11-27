@@ -1,6 +1,8 @@
+/** "Mis pedidos" del comprador: cada compra con empresa, productos, total y estado; detalle con
+ * seguimiento y devoluciones, y cancelación de los pedidos pendientes o pagados. */
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Eye, ShoppingBag } from "lucide-react";
+import { Eye, Package, ShoppingBag } from "lucide-react";
 
 import ConfirmModal from "@/shared/components/ConfirmModal";
 import OrderDetailModal from "@/features/orders/components/OrderDetailModal";
@@ -9,7 +11,8 @@ import { ORDER_STATUS_LABEL, ORDER_STATUS_TONE } from "@/features/orders/utils/o
 import { formatPrice } from "@/shared/utils/formatPrice";
 import { formatAttributePairs } from "@/shared/utils/formatAttributes";
 import { useAlert } from "@/shared/components/alert/useAlert";
-import { Badge, EmptyState, ErrorState, Skeleton } from "@/shared/components/ui";
+import DashboardPageHeader from "@/shared/components/dashboard/DashboardPageHeader";
+import { Badge, Button, EmptyState, ErrorState, Skeleton } from "@/shared/components/ui";
 import { buttonClasses } from "@/shared/components/ui/buttonVariants";
 
 import type { Order } from "@/features/orders/types/response";
@@ -65,28 +68,23 @@ export default function Orders() {
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Mis pedidos</h1>
-
-      <p className="mt-1 text-sm text-gray-500">
-        Consulta el estado y el historial de tus pedidos.
-      </p>
+    <div className="space-y-6">
+      <DashboardPageHeader
+        icon={<Package size={26} />}
+        title="Mis pedidos"
+        description="Consulta el estado, el envío y el detalle de tus compras."
+      />
 
       {loading ? (
-        <div className="mt-8 space-y-4">
+        <div className="space-y-4" aria-busy="true">
           {Array.from({ length: 3 }).map((_, index) => (
-            <Skeleton key={index} className="h-40 rounded-card" />
+            <Skeleton key={index} className="h-44 rounded-card" />
           ))}
         </div>
       ) : failed ? (
-        <ErrorState
-          className="mt-8"
-          title="No pudimos cargar tus pedidos"
-          onRetry={loadOrders}
-        />
+        <ErrorState title="No pudimos cargar tus pedidos" onRetry={loadOrders} />
       ) : orders.length === 0 ? (
         <EmptyState
-          className="mt-8"
           icon={<ShoppingBag size={22} />}
           title="Todavía no tienes pedidos"
           description="Cuando hagas tu primera compra, podrás seguir su estado desde aquí."
@@ -97,74 +95,75 @@ export default function Orders() {
           }
         />
       ) : (
-        <div className="mt-8 space-y-4">
+        <ul className="space-y-4">
           {orders.map((order) => (
-            <div key={order.id} className="rounded-card border border-gray-200 bg-surface-1 p-5 shadow-card">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-gray-900">
+            <li key={order.id} className="rounded-card border border-hairline bg-surface-1 p-4 sm:p-5">
+              <div className="flex flex-wrap items-start gap-3">
+                <span
+                  aria-hidden="true"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-surface-2 text-base font-semibold text-ink"
+                >
+                  {order.companyName.charAt(0).toUpperCase()}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-ink">
                     {order.firstItemName}
                     {order.totalItems > 1 ? ` y ${order.totalItems - 1} más` : ""}
                   </p>
-
-                  <p className="mt-1 text-sm text-gray-500">
-                    Pedido a {order.companyName} ·{" "}
-                    {new Date(order.createdAt).toLocaleDateString("es-CO")}
+                  <p className="mt-0.5 text-sm text-ink-muted">
+                    Pedido a {order.companyName} · {new Date(order.createdAt).toLocaleDateString("es-CO")}
                   </p>
+                  <p className="text-xs text-ink-muted">{order.reference}</p>
                 </div>
-
-                <Badge tone={ORDER_STATUS_TONE[order.status]}>
-                  {ORDER_STATUS_LABEL[order.status]}
-                </Badge>
+                <Badge tone={ORDER_STATUS_TONE[order.status]}>{ORDER_STATUS_LABEL[order.status]}</Badge>
               </div>
 
-              <div className="mt-3 divide-y divide-gray-100 border-t border-gray-100 pt-3">
+              <ul className="mt-4 divide-y divide-hairline rounded-control bg-surface-2/60 px-4">
                 {order.items.map((item) => {
                   const combo = formatAttributePairs(item.attributes) || item.variantName;
-
                   return (
-                    <div key={item.id} className="flex justify-between gap-3 py-1.5 text-sm">
-                      <span className="text-gray-600">
+                    <li key={item.id} className="flex justify-between gap-3 py-2.5 text-sm">
+                      <span className="min-w-0 text-ink-muted">
                         {item.quantity} × {item.productName}
                         {combo ? ` (${combo})` : ""}
                       </span>
-                      <span className="font-medium">{formatPrice(item.subtotal)}</span>
-                    </div>
+                      <span className="shrink-0 font-medium tabular-nums text-ink">{formatPrice(item.subtotal)}</span>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
 
-              <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
-                <span className="font-bold text-gray-900">
-                  Total: {formatPrice(order.total)}
-                </span>
-
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => {
-                      setSelectedOrderId(order.id);
-                      setDetailOpen(true);
-                    }}
-                    className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-                  >
-                    <Eye size={15} />
-                    Ver detalle
-                  </button>
-
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-ink-muted">
+                  Total <span className="ml-1 text-lg font-semibold tabular-nums text-ink">{formatPrice(order.total)}</span>
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
                   {CANCELLABLE_STATUSES.has(order.status) && (
                     <button
-                      onClick={() => setConfirmCancelId(order.id)}
+                      type="button"
                       disabled={cancellingId === order.id}
-                      className="text-sm font-medium text-danger hover:underline disabled:opacity-50"
+                      onClick={() => setConfirmCancelId(order.id)}
+                      className="inline-flex h-9 items-center rounded-control px-3.5 text-sm font-medium text-danger transition hover:bg-danger-bg disabled:opacity-50"
                     >
                       {cancellingId === order.id ? "Cancelando…" : "Cancelar pedido"}
                     </button>
                   )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leadingIcon={<Eye size={15} />}
+                    onClick={() => {
+                      setSelectedOrderId(order.id);
+                      setDetailOpen(true);
+                    }}
+                  >
+                    Ver detalle
+                  </Button>
                 </div>
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
 
       <OrderDetailModal

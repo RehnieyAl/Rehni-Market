@@ -1,7 +1,9 @@
+"""Modelo ORM de refresh tokens emitidos (tabla refreshToken)."""
+
 from sqlalchemy import String, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 

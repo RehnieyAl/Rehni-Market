@@ -1,3 +1,6 @@
+"""Servicio de verificación de correo: confirmar el código, reenviarlo y cambiar el correo de una cuenta sin verificar."""
+
+import logging
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
@@ -16,15 +19,16 @@ from app.services.email.CodeService import (
     resend_verification_code,
     VerifyCodeStatus,
     TypeCode,
-    delete_user_codes
 )
+from app.repository.CodeRepository import delete_user_codes
 
 from app.repository.UserRepository import (
     get_by_email,
     verify_email
 )
 
-import traceback
+logger = logging.getLogger(__name__)
+
 
 
 def _account_email_context(user):
@@ -35,6 +39,18 @@ def _account_email_context(user):
         user.company.nameCompany if role == "company" and user.company else None
     )
     return role, company_name
+
+
+def raise_code_error(result: VerifyCodeStatus, purpose: str) -> None:
+    if result == VerifyCodeStatus.EXPIRED:
+        api_error(400, ErrorCodes.CODE_EXPIRED, f"El código de {purpose} expiró. Solicita un nuevo código.")
+    if result == VerifyCodeStatus.LOCKED:
+        api_error(
+            429,
+            ErrorCodes.CODE_ATTEMPTS_EXCEEDED,
+            "Superaste el número de intentos con este código. Solicita un nuevo código.",
+        )
+    api_error(400, ErrorCodes.INVALID_CODE, f"El código de {purpose} es incorrecto.")
 
 
 def verify_email_service(code: VerifyEmailRequest, database: Session):
@@ -55,15 +71,10 @@ def verify_email_service(code: VerifyEmailRequest, database: Session):
             code_type=TypeCode.VERIFY_EMAIL
         )
 
-        if result == VerifyCodeStatus.INVALID:
-            api_error(400, ErrorCodes.INVALID_CODE, "El código de verificación es incorrecto.")
-
-        if result == VerifyCodeStatus.EXPIRED:
-            api_error(
-                400,
-                ErrorCodes.CODE_EXPIRED,
-                "El código de verificación ha expirado. Solicita un nuevo código.",
-            )
+        if result != VerifyCodeStatus.VALID:
+            # Se confirma el intento fallido (o el código invalidado) antes de responder el error.
+            database.commit()
+            raise_code_error(result, "verificación")
 
         verify_email(database, user)
 
@@ -83,7 +94,7 @@ def verify_email_service(code: VerifyEmailRequest, database: Session):
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor..")
 
 
-def resend_verification_code_service(data: ResendVerificationCodeRequest, database: Session):
+def resend_verification_code_service(data: ResendVerificationCodeRequest, database: Session, client_ip: str | None = None):
     """Boton "Reenviar codigo" de la pantalla de verificacion. Funciona
     igual para usuario y empresa. Aplica el cooldown de 60 s en backend
     (no se puede saltar manipulando el frontend)."""
@@ -105,6 +116,7 @@ def resend_verification_code_service(data: ResendVerificationCodeRequest, databa
             user.email,
             role=role,
             company_name=company_name,
+            client_ip=client_ip,
         )
 
         database.commit()
@@ -135,6 +147,11 @@ def change_email_service(changeEmail: ChangeEmailRequestOnlyRegistered, database
         if user.verified:
             api_error(400, ErrorCodes.EMAIL_ALREADY_VERIFIED, "El correo ya fue verificado y no puede modificarse")
 
+        owner_of_new_email = get_by_email(database, changeEmail.new_email)
+
+        if owner_of_new_email and owner_of_new_email.id != user.id:
+            api_error(409, ErrorCodes.EMAIL_ALREADY_EXISTS, "El correo electrónico ya está registrado.")
+
         delete_user_codes(database, user.id, TypeCode.VERIFY_EMAIL)
 
         user.email = changeEmail.new_email
@@ -156,7 +173,7 @@ def change_email_service(changeEmail: ChangeEmailRequestOnlyRegistered, database
         raise
 
     except Exception:
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         database.rollback()
         api_error(500,ErrorCodes.INTERNAL_SERVER_ERROR, "Ha ocurrido un error interno del servidor")
 

@@ -15,7 +15,7 @@ import { check } from 'k6';
 import { Rate, Trend } from 'k6/metrics';
 
 export const BASE_URL =
-  __ENV.K6_BASE_URL || __ENV.BASE_URL || 'http://127.0.0.1:8000';
+  __ENV.K6_BASE_URL || __ENV.BASE_URL || 'https://api.rehnimarket.duckdns.org';
 
 // Tasa de errores de negocio (respuesta 200 pero contenido inesperado, o
 // cualquier check fallido que no sea ya un status code erróneo contado por

@@ -72,6 +72,8 @@ def get_public_company_profile_service(
         is_verified=is_verified,
         created_at=company.created_at,
         total_products=total_products,
+        contact_email=company.contact_email if company.contact_public else None,
+        contact_phone=company.contact_phone if company.contact_public else None,
     )
 
 

@@ -12,11 +12,7 @@ router = APIRouter(
 def healthDatabase():
     result = db_test()
 
-    # db_test() nunca lanza: ante un fallo de conexión devuelve
-    # {"Base de datos": "ERROR", ...} pero esta vista seguía respondiendo
-    # HTTP 200 igual. El healthcheck de Docker solo mira el status code, así
-    # que con la BD caída el contenedor se reportaba "healthy" de todas
-    # formas. Se responde 503 cuando el chequeo reporta error.
+    # El healthcheck de Docker solo mira el código HTTP: con la BD caída debe ser 503, no 200.
     if result.get("Base de datos") != "OK":
         return JSONResponse(status_code=503, content=result)
 

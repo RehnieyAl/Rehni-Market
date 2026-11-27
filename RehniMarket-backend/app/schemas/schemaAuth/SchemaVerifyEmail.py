@@ -1,11 +1,14 @@
-from pydantic import BaseModel, EmailStr
+"""Schemas de verificación de correo, cambio de correo sin verificar y reenvío del código."""
+
+from pydantic import BaseModel
+from app.schemas.SchemaEmail import NormalizedEmail
 class VerifyEmailRequest(BaseModel):
-    email: EmailStr
+    email: NormalizedEmail
     code: str
 
 class ChangeEmailRequestOnlyRegistered(BaseModel):
-    old_email: EmailStr
-    new_email: EmailStr
+    old_email: NormalizedEmail
+    new_email: NormalizedEmail
 
 class ResendVerificationCodeRequest(BaseModel):
-    email: EmailStr
+    email: NormalizedEmail

@@ -1,4 +1,5 @@
-import traceback
+"""Reseñas de productos: elegibilidad por compra entregada, creación, edición y baja por su dueño."""
+import logging
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -22,12 +23,21 @@ from app.schemas.SchemaCommerce.SchemaReview import (
 
 from app.services.NasService import build_media_url
 
+logger = logging.getLogger(__name__)
+
 
 def _require_buyer(role: str):
     """Solo USER puede escribir/editar/eliminar reseñas; se revalida acá igual que en compras."""
 
     if role != "user":
         api_error(403, ErrorCodes.PURCHASE_NOT_ALLOWED, "Esta cuenta no puede escribir reseñas.")
+
+
+def _is_owner(review: Review, user_id: UUID | str) -> bool:
+    """AuthContext entrega el `sub` del JWT como texto y la columna es UUID: sin normalizar,
+    la comparación era siempre distinta y el dueño recibía 403 al editar o eliminar."""
+
+    return str(review.user_id) == str(user_id)
 
 
 def _to_review_response(review: Review) -> ReviewResponse:
@@ -59,7 +69,7 @@ def check_review_eligibility_service(
 
     existing = repo.get_review_by_user_and_product(database, user_id, product_id)
 
-    if existing:
+    if existing and existing.is_active:
         return ReviewEligibilityResponse(
             can_review=False, already_reviewed=True, my_review_id=existing.id
         )
@@ -82,7 +92,9 @@ def create_review_service(
         if not product:
             api_error(404, ErrorCodes.PRODUCT_NOT_FOUND, "Producto no encontrado.")
 
-        if repo.get_review_by_user_and_product(database, user_id, data.productId):
+        existing = repo.get_review_by_user_and_product(database, user_id, data.productId)
+
+        if existing and existing.is_active:
             api_error(
                 409,
                 ErrorCodes.REVIEW_ALREADY_EXISTS,
@@ -96,14 +108,21 @@ def create_review_service(
                 "Solo puedes reseñar productos que ya te hayan entregado.",
             )
 
-        review = Review(
-            user_id=user_id,
-            product_id=data.productId,
-            rating=data.rating,
-            comment=data.comment,
-        )
-
-        repo.create_review(database, review)
+        if existing:
+            # La baja es lógica y la tabla exige una reseña por usuario+producto: quien eliminó
+            # la suya la vuelve a publicar reactivando esa fila en vez de insertar otra.
+            review = existing
+            review.rating = data.rating
+            review.comment = data.comment
+            review.is_active = True
+        else:
+            review = Review(
+                user_id=user_id,
+                product_id=data.productId,
+                rating=data.rating,
+                comment=data.comment,
+            )
+            repo.create_review(database, review)
 
         database.commit()
         database.refresh(review)
@@ -116,7 +135,7 @@ def create_review_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
@@ -131,7 +150,7 @@ def update_my_review_service(
         if not review or not review.is_active:
             api_error(404, ErrorCodes.REVIEW_NOT_FOUND, "Reseña no encontrada.")
 
-        if review.user_id != user_id:
+        if not _is_owner(review, user_id):
             api_error(403, ErrorCodes.FORBIDDEN, "No puedes editar la reseña de otro usuario.")
 
         if data.rating is not None:
@@ -151,7 +170,7 @@ def update_my_review_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
@@ -164,7 +183,7 @@ def delete_my_review_service(user_id: UUID, role: str, review_id: UUID, database
         if not review or not review.is_active:
             api_error(404, ErrorCodes.REVIEW_NOT_FOUND, "Reseña no encontrada.")
 
-        if review.user_id != user_id:
+        if not _is_owner(review, user_id):
             api_error(403, ErrorCodes.FORBIDDEN, "No puedes eliminar la reseña de otro usuario.")
 
         review.is_active = False
@@ -177,7 +196,7 @@ def delete_my_review_service(user_id: UUID, role: str, review_id: UUID, database
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 

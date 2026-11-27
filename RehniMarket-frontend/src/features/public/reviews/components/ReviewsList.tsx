@@ -50,7 +50,7 @@ export default function ReviewsList({
         {reviews.map((review) => (
           <div key={review.id} className="rounded-card border border-gray-200 p-4 dark:border-hairline">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-bold text-primary-fg">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary text-sm font-semibold text-primary-fg">
                 {review.buyerPhoto ? (
                   <img
                     src={review.buyerPhoto}

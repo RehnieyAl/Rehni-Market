@@ -1,13 +1,34 @@
+"""Schemas de registro de comprador y de empresa (JSON y formulario multipart)."""
+
 from typing import Annotated
 import re
 from fastapi import Form
-from pydantic import BaseModel, EmailStr, field_validator, model_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 from app.utils.NitValidator import validate_nit_dv
+from app.schemas.SchemaEmail import NormalizedEmail
+
+
+def check_password_strength(value: str) -> str:
+    """Reglas de contraseña compartidas por el registro y el restablecimiento."""
+    if len(value) < 8:
+        raise ValueError("La contraseña debe tener al menos 8 caracteres.")
+
+    if not re.search(r"[A-Z]", value):
+        raise ValueError("La contraseña debe contener al menos una letra mayúscula.")
+
+    if not re.search(r"[a-z]", value):
+        raise ValueError("La contraseña debe contener al menos una letra minúscula.")
+
+    if not re.search(r"\d", value):
+        raise ValueError("La contraseña debe contener al menos un número.")
+
+    return value
+
 
 class CreateUserRequest(BaseModel):
     full_name: str
-    email: EmailStr
+    email: NormalizedEmail
     password: str
     tell: str
 
@@ -15,7 +36,7 @@ class CreateUserRequest(BaseModel):
     def as_form(
         cls,
         full_name: Annotated[str, Form(...)],
-        email: Annotated[EmailStr, Form(...)],
+        email: Annotated[NormalizedEmail, Form(...)],
         password: Annotated[str, Form(...)],
         tell: Annotated[str, Form(...)],
     ):
@@ -44,27 +65,7 @@ class CreateUserRequest(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, value: str):
-        if len(value) < 8:
-            raise ValueError(
-                "La contraseña debe tener al menos 8 caracteres."
-            )
-
-        if not re.search(r"[A-Z]", value):
-            raise ValueError(
-                "La contraseña debe contener al menos una letra mayúscula."
-            )
-
-        if not re.search(r"[a-z]", value):
-            raise ValueError(
-                "La contraseña debe contener al menos una letra minúscula."
-            )
-
-        if not re.search(r"\d", value):
-            raise ValueError(
-                "La contraseña debe contener al menos un número."
-            )
-
-        return value
+        return check_password_strength(value)
 
     @field_validator("tell")
     @classmethod

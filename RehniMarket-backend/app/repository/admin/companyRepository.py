@@ -1,3 +1,4 @@
+"""Consultas del administrador sobre empresas: listado, detalle y cambio de estado del certificado."""
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, case
 from uuid import UUID
@@ -7,7 +8,7 @@ from app.models.ModelCompany import (
     CompanyCertificateEnum,
 )
 from app.models.ModelUser import Users
-from app.services.NasService import build_media_url
+from app.services.NasService import build_media_url, build_private_media_url
 from app.schemas.SchemaDashboard.admin.company import (
     AdminCompanyDetailResponse,
 )
@@ -132,9 +133,7 @@ def get_company_by_id(
         return None
 
     certificado = (
-        build_media_url(
-            f"uploads/{company.CompanyCertificate}"
-        )
+        build_private_media_url(company.CompanyCertificate)
         if company.CompanyCertificate
         else None
     )
@@ -210,27 +209,5 @@ def update_certificate_status(
     company.rejection_reason = (
         reason if status in ("rejected", "needs_update") else None
     )
-
-    return company
-
-
-def update_company_status(
-    database: Session,
-    company_id: UUID,
-    status: bool,
-) -> Company | None:
-
-    company = (
-        database.query(Company)
-        .filter(
-            Company.id == company_id
-        )
-        .first()
-    )
-
-    if company is None:
-        return None
-
-    company.CompanyStatus = status
 
     return company

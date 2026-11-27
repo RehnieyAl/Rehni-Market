@@ -1,3 +1,4 @@
+/** Formulario de anuncio del Hero: imágenes desktop/móvil con vista previa en su proporción y segmentación. */
 import { useEffect, useRef, useState } from "react";
 import { X, Save, Upload, Search } from "lucide-react";
 
@@ -13,6 +14,9 @@ import type { AdvertisementTargetType } from "@/features/admin/types/request";
 import type { PublicCatalog } from "@/features/public/products/types/response";
 import type { PublicProductCard } from "@/features/public/home/types/response";
 import type { AdminCompanyResponse } from "@/features/admin/types/response";
+import { useAlert } from "@/shared/components/alert/useAlert";
+import HeroBannerImage from "@/features/public/home/components/HeroBannerImage";
+import { FILE_ACCEPT, validateFile } from "@/shared/validation/files";
 
 const TARGET_TYPE_OPTIONS: { value: AdvertisementTargetType; label: string }[] = [
   { value: "PRODUCT", label: "Producto específico" },
@@ -57,6 +61,7 @@ export default function AdvertisementFormModal({
   onClose,
   onSubmit,
 }: AdvertisementFormModalProps) {
+  const { showAlert } = useAlert();
   const [buttonLink, setButtonLink] = useState(advertisement?.button_link ?? "");
   const [order, setOrder] = useState(advertisement?.order ?? 0);
   const [isActive, setIsActive] = useState(advertisement?.is_active ?? true);
@@ -102,19 +107,23 @@ export default function AdvertisementFormModal({
 
   const isEditing = advertisement !== null;
 
+  const savedTargetType = advertisement?.target_type;
+  const savedProductId = advertisement?.target_product_id;
+  const savedCompanyId = advertisement?.target_company_id;
+
   useEffect(() => {
-    if (advertisement?.target_type === "PRODUCT" && advertisement.target_product_id) {
-      getPublicProductDetail(advertisement.target_product_id)
+    if (savedTargetType === "PRODUCT" && savedProductId) {
+      getPublicProductDetail(savedProductId)
         .then((product) => setSelectedProductLabel(product.name))
         .catch((error) => console.error("Error cargando el producto del anuncio:", error));
     }
 
-    if (advertisement?.target_type === "COMPANY" && advertisement.target_company_id) {
-      getAdminCompany(advertisement.target_company_id)
+    if (savedTargetType === "COMPANY" && savedCompanyId) {
+      getAdminCompany(savedCompanyId)
         .then((company) => setSelectedCompanyLabel(company.nameCompany))
         .catch((error) => console.error("Error cargando la empresa del anuncio:", error));
     }
-  }, []);
+  }, [savedTargetType, savedProductId, savedCompanyId]);
 
   useEffect(() => {
     if (targetType !== "CATEGORY") return;
@@ -161,6 +170,13 @@ export default function AdvertisementFormModal({
 
     if (!file) return;
 
+    const error = validateFile(file, "image", "Imagen del anuncio");
+    if (error) {
+      e.target.value = "";
+      showAlert("error", error);
+      return;
+    }
+
     setImage(file);
     setPreview(URL.createObjectURL(file));
   };
@@ -169,6 +185,13 @@ export default function AdvertisementFormModal({
     const file = e.target.files?.[0];
 
     if (!file) return;
+
+    const error = validateFile(file, "image", "Imagen móvil del anuncio");
+    if (error) {
+      e.target.value = "";
+      showAlert("error", error);
+      return;
+    }
 
     setMobileImage(file);
     setMobilePreview(URL.createObjectURL(file));
@@ -265,11 +288,12 @@ export default function AdvertisementFormModal({
               <label className="mb-2 block text-sm font-medium text-gray-700">
                 Imagen desktop/tablet {!isEditing && <span className="text-danger">*</span>}
               </label>
+              <p className="mb-2 text-xs text-gray-500">1600 × 300 px, como la plantilla web: textos y logotipos dentro de su zona segura central.</p>
 
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept={FILE_ACCEPT.image}
                 hidden
                 onChange={handleImageChange}
               />
@@ -278,9 +302,9 @@ export default function AdvertisementFormModal({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="group relative block h-40 w-full overflow-hidden rounded-xl border border-gray-200"
+                  className="group relative block aspect-[16/3] w-full overflow-hidden rounded-xl border border-gray-200"
                 >
-                  <img src={preview} alt="" className="h-full w-full object-cover" />
+                  <HeroBannerImage src={preview} />
 
                   <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-transparent transition group-hover:bg-black/40 group-hover:text-white">
                     Cambiar imagen
@@ -290,7 +314,7 @@ export default function AdvertisementFormModal({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex h-40 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 transition hover:border-primary hover:text-primary"
+                  className="flex aspect-[16/3] w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 transition hover:border-secondary hover:text-secondary"
                 >
                   <Upload size={24} />
                   <span className="text-sm">Subir imagen</span>
@@ -302,23 +326,24 @@ export default function AdvertisementFormModal({
               <label className="mb-2 block text-sm font-medium text-gray-700">
                 Imagen móvil <span className="font-normal text-gray-400">(opcional)</span>
               </label>
+              <p className="mb-2 text-xs text-gray-500">1080 × 450 px, como la plantilla móvil (se usa en pantallas de menos de 640 px).</p>
 
               <input
                 ref={mobileFileInputRef}
                 type="file"
-                accept="image/*"
+                accept={FILE_ACCEPT.image}
                 hidden
                 onChange={handleMobileImageChange}
               />
 
               {mobilePreview ? (
-                <div className="relative h-40 w-full overflow-hidden rounded-xl border border-gray-200">
+                <div className="relative mx-auto aspect-[12/5] w-full max-w-xs overflow-hidden rounded-xl border border-gray-200">
                   <button
                     type="button"
                     onClick={() => mobileFileInputRef.current?.click()}
                     className="group block h-full w-full"
                   >
-                    <img src={mobilePreview} alt="" className="h-full w-full object-cover" />
+                    <HeroBannerImage src={mobilePreview} />
 
                     <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-transparent transition group-hover:bg-black/40 group-hover:text-white">
                       Cambiar imagen
@@ -339,7 +364,7 @@ export default function AdvertisementFormModal({
                 <button
                   type="button"
                   onClick={() => mobileFileInputRef.current?.click()}
-                  className="flex h-40 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 transition hover:border-primary hover:text-primary"
+                  className="mx-auto flex aspect-[12/5] w-full max-w-xs flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 transition hover:border-secondary hover:text-secondary"
                 >
                   <Upload size={24} />
                   <span className="text-sm">Subir imagen móvil</span>
@@ -373,7 +398,7 @@ export default function AdvertisementFormModal({
                   setCompanyQuery("");
                   setSelectedCompanyLabel("");
                 }}
-                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+                className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
               >
                 <option value="">Manual (escribir destino a mano)</option>
                 {TARGET_TYPE_OPTIONS.map((option) => (
@@ -423,7 +448,7 @@ export default function AdvertisementFormModal({
                   <select
                     value={targetCatalogId}
                     onChange={(event) => setTargetCatalogId(event.target.value)}
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
                   >
                     <option value="">Selecciona una categoría</option>
                     {catalogs.map((catalog) => (
@@ -446,7 +471,7 @@ export default function AdvertisementFormModal({
                         setCategoryDiscountEnabled(enabled);
                         if (!enabled) setMinimumDiscount("");
                       }}
-                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-brand-600/20"
+                      className="h-4 w-4 rounded border-gray-300 text-secondary focus:ring-2 focus:ring-secondary/20"
                     />
                     Habilitar descuento
                   </label>
@@ -466,7 +491,7 @@ export default function AdvertisementFormModal({
                           value={minimumDiscount}
                           onChange={(event) => setMinimumDiscount(event.target.value)}
                           placeholder="20"
-                          className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-10 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+                          className="w-full rounded-xl border border-gray-300 px-4 py-3 pr-10 text-sm text-gray-900 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
                         />
 
                         <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400">
@@ -528,7 +553,7 @@ export default function AdvertisementFormModal({
                   placeholder={
                     targetType === "BLACK_FRIDAY" ? "30" : targetType === "CYBER_DAYS" ? "15" : "20"
                   }
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
                 />
 
                 <p className="mt-2 text-xs text-gray-400">
@@ -551,7 +576,7 @@ export default function AdvertisementFormModal({
                     value={minimumDiscount}
                     onChange={(event) => setMinimumDiscount(event.target.value)}
                     placeholder="40"
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
                   />
                 </div>
 
@@ -566,7 +591,7 @@ export default function AdvertisementFormModal({
                     value={maximumStock}
                     onChange={(event) => setMaximumStock(event.target.value)}
                     placeholder="5"
-                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+                    className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
                   />
                 </div>
 
@@ -588,7 +613,7 @@ export default function AdvertisementFormModal({
                   value={maxAgeDays}
                   onChange={(event) => setMaxAgeDays(event.target.value)}
                   placeholder="30"
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
                 />
 
                 <p className="mt-2 text-xs text-gray-400">
@@ -609,7 +634,7 @@ export default function AdvertisementFormModal({
                   onChange={(event) => setButtonLink(event.target.value)}
                   maxLength={255}
                   placeholder="/products"
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
                 />
               ) : (
                 <div className="flex h-[46px] items-center rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 text-sm text-gray-500">
@@ -638,7 +663,7 @@ export default function AdvertisementFormModal({
                     setOrder(Number.isFinite(parsed) ? parsed : 0);
                   }}
                   min={0}
-                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-brand-600 focus:ring-2 focus:ring-brand-600/20"
+                  className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20"
                 />
               </div>
 
@@ -652,7 +677,7 @@ export default function AdvertisementFormModal({
                   onClick={() => setIsActive((current) => !current)}
                   className={`flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition ${
                     isActive
-                      ? "border-green-200 bg-success-bg text-success"
+                      ? "border-success/30 bg-success-bg text-success"
                       : "border-gray-200 bg-gray-50 text-gray-500"
                   }`}
                 >
@@ -675,7 +700,7 @@ export default function AdvertisementFormModal({
             <button
               type="submit"
               disabled={loading || !isValid}
-              className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white transition fill-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Save size={16} />
               {loading ? "Guardando…" : "Guardar"}
@@ -724,7 +749,7 @@ function SearchPicker({
 }) {
   return (
     <div>
-      <div className="flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-3">
+      <div className="flex items-center gap-2 rounded-xl border border-gray-300 px-4 py-3 transition-colors focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary/20">
         <Search size={16} className="text-gray-400" />
 
         <input

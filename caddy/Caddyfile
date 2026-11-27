@@ -18,6 +18,14 @@
 	http_port {$HTTP_PORT:80}
 	https_port {$HTTPS_PORT:443}
 	{$CADDY_LOCAL_CERTS}
+	# CA local (desarrollo): intermedio de 1 año en vez de 7 días. Con 7 días, si el stack pasaba una
+	# semana apagado el intermedio vencía y al arrancar Caddy emitía certificados ya vencidos
+	# (caddy/readme.md, «Certificado HTTPS vencido»). No afecta a Let's Encrypt en producción.
+	pki {
+		ca local {
+			intermediate_lifetime 365d
+		}
+	}
 }
 
 # Encabezados comunes al frontend y a la API. `-Server` quita el encabezado Server

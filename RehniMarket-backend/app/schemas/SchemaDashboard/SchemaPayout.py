@@ -1,9 +1,12 @@
+"""Schemas de liquidaciones a empresas: generación, vista previa, listado del owner (con las pendientes de
+generar), detalle y saldo de la empresa."""
+
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, model_validator
 
 
 class GeneratePayoutRequest(BaseModel):
@@ -47,6 +50,7 @@ class CompanyPayoutResponse(BaseModel):
     periodEnd: date
 
     grossSales: Decimal
+    refundsAmount: Decimal = Decimal("0")
     commissionPercentage: Decimal
     commissionAmount: Decimal
     netAmount: Decimal
@@ -59,6 +63,22 @@ class CompanyPayoutResponse(BaseModel):
     paidAt: Optional[datetime] = None
     createdAt: datetime
 
+    # Quinto día hábil (Colombia) tras el cierre del periodo; isOverdue solo es un indicador visual,
+    # no cambia payoutStatus.
+    consignmentDeadline: date
+    isOverdue: bool = False
+
+
+class AdminPayoutListItemResponse(CompanyPayoutResponse):
+    """Fila del listado del owner. Con isGenerated=false es un mes cerrado con ventas que aún no se
+    liquida: sin id ni registro, con importes estimados por el mismo cálculo de la generación y
+    bankAccount nulo si la empresa no tiene cuenta predeterminada."""
+
+    id: Optional[UUID] = None
+    isGenerated: bool = True
+    bankAccount: Optional[PayoutBankAccountSummary] = None
+    createdAt: Optional[datetime] = None
+
 
 class PayoutPreviewResponse(BaseModel):
     """Proyección de lo que generaría POST /admin/payouts/generate, sin persistir nada."""
@@ -70,6 +90,7 @@ class PayoutPreviewResponse(BaseModel):
     periodEnd: date
 
     grossSales: Decimal
+    refundsAmount: Decimal = Decimal("0")
     commissionPercentage: Decimal
     commissionAmount: Decimal
     netAmount: Decimal
@@ -92,9 +113,17 @@ class CompanyPayoutsPaginatedResponse(BaseModel):
     total_pages: int
 
 
+class AdminPayoutsPaginatedResponse(BaseModel):
+    items: list[AdminPayoutListItemResponse]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+
+
 class CompanyBalanceResponse(BaseModel):
-    """- grossSalesAccumulated / commissionAccumulated: suma histórica de todas las liquidaciones.
-    - netBalance: suma de netAmount de las liquidaciones aún no PAID.
+    """- grossSalesAccumulated / commissionAccumulated: liquidaciones + ventas entregadas aún sin liquidar.
+    - netBalance: netAmount de las liquidaciones aún no PAID + neto de las ventas aún sin liquidar.
     - nextPayoutDate: proyección informativa (último día del mes), no hay job automático."""
 
     grossSalesAccumulated: Decimal

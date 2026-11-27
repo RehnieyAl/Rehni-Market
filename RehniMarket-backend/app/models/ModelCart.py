@@ -1,9 +1,11 @@
+"""Modelos ORM del carrito del comprador y sus ítems (tablas carts y cart_items)."""
+
 from sqlalchemy import ForeignKey, Integer, DateTime, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime, timezone
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 
 class Cart(Base):

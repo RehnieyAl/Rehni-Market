@@ -25,9 +25,9 @@ export default function MobileAppNotice() {
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-surface-1/95 px-4 py-2.5 shadow-pop backdrop-blur lg:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-hairline bg-surface-1 px-4 py-2.5 shadow-pop lg:hidden">
       <div className="mx-auto flex max-w-md items-center gap-3">
-        <Smartphone size={18} className="shrink-0 text-primary" />
+        <Smartphone size={18} className="shrink-0 text-secondary" />
 
         <p className="flex-1 text-xs leading-4 text-gray-600">
           Estás usando RehniMarket en el navegador. Funciona igual desde tu

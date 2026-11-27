@@ -1,6 +1,9 @@
+"""Rutas del panel admin para empresas, certificados, catálogos, especificaciones y publicidad (admin y owner)."""
+
+from typing import Annotated
+
 from fastapi import (
     APIRouter,
-    Request,
     Depends,
     Query,
     UploadFile,
@@ -9,7 +12,9 @@ from fastapi import (
 
 from sqlalchemy.orm import Session
 
-from app.database.Connection import get_db
+from app.core.dbconexion import get_db
+from app.core.AuthDependencies import AuthContext, require_role
+from app.utils.FileValidator import IMAGE_EXTENSIONS, validate_upload, validate_uploads
 
 from uuid import UUID
 
@@ -101,6 +106,7 @@ router = APIRouter(
 @router.get(
     "/dashboard/get-companies",
     response_model=AdminCompaniesPaginatedResponse,
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def get_company(
     search: str | None = Query(None),
@@ -124,7 +130,8 @@ def get_company(
 
 
 @router.get(
-    "/dashboard/get-company/{company_id}"
+    "/dashboard/get-company/{company_id}",
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def get_admin_company(
     company_id: UUID,
@@ -141,13 +148,13 @@ def get_admin_company(
     "/dashboard/companies/certificate/status/{company_id}"
 )
 def update_certificate_status(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("admin", "owner"))],
     company_id: UUID,
     data: UpdateCertificateStatusRequest,
     database: Session = Depends(get_db, scope="function"),
 ):
 
-    admin_id = request.state.user_id
+    admin_id = current.user_id
 
     return update_certificate_status_service(
         company_id=company_id,
@@ -163,13 +170,13 @@ def update_certificate_status(
     response_model=UpdateCompanyStatusResponse,
 )
 def update_company_status(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("admin", "owner"))],
     company_id: UUID,
     data: UpdateCompanyStatusRequest,
     database: Session = Depends(get_db, scope="function"),
 ):
 
-    admin_id = request.state.user_id
+    admin_id = current.user_id
 
     return update_company_status_service(
         company_id=company_id,
@@ -181,7 +188,8 @@ def update_company_status(
 
 
 @router.get(
-    "/dashboard/get-colors"
+    "/dashboard/get-colors",
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def get_colors(
     database: Session = Depends(get_db, scope="function"),
@@ -193,7 +201,8 @@ def get_colors(
 
 
 @router.post(
-    "/dashboard/create-color"
+    "/dashboard/create-color",
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def create_color(
     data: CreateColorRequest,
@@ -207,7 +216,8 @@ def create_color(
 
 
 @router.put(
-    "/dashboard/update-color/{color_id}"
+    "/dashboard/update-color/{color_id}",
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def update_color(
     color_id: UUID,
@@ -223,7 +233,8 @@ def update_color(
 
 
 @router.delete(
-    "/dashboard/delete-color/{color_id}"
+    "/dashboard/delete-color/{color_id}",
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def delete_color(
     color_id: UUID,
@@ -239,6 +250,7 @@ def delete_color(
 @router.get(
     "/dashboard/get-catalogs",
     response_model=list[CatalogResponse],
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def get_catalogs(
     database: Session = Depends(get_db, scope="function"),
@@ -252,6 +264,7 @@ def get_catalogs(
 @router.post(
     "/dashboard/created-catalogs",
     response_model=CatalogResponse,
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def create_catalog(
     data: CreateCatalogRequest = Depends(CreateCatalogRequest.as_form),
@@ -259,6 +272,7 @@ def create_catalog(
     nas: NasService = Depends(get_nas_service),
     database: Session = Depends(get_db, scope="function"),
 ):
+    validate_uploads([image], IMAGE_EXTENSIONS, "Imagen de la categoría")
 
     return create_catalog_service(
         database,
@@ -271,6 +285,7 @@ def create_catalog(
 @router.put(
     "/dashboard/update-catalogs/{catalog_id}",
     response_model=CatalogResponse,
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def update_catalog(
     catalog_id: UUID,
@@ -279,6 +294,7 @@ def update_catalog(
     nas: NasService = Depends(get_nas_service),
     database: Session = Depends(get_db, scope="function"),
 ):
+    validate_uploads([image], IMAGE_EXTENSIONS, "Imagen de la categoría")
 
     return update_catalog_service(
         database,
@@ -292,6 +308,7 @@ def update_catalog(
 @router.patch(
     "/dashboard/change-status-catalog/{catalog_id}",
     response_model=CatalogResponse,
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def change_catalog_status(
     catalog_id: UUID,
@@ -307,7 +324,8 @@ def change_catalog_status(
 
 
 @router.delete(
-    "/dashboard/delete-catalogs/{catalog_id}"
+    "/dashboard/delete-catalogs/{catalog_id}",
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def delete_catalog(
     catalog_id: UUID,
@@ -325,6 +343,7 @@ def delete_catalog(
 @router.get(
     "/dashboard/get-specifications/{catalog_id}",
     response_model=list[SpecificationResponse],
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def get_specifications(
     catalog_id: UUID,
@@ -340,6 +359,7 @@ def get_specifications(
 @router.post(
     "/dashboard/created-specifications/{catalog_id}",
     response_model=SpecificationResponse,
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def create_specification(
     catalog_id: UUID,
@@ -357,6 +377,7 @@ def create_specification(
 @router.put(
     "/dashboard/update-specifications/{specification_id}",
     response_model=SpecificationResponse,
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def update_specification(
     specification_id: UUID,
@@ -372,7 +393,8 @@ def update_specification(
 
 
 @router.delete(
-    "/dashboard/delete-specifications/{specification_id}"
+    "/dashboard/delete-specifications/{specification_id}",
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def delete_specification(
     specification_id: UUID,
@@ -388,6 +410,7 @@ def delete_specification(
 @router.get(
     "/dashboard/get-advertisements",
     response_model=list[AdvertisementResponse],
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def get_advertisements(
     database: Session = Depends(get_db, scope="function"),
@@ -400,6 +423,7 @@ def get_advertisements(
 @router.get(
     "/dashboard/get-advertisement/{advertisement_id}",
     response_model=AdvertisementResponse,
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def get_advertisement(
     advertisement_id: UUID,
@@ -414,6 +438,7 @@ def get_advertisement(
 @router.post(
     "/dashboard/create-advertisement",
     response_model=AdvertisementResponse,
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def create_advertisement(
     data: CreateAdvertisementRequest = Depends(
@@ -428,6 +453,8 @@ def create_advertisement(
 
     database: Session = Depends(get_db, scope="function"),
 ):
+    validate_upload(image, IMAGE_EXTENSIONS, "Imagen del anuncio")
+    validate_uploads([mobile_image], IMAGE_EXTENSIONS, "Imagen móvil del anuncio")
     return create_advertisement_service(
         database=database,
         data=data,
@@ -440,6 +467,7 @@ def create_advertisement(
 @router.patch(
     "/dashboard/update-advertisement/{advertisement_id}",
     response_model=AdvertisementResponse,
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def update_advertisement(
     advertisement_id: UUID,
@@ -456,6 +484,8 @@ def update_advertisement(
 
     database: Session = Depends(get_db, scope="function"),
 ):
+    validate_uploads([image], IMAGE_EXTENSIONS, "Imagen del anuncio")
+    validate_uploads([mobile_image], IMAGE_EXTENSIONS, "Imagen móvil del anuncio")
     return update_advertisement_service(
         database=database,
         advertisement_id=advertisement_id,
@@ -469,6 +499,7 @@ def update_advertisement(
 @router.patch(
     "/dashboard/change-status-advertisement/{advertisement_id}",
     response_model=AdvertisementResponse,
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def change_advertisement_status(
     advertisement_id: UUID,
@@ -485,7 +516,8 @@ def change_advertisement_status(
 
 
 @router.delete(
-    "/dashboard/delete-advertisement/{advertisement_id}"
+    "/dashboard/delete-advertisement/{advertisement_id}",
+    dependencies=[Depends(require_role("admin", "owner"))],
 )
 def delete_advertisement(
     advertisement_id: UUID,

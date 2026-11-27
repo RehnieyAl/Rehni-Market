@@ -1,4 +1,7 @@
+/** Vista previa de un anuncio del Hero con el mismo marco y ajuste que en el Home. */
 import { Modal, Badge } from "@/shared/components/ui";
+import HeroBannerImage from "@/features/public/home/components/HeroBannerImage";
+import { HERO_FRAME, HERO_FRAME_WEB_ONLY, HERO_MOBILE_ASPECT, HERO_WEB_ASPECT } from "@/features/public/home/components/heroFrame";
 
 import type { AdminAdvertisementResponse } from "@/features/admin/types/response";
 
@@ -22,42 +25,26 @@ export default function AdvertisementPreviewModal({
       title="Vista previa del anuncio"
       size="lg"
     >
-      <div className="relative aspect-[16/7] w-full overflow-hidden rounded-card bg-gray-100">
-        <picture>
-          {advertisement.mobile_image_url && (
-            <source
-              media="(max-width: 767px)"
-              srcSet={advertisement.mobile_image_url}
-            />
-          )}
-          <img
-            src={advertisement.image_url}
-            alt=""
-            className="h-full w-full object-cover"
-          />
-        </picture>
+      <div className={`relative overflow-hidden rounded-card bg-gray-100 ${advertisement.mobile_image_url ? HERO_FRAME : HERO_FRAME_WEB_ONLY}`}>
+        <HeroBannerImage src={advertisement.image_url} mobileSrc={advertisement.mobile_image_url} />
       </div>
 
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <p className="mb-1 text-xs font-medium text-gray-500">Desktop / tablet</p>
-          <img
-            src={advertisement.image_url}
-            alt=""
-            className="h-20 w-full rounded-control border border-gray-200 object-cover"
-          />
+          <div className={`relative ${HERO_WEB_ASPECT} w-full overflow-hidden rounded-control border border-gray-200`}>
+            <HeroBannerImage src={advertisement.image_url} />
+          </div>
         </div>
 
         <div>
           <p className="mb-1 text-xs font-medium text-gray-500">Móvil</p>
-          <img
-            src={advertisement.mobile_image_url ?? advertisement.image_url}
-            alt=""
-            className="h-20 w-full rounded-control border border-gray-200 object-cover"
-          />
+          <div className={`relative ${advertisement.mobile_image_url ? HERO_MOBILE_ASPECT : "aspect-[4/1]"} w-full overflow-hidden rounded-control border border-gray-200`}>
+            <HeroBannerImage src={advertisement.mobile_image_url ?? advertisement.image_url} />
+          </div>
           {!advertisement.mobile_image_url && (
             <p className="mt-1 text-[11px] text-gray-400">
-              Sin imagen móvil propia — usa la de desktop.
+              Sin imagen móvil propia: usa la de desktop en 4:1, recortada a su zona segura.
             </p>
           )}
         </div>

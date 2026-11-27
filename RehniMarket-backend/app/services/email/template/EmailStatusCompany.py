@@ -1,5 +1,6 @@
 from app.services.email.EmailService import send_email
 from app.services.email.template.EmailBase import (
+    highlight,
     bullet_list_html,
     email_wrapper,
     escape,
@@ -30,7 +31,7 @@ def EmailCompanyBlocked(
         + paragraph_html("Hola,")
         + paragraph_html(
             "Te informamos que la cuenta empresarial de "
-            f'<strong style="color:#6D0F2D;">{escape(company_name)}</strong> ha sido '
+            + highlight(company_name) + ' ha sido '
             "bloqueada por el equipo de Rehni Market."
         )
         + reason_section
@@ -74,11 +75,11 @@ def EmailCompanyUnblocked(
     subject = "Cuenta empresarial desbloqueada | Rehni Market"
 
     content = (
-        heading_html("¡Tu cuenta empresarial está activa nuevamente!")
+        heading_html("Tu cuenta empresarial está activa de nuevo")
         + paragraph_html("Hola,")
         + paragraph_html(
             "Te informamos que la cuenta empresarial de "
-            f'<strong style="color:#6D0F2D;">{escape(company_name)}</strong> ha sido '
+            + highlight(company_name) + ' ha sido '
             "desbloqueada por el equipo de Rehni Market."
         )
         + info_box(

@@ -31,7 +31,7 @@ export default function ReviewForm({ productId, onCreated }: ReviewFormProps) {
 
       setRating(0);
       setComment("");
-      showAlert("success", "¡Gracias por tu reseña!");
+      showAlert("success", "Reseña publicada");
       onCreated();
     } catch (error) {
       console.error("Error creando la reseña:", error);

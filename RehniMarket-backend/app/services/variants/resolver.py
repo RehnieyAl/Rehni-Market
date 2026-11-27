@@ -12,6 +12,50 @@ from app.services.variants import attributes as attrs
 from app.services.variants.combo_key import build_combo_key
 
 
+def _validated_variant_option(database: Session, option_id, axis_ids: set, seen_attribute_ids: set):
+    """La opción debe existir y ser de un eje de variante activo de la categoría, sin repetir eje."""
+    option = attrs.get_attribute_option(database, option_id)
+
+    if option is None:
+        api_error(
+            404,
+            ErrorCodes.CATALOG_ATTRIBUTE_OPTION_NOT_FOUND,
+            "Una de las opciones seleccionadas no existe.",
+        )
+
+    attribute = option.attribute
+
+    if attribute.role != "variant":
+        api_error(
+            409,
+            ErrorCodes.VARIANT_AXIS_ROLE_INVALID,
+            f"'{attribute.name}' no es un atributo de variante.",
+        )
+
+    if not attribute.is_active:
+        api_error(
+            409,
+            ErrorCodes.CATALOG_ATTRIBUTE_INACTIVE,
+            f"El atributo '{attribute.name}' está inactivo.",
+        )
+
+    if attribute.id not in axis_ids:
+        api_error(
+            409,
+            ErrorCodes.VARIANT_OPTION_MISMATCH,
+            f"'{option.value}' no pertenece a un eje de variante de esta categoría.",
+        )
+
+    if attribute.id in seen_attribute_ids:
+        api_error(
+            400,
+            ErrorCodes.VARIANT_COMBINATION_INVALID,
+            f"No puedes elegir dos valores para '{attribute.name}'.",
+        )
+
+    return option
+
+
 def resolve_option_set(
     database: Session, product: Product, option_ids
 ) -> list[CatalogAttributeOption]:
@@ -44,46 +88,8 @@ def resolve_option_set(
     seen_attribute_ids: set = set()
 
     for option_id in normalized_ids:
-        option = attrs.get_attribute_option(database, option_id)
-
-        if option is None:
-            api_error(
-                404,
-                ErrorCodes.CATALOG_ATTRIBUTE_OPTION_NOT_FOUND,
-                "Una de las opciones seleccionadas no existe.",
-            )
-
-        attribute = option.attribute
-
-        if attribute.role != "variant":
-            api_error(
-                409,
-                ErrorCodes.VARIANT_AXIS_ROLE_INVALID,
-                f"'{attribute.name}' no es un atributo de variante.",
-            )
-
-        if not attribute.is_active:
-            api_error(
-                409,
-                ErrorCodes.CATALOG_ATTRIBUTE_INACTIVE,
-                f"El atributo '{attribute.name}' está inactivo.",
-            )
-
-        if attribute.id not in axis_ids:
-            api_error(
-                409,
-                ErrorCodes.VARIANT_OPTION_MISMATCH,
-                f"'{option.value}' no pertenece a un eje de variante de esta categoría.",
-            )
-
-        if attribute.id in seen_attribute_ids:
-            api_error(
-                400,
-                ErrorCodes.VARIANT_COMBINATION_INVALID,
-                f"No puedes elegir dos valores para '{attribute.name}'.",
-            )
-
-        seen_attribute_ids.add(attribute.id)
+        option = _validated_variant_option(database, option_id, axis_ids, seen_attribute_ids)
+        seen_attribute_ids.add(option.attribute.id)
         options.append(option)
 
     if seen_attribute_ids != axis_ids:

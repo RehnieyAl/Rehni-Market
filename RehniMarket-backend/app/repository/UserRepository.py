@@ -1,14 +1,22 @@
+"""Acceso a datos de usuarios: búsqueda por correo (sin distinguir mayúsculas), creación y cambios de cuenta."""
+
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.ModelUser import Users
 from app.schemas.schemaAuth.SchemaRegister import CreateUserRequest
+from app.schemas.SchemaEmail import normalize_email
 from app.utils.Security import hash_password
 
 from uuid import UUID
 
 def get_by_email(database: Session, email: str) -> Users | None:
-    get_email = database.query(Users).filter(Users.email == email).first()
-    return get_email
+    # lower() en la columna: cuentas creadas antes de normalizar pueden tener mayúsculas guardadas.
+    return (
+        database.query(Users)
+        .filter(func.lower(Users.email) == normalize_email(email))
+        .first()
+    )
 
 def create_user(database: Session,user: CreateUserRequest,role_id: int) -> Users:
     new_user = Users(
@@ -26,13 +34,6 @@ def verify_email(database: Session, user: Users):
     user.verified = True
     database.flush()
     return user
-
-def change_email(database: Session, user: Users, new_email: str):
-    user.email = new_email
-    user.verified = False
-    database.flush()
-    return user
-
 
 def get_by_id(database: Session, user_id: UUID) -> Users | None:
     my_user = database.query(Users).filter(Users.id == user_id).first()

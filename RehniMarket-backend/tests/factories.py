@@ -148,3 +148,30 @@ def place_order(
 
 def utc(year: int, month: int, day: int, hour: int = 12) -> datetime:
     return datetime(year, month, day, hour, tzinfo=timezone.utc)
+
+
+def valid_png(size: int = 2) -> bytes:
+    """PNG mínimo y completo (firma, IHDR, IDAT e IEND) que pasa FileValidator."""
+    import struct
+    import zlib
+
+    def chunk(tag: bytes, data: bytes) -> bytes:
+        return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+
+    ihdr = struct.pack(">IIBBBBB", size, size, 8, 2, 0, 0, 0)
+    idat = zlib.compress((b"\x00" + b"\x80\x40\x20" * size) * size)
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) + chunk(b"IDAT", idat) + chunk(b"IEND", b"")
+
+
+def valid_jpeg() -> bytes:
+    """JPEG con marcadores SOI/APP0 y EOI: suficiente para la validación por firma y fin."""
+    return b"\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00" + b"\x00" * 64 + b"\xff\xd9"
+
+
+def valid_webp() -> bytes:
+    payload = b"WEBPVP8 " + (10).to_bytes(4, "little") + b"\x00" * 10
+    return b"RIFF" + len(payload).to_bytes(4, "little") + payload
+
+
+def valid_pdf(padding: int = 0) -> bytes:
+    return b"%PDF-1.4\n1 0 obj << /Type /Catalog >> endobj\n" + b"0" * padding + b"\ntrailer << /Root 1 0 R >>\n%%EOF\n"

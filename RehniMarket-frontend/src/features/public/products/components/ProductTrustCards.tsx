@@ -47,13 +47,13 @@ export default function ProductTrustCards({ isVerified }: ProductTrustCardsProps
   ];
 
   return (
-    <div className="theme-dark mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {cards.map((card) => (
         <div
           key={card.title}
           className="rounded-card border border-hairline bg-surface-1 p-4"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-control bg-brand-600/20 text-brand-300">
+          <span className="flex h-9 w-9 items-center justify-center rounded-control bg-primary/20 text-secondary">
             {card.icon}
           </span>
 

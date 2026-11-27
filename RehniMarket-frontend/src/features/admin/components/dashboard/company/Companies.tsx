@@ -1,4 +1,5 @@
-import { Search, Eye, Lock, Unlock } from "lucide-react";
+/** Empresas registradas (admin/owner): búsqueda, filtro por certificado, paginación, detalle y suspensión o reactivación. */
+import { Search, Eye, Lock, Unlock, Building2 } from "lucide-react";
 
 import { useCallback, useEffect, useState } from "react";
 
@@ -22,6 +23,7 @@ import type {
 import type {
   CompanyCertificateFilter,
 } from "@/features/admin/api/companyService";
+import DashboardPageHeader from "@/shared/components/dashboard/DashboardPageHeader";
 
 export default function Companies() {
   const { showAlert } = useAlert();
@@ -121,7 +123,7 @@ export default function Companies() {
       }
     };
 
-    loadInitialCompanies();
+    void loadInitialCompanies();
   }, []);
 
   const handleSearch = async (
@@ -328,14 +330,11 @@ export default function Companies() {
     <div className="flex min-h-0 flex-1 flex-col">
 
       <div className="shrink-0">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Empresas
-        </h1>
-
-        <p className="mt-1 text-sm text-gray-500">
-          Gestiona las empresas registradas
-          en la plataforma.
-        </p>
+        <DashboardPageHeader
+          icon={<Building2 size={26} />}
+          title="Empresas"
+          description="Gestiona las empresas registradas en la plataforma."
+        />
       </div>
 
       <section className="mt-6 shrink-0 rounded-card border border-gray-200 bg-surface-1 p-5 shadow-card">
@@ -389,11 +388,11 @@ export default function Companies() {
           <Badge>{getFilterLabel()}</Badge>
         </div>
 
-        <div className="h-[360px] overflow-y-auto overflow-x-auto">
+        <div className="overflow-x-auto">
           <table className="w-full min-w-[900px]">
 
-            <thead className="sticky top-0 z-10 bg-surface-1">
-              <tr className="border-b border-gray-200 text-left text-xs uppercase tracking-wide text-gray-400">
+            <thead className="bg-surface-1">
+              <tr className="border-b border-gray-200 text-left text-xs text-ink-muted">
 
                 <th className="px-5 py-3 font-medium">
                   Empresa
@@ -607,7 +606,7 @@ export default function Companies() {
               onClick={handlePreviousPage}
               disabled={cursorHistory.length === 0 || loading}
             >
-              Atrás
+              Anterior
             </Button>
 
             <Button

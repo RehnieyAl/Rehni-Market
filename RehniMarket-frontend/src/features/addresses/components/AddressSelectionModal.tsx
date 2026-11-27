@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+/** Modal del checkout para elegir la dirección de envío o crear una nueva. */
+import { useCallback, useEffect, useState } from "react";
 import { MapPin, Plus } from "lucide-react";
 
 import AddressForm from "./AddressForm";
@@ -26,7 +27,7 @@ export default function AddressSelectionModal({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
 
-  const loadAddresses = async () => {
+  const loadAddresses = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -44,14 +45,14 @@ export default function AddressSelectionModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, [showAlert]);
 
   useEffect(() => {
     if (!isOpen) return;
 
     const timeout = setTimeout(loadAddresses);
     return () => clearTimeout(timeout);
-  }, [isOpen]);
+  }, [isOpen, loadAddresses]);
 
   const handleSaved = (created: Address) => {
     setAddresses((prev) => [created, ...prev]);
@@ -112,7 +113,7 @@ export default function AddressSelectionModal({
                   key={address.id}
                   className={`flex cursor-pointer items-start gap-3 rounded-control border p-4 text-sm transition ${
                     selectedId === address.id
-                      ? "border-primary bg-brand-50"
+                      ? "border-secondary bg-primary/15"
                       : "border-gray-200 hover:bg-gray-50"
                   }`}
                 >
@@ -121,14 +122,14 @@ export default function AddressSelectionModal({
                     name="address"
                     checked={selectedId === address.id}
                     onChange={() => setSelectedId(address.id)}
-                    className="mt-1 accent-primary"
+                    className="mt-1 accent-secondary"
                   />
 
                   <span>
                     <span className="block font-medium text-gray-900">
                       {address.label ?? "Dirección"}
                       {address.isDefault && (
-                        <span className="ml-2 text-xs font-normal text-primary">
+                        <span className="ml-2 text-xs font-normal text-ink-muted">
                           (predeterminada)
                         </span>
                       )}
@@ -144,7 +145,7 @@ export default function AddressSelectionModal({
 
           <button
             onClick={() => setShowForm(true)}
-            className="mt-4 flex items-center gap-2 text-sm font-medium text-primary hover:underline"
+            className="mt-4 flex items-center gap-2 text-sm font-medium brand-link"
           >
             <Plus size={16} />
             Nueva dirección

@@ -1,27 +1,21 @@
-export function buildRechargeWhatsappUrl(params: {
-  amount: number;
-  userName: string;
-  userEmail: string;
-}): string | null {
-  const rawNumber = import.meta.env.VITE_REHNIMARKET_WHATSAPP;
+/** Enlace de WhatsApp para pedir una recarga de RehniCoin al número público institucional. El mensaje es
+ * fijo y no lleva datos de la cuenta: el equipo identifica al comprador durante la conversación. */
 
-  if (!rawNumber) return null;
+export const RECHARGE_MESSAGE =
+  "Hola, equipo de RehniMarket. Quiero solicitar una recarga de RehniCoin para mi cuenta. ¿Podrían indicarme cómo continuar?";
 
-  const number = rawNumber.replace(/\D/g, "");
+/**
+ * Número en formato internacional para wa.me (solo dígitos, con prefijo de país) o null si no es seguro
+ * usarlo. Solo se acepta un número que empiece con "+": sin él el prefijo de país sería una suposición.
+ */
+export function toWhatsappNumber(phone: string | null | undefined): string | null {
+  if (!phone) return null;
+  const compact = phone.replace(/[\s().-]/g, "");
+  if (!/^\+[1-9][0-9]{7,14}$/.test(compact)) return null;
+  return compact.slice(1);
+}
 
-  if (!number) return null;
-
-  const message = [
-    `Hola, soy ${params.userName}.`,
-    "Quiero solicitar una recarga de RehniCoins.",
-    "",
-    `Cantidad solicitada: ${params.amount.toLocaleString("es-CO")} RehniCoins`,
-    "",
-    "Correo de mi cuenta:",
-    params.userEmail,
-    "",
-    "Quedo atento para completar el proceso de pago.",
-  ].join("\n");
-
-  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+export function buildRechargeWhatsappUrl(phone: string | null | undefined): string | null {
+  const number = toWhatsappNumber(phone);
+  return number ? `https://wa.me/${number}?text=${encodeURIComponent(RECHARGE_MESSAGE)}` : null;
 }

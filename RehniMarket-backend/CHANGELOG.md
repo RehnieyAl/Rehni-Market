@@ -8,6 +8,133 @@ Todos los cambios importantes de este proyecto se documentan en este archivo.
 
 ---
 
+## [Unreleased] - 2026-11-24
+### Added (2026-11-26) · liquidaciones
+- **Cierre mensual de liquidaciones.** `GET /admin/payouts` (solo `owner`) lista, además de las
+  liquidaciones generadas, cada mes cerrado con ventas entregadas que aún no se liquida
+  (`isGenerated: false`, sin `id` y sin crear registros), con importes calculados igual que la
+  generación. Aparecen desde el primer día del mes siguiente (`America/Bogota`), ordenadas por
+  urgencia (sin pagar por fecha límite y luego pagadas) y paginadas en el servidor.
+- **Fecha límite de consignación** (`consignmentDeadline`): quinto día hábil tras el cierre, sin
+  sábados, domingos ni festivos de Colombia (`app/core/BusinessCalendar.py`, Ley 51 de 1983).
+  `isOverdue` es solo un indicador: no cambia `payoutStatus`. El plazo es una regla interna.
+
+### Changed (2026-11-26) · liquidaciones
+- **Cierre del mes a medianoche de Colombia.** Las ventas se asignan al mes calendario de
+  `America/Bogota` (antes UTC: una venta de las 19:00–24:00 del último día caía en el mes siguiente).
+- **Cada venta liquidada queda enlazada a su liquidación** (`orders.payout_id`, migración
+  `a4c6e8f0b2d4`): una venta no se paga dos veces, y la entregada después de liquidar su mes o que
+  quedó en el borde horario se liquida en el primer mes siguiente sin liquidación. La migración
+  enlaza lo existente con la regla UTC anterior: ningún importe histórico cambia. Conciliación:
+  `docs/runbooks/conciliar-liquidaciones.md`.
+- **Devoluciones repartidas con un único plan cronológico por empresa** que comparten el listado, la
+  vista previa y la generación: generar los meses en cualquier orden da los mismos importes que se
+  mostraron y ningún reembolso se descuenta dos veces. La generación bloquea la empresa, sus ventas
+  sin liquidar y sus reembolsos.
+- Solo se liquidan meses calendario completos (`422 PAYOUT_INVALID_PERIOD`): cierra H-07 (#36),
+  periodos solapados que volvían a liquidar las mismas ventas.
+- Un periodo que no ha cerrado ya no se puede liquidar ni previsualizar (`422 PAYOUT_INVALID_PERIOD`)
+  y `available-periods` ya no lo ofrece: las ventas posteriores de ese mes quedaban fuera de todo pago.
+- Dos generaciones simultáneas del mismo periodo responden `409 PAYOUT_ALREADY_EXISTS` (antes `500`)
+  y «Marcar como pagada» bloquea la fila para no confirmar dos veces el mismo pago.
+
+### Changed
+- **Autenticación y roles por dependencias de FastAPI.** `AuthMiddleware.py`, `RolePermissions.py`,
+  `PublicRoutes.py` y `AuthUser.py` se reemplazan por `app/core/AuthDependencies.py`: cada endpoint
+  protegido declara `Depends(require_role(...))`. Se conservan los códigos y mensajes de `401`
+  (`UNAUTHORIZED`, `INVALID_TOKEN`, `TOKEN_EXPIRED`), `403` (`USER_BLOCKED`, `FORBIDDEN`, estados de
+  empresa) y el `503` con `Retry-After` si la base de datos no responde. Swagger muestra el candado
+  Bearer (JWT) en las 129 operaciones protegidas.
+- **`admin` y `owner` ya no pasan a las rutas de comprador ni de empresa.** Antes el middleware los
+  dejaba entrar a todo; ahora reciben `403 FORBIDDEN` (antes, según la ruta, `PURCHASE_NOT_ALLOWED`,
+  `COMPANY_NOT_FOUND` o una respuesta `200` en `/wallet/me` y `/reports`). Ninguna pantalla de la web o
+  la app móvil usaba esos accesos.
+- Una ruta inexistente responde `404` (antes `401` sin token y `403` con token de un rol sin acceso).
+- **Conexión a PostgreSQL en `app/core/dbconexion.py`** (antes `app/database/Connection.py`), con
+  el mismo `engine`, `SessionLocal`, `get_db`, `read_session` y `Base`. Se elimina `app/database/`:
+  el SQL del único owner vive en `ModelUser.py` y, copiado tal cual, en la migración `d7e3f1a9c5b2`
+  (solo cambió su import; el SQL que ejecuta es idéntico y una prueba los mantiene iguales).
+- Errores 500 sin detalles internos: `traceback.print_exc()` pasa a `logging` y los
+  `HTTPException(500, detail=str(e))` a un mensaje genérico; `/health/database` ya no publica el
+  texto del error de conexión.
+- Ninguna función del backend supera complejidad ciclomática 10 (antes 16): checkout, edición de
+  productos, anuncios, catálogos, usuarios de admin, listado público y resolución de variantes se
+  dividen en pasos con nombre, sin cambiar respuestas ni SQL (comprobado contra la versión anterior).
+  Los errores de subida a NAS ya no devuelven el texto interno de MinIO.
+- **Ningún seed corre solo.** Con `RUN_SEED=false` (predeterminado, ahora también en `.env.example`)
+  el arranque ya no crea roles, catálogos ni transportadoras: en una base nueva se crean con
+  `bash scripts/datos-base.sh`. Con `RUN_SEED=true` se crean los datos base y luego los de demo.
+
+- **Seeds separados por responsabilidad** (`app/utils/seed_*.py`): roles, categorías,
+  especificaciones, atributos, colores (nuevo, opcional), transportadoras, owner, empresas demo y
+  productos demo. `python -m app.utils.seed <nombres|base|demo>` los ejecuta en orden de dependencias;
+  nada corre al importar. El seed `owner` ya no falla si existe un owner con otro correo.
+- **Validación de archivos** (`app/utils/FileValidator.py`) en todas las subidas: JPEG/PNG/WEBP o
+  PDF según el endpoint, máximo 5 MiB, MIME, firma real y archivo completo. `413 FILE_TOO_LARGE`,
+  `415 UNSUPPORTED_FILE_TYPE`, `400 INVALID_FILE` (vacío o dañado); antes certificados y evidencias
+  respondían `400 INVALID_FILE` también para tipo y tamaño. Un archivo rechazado nunca llega a MinIO.
+- **Certificados privados:** `/media/proxy` ya no los sirve; el panel de admin y el de la empresa
+  reciben una URL firmada de `/media/private` que caduca a los 30 minutos.
+
+### Fixed
+- **Correos sin distinguir mayúsculas.** Registro, login, recuperación, verificación, cambio de
+  correo, `/auth/me` y los formularios de admin guardan y buscan el correo con `strip().lower()`
+  (`SchemaEmail.NormalizedEmail`); las búsquedas usan `lower(email)` para que las cuentas antiguas
+  con mayúsculas sigan entrando y no se pueda registrar otra igual con otras mayúsculas.
+  `/auth/change-email` responde `409 EMAIL_ALREADY_EXISTS` si el correo nuevo ya es de otra cuenta.
+- **Ganancias de la empresa en cero.** `GET /company/balance` solo sumaba liquidaciones, que el owner
+  genera a mano por periodo: las ventas entregadas aún sin liquidar no aparecían. Ahora suma también
+  esas ventas (pedidos `DELIVERED` fuera del periodo de cualquier liquidación de la empresa) con la
+  misma comisión del 5 %, sin contar dos veces lo ya liquidado.
+
+### Added
+- Manejador de excepciones no controladas: `500` con `{code: INTERNAL_SERVER_ERROR, message}` sin
+  detalles internos (antes texto plano, o `401 Token inválido` si fallaba la autenticación).
+- Prueba de guarda: falla si alguna ruta que no está en la lista pública queda sin `require_role`.
+- **Seguir empresas.** Tabla `company_followers` (migración `b5d7f9a1c3e6`: UNIQUE
+  `(user_id, company_id)`, índice por empresa, `ON DELETE CASCADE`). `GET /public/company/{id}/followers`
+  (público, solo el número) y `GET|POST|DELETE /company-follows/{id}` (solo rol `user`; seguir y dejar
+  de seguir son idempotentes y seguras ante peticiones simultáneas con `ON CONFLICT DO NOTHING`).
+  Empresa inexistente o suspendida: `404 COMPANY_NOT_FOUND`.
+- `alembic check` en el CI tras `upgrade head`.
+
+### Changed (2026-11-25)
+- `GET /company/dashboard/my-profile` ("Mi tienda") declara `response_model=CompanyStoreSettingsResponse`
+  y consulta solo la empresa: ya no carga la cuenta del representante (`Users`) y `memberAT` pasa a ser la
+  fecha de registro de la empresa (`company.created_at`), no la de la cuenta personal. Los nombres de los
+  campos no cambian. Sin empresa: `404 COMPANY_NOT_FOUND` con el formato de error de la API (antes texto
+  plano). Los datos del representante siguen en `/auth/me`.
+
+### Added (2026-11-25)
+- **Catálogo de bancos.** Tabla `banks` (nombre, `normalized_name` único, logo en MinIO `banks/`, estado)
+  y `company_bank_accounts.bank_id` (FK `RESTRICT`, nulable), migración `d8f0a2c4e6b1`. No crea bancos:
+  las cuentas existentes conservan `bank_name` con `bank_id` vacío y se enlazan solas cuando un
+  administrador registra un banco con el mismo nombre normalizado. `GET|POST /admin/dashboard/banks` y
+  `PATCH /admin/dashboard/banks/{bank_id}` (roles `admin` y `owner`; logo PNG/JPG/WebP hasta 5 MB, al
+  reemplazarlo se borra el anterior; sin borrado, un banco en desuso se desactiva). Nombre duplicado:
+  `409 BANK_ALREADY_EXISTS`. `GET /company/bank-accounts/banks` lista los bancos activos para la empresa.
+
+### Changed (2026-11-25) · cuentas bancarias
+- `POST /company/bank-accounts` recibe `bankId` del catálogo en lugar de `bankName` (banco inexistente
+  `404 BANK_NOT_FOUND`, inactivo `400 BANK_INACTIVE`); `PATCH` acepta cambios parciales y conserva el
+  número si no se envía. Las respuestas ya no incluyen el número completo: `lastFourDigits`, `bankId`,
+  `bankName` y `bankLogoUrl`. Elegir la cuenta principal bloquea la fila de la empresa para que dos
+  peticiones simultáneas no dejen dos cuentas principales.
+
+### Fixed (2026-11-25)
+- **H-01:** `shipping_carriers.created_at` pasa a `NOT NULL` como declara el modelo (migración
+  `c6e8a0b2d4f7`; antes rellena solo filas en `NULL`). `alembic/env.py` excluye de la comparación el
+  índice de expresión `ix_products_name_search_trgm`: `alembic check` ya no reporta diferencias.
+- Seed `demo`: las imágenes nuevas son un círculo del color de la variante sobre fondo claro (antes un
+  lienzo entero del color, que en la tienda se veía como una foto vacía). No reemplaza objetos ya subidos.
+
+### Removed (2026-11-25)
+- Código sin uso confirmado: `app/utils/Response.py`, `app/schemas/SchemaError.py`,
+  `dbconexion.pool_stats`, `NasService.get_presigned_url`/`download_stream`,
+  `companyRepository.update_company_status`, `ReturnRepository.count_pending_by_company`,
+  `UserRepository.change_email`, `DashboarService.get_recent_activities` y los esquemas
+  `AdminRecentUserResponse`/`AdminUserUpdateResponse`.
+
 ## [Unreleased] - 2026-11-04
 ### Changed
 - **Compose y Caddyfile únicos** (detalle en el `CHANGELOG.md` de la raíz, «Infraestructura

@@ -1,3 +1,4 @@
+"""Acceso a datos de los códigos de un solo uso (tabla event_codes)."""
 from datetime import datetime
 from uuid import UUID
 from sqlalchemy.orm import Session
@@ -18,13 +19,14 @@ def create_code(database: Session,user_id: UUID,code: str,code_type: TypeCode,ex
 
     return new_code
 
-def get_code(database: Session,user_id: UUID,code_type: TypeCode) -> Codes | None:
-    return (
+def get_code(database: Session, user_id: UUID, code_type: TypeCode, lock: bool = False) -> Codes | None:
+    query = (
         database.query(Codes)
         .filter(Codes.user_id == user_id, Codes.type == code_type)
         .order_by(Codes.created_at.desc())
-        .first()
     )
+    # FOR UPDATE al validar: dos intentos simultáneos no cuentan sobre el mismo valor de failed_attempts.
+    return (query.with_for_update() if lock else query).first()
 
 
 def delete_code(database: Session,code: Codes) -> None:

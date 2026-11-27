@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Comprueba los DATOS BASE de una instalación y, si se definen en el .env, crea la cuenta owner.
 #
-# Ya no es obligatorio (#53): el backend crea los roles, el catálogo y las transportadoras en
-# cada arranque, aunque RUN_SEED=false (app/utils/base_data.py). Este script ejecuta lo mismo
-# (ensure_base_data), crea la cuenta owner si USER_NAME_OWNER / OWNER_DEFAULT /
-# OWNER_PASSWORD_DEFAULT tienen valor, y muestra los conteos. Se puede ejecutar más de una vez.
+# Obligatorio en una base nueva: con RUN_SEED=false (predeterminado) el backend no siembra nada al
+# arrancar. Este script crea los roles, el catálogo y las transportadoras que falten
+# (ensure_base_data, app/utils/base_data.py), la cuenta owner si USER_NAME_OWNER / OWNER_DEFAULT /
+# OWNER_PASSWORD_DEFAULT tienen valor, y muestra los conteos. Se puede ejecutar más de una vez:
+# no duplica ni modifica lo que ya existe.
 #
 # Uso (en el servidor, con los contenedores en marcha):
 #   bash scripts/datos-base.sh
@@ -18,9 +19,9 @@ docker inspect "$BACKEND" >/dev/null 2>&1 || { echo "ERROR: el contenedor $BACKE
 
 docker exec -i "$BACKEND" uv run --no-sync python - <<'PY'
 from sqlalchemy import text
-from app.database.Connection import SessionLocal
+from app.core.dbconexion import SessionLocal
 from app.utils.base_data import ensure_base_data
-from app.utils.seed import seed_owner
+from app.utils.seed_accounts import seed_owner
 
 ensure_base_data()
 print("OK  ensure_base_data")

@@ -1,22 +1,18 @@
+/** Actualización pública del certificado de una empresa con NEEDS_UPDATE o REJECTED (correo + contraseña, sin JWT). */
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { CheckCircle2, FileUp, Lock, Mail, ShieldAlert } from "lucide-react";
 
 import { Button } from "@/shared/components/ui";
+import AuthLayout from "@/features/public/auth/components/AuthLayout";
 import { ErrorCode } from "@/shared/types/ErrorCode";
 import { useAuth } from "@/features/public/auth/context/useAuth";
 import { updateCompanyCertificate } from "@/features/public/auth/api/certificateService";
-
-const MAX_SIZE = 5 * 1024 * 1024;
+import { FILE_ACCEPT, validateFile } from "@/shared/validation/files";
 
 function fileError(file: File | null): string | null {
-  if (!file) return null;
-  const isPdf =
-    file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
-  if (!isPdf) return "El certificado debe ser un archivo PDF.";
-  if (file.size > MAX_SIZE) return "El certificado debe pesar como máximo 5 MB.";
-  return null;
+  return file ? validateFile(file, "pdf", "Certificado") : null;
 }
 
 export default function UpdateCertificate() {
@@ -60,9 +56,7 @@ export default function UpdateCertificate() {
             ? "El certificado de esta empresa no puede actualizarse en este momento."
             : detail?.code === ErrorCode.COMPANY_SUSPENDED
               ? "Tu empresa se encuentra suspendida."
-              : detail?.code === ErrorCode.INVALID_FILE
-                ? "El certificado debe ser un archivo PDF de máximo 5 MB."
-                : detail?.message ?? "No se pudo actualizar el certificado. Intenta de nuevo.";
+              : detail?.message ?? "No se pudo actualizar el certificado. Intenta de nuevo.";
 
       setError(message);
     } finally {
@@ -71,130 +65,102 @@ export default function UpdateCertificate() {
   };
 
   return (
-    <div className="theme-dark flex min-h-dvh flex-col items-center justify-center bg-surface-0 px-4 py-10 text-ink">
-      <div className="w-full max-w-md">
-        <p className="mb-6 text-center text-xl font-bold tracking-tight text-ink">
-          RehniMarket
-        </p>
+    <AuthLayout
+      icon={done ? <CheckCircle2 size={28} /> : <ShieldAlert size={28} />}
+      title={done ? "Certificado actualizado" : "Actualizar certificado"}
+      subtitle={
+        done
+          ? "Tu empresa volverá a revisión y el equipo de RehniMarket evaluará el nuevo certificado. Inicia sesión cuando esté aprobado."
+          : "El certificado que presentaste no es válido. Ingresa tus credenciales y carga uno nuevo para que tu empresa vuelva a revisión."
+      }
+      backFallback="/login"
+    >
+      {done ? (
+      <Link
+        to="/login"
+        replace
+        className="inline-flex h-11 w-full items-center justify-center rounded-control bg-primary px-5 text-sm font-medium text-primary-fg transition fill-hover"
+      >
+        Ir al inicio de sesión
+      </Link>
+      ) : (
+      <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-medium text-ink">
+            Correo electrónico
+          </span>
+          <span className="relative block">
+            <Mail
+              size={18}
+              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted"
+            />
+            <input
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="empresa@correo.com"
+              className="h-11 w-full rounded-control border border-white/15 bg-surface-2 pl-10 pr-3 text-sm text-ink outline-none transition placeholder:text-ink-muted focus:border-secondary focus:ring-2 focus:ring-secondary/30"
+            />
+          </span>
+        </label>
 
-        <div className="rounded-card border border-hairline bg-surface-1 p-6 shadow-pop sm:p-8">
-          {done ? (
-            <div className="text-center">
-              <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-success/15 text-stock">
-                <CheckCircle2 size={26} />
-              </span>
-              <h1 className="text-xl font-bold text-ink">Certificado actualizado</h1>
-              <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-                Certificado actualizado correctamente. Tu empresa volverá a revisión y el
-                equipo de RehniMarket lo evaluará de nuevo. Inicia sesión de nuevo cuando
-                el certificado esté aprobado.
-              </p>
-              <Link
-                to="/login"
-                replace
-                className="mt-6 inline-flex h-11 w-full items-center justify-center rounded-control bg-primary px-5 text-sm font-medium text-primary-fg transition hover:bg-primary-hover"
-              >
-                Ir al inicio de sesión
-              </Link>
-            </div>
-          ) : (
-            <>
-              <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-brand-600/20 text-brand-300">
-                <ShieldAlert size={22} />
-              </span>
+        <label className="block">
+          <span className="mb-1.5 block text-sm font-medium text-ink">Contraseña</span>
+          <span className="relative block">
+            <Lock
+              size={18}
+              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted"
+            />
+            <input
+              type="password"
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              className="h-11 w-full rounded-control border border-white/15 bg-surface-2 pl-10 pr-3 text-sm text-ink outline-none transition placeholder:text-ink-muted focus:border-secondary focus:ring-2 focus:ring-secondary/30"
+            />
+          </span>
+        </label>
 
-              <h1 className="text-xl font-bold text-ink sm:text-2xl">Actualizar certificado</h1>
-              <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-                El certificado que presentaste no es válido. Ingresa tus credenciales y
-                carga uno nuevo para que tu empresa vuelva a revisión.
-              </p>
-
-              <form onSubmit={handleSubmit} className="mt-7 space-y-5" autoComplete="off">
-                <label className="block">
-                  <span className="mb-1.5 block text-sm font-medium text-ink">
-                    Correo electrónico
-                  </span>
-                  <span className="relative block">
-                    <Mail
-                      size={18}
-                      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted"
-                    />
-                    <input
-                      type="email"
-                      required
-                      autoComplete="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="empresa@correo.com"
-                      className="h-11 w-full rounded-control border border-white/15 bg-surface-2 pl-10 pr-3 text-sm text-ink outline-none transition placeholder:text-ink-muted focus:border-brand-400 focus:ring-2 focus:ring-brand-600/30"
-                    />
-                  </span>
-                </label>
-
-                <label className="block">
-                  <span className="mb-1.5 block text-sm font-medium text-ink">Contraseña</span>
-                  <span className="relative block">
-                    <Lock
-                      size={18}
-                      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted"
-                    />
-                    <input
-                      type="password"
-                      required
-                      autoComplete="current-password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="h-11 w-full rounded-control border border-white/15 bg-surface-2 pl-10 pr-3 text-sm text-ink outline-none transition placeholder:text-ink-muted focus:border-brand-400 focus:ring-2 focus:ring-brand-600/30"
-                    />
-                  </span>
-                </label>
-
-                <div>
-                  <span className="mb-1.5 block text-sm font-medium text-ink">
-                    Nuevo certificado
-                  </span>
-                  <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-card border-2 border-dashed border-white/15 bg-surface-2 p-5 text-center transition hover:border-brand-400/60">
-                    <FileUp size={22} className="text-brand-300" />
-                    <span className="text-sm font-medium text-ink">
-                      {file ? file.name : "Seleccionar PDF"}
-                    </span>
-                    <span className="text-xs text-ink-muted">Máximo 5 MB · Solo PDF</span>
-                    <input
-                      type="file"
-                      accept="application/pdf,.pdf"
-                      hidden
-                      onChange={(e) => {
-                        setFile(e.target.files?.[0] ?? null);
-                        setError(null);
-                      }}
-                    />
-                  </label>
-                  {localFileError && (
-                    <p className="mt-1.5 text-xs font-medium text-danger">{localFileError}</p>
-                  )}
-                </div>
-
-                {error && (
-                  <p className="rounded-control border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
-                    {error}
-                  </p>
-                )}
-
-                <Button type="submit" fullWidth size="lg" loading={loading} disabled={!canSubmit}>
-                  {loading ? "Actualizando…" : "Actualizar certificado"}
-                </Button>
-              </form>
-            </>
+        <div>
+          <span className="mb-1.5 block text-sm font-medium text-ink">
+            Nuevo certificado
+          </span>
+          <label className="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-card border-2 border-dashed border-white/15 bg-surface-2 p-5 text-center transition hover:border-secondary/60">
+            <FileUp size={22} className="text-secondary" />
+            <span className="text-sm font-medium text-ink">
+              {file ? file.name : "Seleccionar PDF"}
+            </span>
+            <span className="text-xs text-ink-muted">Máximo 5 MB · Solo PDF</span>
+            <input
+              type="file"
+              accept={FILE_ACCEPT.pdf}
+              hidden
+              onChange={(e) => {
+                setFile(e.target.files?.[0] ?? null);
+                setError(null);
+              }}
+            />
+          </label>
+          {localFileError && (
+            <p className="mt-1.5 text-xs font-medium text-danger">{localFileError}</p>
           )}
         </div>
 
-        <p className="mt-6 text-center text-sm text-ink-muted">
-          <Link to="/login" className="font-medium text-brand-300 hover:underline">
-            Volver al inicio de sesión
-          </Link>
-        </p>
-      </div>
-    </div>
+        {error && (
+          <p className="rounded-control border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
+            {error}
+          </p>
+        )}
+
+        <Button type="submit" fullWidth size="lg" loading={loading} disabled={!canSubmit}>
+          {loading ? "Actualizando…" : "Actualizar certificado"}
+        </Button>
+      </form>
+      )}
+    </AuthLayout>
   );
 }

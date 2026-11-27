@@ -1,11 +1,13 @@
-from sqlalchemy import String, Boolean, ForeignKey, DateTime, Enum, Text
+"""Modelo ORM de empresas vendedoras, su certificado y estado (tabla company)."""
+
+from sqlalchemy import String, Boolean, ForeignKey, DateTime, Enum, Text, text
 from datetime import datetime, timezone
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 
 import uuid
 
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 from enum import Enum as PyEnum
 
@@ -92,6 +94,14 @@ class Company(Base):
     suspension_reason: Mapped[str | None] = mapped_column(
         Text,
         nullable=True,
+    )
+
+    # Contacto empresarial (Mi tienda), distinto del correo y teléfono personales del representante.
+    contact_email: Mapped[str | None] = mapped_column(String(254), nullable=True)
+    contact_phone: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    # Solo con este permiso explícito de la empresa el perfil público muestra su contacto empresarial.
+    contact_public: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
     )
 
     created_at: Mapped[datetime] = mapped_column(

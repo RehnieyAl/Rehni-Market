@@ -1,4 +1,4 @@
-import traceback
+import logging
 from collections import defaultdict
 from decimal import Decimal
 from uuid import UUID
@@ -23,9 +23,11 @@ from app.schemas.SchemaCommerce.SchemaCart import (
 )
 
 from app.core.TaxConfig import compute_tax
-from app.services.NasService import build_media_url
 from app.services.pricing import resolve_price
 from app.services.variants import attributes as attrs
+from app.services.variants.images import _first_image_url, product_display_image_url
+
+logger = logging.getLogger(__name__)
 
 
 def _require_buyer(role: str):
@@ -52,8 +54,8 @@ def _to_item_response(item: CartItem) -> CartItemResponse:
     variant = item.variant if item.variant_id else None
     price = resolve_price(item.product, variant)
 
-    images = variant.images if variant else item.product.images
-    main_image = next((image for image in images if image.is_main), None)
+    # Misma regla que tarjetas y detalle: principal o primera de la variante; si no tiene, la del producto.
+    image_url = (_first_image_url(variant.images) if variant else None) or product_display_image_url(item.product)
 
     color = variant.color if variant else item.product.main_color
 
@@ -78,7 +80,7 @@ def _to_item_response(item: CartItem) -> CartItemResponse:
         name=item.product.name,
         variantName=variant.name if variant else None,
         sku=variant.sku if variant else None,
-        image=build_media_url(main_image.url) if main_image else None,
+        image=image_url,
         color=(
             CartItemColorResponse(name=color.name, hex_color=color.hex_color)
             if color
@@ -205,7 +207,7 @@ def add_to_cart_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
@@ -247,7 +249,7 @@ def update_cart_item_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
@@ -275,7 +277,7 @@ def remove_cart_item_service(
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
@@ -297,5 +299,5 @@ def clear_cart_service(user_id: UUID, role: str, database: Session) -> CartRespo
 
     except Exception:
         database.rollback()
-        traceback.print_exc()
+        logger.exception("Error inesperado")
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")

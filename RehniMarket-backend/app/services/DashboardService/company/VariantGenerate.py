@@ -10,7 +10,6 @@ from app.schemas.SchemaDashboard.SchemaVariant import (
     GeneratedCombination,
     VariantOptionPair,
 )
-from app.services.variants import resolver
 from app.services.variants.combo_key import build_combo_key
 
 

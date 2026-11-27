@@ -33,7 +33,7 @@ interface CatalogFiltersProps {
   onSortChange: (value: string) => void;
 }
 
-const SECTION_LABEL = "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-400";
+const SECTION_LABEL = "mb-1.5 block text-xs font-semibold text-ink-muted";
 
 export default function CatalogFilters({
   catalogs,
@@ -74,7 +74,7 @@ export default function CatalogFilters({
               Buscar en {selectedCatalog.name}
             </label>
 
-            <div className="flex h-11 items-center rounded-control border border-gray-300 bg-surface-1 px-3 transition focus-within:border-brand-600 focus-within:ring-2 focus-within:ring-brand-600/20">
+            <div className="flex h-11 items-center rounded-control border border-gray-300 bg-surface-1 px-3 transition focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary/20">
               <Search size={15} className="shrink-0 text-gray-400" aria-hidden="true" />
               <input
                 type="text"
@@ -127,7 +127,7 @@ export default function CatalogFilters({
             type="checkbox"
             checked={discountOnly}
             onChange={(e) => onToggle("discount", e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 accent-brand-600"
+            className="h-4 w-4 rounded border-gray-300 accent-secondary"
           />
           Solo con descuento
         </label>
@@ -137,7 +137,7 @@ export default function CatalogFilters({
             type="checkbox"
             checked={inStockOnly}
             onChange={(e) => onToggle("inStock", e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 accent-brand-600"
+            className="h-4 w-4 rounded border-gray-300 accent-secondary"
           />
           Solo disponibles
         </label>

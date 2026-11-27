@@ -1,7 +1,8 @@
 # Compose único: desarrollo, pruebas y producción. Toda la configuración está en un solo
 # .env en la raíz (desarrollo: cp .env.example .env; producción: cp deploy/env.prod.example .env).
-# minio, postgres, pgbouncer y backend lo cargan con env_file; Caddy recibe solo sus variables
-# por environment. El .env es obligatorio: sin él compose no arranca.
+# Solo el backend lo carga completo (env_file). minio, postgres, pgbouncer y Caddy reciben por
+# environment únicamente sus variables: ninguno ve SECRET_KEY, SMTP ni las claves de otro servicio.
+# El .env es obligatorio: sin él compose no arranca y las credenciales marcadas con :? fallan.
 #
 #   docker compose up -d --build                                  # stack completo
 #   docker compose watch                                          # desarrollo (develop.watch)
@@ -24,7 +25,9 @@ services:
     image: cgr.dev/chainguard/minio@sha256:3c60a2a8c4d33409a9bc7a623a7fcbfb4605adc3d89422d2f53b3f673a6e5597
     container_name: rehni-minio
     restart: unless-stopped
-    env_file: ./.env
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER:?Falta MINIO_ROOT_USER en .env}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:?Falta MINIO_ROOT_PASSWORD en .env}"
     volumes:
       - minio_data:/data
     command: server /data
@@ -48,7 +51,10 @@ services:
     image: postgres:17-alpine
     container_name: rehni-postgres
     restart: unless-stopped
-    env_file: ./.env
+    environment:
+      POSTGRES_USER: "${POSTGRES_USER:?Falta POSTGRES_USER en .env}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD en .env}"
+      POSTGRES_DB: "${POSTGRES_DB:?Falta POSTGRES_DB en .env}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     # Solo en el loopback del host (clientes como DbSchema; en el servidor, por túnel SSH).
@@ -91,11 +97,14 @@ services:
         condition: service_healthy
 
   pgbouncer:
-    image: edoburu/pgbouncer:latest
+    # Fijada por digest (PgBouncer 1.26.0): con :latest, cada pull podía cambiar de versión sin aviso.
+    image: edoburu/pgbouncer@sha256:9c78945868a6a142c7fc40ccd843bbe5a606df163c7ffce4de70e0d628d696a2
     container_name: pgbouncer_pool
     restart: unless-stopped
-    env_file: ./.env
     environment:
+      POSTGRES_USER: "${POSTGRES_USER:?Falta POSTGRES_USER en .env}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD en .env}"
+      POSTGRES_DB: "${POSTGRES_DB:?Falta POSTGRES_DB en .env}"
       AUTH_TYPE: scram-sha-256
       POOL_MODE: transaction
       LISTEN_PORT: "6432"
@@ -150,12 +159,9 @@ services:
     image: rehni-market-backend
     container_name: rehni-backend
     restart: unless-stopped
-    # Recordar DevOps, Nunca fijar un dns, ya que rompe la resolución de nombres en redes que bloquean DNS saliente a resolutores públicos 
-    # (p. ej. Wi-Fi institucional) y `uv run` no puede descargar de PyPI.
-    # Tambien bloquea el servicio STMP para enviar correos, por lo que se recomienda usar un relay SMTP interno.
+    # Sin `dns:` fijo: en redes que bloquean resolutores públicos (p. ej. Wi-Fi institucional)
+    # el backend dejaría de resolver el servidor SMTP y no saldrían los correos.
     env_file: ./.env
-    volumes:
-      - backend_venv:/app/.venv
     depends_on:
       postgres:
         condition: service_healthy
@@ -170,11 +176,11 @@ services:
       # la que llega todo lo que entra al :8000 desde el propio host: cualquiera en el
       # servidor podría falsear su IP y saltarse el rate limit.
       FORWARDED_ALLOW_IPS: "${FORWARDED_ALLOW_IPS:-172.30.0.10}"
-      DOCS_ENABLED: "${DOCS_ENABLED:-false}"
-      # El frontend está en otro dominio que la API: su origen debe estar permitido.
-      CORS_EXTRA_ORIGINS: "${CORS_EXTRA_ORIGINS:-}"
+      # Mismo valor que recibe pgbouncer: Config.py valida con él el presupuesto de conexiones.
       PGBOUNCER_MAX_CLIENT_CONN: "${PGBOUNCER_MAX_CLIENT_CONN:-1200}"
-    command: sh -c "uv run alembic upgrade head && exec uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers $$UVICORN_WORKERS --backlog 4096 --proxy-headers --forwarded-allow-ips \"$$FORWARDED_ALLOW_IPS\""
+    # --no-sync: se usa el entorno que el Dockerfile instaló (--frozen --no-dev). Sin él, `uv run`
+    # instalaba el grupo dev (pytest, ruff, pip-audit) en cada arranque y necesitaba acceso a PyPI.
+    command: sh -c "uv run --no-sync alembic upgrade head && exec uv run --no-sync uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers $$UVICORN_WORKERS --backlog 4096 --proxy-headers --forwarded-allow-ips \"$$FORWARDED_ALLOW_IPS\""
     ports:
       - "${BACKEND_BIND:-127.0.0.1}:${BACKEND_PORT:-8000}:8000"
     # edge: recibe a Caddy. data: llega a pgbouncer y minio.
@@ -195,6 +201,7 @@ services:
           cpus: "${BACKEND_CPUS:-4}"
     # docker compose watch: el código se copia al contenedor y se reinicia (vuelve a
     # pasar por alembic upgrade head). Sin uvicorn --reload: no se combina con --workers.
+    # Un cambio de dependencias reconstruye la imagen y con ella el entorno de /app/.venv.
     develop:
       watch:
         - action: sync+restart
@@ -213,8 +220,8 @@ services:
       context: ./RehniMarket-frontend
       dockerfile: Dockerfile
       args:
+        # Solo valores públicos: todo VITE_* queda dentro del bundle que descarga el navegador.
         VITE_API_URL: ${VITE_API_URL:-https://api.localhost}
-        VITE_REHNIMARKET_WHATSAPP: ${VITE_REHNIMARKET_WHATSAPP:-}
     image: rehni-market-frontend
     container_name: rehni-frontend
     restart: unless-stopped
@@ -314,6 +321,5 @@ networks:
 volumes:
   postgres_data:
   minio_data:
-  backend_venv:
   caddy_data:
   caddy_config:

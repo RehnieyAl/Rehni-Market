@@ -23,24 +23,18 @@
     "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji";
 
-  /* ---- Marca (vinotinto) ---- */
-  --color-brand-50: #2a1119;   /* tinte para chips / botones secundarios */
-  --color-brand-100: #3a1622;
-  --color-brand-200: #5a1f31;
-  --color-brand-300: #db92a9;  /* claro: usado como texto sobre oscuro */
-  --color-brand-400: #c25f7e;
-  --color-brand-500: #a51d47;
-  --color-brand-600: #8b0d35;  /* VINOTINTO PRINCIPAL */
-  --color-brand-700: #650a29;  /* VINOTINTO OSCURO */
-  --color-brand-800: #4c0a20;
-  --color-brand-900: #350614;
-  --color-primary: var(--color-brand-600);
-  --color-primary-hover: var(--color-brand-700);
+  /* ---- Marca: los DOS colores oficiales, única fuente de verdad de toda la web ----
+     primary  = vinotinto: rellenos de marca (acción principal, elemento activo, insignias con texto blanco).
+     secondary = rojo: tinta de marca (texto, iconos, bordes, foco, precios) y resaltes rellenos.
+     Sobre el fondo oscuro el vinotinto no llega a 3:1 como texto o línea; por eso la tinta es el rojo.
+     Ningún componente define otro tono de marca: hover y foco no cambian el color (ver fill-hover). */
+  --color-primary: #8b0d35;
+  --color-secondary: #e51d48;
   --color-primary-fg: #ffffff;
-
-  /* ---- Rojo de acción (badges, precios, CTAs brillantes) ---- */
-  --color-accent: #e51d48;
-  --color-accent-hover: #b9143c;
+  /* Sin rojos de la paleta de Tailwind: un "rojo parecido" no puede sustituir a la marca ni a danger. */
+  --color-red-*: initial;
+  --color-rose-*: initial;
+  --color-pink-*: initial;
 
   /* ---- Estados (ajustados para fondo oscuro) ---- */
   --color-success: #22c55e;
@@ -63,6 +57,8 @@
   --color-ink: #f5f5f5;           /* TEXT PRIMARY */
   --color-ink-muted: #a5a9b3;     /* TEXT SECONDARY */
   --color-stock: #4ade80;
+  /* Verde de WhatsApp (canal externo de recarga), no de RehniMarket; 5,4:1 con texto blanco. */
+  --color-whatsapp: #1a7a43;
 
   /* ---- Escala neutra INVERTIDA (gray-* → oscuro) ---- */
   --color-white: #ffffff;         /* se conserva real (text-white sobre color) */
@@ -79,21 +75,6 @@
   --color-gray-900: #f5f5f5;
   --color-gray-950: #ffffff;
 
-  /* ---- Alias de tokens del Design System (equivalentes semánticos) ---- */
-  --color-rm-bg: var(--color-canvas);
-  --color-rm-surface: var(--color-surface-1);
-  --color-rm-surface-elevated: var(--color-surface-2);
-  --color-rm-surface-hover: var(--color-surface-3);
-  --color-rm-border: var(--color-gray-200);
-  --color-rm-border-active: var(--color-gray-300);
-  --color-rm-text: var(--color-ink);
-  --color-rm-text-secondary: var(--color-ink-muted);
-  --color-rm-text-muted: var(--color-gray-400);
-  --color-rm-primary: var(--color-brand-600);
-  --color-rm-primary-hover: var(--color-brand-700);
-  --color-rm-danger: var(--color-danger);
-  --color-rm-success: var(--color-success);
-
   --radius-control: 0.7rem;
   --radius-card: 1rem;
   --shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 1px 3px 0 rgb(0 0 0 / 0.35);
@@ -101,14 +82,48 @@
   --ease-out-quart: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Foco de teclado por defecto en todo control: rojo de marca (4,1:1 sobre el fondo, más de 3:1). En la capa
+   base para que el foco propio de cada componente (utilidades) siga mandando. */
+@layer base {
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-secondary);
+    outline-offset: 2px;
+  }
+}
+
 html {
   color-scheme: dark;
+  accent-color: var(--color-secondary);
   background-color: var(--color-canvas);
 }
 
 body {
   background-color: var(--color-canvas);
   color: var(--color-gray-900);
+}
+
+/* Hover de los botones rellenos (marca, danger, WhatsApp) sin cambiar de tono: contorno interior claro; al pulsar, una leve escala. */
+@utility fill-hover {
+  &:hover:not(:disabled) {
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.32);
+  }
+  &:active:not(:disabled) {
+    scale: 0.98;
+  }
+}
+
+/* Enlaces de texto: el rojo de marca como texto pequeño no llega a 4,5:1 sobre el fondo oscuro, así
+   que el texto va en ink y la marca en el subrayado (además, el enlace no depende solo del color). */
+@utility brand-link {
+  color: var(--color-ink);
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-secondary);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  transition: text-decoration-thickness 150ms var(--ease-out-quart);
+  &:hover {
+    text-decoration-thickness: 2px;
+  }
 }
 
 /* Skeletons: shimmer sobre superficie oscura (evita bloques claros). */
@@ -176,4 +191,25 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Acordeón nativo (<details>): animación de apertura como mejora progresiva; sin soporte abre al instante. */
+.disclosure::details-content {
+  interpolate-size: allow-keywords;
+  overflow: clip;
+  contain: layout;
+}
+.disclosure:not([open])::details-content {
+  block-size: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .disclosure::details-content {
+    transition: block-size 0.25s ease-in-out, content-visibility 0.25s allow-discrete;
+  }
+}
+.disclosure > summary {
+  list-style: none;
+}
+.disclosure > summary::-webkit-details-marker {
+  display: none;
 }

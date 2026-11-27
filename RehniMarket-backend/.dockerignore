@@ -1,11 +1,9 @@
-venv
 .venv
 __pycache__
 *.pyc
 .env
 .env.*
 .git
-.git.old
 .coverage
 coverage.json
 coverage.xml
@@ -16,6 +14,4 @@ backups
 *.dump
 *.tar.gz
 *.sha256
-pruebaHtmlbasic/loginempresa.html
-pruebaHtmlbasic/empresaregistro.html
 

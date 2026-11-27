@@ -1,8 +1,9 @@
+/** API de la empresa para las reclamaciones de devolución de sus pedidos: listar, ver y decidir. */
 import { api } from "@/api/Client";
 
 import type {
   ReturnDecision,
-  ReturnRequest,
+  ReturnDetail,
   ReturnsPaginated,
   ReturnStatus,
 } from "@/features/returns/types/response";
@@ -29,16 +30,17 @@ export async function getCompanyReturns(
   return data;
 }
 
-export async function getCompanyReturnDetail(returnId: string): Promise<ReturnRequest> {
-  const { data } = await api.get<ReturnRequest>(`/company/dashboard/returns/${returnId}`);
+export async function getCompanyReturnDetail(returnId: string): Promise<ReturnDetail> {
+  const { data } = await api.get<ReturnDetail>(`/company/dashboard/returns/${returnId}`);
   return data;
 }
 
+/** `reason`: explicación al aprobar (opcional) o motivo del rechazo (obligatorio). */
 export async function decideCompanyReturn(
   returnId: string,
-  payload: { action: ReturnDecision; reason?: string },
-): Promise<ReturnRequest> {
-  const { data } = await api.patch<ReturnRequest>(
+  payload: { action: ReturnDecision; subject?: string; reason?: string },
+): Promise<ReturnDetail> {
+  const { data } = await api.patch<ReturnDetail>(
     `/company/dashboard/returns/${returnId}`,
     payload,
   );

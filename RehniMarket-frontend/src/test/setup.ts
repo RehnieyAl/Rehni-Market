@@ -1,3 +1,4 @@
+// Entorno común de Vitest: almacenamiento en memoria, APIs de navegador ausentes en jsdom y limpieza.
 import { afterEach } from "vitest";
 import { cleanup } from "@testing-library/react";
 
@@ -42,6 +43,27 @@ if (typeof globalThis.sessionStorage === "undefined") {
     configurable: true,
   });
 }
+
+// APIs del navegador que jsdom no implementa y que la app usa en layout y previsualizaciones.
+if (typeof window.matchMedia !== "function") {
+  window.matchMedia = (query: string) =>
+    ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    }) as MediaQueryList;
+}
+window.scrollTo = (() => {}) as typeof window.scrollTo;
+Element.prototype.scrollIntoView ??= function scrollIntoView() {};
+Element.prototype.scrollBy ??= function scrollBy() {};
+Element.prototype.scrollTo ??= function scrollTo() {};
+URL.createObjectURL ??= () => "blob:preview";
+URL.revokeObjectURL ??= () => {};
 
 afterEach(() => {
   cleanup();

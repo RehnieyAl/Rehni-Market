@@ -1,3 +1,4 @@
+import logging
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from datetime import datetime
@@ -20,6 +21,9 @@ from app.services.NasService import build_media_url
 
 from app.core.ErrorCodes import ErrorCodes
 from app.core.Exceptions import api_error
+from app.services.NasService import require_stored
+
+logger = logging.getLogger(__name__)
 
 
 def _normalize_specifications(technical_spec):
@@ -89,30 +93,37 @@ def _resolve_product_attributes(database: Session, items, catalog_id):
     return resolved
 
 
+def _resolve_new_product_context(database: Session, user_id, catalogId, mainColorId):
+    """(empresa, categoría, color principal) del producto nuevo; 404 si alguno no existe."""
+    user = database.query(Users).filter(Users.id == user_id).first()
+
+    if not user:
+        api_error(404, ErrorCodes.USER_NOT_FOUND, "Usuario no encontrado")
+
+    company = user.company
+
+    if not company:
+        api_error(404, ErrorCodes.COMPANY_NOT_FOUND, "Empresa no encontrada")
+
+    catalog = database.query(Catalog).filter(Catalog.id == catalogId).first()
+
+    if not catalog:
+        api_error(404, ErrorCodes.CATALOG_NOT_FOUND, "Catálogo no encontrado")
+
+    main_color = None
+
+    if mainColorId:
+        main_color = database.query(ColorVariant).filter(ColorVariant.id == mainColorId).first()
+
+        if not main_color:
+            api_error(404, ErrorCodes.COLOR_NOT_FOUND, "Color no encontrado")
+
+    return company, catalog, main_color
+
+
 def create_product_service(user_id,nameProduct,catalogId,priceProduct,stockProduct,descripcionProduct,technicalSpecProduct,imagesProduct,nas,database: Session,mainColorId=None,appliesTax=True):
     try:
-        user = (database.query(Users).filter(Users.id == user_id).first())
-
-        if not user:
-            api_error(404, ErrorCodes.USER_NOT_FOUND, "Usuario no encontrado")
-
-        company = user.company
-
-        if not company:
-            api_error(404, ErrorCodes.COMPANY_NOT_FOUND, "Empresa no encontrada")
-
-        catalog = (database.query(Catalog).filter(Catalog.id == catalogId).first())
-
-        if not catalog:
-            api_error(404, ErrorCodes.CATALOG_NOT_FOUND, "Catálogo no encontrado")
-
-        main_color = None
-
-        if mainColorId:
-            main_color = (database.query(ColorVariant).filter(ColorVariant.id == mainColorId).first())
-
-            if not main_color:
-                api_error(404, ErrorCodes.COLOR_NOT_FOUND, "Color no encontrado")
+        company, catalog, main_color = _resolve_new_product_context(database, user_id, catalogId, mainColorId)
 
         attribute_items = _normalize_specifications(technicalSpecProduct)
         resolved_attributes = (
@@ -139,7 +150,7 @@ def create_product_service(user_id,nameProduct,catalogId,priceProduct,stockProdu
 
             for index, file in enumerate(imagesProduct):
                 result = nas.upload_file(file,f"companies/{company.CompanyNIT}/products/")
-                image = ProductImage(url=result["path"],is_main=(index == 0),product_id=new_product.id)
+                image = ProductImage(url=require_stored(result),is_main=(index == 0),product_id=new_product.id)
                 database.add(image)
 
         for attribute, value in resolved_attributes:
@@ -165,9 +176,10 @@ def create_product_service(user_id,nameProduct,catalogId,priceProduct,stockProdu
         database.rollback()
         raise
 
-    except Exception as e:
+    except Exception:
+        logger.exception("Error inesperado")
         database.rollback()
-        api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, str(e))
+        api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 def get_product_detail_service(user_id, product_id, database: Session) -> ProductDetailResponse:
 
@@ -246,6 +258,157 @@ def get_product_detail_service(user_id, product_id, database: Session) -> Produc
     )
 
 
+def _get_company_product(database: Session, user_id, product_id):
+    user = database.query(Users).filter(Users.id == user_id).first()
+
+    if not user:
+        api_error(404, ErrorCodes.USER_NOT_FOUND, "Usuario no encontrado")
+
+    company = user.company
+
+    if not company:
+        api_error(404, ErrorCodes.COMPANY_NOT_FOUND, "Empresa no encontrada")
+
+    product = (
+        database.query(Product)
+        .filter(Product.id == product_id, Product.company_id == company.id)
+        .first()
+    )
+
+    if not product:
+        api_error(404, ErrorCodes.PRODUCT_NOT_FOUND, "Producto no encontrado")
+
+    return company, product
+
+
+def _apply_catalog_and_color(database: Session, product: Product, data: UpdateProductRequest):
+    """Aplica categoría y color principal; devuelve la categoría final del producto."""
+    catalog = product.catalog
+
+    if data.catalogId is not None:
+        catalog = database.query(Catalog).filter(Catalog.id == data.catalogId).first()
+
+        if not catalog:
+            api_error(404, ErrorCodes.CATALOG_NOT_FOUND, "Catálogo no encontrado")
+
+        product.catalog_id = catalog.id
+
+    if data.clearMainColor:
+        product.main_color_id = None
+    elif data.mainColorId is not None:
+        main_color = database.query(ColorVariant).filter(ColorVariant.id == data.mainColorId).first()
+
+        if not main_color:
+            api_error(404, ErrorCodes.COLOR_NOT_FOUND, "Color no encontrado")
+
+        product.main_color_id = main_color.id
+
+    return catalog
+
+
+# Campo del schema -> columna del producto.
+_PRODUCT_FIELDS = {
+    "nameProduct": "name",
+    "priceProduct": "price",
+    "discountEnable": "discount_enable",
+    "discountValue": "discount_value",
+    "appliesTax": "applies_tax",
+    "stockProduct": "stock",
+    "descripcionProduct": "descripcion",
+}
+
+
+def _apply_product_fields(product: Product, data: UpdateProductRequest) -> None:
+    for field, column in _PRODUCT_FIELDS.items():
+        value = getattr(data, field)
+        if value is not None:
+            setattr(product, column, value)
+
+    discount_changed = data.discountEnable is not None or data.discountValue is not None
+
+    if discount_changed and product.discount_enable and (not product.discount_value or product.discount_value <= 0):
+        api_error(
+            400,
+            ErrorCodes.VALIDATION_ERROR,
+            "Para activar el descuento, el porcentaje de descuento debe ser mayor a 0.",
+        )
+
+
+def _delete_product_images(database: Session, nas, product: Product, image_ids) -> None:
+    images_to_delete = (
+        database.query(ProductImage)
+        .filter(
+            ProductImage.id.in_(image_ids),
+            ProductImage.product_id == product.id,
+        )
+        .all()
+    )
+
+    for image in images_to_delete:
+        nas.delete_file(image.url.removeprefix("uploads/"))
+        database.delete(image)
+
+    database.flush()
+
+
+def _upload_product_images(database: Session, nas, company, product: Product, files) -> None:
+    for file in files:
+        result = nas.upload_file(file, f"companies/{company.CompanyNIT}/products/")
+        database.add(ProductImage(url=require_stored(result), is_main=False, product_id=product.id))
+
+    database.flush()
+
+
+def _set_main_image(database: Session, product: Product, main_image_id) -> None:
+    new_main_image = (
+        database.query(ProductImage)
+        .filter(
+            ProductImage.id == main_image_id,
+            ProductImage.product_id == product.id,
+        )
+        .first()
+    )
+
+    if not new_main_image:
+        api_error(404, ErrorCodes.PRODUCT_IMAGE_NOT_FOUND, "Imagen no encontrada")
+
+    database.query(ProductImage).filter(
+        ProductImage.product_id == product.id
+    ).update({ProductImage.is_main: False})
+
+    new_main_image.is_main = True
+
+
+def _ensure_main_image(database: Session, product: Product) -> None:
+    remaining_images = (
+        database.query(ProductImage)
+        .filter(ProductImage.product_id == product.id)
+        .order_by(ProductImage.id)
+        .all()
+    )
+
+    if remaining_images and not any(image.is_main for image in remaining_images):
+        remaining_images[0].is_main = True
+
+
+def _replace_product_attributes(database: Session, product: Product, technical_spec) -> None:
+    attribute_items = _normalize_specifications(technical_spec)
+    resolved_attributes = _resolve_product_attributes(database, attribute_items, product.catalog_id)
+
+    database.query(ProductAttributeValue).filter(
+        ProductAttributeValue.product_id == product.id
+    ).delete()
+
+    for attribute, value in resolved_attributes:
+        database.add(
+            ProductAttributeValue(
+                value=value,
+                attribute_id=attribute.id,
+                product_id=product.id,
+            )
+        )
+
+
 def update_product_service(
     user_id,
     product_id,
@@ -256,157 +419,24 @@ def update_product_service(
     database: Session,
 ):
     try:
-        user = database.query(Users).filter(Users.id == user_id).first()
-
-        if not user:
-            api_error(404, ErrorCodes.USER_NOT_FOUND, "Usuario no encontrado")
-
-        company = user.company
-
-        if not company:
-            api_error(404, ErrorCodes.COMPANY_NOT_FOUND, "Empresa no encontrada")
-
-        product = (
-            database.query(Product)
-            .filter(Product.id == product_id, Product.company_id == company.id)
-            .first()
-        )
-
-        if not product:
-            api_error(404, ErrorCodes.PRODUCT_NOT_FOUND, "Producto no encontrado")
-
-        catalog = product.catalog
-
-        if data.catalogId is not None:
-            catalog = database.query(Catalog).filter(Catalog.id == data.catalogId).first()
-
-            if not catalog:
-                api_error(404, ErrorCodes.CATALOG_NOT_FOUND, "Catálogo no encontrado")
-
-            product.catalog_id = catalog.id
-
-        if data.clearMainColor:
-            product.main_color_id = None
-        elif data.mainColorId is not None:
-            main_color = (
-                database.query(ColorVariant)
-                .filter(ColorVariant.id == data.mainColorId)
-                .first()
-            )
-
-            if not main_color:
-                api_error(404, ErrorCodes.COLOR_NOT_FOUND, "Color no encontrado")
-
-            product.main_color_id = main_color.id
-
-        if data.nameProduct is not None:
-            product.name = data.nameProduct
-
-        if data.priceProduct is not None:
-            product.price = data.priceProduct
-
-        if data.discountEnable is not None:
-            product.discount_enable = data.discountEnable
-
-        if data.discountValue is not None:
-            product.discount_value = data.discountValue
-
-        if (data.discountEnable is not None or data.discountValue is not None) and product.discount_enable:
-            if not product.discount_value or product.discount_value <= 0:
-                api_error(
-                    400,
-                    ErrorCodes.VALIDATION_ERROR,
-                    "Para activar el descuento, el porcentaje de descuento debe ser mayor a 0.",
-                )
-
-        if data.appliesTax is not None:
-            product.applies_tax = data.appliesTax
-
-        if data.stockProduct is not None:
-            product.stock = data.stockProduct
-
-        if data.descripcionProduct is not None:
-            product.descripcion = data.descripcionProduct
-
+        company, product = _get_company_product(database, user_id, product_id)
+        catalog = _apply_catalog_and_color(database, product, data)
+        _apply_product_fields(product, data)
         database.flush()
 
         if imagesToDeleted:
-            images_to_delete = (
-                database.query(ProductImage)
-                .filter(
-                    ProductImage.id.in_(imagesToDeleted),
-                    ProductImage.product_id == product.id,
-                )
-                .all()
-            )
-
-            for image in images_to_delete:
-                nas.delete_file(image.url.removeprefix("uploads/"))
-                database.delete(image)
-
-            database.flush()
+            _delete_product_images(database, nas, product, imagesToDeleted)
 
         if imagesProduct:
-            for file in imagesProduct:
-                result = nas.upload_file(file, f"companies/{company.CompanyNIT}/products/")
-                new_image = ProductImage(
-                    url=result["path"],
-                    is_main=False,
-                    product_id=product.id,
-                )
-                database.add(new_image)
-
-            database.flush()
+            _upload_product_images(database, nas, company, product, imagesProduct)
 
         if data.mainImageId is not None:
-            new_main_image = (
-                database.query(ProductImage)
-                .filter(
-                    ProductImage.id == data.mainImageId,
-                    ProductImage.product_id == product.id,
-                )
-                .first()
-            )
-
-            if not new_main_image:
-                api_error(404, ErrorCodes.PRODUCT_IMAGE_NOT_FOUND, "Imagen no encontrada")
-
-            database.query(ProductImage).filter(
-                ProductImage.product_id == product.id
-            ).update({ProductImage.is_main: False})
-
-            new_main_image.is_main = True
-
+            _set_main_image(database, product, data.mainImageId)
         elif imagesToDeleted or imagesProduct:
-            remaining_images = (
-                database.query(ProductImage)
-                .filter(ProductImage.product_id == product.id)
-                .order_by(ProductImage.id)
-                .all()
-            )
-
-            if remaining_images and not any(image.is_main for image in remaining_images):
-                remaining_images[0].is_main = True
+            _ensure_main_image(database, product)
 
         if data.technicalSpecProduct is not None:
-            attribute_items = _normalize_specifications(data.technicalSpecProduct)
-
-            resolved_attributes = _resolve_product_attributes(
-                database, attribute_items, product.catalog_id
-            )
-
-            database.query(ProductAttributeValue).filter(
-                ProductAttributeValue.product_id == product.id
-            ).delete()
-
-            for attribute, value in resolved_attributes:
-                database.add(
-                    ProductAttributeValue(
-                        value=value,
-                        attribute_id=attribute.id,
-                        product_id=product.id,
-                    )
-                )
+            _replace_product_attributes(database, product, data.technicalSpecProduct)
 
         database.commit()
         database.refresh(product)
@@ -422,9 +452,10 @@ def update_product_service(
         database.rollback()
         raise
 
-    except Exception as e:
+    except Exception:
+        logger.exception("Error inesperado")
         database.rollback()
-        api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, str(e))
+        api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
 def change_product_status_service(user_id,product_id,is_active,database: Session):
@@ -457,9 +488,10 @@ def change_product_status_service(user_id,product_id,is_active,database: Session
         database.rollback()
         raise
 
-    except Exception as e:
+    except Exception:
+        logger.exception("Error inesperado")
         database.rollback()
-        api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, str(e))
+        api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error interno del servidor.")
 
 
 def delete_product_service(user_id,product_id,database: Session):
@@ -491,6 +523,6 @@ def delete_product_service(user_id,product_id,database: Session):
         database.rollback()
         raise
 
-    except Exception as e:
+    except Exception:
         database.rollback()
         api_error(500, ErrorCodes.INTERNAL_SERVER_ERROR, "Error del servidor")

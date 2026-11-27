@@ -1,9 +1,11 @@
+"""Modelo ORM de imágenes de una variante (tabla product_variant_images)."""
+
 from sqlalchemy import String, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 
 class ProductVariantImage(Base):

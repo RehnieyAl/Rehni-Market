@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.ErrorCodes import ErrorCodes
 from app.core.Exceptions import api_error
+from app.services.NasService import require_stored
 from app.models.ModelAttributeValue import VariantAttributeValue
 from app.models.ModelCatalogAttribute import CatalogAttribute
 from app.models.ModelVariant import ProductVariant
@@ -454,7 +455,7 @@ def upload_variant_images_service(
             )
             database.add(
                 ProductVariantImage(
-                    url=result["path"],
+                    url=require_stored(result),
                     is_main=(not has_main_already and index == 0),
                     variant_id=variant.id,
                 )

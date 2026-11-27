@@ -1,7 +1,12 @@
-from fastapi import APIRouter, Request, Depends, UploadFile, File
+"""Ruta para que el comprador reporte un producto (solo rol user)."""
+
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, UploadFile, File
 from sqlalchemy.orm import Session
 
-from app.database.Connection import get_db
+from app.core.dbconexion import get_db
+from app.core.AuthDependencies import AuthContext, require_role
 
 from app.schemas.SchemaCommerce.SchemaReport import (
     CreateReportRequest,
@@ -16,14 +21,14 @@ router = APIRouter(prefix="/reports", tags=["reports"])
 
 @router.post("", response_model=ReportResponse)
 def create_report(
-    request: Request,
+    current: Annotated[AuthContext, Depends(require_role("user"))],
     data: CreateReportRequest = Depends(CreateReportRequest.as_form),
     evidences: list[UploadFile] = File(default=[]),
     nas: NasService = Depends(get_nas_service),
     database: Session = Depends(get_db, scope="function"),
 ):
     return create_report_service(
-        request.state.user_id,
+        current.user_id,
         data,
         database,
         nas=nas,

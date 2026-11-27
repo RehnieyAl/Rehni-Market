@@ -1,7 +1,9 @@
-from sqlalchemy import String, Enum, ForeignKey, DateTime, Index
+"""Modelo ORM de códigos de un solo uso: verificación de correo y recuperación de contraseña (tabla event_codes)."""
+
+from sqlalchemy import String, Enum, ForeignKey, DateTime, Index, Integer
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime, timedelta
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 from enum import Enum as typerEnum
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
@@ -39,6 +41,8 @@ class Codes(Base):
         DateTime,
         default=lambda: datetime.utcnow() + timedelta(minutes=15)
     )
+
+    failed_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
 
     
     user_id: Mapped[uuid.UUID] = mapped_column(

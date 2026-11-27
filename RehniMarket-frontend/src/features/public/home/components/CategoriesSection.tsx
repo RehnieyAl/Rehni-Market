@@ -38,7 +38,7 @@ export default function CategoriesSection() {
       }
     };
 
-    load();
+    void load();
 
     return () => {
       cancelled = true;

@@ -1,5 +1,7 @@
+/** Resumen financiero de la empresa: ventas acumuladas, comisión, saldo neto pendiente y próxima liquidación
+ * tal como los calcula el backend (/company/balance). */
 import { useEffect, useState } from "react";
-import { Calendar, Coins, TrendingUp, Wallet } from "lucide-react";
+import { Calendar, Link2, TrendingUp, Wallet } from "lucide-react";
 
 import StatCard from "@/shared/components/dashboard/StatCard";
 import StatCardSkeleton from "@/features/payouts/components/StatCardSkeleton";
@@ -13,6 +15,7 @@ import type { CompanyBalance } from "@/features/payouts/types/response";
 export default function FinanceSummary() {
   const [balance, setBalance] = useState<CompanyBalance | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,16 +32,16 @@ export default function FinanceSummary() {
       }
     };
 
-    load();
+    void load();
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadKey]);
 
   if (loading) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, index) => (
           <StatCardSkeleton key={index} />
         ))}
@@ -51,24 +54,27 @@ export default function FinanceSummary() {
       <ErrorState
         title="No se pudo cargar el resumen financiero"
         description="Intenta de nuevo en unos momentos."
+        onRetry={() => setReloadKey((key) => key + 1)}
       />
     );
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 xl:grid-cols-4">
       <StatCard
         title="Ventas acumuladas"
         value={formatPrice(balance.grossSalesAccumulated)}
         subtitle="Histórico de todas tus liquidaciones"
         icon={<TrendingUp size={20} />}
+        tone="brand"
       />
 
       <StatCard
         title="Comisión Rehni Market"
         value={formatPrice(balance.commissionAccumulated)}
         subtitle="5% acumulado sobre ventas válidas"
-        icon={<Coins size={20} />}
+        icon={<Link2 size={20} />}
+        tone="brand"
       />
 
       <StatCard
@@ -76,6 +82,7 @@ export default function FinanceSummary() {
         value={formatPrice(balance.netBalance)}
         subtitle="Liquidaciones aún no pagadas"
         icon={<Wallet size={20} />}
+        tone="brand"
       />
 
       <StatCard
@@ -86,6 +93,7 @@ export default function FinanceSummary() {
         })}
         subtitle="Corte mensual estimado"
         icon={<Calendar size={20} />}
+        tone="brand"
       />
     </div>
   );

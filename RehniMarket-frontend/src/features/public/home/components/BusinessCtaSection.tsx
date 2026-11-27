@@ -12,7 +12,7 @@ const BULLETS = [
 export default function BusinessCtaSection() {
   return (
     <section className="mt-14 sm:mt-20">
-      <div className="relative overflow-hidden rounded-card border border-hairline bg-gradient-to-r from-brand-700 via-brand-800 to-[#160611]">
+      <div className="relative overflow-hidden rounded-card border border-hairline bg-primary">
         {/* Fondo tecnológico generado localmente (Pillow), sólo decorativo. */}
         <img
           src={bg}
@@ -26,7 +26,7 @@ export default function BusinessCtaSection() {
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white">
               <Store size={22} />
             </span>
-            <h2 className="mt-4 text-2xl font-bold tracking-tight text-white sm:text-3xl">
+            <h2 className="mt-4 text-2xl font-semibold text-white sm:text-3xl">
               ¿Tienes una empresa?
             </h2>
             <p className="mt-2 max-w-sm text-sm leading-relaxed text-white/75">
@@ -34,7 +34,7 @@ export default function BusinessCtaSection() {
             </p>
             <Link
               to="/register-company"
-              className="mt-5 inline-flex h-11 items-center gap-2 rounded-control bg-accent px-5 text-sm font-semibold text-white transition hover:bg-accent-hover"
+              className="mt-5 inline-flex h-11 items-center gap-2 rounded-control bg-white px-5 text-sm font-semibold text-primary transition-colors hover:bg-white/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               Registrar mi empresa
               <ArrowRight size={16} />
@@ -55,7 +55,7 @@ export default function BusinessCtaSection() {
           <p className="text-lg font-semibold leading-snug text-white lg:text-right">
             Haz crecer
             <br className="hidden lg:block" /> tu negocio con{" "}
-            <span className="text-accent">RehniMarket</span>
+            RehniMarket
           </p>
         </div>
       </div>

@@ -1,3 +1,4 @@
+/** Acceso al contexto del carrito; falla si se usa fuera de CartProvider. */
 import { useContext } from "react";
 import { CartContext } from "./CartContext";
 

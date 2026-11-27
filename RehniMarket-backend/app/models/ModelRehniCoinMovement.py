@@ -1,3 +1,5 @@
+"""Modelo ORM de la conversión a RehniCoin de cada liquidación (tabla rehnicoin_movements)."""
+
 from sqlalchemy import Numeric, ForeignKey, DateTime
 from decimal import Decimal
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -5,7 +7,7 @@ from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime, timezone
 
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 
 class RehniCoinMovement(Base):

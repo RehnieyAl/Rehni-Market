@@ -1,3 +1,5 @@
+"""Modelos ORM de reportes de productos o empresas y sus evidencias (tablas reports y report_evidences)."""
+
 from sqlalchemy import String, Text, DateTime, Enum, ForeignKey, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
@@ -5,7 +7,7 @@ import uuid
 from datetime import datetime, timezone
 from enum import Enum as PyEnum
 
-from app.database.Connection import Base
+from app.core.dbconexion import Base
 
 
 class ReportTargetType(str, PyEnum):
