@@ -163,7 +163,9 @@ class TestVariantCrud:
             client, tokens["company"], product.id,
             ["00000000-0000-0000-0000-000000000000", str(axes["t40"].id)],
         )
+        # Regresión de resolver.py: la opción inexistente corta con 404 antes de leer option.attribute.
         assert response.status_code == 404
+        assert response.json()["detail"]["code"] == "CATALOG_ATTRIBUTE_OPTION_NOT_FOUND"
 
     def test_inactive_axis_rejected(self, client, tokens, product, axes):
         client.patch(
