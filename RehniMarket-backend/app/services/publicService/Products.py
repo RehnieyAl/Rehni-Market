@@ -1,6 +1,6 @@
 """Catálogo público: categorías, listados (filtros, orden y paginación por el precio de la tarjeta), ofertas, novedades y detalle."""
 import unicodedata
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import UUID
 
@@ -204,7 +204,8 @@ def card_price_sql(now: datetime | None = None):
     (descuento de variante, si no el del producto) y, sin variantes vivas, el precio del
     producto. Así el listado filtra, ordena y pagina por el precio que se muestra."""
 
-    now = now or datetime.utcnow()
+    # UTC sin zona, como las columnas de fechas de descuento con las que se compara.
+    now = now or datetime.now(timezone.utc).replace(tzinfo=None)
     now_param = literal(now)
 
     variant_final = case(
@@ -252,7 +253,7 @@ def card_price_sql(now: datetime | None = None):
 def _variant_offer_active():
     """Variante viva, con stock y con un descuento propio vigente (> 0)."""
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     return and_(
         ProductVariant.deleted_at.is_(None),
         ProductVariant.stock > 0,
@@ -271,7 +272,7 @@ def _has_active_offer():
         viva con stock a la que aplicárselo (fallback variante→producto).
     Descuentos de variante eliminada o sin stock no cuentan."""
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     product_discount_active = and_(
         Product.discount_enable.is_(True),
         Product.discount_value > 0,
@@ -323,7 +324,7 @@ def list_public_new_products_service(
     (Product.created_at), visibles y con stock, ordenados de más reciente a más antiguo.
     Cada producto aparece una sola vez (una fila por Product, no por variante)."""
 
-    cutoff = datetime.utcnow() - timedelta(days=NEW_PRODUCT_WINDOW_DAYS)
+    cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=NEW_PRODUCT_WINDOW_DAYS)
 
     query = (
         database.query(Product)
@@ -428,21 +429,22 @@ def _apply_catalog_filters(
         conditions.append(Product.stock <= max_stock)
 
     if days is not None:
-        conditions.append(Product.created_at >= datetime.utcnow() - timedelta(days=days))
+        conditions.append(Product.created_at >= datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=days))
 
     return query.filter(*conditions) if conditions else query
 
 
-def _catalog_order(sort, final_price_expr, discount_percentage_expr, search_term, name_norm, token_matches):
-    # Product.id cierra cada orden: con empates, las páginas no repiten ni saltan productos.
+def _catalog_order(sort, final_price_expr, discount_percentage_expr, search_term, name_norm, token_matches) -> list:
+    # Lista de criterios para order_by(*...): su largo depende del orden pedido. Product.id cierra cada
+    # orden: con empates, las páginas no repiten ni saltan productos.
     if sort == SORT_PRICE_ASC:
-        return final_price_expr.asc(), Product.created_at.desc(), Product.id
+        return [final_price_expr.asc(), Product.created_at.desc(), Product.id]
 
     if sort == SORT_PRICE_DESC:
-        return final_price_expr.desc(), Product.created_at.desc(), Product.id
+        return [final_price_expr.desc(), Product.created_at.desc(), Product.id]
 
     if sort == SORT_DISCOUNT:
-        return discount_percentage_expr.desc(), Product.created_at.desc(), Product.id
+        return [discount_percentage_expr.desc(), Product.created_at.desc(), Product.id]
 
     if search_term:
         relevance = case(
@@ -452,14 +454,14 @@ def _catalog_order(sort, final_price_expr, discount_percentage_expr, search_term
             (token_matches, 3),
             else_=4,
         )
-        return (
+        return [
             relevance.asc(),
             func.word_similarity(search_term, name_norm).desc(),
             Product.created_at.desc(),
             Product.id,
-        )
+        ]
 
-    return Product.created_at.desc(), Product.id
+    return [Product.created_at.desc(), Product.id]
 
 
 def list_public_products_service(

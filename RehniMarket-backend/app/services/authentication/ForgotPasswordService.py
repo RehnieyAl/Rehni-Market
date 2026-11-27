@@ -1,7 +1,7 @@
 """Solicitud y reenvío del código de recuperación de contraseña sin revelar si la cuenta existe."""
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
@@ -44,7 +44,8 @@ def forgot_password_service(data: ForgotPasswordRequest, database: Session, clie
 
         if user:
             lock_account(database, user.id)
-            now = datetime.utcnow()
+            # UTC sin zona, como el resto de fechas guardadas (columnas sin zona horaria).
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
             # Con varios procesos el contador en memoria no se comparte: la fecha del código guardado
             # sigue impidiendo un segundo correo dentro del cooldown.
             reject_if_cooling_down(cooldown_remaining(get_code(database, user.id, TypeCode.RESET_PASSWORD), now))
